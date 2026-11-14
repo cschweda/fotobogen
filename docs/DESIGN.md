@@ -164,7 +164,7 @@ The token is compared in constant time. Wrong-token attempts share the login lim
 
 On completion, in one database transaction that first re-checks that no user exists: create the user, write settings, set `site.setup_complete`. Then delete `data/setup-token` and log the admin in. A second completion attempt fails. The `/setup` routes and API then return 404 permanently. Step 6 is shown from the completion response, so reloading it afterward is also a 404; that is intended.
 
-**Look.** The wizard and the login page are dark, Swiss in style, and infographic-like: near-black ground, off-white grotesque type, the one red accent, a strict grid, and no rounded corners, shadows, or gradients. Progress is a numbered six-frame contact strip with the current frame in red, matching the og image. Layout choices are picked from small drawn diagrams of each option. This is the first thing an installer sees, so it carries the product's visual identity; the rest of admin keeps the default Nuxt UI theme (section 11).
+**Look.** The wizard and the login page are dark, Swiss in style, and infographic-like: near-black ground, off-white grotesque type, the one red accent, a strict grid, and no rounded corners, shadows, or gradients. Progress is a numbered six-frame contact strip with the current frame in red, matching the og image. Layout choices are picked from small drawn diagrams of each option. This is the first thing an installer sees, so it carries the product's visual identity, which the rest of admin and the bundled skin share (section 11).
 
 The password strength indicator is a small built-in estimate (length and character variety) with a text label. No strength library is bundled.
 
@@ -327,11 +327,11 @@ A skin is a folder containing `skin.json` and `skin.css`. Skins are discovered f
 
 - Strict grid, flush-left ragged-right text, generous white space, no rounded corners, no shadows, no gradients.
 - One grotesque sans-serif at a small number of sizes; self-hosted (Inter or similar open-licensed face). Tabular numerals for EXIF data.
-- Black on white with a single accent color, used sparingly (current item, focus ring, links on hover).
+- Dark by default: off-white on near-black with a single accent color (red, `#e30613`), used sparingly (current item, focus ring, links on hover). A light variant may be offered as a skin option later.
 - Site title top-left, small. Captions and metadata set small in a column beside or under the photo, never over it.
 - The photographs supply all the color and texture. The interface stays out of the way.
 
-Skins apply to the public site only. Admin always uses the default Nuxt UI theme.
+Skins apply to the public site only. Admin is not skinnable, but it shares the same character: the whole product is Swiss in style, sleek, modern, and dark. Admin uses Nuxt UI in dark mode with a neutral grey scale, the red accent as its primary color, square corners, and no shadows or gradients.
 
 ---
 
@@ -433,7 +433,7 @@ For running without Docker, and for development servers.
 | 5 | Module loader, recipe model, preview, `mono` and `tone` | A transform can be applied, previewed, and fully reverted |
 | 6 | Sample fetch wired into the setup wizard and admin, accessibility audit, README install guide, backup CLI | A stranger can install from the README |
 
-**v2 candidates:** albums and tags, search, multiple users, object storage adapter, AVIF output, HEIC input, layer-based skins, more hook types, install skins and modules from admin.
+**v2 candidates:** a slideshow (if added, follow how openMantel, `cschweda/openmantel`, runs its slideshow), albums and tags, search, multiple users, object storage adapter, AVIF output, HEIC input, layer-based skins, more hook types, install skins and modules from admin.
 
 ---
 
@@ -448,6 +448,7 @@ For running without Docker, and for development servers.
 
 **Revised 2026-11-14, after checking the stack against current releases and before any code:**
 
+- **Dark, Swiss look everywhere:** wizard, login, admin, and the bundled skin (sections 5 and 11). Requested 2026-11-14.
 - **Auth without `nuxt-auth-utils`.** Nuxt's built-in session plus `node:crypto` scrypt, so the secret can live in `data/secret` (sections 2 and 6).
 - **Node 24 LTS** throughout, required by `nuxt-security` (section 2).
 - **`nuxt-security` for headers and CSP only;** its rate and size limiters are off (section 6).
