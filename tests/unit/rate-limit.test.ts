@@ -37,3 +37,31 @@ describe('createFailureLimiter', () => {
     expect(limiter.isBlocked('a')).toBe(false)
   })
 })
+
+describe('createFailureLimiter when its table is full', () => {
+  const full = (maxKeys: number) => createFailureLimiter({ max: 2, windowMs: 60_000, now: () => 1, maxKeys })
+
+  it('never forgets a blocked key to make room', () => {
+    const limiter = full(2)
+    for (const key of ['a', 'b']) { limiter.recordFailure(key); limiter.recordFailure(key) }
+    limiter.recordFailure('c')
+    expect(limiter.isBlocked('a')).toBe(true)
+    expect(limiter.isBlocked('b')).toBe(true)
+  })
+
+  it('treats an untracked key as blocked while every slot holds a blocked key', () => {
+    const limiter = full(2)
+    for (const key of ['a', 'b']) { limiter.recordFailure(key); limiter.recordFailure(key) }
+    expect(limiter.isBlocked('newcomer')).toBe(true)
+    expect(limiter.retryAfterSeconds('newcomer')).toBeGreaterThan(0)
+  })
+
+  it('makes room by dropping a key that is not blocked', () => {
+    const limiter = full(2)
+    limiter.recordFailure('a')
+    limiter.recordFailure('b'); limiter.recordFailure('b')
+    limiter.recordFailure('c'); limiter.recordFailure('c')
+    expect(limiter.isBlocked('b')).toBe(true)
+    expect(limiter.isBlocked('c')).toBe(true)
+  })
+})

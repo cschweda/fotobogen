@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { clientIpFrom, isLoopbackHost, originMatchesHost } from '../../server/core/request.ts'
+import { clientIpFrom, isLoopbackHost, originMatchesHost, rateLimitKey } from '../../server/core/request.ts'
 import { newId } from '../../server/core/ids.ts'
 
 describe('originMatchesHost', () => {
@@ -43,5 +43,19 @@ describe('newId', () => {
   it('is 12 URL-safe characters and not repeated', () => {
     expect(newId()).toMatch(/^[A-Za-z0-9_-]{12}$/)
     expect(newId()).not.toBe(newId())
+  })
+})
+
+describe('rateLimitKey', () => {
+  it.each([
+    ['1.2.3.4', '1.2.3.4'],
+    ['::ffff:1.2.3.4', '1.2.3.4'],
+    ['2001:db8:1:2:3:4:5:6', '2001:db8:1:2::/64'],
+    ['2001:db8:1:2:ffff:ffff:ffff:ffff', '2001:db8:1:2::/64'],
+    ['2001:DB8::1', '2001:db8:0:0::/64'],
+    ['::1', '0:0:0:0::/64'],
+    ['unknown', 'unknown'],
+  ])('%s is counted as %s', (ip, key) => {
+    expect(rateLimitKey(ip)).toBe(key)
   })
 })

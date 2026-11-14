@@ -35,3 +35,24 @@ export function clientIpFrom(socketAddress: string | undefined, forwardedFor: st
   }
   return socketAddress || 'unknown'
 }
+
+/**
+ * What the failure limiter counts against. One IPv6 customer usually holds a
+ * whole /64, so counting single addresses would let them rotate freely;
+ * IPv6 is grouped by its /64 prefix. IPv4 addresses are counted singly.
+ */
+export function rateLimitKey(ip: string): string {
+  const address = ip.toLowerCase()
+  const mapped = address.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/)
+  if (mapped) return mapped[1]!
+  if (!address.includes(':')) return address
+
+  const [head = '', tail] = address.split('::')
+  const headParts = head ? head.split(':') : []
+  const tailParts = tail ? tail.split(':') : []
+  const groups = tail === undefined
+    ? headParts
+    : [...headParts, ...Array(Math.max(0, 8 - headParts.length - tailParts.length)).fill('0'), ...tailParts]
+  if (groups.length !== 8) return address
+  return groups.slice(0, 4).map(group => group.replace(/^0+(?=.)/, '')).join(':') + '::/64'
+}
