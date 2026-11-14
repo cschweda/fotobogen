@@ -1,0 +1,47 @@
+import { describe, expect, it } from 'vitest'
+import { clientIpFrom, isLoopbackHost, originMatchesHost } from '../../server/core/request.ts'
+import { newId } from '../../server/core/ids.ts'
+
+describe('originMatchesHost', () => {
+  it.each([
+    ['https://a.com', 'a.com', true],
+    ['http://localhost:3000', 'localhost:3000', true],
+    ['https://A.com', 'a.com', true],
+    ['https://evil.com', 'a.com', false],
+    ['https://a.com:8443', 'a.com', false],
+    [undefined, 'a.com', false],
+    ['null', 'a.com', false],
+    ['https://a.com', undefined, false],
+  ])('%s against %s is %s', (origin, host, expected) => {
+    expect(originMatchesHost(origin, host)).toBe(expected)
+  })
+})
+
+describe('clientIpFrom', () => {
+  it('ignores X-Forwarded-For unless the proxy is trusted', () => {
+    expect(clientIpFrom('10.0.0.1', '1.2.3.4, 5.6.7.8', false)).toBe('10.0.0.1')
+  })
+  it('takes the last forwarded address when the proxy is trusted', () => {
+    expect(clientIpFrom('10.0.0.1', '1.2.3.4, 5.6.7.8', true)).toBe('5.6.7.8')
+  })
+  it('falls back to the socket address when no header is present', () => {
+    expect(clientIpFrom('10.0.0.1', undefined, true)).toBe('10.0.0.1')
+    expect(clientIpFrom(undefined, undefined, false)).toBe('unknown')
+  })
+})
+
+describe('isLoopbackHost', () => {
+  it.each(['localhost', 'localhost:3000', '127.0.0.1:8080', '[::1]:3000', 'LOCALHOST'])('%s is loopback', (host) => {
+    expect(isLoopbackHost(host)).toBe(true)
+  })
+  it.each(['example.com', 'localhost.evil.com', '127.0.0.1.evil.com', '', undefined])('%s is not loopback', (host) => {
+    expect(isLoopbackHost(host)).toBe(false)
+  })
+})
+
+describe('newId', () => {
+  it('is 12 URL-safe characters and not repeated', () => {
+    expect(newId()).toMatch(/^[A-Za-z0-9_-]{12}$/)
+    expect(newId()).not.toBe(newId())
+  })
+})
