@@ -34,14 +34,27 @@ export function applyMigrations(sqlite: Database, migrations: Migration[]): stri
       for (const statement of migration.sql.split(BREAKPOINT)) {
         if (statement.trim()) sqlite.exec(statement)
       }
+      const broken = sqlite.pragma('foreign_key_check') as unknown[]
+      if (broken.length) throw new Error(`it would leave ${broken.length} row(s) pointing at rows that no longer exist`)
       record.run(migration.name, Date.now())
     })
+
+    // SQLite changes a column by rebuilding the table: create a new one, copy,
+    // drop the old one, rename. With foreign keys enforced, that drop would
+    // cascade and delete every row that points at the table. Enforcement can
+    // only be switched outside a transaction, so it is turned off around each
+    // migration and the result is verified before the commit instead.
+    const enforced = sqlite.pragma('foreign_keys', { simple: true }) === 1
+    sqlite.pragma('foreign_keys = OFF')
     try {
       run()
     }
     catch (error) {
       const reason = error instanceof Error ? error.message : String(error)
       throw new Error(`Database migration ${migration.name} failed: ${reason}`)
+    }
+    finally {
+      if (enforced) sqlite.pragma('foreign_keys = ON')
     }
     applied.push(migration.name)
   }

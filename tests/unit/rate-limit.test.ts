@@ -79,4 +79,19 @@ describe('createFailureLimiter when its table is full', () => {
     for (let i = 0; i < 50; i++) block(`k${i}`)
     expect(limiter.size()).toBe(3)
   })
+
+  it('judges "ends soonest" by when the block lifts, not by the latest failure', () => {
+    let now = 0
+    const minute = 60_000
+    const limiter = createFailureLimiter({ max: 5, windowMs: 15 * minute, now: () => now, maxKeys: 2 })
+    // A: failures at minutes 0, 1, 2, 3, 14 -> its block lifts at minute 15.
+    for (const at of [0, 1, 2, 3, 14]) { now = at * minute; limiter.recordFailure('a') }
+    // B: five failures at minute 10 -> its block lifts at minute 25.
+    now = 10 * minute
+    for (let i = 0; i < 5; i++) limiter.recordFailure('b')
+    now = 14.5 * minute
+    limiter.recordFailure('c')
+    expect(limiter.isBlocked('b')).toBe(true)
+    expect(limiter.isBlocked('a')).toBe(false)
+  })
 })

@@ -34,17 +34,19 @@ export function dataPaths(root: string): DataPaths {
 }
 
 export function ensureDataDirs(paths: DataPaths): void {
-  try {
-    for (const dir of [paths.root, paths.originals, paths.derivatives, paths.skins, paths.modules]) {
+  // Every directory is checked, not just the root: Docker can create a
+  // bind-mounted subdirectory as root before the app first runs.
+  for (const dir of [paths.root, paths.originals, paths.derivatives, paths.skins, paths.modules]) {
+    try {
       mkdirSync(dir, { recursive: true })
+      accessSync(dir, constants.W_OK)
     }
-    accessSync(paths.root, constants.W_OK)
-  }
-  catch (error) {
-    const reason = error instanceof Error ? error.message : String(error)
-    throw new Error(
-      `Fotobogen cannot write to its data directory: ${paths.root}. `
-      + `Create it and make it writable by the user running the app, or set DATA_DIR. (${reason})`,
-    )
+    catch (error) {
+      const reason = error instanceof Error ? error.message : String(error)
+      throw new Error(
+        `Fotobogen cannot write to its data directory: ${dir}. `
+        + `Create it and make it writable by the user running the app, or set DATA_DIR. (${reason})`,
+      )
+    }
   }
 }

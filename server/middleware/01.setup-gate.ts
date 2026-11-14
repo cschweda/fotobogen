@@ -9,7 +9,8 @@ const isSetupPath = (path: string) =>
   path === '/setup' || path.startsWith('/setup/') || path.startsWith('/api/setup/')
 
 export default defineEventHandler((event) => {
-  const path = event.path.split('?')[0]!
+  // Lowercased because the page router matches paths without regard to case.
+  const path = event.path.split('?')[0]!.toLowerCase()
 
   if (isSetupComplete()) {
     if (isSetupPath(path)) throw createError({ status: 404, message: 'Page not found' })

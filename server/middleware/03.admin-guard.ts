@@ -7,7 +7,8 @@ import { currentAdmin, requireAdmin } from '../utils/session.ts'
 
 export default defineEventHandler(async (event) => {
   if (!isSetupComplete()) return
-  const path = event.path.split('?')[0]!
+  // Lowercased because the page router matches paths without regard to case.
+  const path = event.path.split('?')[0]!.toLowerCase()
 
   if (path.startsWith('/api/admin/')) {
     await requireAdmin(event)

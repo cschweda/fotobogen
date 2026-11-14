@@ -52,4 +52,54 @@ describe('applyMigrations', () => {
     expect(db.prepare(`select count(*) as n from derivatives`).get()).toEqual({ n: 0 })
     expect(db.prepare(`select count(*) as n from jobs`).get()).toEqual({ n: 0 })
   })
+
+  it('keeps child rows when a migration rebuilds the table they point to', () => {
+    const db = new Database(':memory:')
+    db.pragma('foreign_keys = ON')
+    applyMigrations(db, [{
+      name: '0001_tables',
+      sql: `create table parent (id text primary key);
+--> statement-breakpoint
+create table child (id text primary key, parent_id text not null references parent(id) on delete cascade);
+--> statement-breakpoint
+insert into parent values ('p');
+--> statement-breakpoint
+insert into child values ('c', 'p');`,
+    }])
+    // The shape drizzle-kit generates for a column change in SQLite.
+    applyMigrations(db, [{
+      name: '0002_rebuild_parent',
+      sql: `PRAGMA foreign_keys=OFF;
+--> statement-breakpoint
+create table __new_parent (id text primary key, note text);
+--> statement-breakpoint
+insert into __new_parent (id) select id from parent;
+--> statement-breakpoint
+drop table parent;
+--> statement-breakpoint
+alter table __new_parent rename to parent;
+--> statement-breakpoint
+PRAGMA foreign_keys=ON;`,
+    }])
+    expect(db.prepare('select count(*) as n from child').get()).toEqual({ n: 1 })
+    expect(db.pragma('foreign_keys', { simple: true })).toBe(1)
+  })
+
+  it('refuses a migration that would leave rows pointing at nothing', () => {
+    const db = new Database(':memory:')
+    db.pragma('foreign_keys = ON')
+    applyMigrations(db, [{
+      name: '0001_tables',
+      sql: `create table parent (id text primary key);
+--> statement-breakpoint
+create table child (id text primary key, parent_id text not null references parent(id));
+--> statement-breakpoint
+insert into parent values ('p');
+--> statement-breakpoint
+insert into child values ('c', 'p');`,
+    }])
+    expect(() => applyMigrations(db, [{ name: '0002_orphan', sql: `delete from parent;` }])).toThrow(/0002_orphan/)
+    expect(db.prepare('select count(*) as n from parent').get()).toEqual({ n: 1 })
+    expect(db.pragma('foreign_keys', { simple: true })).toBe(1)
+  })
 })

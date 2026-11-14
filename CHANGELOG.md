@@ -22,3 +22,4 @@ uses [Semantic Versioning](https://semver.org/).
 - Placeholder admin dashboard and public page.
 - Docker image, quick-start compose file with Caddy, compose file and nginx snippet for Laravel Forge, pm2 process file, and rebuild script.
 - GitHub Actions: tests on every pull request, and image publishing to GHCR on version tags.
+- Sessions renew for another 30 days each time they are used.

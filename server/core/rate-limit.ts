@@ -41,14 +41,16 @@ export function createFailureLimiter(options: { max: number, windowMs: number, n
 
     let victim: string | undefined
     let victimBlocked = true
-    let victimLatest = Infinity
+    let victimEnds = Infinity
     for (const [key, times] of failures) {
       const blocked = times.length >= max
-      const latest = times[times.length - 1]!
-      if ((victimBlocked && !blocked) || (blocked === victimBlocked && latest < victimLatest)) {
+      // A block lifts when the oldest of its last `max` failures leaves the
+      // window. For a key that is not blocked, its latest failure is used.
+      const ends = blocked ? times[times.length - max]! : times[times.length - 1]!
+      if ((victimBlocked && !blocked) || (blocked === victimBlocked && ends < victimEnds)) {
         victim = key
         victimBlocked = blocked
-        victimLatest = latest
+        victimEnds = ends
       }
     }
     if (victim !== undefined) failures.delete(victim)

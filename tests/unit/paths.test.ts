@@ -38,4 +38,13 @@ describe('ensureDataDirs', () => {
     expect(() => ensureDataDirs(dataPaths(root))).toThrow(/cannot write to its data directory/)
     chmodSync(root, 0o700)
   })
+
+  it.skipIf(process.getuid?.() === 0)('names a subdirectory it cannot write to', () => {
+    const root = join(mkdtempSync(join(tmpdir(), 'fb-')), 'data')
+    const paths = dataPaths(root)
+    ensureDataDirs(paths)
+    chmodSync(paths.derivatives, 0o500)
+    expect(() => ensureDataDirs(paths)).toThrow(paths.derivatives)
+    chmodSync(paths.derivatives, 0o700)
+  })
 })

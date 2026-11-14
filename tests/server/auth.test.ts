@@ -190,3 +190,34 @@ describe('hardening', () => {
     finally { await server.stop() }
   })
 })
+
+describe('review fixes', () => {
+  it('guards the admin area and closes the wizard whatever the letter case of the path', async () => {
+    const server = await startServer()
+    try {
+      await completeSetup(server)
+      for (const path of ['/Setup', '/SETUP/x']) {
+        expect((await get(server, path)).status, path).toBe(404)
+      }
+      for (const path of ['/Admin', '/ADMIN/library']) {
+        const response = await get(server, path)
+        expect(response.status, path).toBe(302)
+        expect(response.headers.get('location')).toBe('/login')
+      }
+      expect((await get(server, '/api/Admin/overview')).status).toBeGreaterThanOrEqual(401)
+    }
+    finally { await server.stop() }
+  })
+
+  it('renews the session cookie when it is used, so an active admin stays logged in', async () => {
+    const server = await startServer()
+    try {
+      const cookie = await completeSetup(server)
+      const response = await get(server, '/api/admin/overview', { cookie })
+      const renewed = response.headers.getSetCookie().find(c => c.startsWith('fotobogen='))
+      expect(renewed).toMatch(/Max-Age=2592000/i)
+      expect((await get(server, '/api/admin/overview', { cookie: renewed!.split(';')[0]! })).status).toBe(200)
+    }
+    finally { await server.stop() }
+  })
+})
