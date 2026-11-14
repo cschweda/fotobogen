@@ -14,10 +14,12 @@ import { setSettings } from '../../utils/settings.ts'
 
 export default defineEventHandler(async (event) => {
   const key = limiterKey(event)
-  if (failureLimiter.isBlocked(key)) return tooManyAttempts(event, key)
-
   const body = await readBody<Record<string, unknown>>(event).catch(() => null)
   const given = typeof body?.token === 'string' ? body.token.trim() : ''
+
+  // No await between the block check and counting a failure, so attempts
+  // made at the same moment are all counted.
+  if (failureLimiter.isBlocked(key)) return tooManyAttempts(event, key)
   if (!tokensMatch(given, loadOrCreateSetupToken(getPaths().setupToken))) {
     failureLimiter.recordFailure(key)
     return fail(event, 401, 'That setup token is not correct. Copy it from the server log and try again.')

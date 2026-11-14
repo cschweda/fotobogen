@@ -107,7 +107,9 @@ describe('the admin area', () => {
   })
 
   it('redirects a logged-in admin away from /login', async () => {
-    const response = await get(server, '/login', { cookie })
+    // The earlier logout ended every session, so log in again first.
+    const fresh = sessionCookie(await login(server))!
+    const response = await get(server, '/login', { cookie: fresh })
     expect(response.status).toBe(302)
     expect(response.headers.get('location')).toBe('/admin')
   })
@@ -146,6 +148,43 @@ describe('login', () => {
       for (let i = 0; i < 4; i++) await login(server, { username: ADMIN.username, password: 'wrong password' })
       expect((await login(server)).status).toBe(200)
       for (let i = 0; i < 4; i++) await login(server, { username: ADMIN.username, password: 'wrong password' })
+      expect((await login(server)).status).toBe(200)
+    }
+    finally { await server.stop() }
+  })
+})
+
+describe('hardening', () => {
+  it('counts attempts made at the same moment: a burst of 20 wrong passwords tests at most 5', async () => {
+    const server = await startServer()
+    try {
+      await completeSetup(server)
+      const responses = await Promise.all(Array.from({ length: 20 }, (_, i) =>
+        login(server, { username: ADMIN.username, password: `burst guess ${i}` })))
+      const statuses = responses.map(r => r.status)
+      expect(statuses.filter(s => s === 401)).toHaveLength(5)
+      expect(statuses.filter(s => s === 429)).toHaveLength(15)
+    }
+    finally { await server.stop() }
+  })
+
+  it('counts setup-token attempts made at the same moment', async () => {
+    const server = await startServer()
+    try {
+      const responses = await Promise.all(Array.from({ length: 20 }, () =>
+        post(server, '/api/setup/verify', { token: 'f'.repeat(32) })))
+      expect(responses.filter(r => r.status === 401)).toHaveLength(5)
+    }
+    finally { await server.stop() }
+  })
+
+  it('a cookie copied before logout stops working after logout', async () => {
+    const server = await startServer()
+    try {
+      const cookie = await completeSetup(server)
+      expect((await get(server, '/api/admin/overview', { cookie })).status).toBe(200)
+      await post(server, '/api/auth/logout', {}, { cookie })
+      expect((await get(server, '/api/admin/overview', { cookie })).status).toBe(401)
       expect((await login(server)).status).toBe(200)
     }
     finally { await server.stop() }

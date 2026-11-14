@@ -205,3 +205,16 @@ describe('completeSetup helper', () => {
     finally { await server.stop() }
   })
 })
+
+describe('GET /api/site', () => {
+  it('returns the public title and tagline, and nothing else', async () => {
+    const server = await startServer()
+    try {
+      await completeSetup(server)
+      const response = await get(server, '/api/site')
+      expect(response.status).toBe(200)
+      expect(await response.json()).toEqual({ title: 'Test Photos', tagline: 'Pictures of things' })
+    }
+    finally { await server.stop() }
+  })
+})
