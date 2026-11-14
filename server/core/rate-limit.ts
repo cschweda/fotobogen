@@ -7,6 +7,8 @@ export interface FailureLimiter {
   clear(key: string): void
   /** Seconds until the key is unblocked; 0 when it is not blocked. */
   retryAfterSeconds(key: string): number
+  /** How many keys are being tracked. */
+  size(): number
 }
 
 const DEFAULT_MAX_KEYS = 10_000
@@ -26,37 +28,45 @@ export function createFailureLimiter(options: { max: number, windowMs: number, n
   }
 
   /**
-   * Make room for a new key. Expired entries go first, then the oldest key
-   * that is not blocked. A blocked key is never dropped: forgetting it would
-   * hand an attacker a way to reset their own block by flooding the table.
+   * Make room for one new key; only called when a failure for an unknown key
+   * arrives and the table is full. Expired entries go first, then a key that
+   * is not blocked. If every slot holds a live block, the block that would
+   * end soonest is dropped: the table stays bounded, nobody without a record
+   * is ever locked out, and the cost is that one address regains its
+   * attempts slightly early.
    */
-  function makeRoom(): boolean {
-    if (failures.size < maxKeys) return true
+  function makeRoom(): void {
     for (const key of [...failures.keys()]) recent(key)
+    if (failures.size < maxKeys) return
+
+    let victim: string | undefined
+    let victimBlocked = true
+    let victimLatest = Infinity
     for (const [key, times] of failures) {
-      if (failures.size < maxKeys) break
-      if (times.length < max) failures.delete(key)
+      const blocked = times.length >= max
+      const latest = times[times.length - 1]!
+      if ((victimBlocked && !blocked) || (blocked === victimBlocked && latest < victimLatest)) {
+        victim = key
+        victimBlocked = blocked
+        victimLatest = latest
+      }
     }
-    return failures.size < maxKeys
+    if (victim !== undefined) failures.delete(victim)
   }
 
-  /** With every slot held by a blocked key, unknown keys are refused too. */
-  const saturated = (key: string) => !failures.has(key) && !makeRoom()
-
   return {
-    isBlocked: key => recent(key).length >= max || saturated(key),
+    isBlocked: key => recent(key).length >= max,
     recordFailure(key) {
-      if (!failures.has(key) && !makeRoom()) return
+      if (!failures.has(key) && failures.size >= maxKeys) makeRoom()
       failures.set(key, [...recent(key), now()])
     },
     clear: (key) => { failures.delete(key) },
     retryAfterSeconds(key) {
       const times = recent(key)
-      if (times.length >= max) {
-        const oldestCounted = times[times.length - max]!
-        return Math.max(1, Math.ceil((oldestCounted + windowMs - now()) / 1000))
-      }
-      return saturated(key) ? Math.ceil(windowMs / 1000) : 0
+      if (times.length < max) return 0
+      const oldestCounted = times[times.length - max]!
+      return Math.max(1, Math.ceil((oldestCounted + windowMs - now()) / 1000))
     },
+    size: () => failures.size,
   }
 }

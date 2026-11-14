@@ -39,29 +39,44 @@ describe('createFailureLimiter', () => {
 })
 
 describe('createFailureLimiter when its table is full', () => {
-  const full = (maxKeys: number) => createFailureLimiter({ max: 2, windowMs: 60_000, now: () => 1, maxKeys })
+  const make = (maxKeys: number) => {
+    let now = 1
+    const limiter = createFailureLimiter({ max: 2, windowMs: 60_000, now: () => now, maxKeys })
+    const block = (key: string) => { limiter.recordFailure(key); limiter.recordFailure(key) }
+    return { limiter, block, tick: () => { now += 1000 } }
+  }
 
-  it('never forgets a blocked key to make room', () => {
-    const limiter = full(2)
-    for (const key of ['a', 'b']) { limiter.recordFailure(key); limiter.recordFailure(key) }
-    limiter.recordFailure('c')
-    expect(limiter.isBlocked('a')).toBe(true)
-    expect(limiter.isBlocked('b')).toBe(true)
-  })
-
-  it('treats an untracked key as blocked while every slot holds a blocked key', () => {
-    const limiter = full(2)
-    for (const key of ['a', 'b']) { limiter.recordFailure(key); limiter.recordFailure(key) }
-    expect(limiter.isBlocked('newcomer')).toBe(true)
-    expect(limiter.retryAfterSeconds('newcomer')).toBeGreaterThan(0)
-  })
-
-  it('makes room by dropping a key that is not blocked', () => {
-    const limiter = full(2)
+  it('makes room by dropping a key that is not blocked before any blocked one', () => {
+    const { limiter, block } = make(2)
     limiter.recordFailure('a')
-    limiter.recordFailure('b'); limiter.recordFailure('b')
-    limiter.recordFailure('c'); limiter.recordFailure('c')
+    block('b')
+    block('c')
     expect(limiter.isBlocked('b')).toBe(true)
     expect(limiter.isBlocked('c')).toBe(true)
+  })
+
+  it('never blocks a visitor it has no record of', () => {
+    const { limiter, block } = make(2)
+    block('a')
+    block('b')
+    expect(limiter.isBlocked('newcomer')).toBe(false)
+    expect(limiter.retryAfterSeconds('newcomer')).toBe(0)
+  })
+
+  it('when every slot is blocked, drops only the block that would end soonest', () => {
+    const { limiter, block, tick } = make(2)
+    block('oldest')
+    tick()
+    block('newer')
+    tick()
+    limiter.recordFailure('c')
+    expect(limiter.isBlocked('newer')).toBe(true)
+    expect(limiter.isBlocked('oldest')).toBe(false)
+  })
+
+  it('never holds more keys than its limit', () => {
+    const { limiter, block } = make(3)
+    for (let i = 0; i < 50; i++) block(`k${i}`)
+    expect(limiter.size()).toBe(3)
   })
 })
