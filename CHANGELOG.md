@@ -12,3 +12,13 @@ uses [Semantic Versioning](https://semver.org/).
 - `netlify.toml` for the fotobogen.com placeholder page, which now lives in `site/`.
 - MIT licence.
 - `.nvmrc` pinning Node 24.
+- Data directory (`DATA_DIR`, default `./data`) created at boot with the SQLite database (WAL mode), session secret, and automatic migrations.
+- Complete v1 database schema.
+- `/api/health` reporting version, database status, and queue depth.
+- One-time setup token, printed at every boot until setup is complete.
+- Six-step setup wizard: dark, Swiss in style, keyboard-operable, checked against WCAG 2.2 AA.
+- Admin login and logout with sealed-cookie sessions, a server-side guard on `/admin` and `/api/admin/*`, an Origin check on every changing request, and a limit of 5 failed attempts per 15 minutes per address.
+- `pnpm fotobogen reset-admin` to set a new admin password from the server and sign out every session.
+- Placeholder admin dashboard and public page.
+- Docker image, quick-start compose file with Caddy, compose file and nginx snippet for Laravel Forge, pm2 process file, and rebuild script.
+- GitHub Actions: tests on every pull request, and image publishing to GHCR on version tags.

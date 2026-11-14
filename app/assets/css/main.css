@@ -62,6 +62,7 @@ h1:focus { outline: none; } /* focused by script on step change, not by the user
 
 .fb-h1 {
   margin: 0;
+  color: var(--fb-text);
   font-size: clamp(2rem, 1.2rem + 2.6vw, 3.25rem);
   font-weight: 700;
   line-height: 1.04;

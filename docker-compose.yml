@@ -1,0 +1,44 @@
+# Quick start: Fotobogen behind Caddy, for a server with nothing on it but Docker.
+#
+#   mkdir -p data                 # so the data directory belongs to you, not root
+#   cp .env.example .env          # then set DOMAIN (leave it unset to try it on localhost)
+#   docker compose up -d
+#   docker compose logs app       # shows the setup token
+#
+# Update with: docker compose pull && docker compose up -d
+
+services:
+  app:
+    image: ghcr.io/cschweda/fotobogen:latest
+    # build: .                    # uncomment to build the image locally instead
+    restart: unless-stopped
+    user: "${PUID:-1000}:${PGID:-1000}"
+    environment:
+      TRUST_PROXY: "1"            # Caddy is the only thing that talks to the app
+    volumes:
+      - ./data:/data
+    expose:
+      - "3000"
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on:
+      - app
+    environment:
+      # With DOMAIN set, Caddy obtains a certificate and serves HTTPS.
+      # Without it, the site is plain HTTP on localhost.
+      SITE_ADDRESS: "${DOMAIN:-http://localhost}"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./data/derivatives:/srv/derivatives:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:

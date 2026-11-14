@@ -1,0 +1,35 @@
+# Caddy for the quick-start compose file. SITE_ADDRESS is a domain name
+# (HTTPS, certificate obtained automatically) or http://localhost.
+
+{$SITE_ADDRESS} {
+	encode zstd gzip
+
+	# Resized photos are served straight from disk. Their file names contain
+	# a content hash, so they can be cached forever. A file that is not on
+	# disk falls through to the app.
+	handle_path /media/* {
+		root * /srv/derivatives
+		@exists file
+		handle @exists {
+			header Cache-Control "public, max-age=31536000, immutable"
+			file_server
+		}
+		handle {
+			rewrite * /media{uri}
+			reverse_proxy app:3000
+		}
+	}
+
+	handle {
+		# Matches the app's upload limit (DESIGN.md section 6).
+		request_body {
+			max_size 50MB
+		}
+		reverse_proxy app:3000
+	}
+
+	@https protocol https
+	header @https Strict-Transport-Security "max-age=31536000"
+	header X-Content-Type-Options nosniff
+	header -Server
+}

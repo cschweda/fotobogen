@@ -1,0 +1,16 @@
+node_modules
+.nuxt
+.output
+.git
+.github
+.superpowers
+.vscode
+data
+.env
+.env.*
+docs
+site
+tests
+test-results
+playwright-report
+*.log
