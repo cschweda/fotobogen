@@ -1,0 +1,15 @@
+{
+    "name": "fotobogen",
+    "version": "0.0.1",
+    "description": "A self-hosted publishing platform for photographs. In development.",
+    "homepage": "https://fotobogen.com",
+    "author": "Christopher Schweda",
+    "license": "MIT",
+    "keywords": [
+        "photos",
+        "photography",
+        "gallery",
+        "self-hosted",
+        "cms"
+    ]
+}
