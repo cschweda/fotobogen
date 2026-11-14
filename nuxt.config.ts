@@ -9,6 +9,18 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
   devtools: { enabled: false },
 
+  app: {
+    head: {
+      htmlAttrs: { lang: 'en', class: 'dark' },
+      meta: [
+        { name: 'color-scheme', content: 'dark' },
+        { name: 'theme-color', content: '#0a0a0b' },
+        { name: 'robots', content: 'noindex' },
+      ],
+      link: [{ rel: 'icon', href: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230a0a0b'/%3E%3Crect x='6' y='9' width='20' height='14' fill='%23e30613'/%3E%3C/svg%3E" }],
+    },
+  },
+
   runtimeConfig: {
     appVersion: pkg.version,
   },
@@ -23,7 +35,8 @@ export default defineNuxtConfig({
   },
 
   // No third-party origins at run time: system fonts, icons bundled locally.
-  ui: { fonts: false },
+  // The whole product is dark (DESIGN.md section 11), so color mode is fixed.
+  ui: { fonts: false, colorMode: false },
   icon: {
     provider: 'none',
     serverBundle: { collections: ['lucide'] },
