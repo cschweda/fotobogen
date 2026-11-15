@@ -2,6 +2,8 @@
 
 A skin changes how the public site looks. It is a stylesheet and a short description file; it does not change the pages' markup, so switching skins needs no rebuild. The skin that comes with Fotobogen, [`skins/swiss`](../skins/swiss/skin.css), is the worked example.
 
+> **New to this?** The step-by-step guide is at [fotobogen.com/docs/writing-a-skin](https://fotobogen.com/docs/writing-a-skin/). This file is the reference.
+
 ## Contents
 
 - [The skins that come with Fotobogen](#the-skins-that-come-with-fotobogen)
@@ -253,7 +255,10 @@ These class names are stable. A skin may rely on them.
     <!-- A photo, on its own page or inside the modal -->
     <p class="fb-photo__back"><a>All photos</a></p>
     <article class="fb-photo">
-      <figure class="fb-photo__figure"><img class="fb-photo__image"></figure>
+      <figure class="fb-photo__figure">   <!-- gains fb-photo__figure--expanded in full screen -->
+        <img class="fb-photo__image">
+        <button class="fb-photo__expand">Full screen</button>
+      </figure>
       <div class="fb-photo__text">
         <h1 class="fb-photo__title">Title</h1>
         <p class="fb-photo__description">Description</p>

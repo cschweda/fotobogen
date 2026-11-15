@@ -108,9 +108,25 @@
 .fb-pager__more:hover { border-color: var(--fb-text); color: var(--fb-text); }
 
 /* A photo on its own page: the picture, with its words in a column beside or under it, never over it. */
-.fb-photo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(14rem, 20rem); gap: clamp(1.5rem, 4vw, 3rem); align-items: start; }
-.fb-photo__figure { margin: 0; }
+.fb-photo { display: grid; grid-template-columns: minmax(0, max-content) minmax(14rem, 20rem); gap: clamp(1.5rem, 4vw, 3rem); align-items: start; }
+/* The first column is as wide as the picture and no wider, so the words sit beside an upright photo, not across the page from it. */
+.fb-photo__figure { position: relative; margin: 0; min-width: 0; }
 .fb-photo__image { display: block; max-width: 100%; max-height: 86vh; width: auto; height: auto; background-size: cover; }
+.fb-photo__image--expandable { cursor: zoom-in; }
+/* The button that shows the photo full screen: over a corner of the photo, appearing
+   on hover. It is always there for the keyboard, and always shown where there is no
+   hover (a touch screen). Dark with light text whatever the mode, so it reads on any photo. */
+.fb-photo__expand {
+  position: absolute; top: 0.75rem; right: 0.75rem; min-height: 2.5rem; padding: 0 0.9rem;
+  border: 1px solid #f5f5f2; background: rgb(0 0 0 / 0.78); color: #f5f5f2; font: inherit; font-size: 0.875rem; cursor: pointer;
+  opacity: 0; transition: opacity 0.15s;
+}
+.fb-photo__figure:hover .fb-photo__expand, .fb-photo__expand:focus-visible, .fb-photo__figure--expanded .fb-photo__expand { opacity: 1; }
+.fb-photo__expand:focus-visible { outline: 2px solid #f5f5f2; outline-offset: 3px; }
+@media (hover: none) { .fb-photo__expand { opacity: 1; } }
+/* Full screen: the photograph alone on black, as large as the screen allows. */
+.fb-photo__figure--expanded { display: flex; align-items: center; justify-content: center; width: 100vw; height: 100vh; background: #000; }
+.fb-photo__figure--expanded .fb-photo__image { max-width: 100vw; max-height: 100vh; cursor: zoom-out; }
 .fb-photo__title { margin: 0 0 0.75rem; font-size: 1.5rem; font-weight: 700; line-height: 1.15; letter-spacing: -0.02em; }
 .fb-photo__description { margin: 0 0 1.25rem; color: var(--fb-muted); white-space: pre-line; }
 .fb-photo__facts { margin: 0; border-top: 1px solid var(--fb-line); font-size: 0.875rem; }
@@ -133,6 +149,7 @@
 .fb-modal__close:hover { border-color: var(--fb-text); }
 .fb-modal .fb-photo { clear: both; }
 .fb-modal .fb-photo__image { max-height: 76vh; }
+.fb-modal .fb-photo__figure--expanded .fb-photo__image { max-height: 100vh; }
 
 /*
   The slideshow fills the screen. Two images are stacked and cross-faded;

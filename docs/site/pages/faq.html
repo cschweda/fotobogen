@@ -128,6 +128,9 @@ docker compose exec app node scripts/fotobogen.mjs reset-admin    # with Docker<
 <h3>Does it send my photographs or any information anywhere?</h3>
 <p>No. It makes three kinds of outside request, each only if you ask: downloading the sample photos, asking GitHub whether a newer version exists, and sending webhooks to addresses you enter. None of them carries your photographs or anything about your visitors.</p>
 
+<h3>Can I show my photos on another website? Do I need to set up CORS?</h3>
+<p>Yes, and no. Each photo's page in the admin has a <strong>Links</strong> panel with the address of every size of the picture and a line of HTML to paste. Showing a picture from another site never needs CORS, and for the stricter case of a script on another site reading the picture, Fotobogen already sends <code>Access-Control-Allow-Origin: *</code> with photos and with its public API. Set your site's address first (<strong>Search and sharing</strong>, or <code>SITE_URL</code>), so the links do not begin with <code>localhost</code>.</p>
+
 <h3>Does it track visitors or set cookies?</h3>
 <p>It has no analytics and loads nothing from any other site. A visitor gets one cookie, and only if they press the light and dark switch: the word <code>light</code> or <code>dark</code>. The admin's login is a second cookie, for you alone.</p>
 
