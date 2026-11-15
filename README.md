@@ -42,6 +42,7 @@ plan is in [docs/DESIGN.md](docs/DESIGN.md); changes are recorded in
 - [Without Docker (pm2)](#without-docker-pm2)
 - [Backup and restore](#backup-and-restore)
 - [Updates](#updates)
+- [For developers](#for-developers)
 - [Resetting the admin password](#resetting-the-admin-password)
 - [The data directory](#the-data-directory)
 - [Settings](#settings)
@@ -556,6 +557,21 @@ To update a source install: `scripts/rebuild.sh`, or `git pull`, `pnpm
 install`, `pnpm build`, and restart. Download a backup first. Database
 changes are applied automatically when the new version starts.
 
+## For developers
+
+| | |
+|---|---|
+| [docs/API.md](docs/API.md) | The read-only JSON API every site answers, readable from other sites |
+| [docs/WEBHOOKS.md](docs/WEBHOOKS.md) | Signed messages sent when a photo is uploaded, goes live, or is deleted |
+| [docs/MODULES.md](docs/MODULES.md) | Writing a module: a transform with declared parameters |
+| [docs/SKINS.md](docs/SKINS.md) | Writing a skin: a stylesheet for the public pages' fixed markup |
+| [docs/UPGRADING.md](docs/UPGRADING.md) | What a version number promises, and the migration policy |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | What is built and what is next |
+| [docs/DESIGN.md](docs/DESIGN.md) | The design document and the decisions made along the way |
+
+Webhooks are added under **Admin, Webhooks**. They can only call addresses on
+the public internet unless `WEBHOOKS_ALLOW_PRIVATE=1` is set.
+
 ## Resetting the admin password
 
 There is no password reset by email. On the server:
@@ -610,6 +626,7 @@ read by `docker compose`.
 | `MAX_UPLOAD_MB` | `50` | Largest upload, in megabytes. If you raise it, raise the proxy's limit too (`max_size` in `deploy/Caddyfile`, `client_max_body_size` in nginx) |
 | `MAX_MEGAPIXELS` | `100` | Largest image, in megapixels (width times height) |
 | `FOTOBOGEN_SKIP_PREFLIGHT` | off | Set to `1` to start even when the preflight check fails. At your own risk |
+| `WEBHOOKS_ALLOW_PRIVATE` | off | Set to `1` to let webhooks call this machine or a private network |
 | `TRUST_PROXY` | off | Set to `1` only when the app is reachable solely through your own reverse proxy. It makes the login limit use the visitor's address from `X-Forwarded-For`. The shipped Docker and pm2 files set it |
 
 Login cookies are marked `Secure`, so logging in works over HTTPS, and over

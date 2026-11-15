@@ -68,6 +68,7 @@ uses [Semantic Versioning](https://semver.org/).
 - fotobogen.com shows the gallery, a photo page, film looks, and the library, and sends named events to Plausible for use as goals.
 - A documented public API (`docs/API.md`): read-only JSON for photos, albums, tags, and the slideshow, readable from other sites, with a version header.
 - `docs/UPGRADING.md`: how to upgrade, what a version number promises, and how to go back.
+- Webhooks: signed JSON messages when a photo is uploaded, goes live (including on a schedule), or is deleted; managed under **Admin, Webhooks**, with retries and a test button. Private-network addresses are refused unless `WEBHOOKS_ALLOW_PRIVATE=1`.
 - Windows: CI installs, builds, and tests on Windows, including a PowerShell smoke test (`scripts/smoke-test.ps1`).
 
 ### Changed
