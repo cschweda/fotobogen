@@ -73,7 +73,7 @@ test('several photos can be hidden, shown, and deleted, with a confirmation befo
   await page.getByRole('button', { name: 'Delete' }).click()
   await expect(page.getByText('Delete 1 photo for good, including the files you uploaded?')).toBeVisible()
   await page.getByRole('button', { name: 'Cancel' }).click()
-  expect(await names(page)).toHaveLength(3)
+  await expect.poll(async () => (await names(page)).length).toBe(3)
   await page.getByRole('button', { name: 'Delete' }).click()
   await page.getByRole('button', { name: 'Yes, delete' }).click()
   await expect.poll(() => names(page)).toEqual(['apple.jpg', 'birch.jpg'])
@@ -127,7 +127,7 @@ test('a photo can be deleted from its own page, after confirming', async ({ page
   await page.getByRole('button', { name: 'Delete photo' }).click()
   await page.getByRole('button', { name: 'Yes, delete' }).click()
   await expect(page).toHaveURL(server.url + '/admin/photos')
-  expect(await names(page)).toEqual(['Apple orchard'])
+  await expect.poll(() => names(page)).toEqual(['Apple orchard'])
 })
 
 test('settings change the site title and how photos are shown', async ({ page }) => {
