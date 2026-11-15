@@ -64,10 +64,15 @@ export function effectiveRecipe(ctx: PipelineContext, own: string | null): Recip
 
 function queueRerender(ctx: PipelineContext, where: string, ...values: unknown[]): number {
   const { sqlite } = ctx
-  const ids = (sqlite.prepare(`select id from photos where status in ('ready', 'failed') and ${where}`).all(...values) as { id: string }[]).map(row => row.id)
+  // Photos still being made are included: one that is half-way through was
+  // started with the old recipe, so it needs another pass afterwards.
+  const ids = (sqlite.prepare(`select id from photos where status in ('ready', 'failed', 'processing') and ${where}`).all(...values) as { id: string }[]).map(row => row.id)
+  const waiting = sqlite.prepare(`select 1 from jobs where photo_id = ? and status = 'queued'`)
   const now = Date.now()
   for (const id of ids) {
     sqlite.prepare(`update photos set status = 'processing', updated_at = ? where id = ?`).run(now, id)
+    // A job that has not started yet will read the new recipe when it does.
+    if (waiting.get(id)) continue
     sqlite.prepare(`insert into jobs (id, type, photo_id, status, attempts, created_at) values (?, 'rerender', ?, 'queued', 0, ?)`).run(newId(), id, now)
   }
   return ids.length
@@ -126,6 +131,8 @@ export function setRecipe(ctx: PipelineContext, photoId: string, recipe: unknown
 export interface ProcessOptions {
   /** False when re-rendering, so details the admin has edited are kept. */
   readMetadata?: boolean
+  /** The queue's answer to: is another job for this photo waiting? If so the photo is not marked ready yet. */
+  anotherPassWaiting?: () => boolean
 }
 
 export async function processPhoto(ctx: PipelineContext, photoId: string, options: ProcessOptions = {}): Promise<void> {
@@ -200,8 +207,9 @@ export async function processPhoto(ctx: PipelineContext, photoId: string, option
         `).run(columns.camera, columns.lens, columns.focalLength, columns.aperture, columns.shutter, columns.iso,
           columns.takenAt, columns.lat, columns.lng, stored ? JSON.stringify(stored) : null, photo.id)
       }
-      sqlite.prepare(`update photos set thumbhash = ?, status = 'ready', updated_at = ? where id = ?`)
-        .run(thumbhash, Date.now(), photo.id)
+      // Still "processing" if another pass is waiting, so nothing shows a look that is about to be replaced.
+      sqlite.prepare(`update photos set thumbhash = ?, status = ?, updated_at = ? where id = ?`)
+        .run(thumbhash, options.anotherPassWaiting?.() ? 'processing' : 'ready', Date.now(), photo.id)
     })()
 
     for (const path of stale) await storage.delete('derivatives', path)
