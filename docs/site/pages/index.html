@@ -1,0 +1,41 @@
+<!-- {"title": "Documentation", "description": "How to install Fotobogen on a Mac, a Windows PC, or a Linux server, how to use it, how to change its look with skins and modules, and answers to common questions."} -->
+<h1>Documentation</h1>
+<p class="lead">Fotobogen is software you install on a computer of your own to publish your photographs at your own address. These pages cover installing it, using it, and changing how it looks.</p>
+
+<ul class="cards">
+  <li><a href="/docs/installation/">Installation</a><p>On a Mac, a Windows PC, or a Linux server, with Docker or without. What size of server to rent.</p></li>
+  <li><a href="/docs/usage/">Using Fotobogen</a><p>The first run, uploading, the library, albums and tags, publishing, the slideshow, and settings.</p></li>
+  <li><a href="/docs/skins/">Skins</a><p>The four looks that come with it, each in light and dark, and how to make your own.</p></li>
+  <li><a href="/docs/modules/">Modules</a><p>Film looks, a film frame, a watermark, and sharpening. How to write a module.</p></li>
+  <li><a href="/docs/faq/">Questions</a><p>Backups, restoring, starting over, a forgotten password, and what Fotobogen does and does not do.</p></li>
+</ul>
+
+<h2 id="how-it-runs">How it runs</h2>
+<p>Fotobogen is a server application, like WordPress. It runs on one machine and you use it from any web browser. That machine can be a small rented Linux server, which is how a public site is run, or your own Mac or PC, which is the quickest way to try it.</p>
+<ul>
+  <li>The machine needs <strong>either Node.js 24 or Docker</strong>. Nothing is compiled during installation.</li>
+  <li>Everything a site owns is kept in <strong>one folder</strong>, called <code>data</code>: the database, your photographs as you uploaded them, and the resized copies.</li>
+  <li>There is <strong>one admin account</strong>, created in a short setup wizard the first time you open the site.</li>
+  <li>It makes <strong>no outside requests</strong> unless you ask: downloading sample photos, checking for a new version, and sending webhooks are each switched on by you.</li>
+</ul>
+
+<h2 id="state">Where it stands</h2>
+<p>Fotobogen is in development and has not had a numbered release. It is tested on every change on Linux (Ubuntu) and on Windows, and is developed on macOS. Two things follow from having no release yet:</p>
+<ul>
+  <li>No Docker image has been published, so a Docker install builds the image on your machine. The <a href="/docs/installation/">installation page</a> says how.</li>
+  <li>Upgrading between unreleased versions is supported (the database updates itself), but take a backup first.</li>
+</ul>
+<div class="note">
+  <p><strong>Your photographs are your responsibility.</strong> Fotobogen is free software provided as it is, with no warranty. If the server is lost and you have no backup, the photographs on it are gone. <a href="/docs/faq/#backups">How to back up.</a></p>
+</div>
+
+<h2 id="more">For developers</h2>
+<p>The reference documents live with the source code:</p>
+<ul>
+  <li><a href="https://github.com/cschweda/fotobogen/blob/main/docs/SKINS.md">Writing and installing a skin</a></li>
+  <li><a href="https://github.com/cschweda/fotobogen/blob/main/docs/MODULES.md">Writing and installing a module</a></li>
+  <li><a href="https://github.com/cschweda/fotobogen/blob/main/docs/API.md">The public JSON API</a></li>
+  <li><a href="https://github.com/cschweda/fotobogen/blob/main/docs/WEBHOOKS.md">Webhooks</a></li>
+  <li><a href="https://github.com/cschweda/fotobogen/blob/main/docs/UPGRADING.md">Upgrading, and what a version number promises</a></li>
+  <li><a href="https://github.com/cschweda/fotobogen/blob/main/docs/DESIGN.md">The design document</a></li>
+</ul>

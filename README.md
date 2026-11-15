@@ -474,7 +474,7 @@ domain automatically.
 git clone https://github.com/cschweda/fotobogen.git
 cd fotobogen
 mkdir -p data                # so the data directory belongs to you, not root
-cp .env.example .env         # set DOMAIN; leave it unset to try it on http://localhost
+cp .env.sample .env         # set DOMAIN; leave it unset to try it on http://localhost
 docker compose up -d
 docker compose logs app      # shows the setup token
 ```
@@ -649,14 +649,29 @@ Netlify, and each one costs build credits.
 
 ## The fotobogen.com placeholder page
 
-`site/` holds the single page shown at fotobogen.com: a visual guide to the
-software, with screens from the current build. It reports a few named
-events to Plausible (`GitHub click`, `Author click`, `Theme switch`,
-`Section viewed`, `Screenshot viewed`); add those names as goals in
-Plausible to see them counted. `netlify.toml` tells Netlify
-to publish only that folder. The application itself needs a persistent disk
-and never runs on Netlify. The social card is built from
-`docs/og/og.html` with `node docs/og/render.mjs`.
+`site/` holds what is shown at fotobogen.com: a front page that is a visual
+guide to the software, and the documentation at
+[fotobogen.com/docs](https://fotobogen.com/docs/) (installation, using it,
+skins, modules, and questions).
+
+The documentation's source is `docs/site/`: one HTML file per page in
+`docs/site/pages/`, a stylesheet, and a small script. Netlify publishes
+`site/` as it is, with no build step, so after changing a page run
+
+```bash
+node docs/site/build.mjs
+```
+
+and commit what it writes to `site/docs/`. A test fails if the built pages
+are out of date, link to something that does not exist, or lose their
+structure.
+
+The pages report a few named events to Plausible (`GitHub click`,
+`Author click`, `Docs click`, `Theme switch`, `Section viewed`,
+`Screenshot viewed`); add those names as goals in Plausible to see them
+counted. `netlify.toml` tells Netlify to publish only that folder. The
+application itself needs a persistent disk and never runs on Netlify. The
+social card is built from `docs/og/og.html` with `node docs/og/render.mjs`.
 
 ## Licence
 

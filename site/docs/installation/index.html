@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Installation | Fotobogen documentation</title>
+<meta name="description" content="Install Fotobogen on macOS, Windows, or Linux, with Node or with Docker, on a fresh VPS or one set up by Laravel Forge. Minimum and recommended server sizes.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f5f5f2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0a0a0b" media="(prefers-color-scheme: dark)">
+<link rel="canonical" href="https://fotobogen.com/docs/installation/">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://fotobogen.com/docs/installation/">
+<meta property="og:title" content="Installation | Fotobogen documentation">
+<meta property="og:description" content="Install Fotobogen on macOS, Windows, or Linux, with Node or with Docker, on a fresh VPS or one set up by Laravel Forge. Minimum and recommended server sizes.">
+<meta property="og:image" content="https://fotobogen.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Fotobogen wordmark beside a contact sheet of sixteen numbered frames, one of them red. Above the wordmark: German for photo sheet, as in a contact sheet.">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230a0a0b'/%3E%3Crect x='6' y='9' width='20' height='14' fill='%23e30613'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/docs/docs.css">
+<script src="/docs/docs.js" defer></script>
+<!-- Privacy-friendly analytics by Plausible -->
+<script async src="https://plausible.io/js/pa-UXO2Zaq02zXvfaEecXWvD.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header>
+  <div class="wrap bar">
+    <a class="bar__name" href="/">Fotobogen<span>Documentation</span></a>
+    <div class="bar__links">
+      <a href="https://github.com/cschweda/fotobogen" data-goal="GitHub click" data-where="docs">Source on GitHub</a>
+      <button class="toggle" type="button" id="theme">Dark</button>
+    </div>
+  </div>
+</header>
+<div class="wrap layout">
+  <nav class="pages" aria-label="Documentation">
+    <ul class="pages__all">
+      <li><a href="/docs/">Overview</a></li>
+      <li><a href="/docs/installation/" aria-current="page">Installation</a></li>
+      <li><a href="/docs/usage/">Using Fotobogen</a></li>
+      <li><a href="/docs/skins/">Skins</a></li>
+      <li><a href="/docs/modules/">Modules</a></li>
+      <li><a href="/docs/faq/">Questions</a></li>
+    </ul>
+    <div class="pages__here">
+      <h2>On this page</h2>
+      <ul>
+        <li><a href="#choose">Which way to install</a></li>
+        <li><a href="#requirements">What the machine needs</a></li>
+        <li><a href="#macos">macOS</a></li>
+        <li><a href="#windows">Windows</a></li>
+        <li><a href="#docker-vps">Docker on a fresh VPS</a></li>
+        <li><a href="#docker-forge">Docker on a Laravel Forge server</a></li>
+        <li><a href="#linux">Linux without Docker</a></li>
+        <li><a href="#docker-local">Docker on your own computer</a></li>
+        <li><a href="#first-run">The first run</a></li>
+        <li><a href="#settings">Settings on the server</a></li>
+        <li><a href="#monitoring">Watching that it is up</a></li>
+        <li><a href="#updating">Updating</a></li>
+      </ul>
+    </div>
+  </nav>
+  <main id="main" class="doc">
+<h1>Installation</h1>
+<p class="lead">Pick the section that matches your machine. Each one ends at the same place: a web address and a setup token, which the <a href="#first-run">first run</a> section takes from there.</p>
+
+<h2 id="choose">Which way to install</h2>
+<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
+  <thead><tr><th>You have</th><th>Use</th><th>Result</th></tr></thead>
+  <tbody>
+    <tr><td>A Mac, to try it or to run it at home</td><td><a href="#macos">macOS</a></td><td><code>http://localhost:5150</code></td></tr>
+    <tr><td>A Windows PC</td><td><a href="#windows">Windows</a></td><td><code>http://localhost:5150</code></td></tr>
+    <tr><td>A new rented server (VPS) with nothing on it</td><td><a href="#docker-vps">Docker on a fresh VPS</a></td><td>A public site with HTTPS</td></tr>
+    <tr><td>A server set up by Laravel Forge</td><td><a href="#docker-forge">Docker on a Forge server</a></td><td>A public site behind Forge's nginx</td></tr>
+    <tr><td>A Linux server, and you prefer no Docker</td><td><a href="#linux">Linux without Docker</a></td><td>A public site behind nginx</td></tr>
+    <tr><td>Docker on your own computer</td><td><a href="#docker-local">Docker on your own computer</a></td><td><code>http://localhost</code></td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="requirements">What the machine needs</h2>
+<p>Fotobogen checks the machine every time it starts and refuses to run on one that cannot run it properly, saying what to fix. The figures below are what that check enforces.</p>
+<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
+  <thead><tr><th></th><th>Minimum</th><th>Recommended</th></tr></thead>
+  <tbody>
+    <tr><th scope="row">Processor</th><td>1 virtual CPU, x64 or arm64</td><td>2 virtual CPUs</td></tr>
+    <tr><th scope="row">Memory</th><td>1 GB, with 2 GB of swap</td><td>2 GB or more</td></tr>
+    <tr><th scope="row">Disk</th><td>10 GB</td><td>25 GB or more, SSD, sized to your photographs</td></tr>
+    <tr><th scope="row">System</th><td colspan="2">Ubuntu or Debian (a current LTS release), macOS, or Windows</td></tr>
+    <tr><th scope="row">Software</th><td colspan="2">Node.js 24 with pnpm 10, <strong>or</strong> Docker with Compose</td></tr>
+  </tbody>
+</table></div>
+<ul>
+  <li><strong>Memory.</strong> Fotobogen will not start with less than 900 MB available to it, and warns below 2 GB when there is no swap. It resizes one photo at a time to stay small: a 40-megapixel photo was processed inside a container limited to 1 GB, using about 250 MB at its peak.</li>
+  <li><strong>Building needs more than running.</strong> Installing from source, or building the Docker image, takes more memory than the running site. On a 1 GB server add swap first (the commands are <a href="#swap">below</a>). A 2 GB server needs none.</li>
+  <li><strong>Disk.</strong> It will not start with less than 500 MB free and warns below 2 GB. Most of the space goes to your photographs as uploaded; the resized copies are smaller. A backup zip is about the size of your originals, so leave room for one.</li>
+  <li><strong>Other Linux distributions</strong> may well work but are reported as untested.</li>
+</ul>
+<div class="note">
+  <p><strong>What has and has not been tested.</strong> Every change is installed, built, and tested on Ubuntu and on Windows, and a 1 GB memory limit was tested in Docker. A real 1 GB rented server, and Docker on Windows, have not been tried yet. If you can afford it, rent the 2 GB size.</p>
+</div>
+
+<h2 id="macos">macOS</h2>
+<p>For trying Fotobogen, or running it on a Mac at home. Works on Apple silicon and Intel.</p>
+<ol>
+  <li><strong>Install Node.js 24.</strong> Download the installer from <a href="https://nodejs.org">nodejs.org</a>, or, if you use <a href="https://github.com/nvm-sh/nvm#installing-and-updating">nvm</a>, run <code>nvm install 24</code>. Check with <code>node --version</code>; it should print <code>v24</code> and some more.</li>
+  <li><strong>Install pnpm</strong>, which fetches Fotobogen's parts:
+<pre tabindex="0"><code>npm install -g pnpm@10</code></pre></li>
+  <li><strong>Get Fotobogen and build it.</strong> In Terminal:
+<pre tabindex="0"><code>git clone https://github.com/cschweda/fotobogen.git
+cd fotobogen
+pnpm install
+pnpm build
+pnpm start</code></pre>
+  If <code>git</code> is missing, macOS offers to install it the first time you type the command.</li>
+  <li><code>pnpm start</code> checks the machine, then prints the address and a setup token:
+<pre tabindex="0"><code>Fotobogen setup token: 3b213e46bd70894ad18f1357791b1f18
+Open the site in a browser and enter this token to finish setup.
+Fotobogen is running at http://localhost:5150</code></pre></li>
+</ol>
+<p>Leave that Terminal window open while you use the site; <kbd>Control</kbd> + <kbd>C</kbd> stops it, and <code>pnpm start</code> starts it again with everything as you left it. Go on to <a href="#first-run">the first run</a>.</p>
+<p>To reach it from another device on your home network, use the Mac's name or address in place of <code>localhost</code>, for example <code>http://my-mac.local:5150</code>. You can look around the public site that way, but <strong>logging in works only over HTTPS or on <code>localhost</code></strong>, so do the admin work on the Mac itself. From another computer you can borrow the Mac's <code>localhost</code> over SSH: run <code>ssh -L 5150:localhost:5150 you@my-mac.local</code> there, leave it open, and browse to <code>http://localhost:5150</code>.</p>
+
+<h2 id="windows">Windows</h2>
+<p>Windows 10 or 11. No compiler or Visual Studio is needed.</p>
+<ol>
+  <li><strong>Install Node.js 24</strong> from <a href="https://nodejs.org">nodejs.org</a>, and <strong>Git</strong> from <a href="https://git-scm.com">git-scm.com</a>.</li>
+  <li>Open <strong>PowerShell</strong> and install pnpm:
+<pre tabindex="0"><code>npm install -g pnpm@10</code></pre></li>
+  <li>Get Fotobogen and build it:
+<pre tabindex="0"><code>git clone https://github.com/cschweda/fotobogen.git
+cd fotobogen
+pnpm install
+pnpm build
+pnpm start</code></pre></li>
+  <li>It prints the address, <code>http://localhost:5150</code>, and the setup token. Go on to <a href="#first-run">the first run</a>.</li>
+</ol>
+<p>If PowerShell refuses to run <code>pnpm</code> because scripts are disabled, run <code>Set-ExecutionPolicy -Scope CurrentUser RemoteSigned</code> once and try again.</p>
+<p>One difference from macOS and Linux: Windows has no equivalent of the file permission Fotobogen uses to keep its secret key private to your user, so that file has the same permissions as the folder it is in. Keep the <code>data</code> folder somewhere only you can read.</p>
+
+<h2 id="docker-vps">Docker on a fresh VPS</h2>
+<p>For a newly rented server running Ubuntu, with nothing else on it. Fotobogen runs behind <a href="https://caddyserver.com">Caddy</a>, which gets an HTTPS certificate for your domain by itself and renews it.</p>
+<h3>Before you start</h3>
+<ul>
+  <li>A server of the <a href="#requirements">size above</a>, and a way to log in to it with SSH.</li>
+  <li>A domain name, with an <strong>A record</strong> pointing at the server's address. Set this first: Caddy cannot get a certificate until it has taken effect.</li>
+  <li>Ports <strong>80 and 443</strong> open in the server's firewall.</li>
+</ul>
+<h3>Steps</h3>
+<ol>
+  <li><strong>Install Docker</strong>, using Docker's own script, and let your user run it:
+<pre tabindex="0"><code>curl -fsSL https://get.docker.com | sudo sh
+sudo usermod -aG docker $USER</code></pre>
+  Log out and in again so the second line takes effect.</li>
+  <li id="swap"><strong>On a 1 GB server, add swap</strong> (skip this with 2 GB or more):
+<pre tabindex="0"><code>sudo fallocate -l 2G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab</code></pre></li>
+  <li><strong>Get Fotobogen:</strong>
+<pre tabindex="0"><code>git clone https://github.com/cschweda/fotobogen.git
+cd fotobogen
+mkdir -p data
+cp .env.sample .env</code></pre>
+  <code>mkdir -p data</code> matters: it makes the data folder belong to you instead of to root.</li>
+  <li><strong>Edit <code>.env</code></strong> (<code>nano .env</code>) and set your domain by removing the <code>#</code> from this line and changing the name:
+<pre tabindex="0"><code>DOMAIN=photos.example.com</code></pre>
+  If <code>id -u</code> prints something other than <code>1000</code>, also set <code>PUID</code> and <code>PGID</code> to what <code>id -u</code> and <code>id -g</code> print.</li>
+  <li><strong>Build and start.</strong> No image has been published yet, so the image is built on your server. Open <code>docker-compose.yml</code>, find the line <code># build: .</code> under <code>app:</code>, and remove the <code>#</code> and the space after it. Then:
+<pre tabindex="0"><code>docker compose up -d --build</code></pre>
+  The first build takes several minutes.</li>
+  <li><strong>Read the setup token:</strong>
+<pre tabindex="0"><code>docker compose logs app</code></pre></li>
+</ol>
+<p>Open <code>https://photos.example.com</code> (your own domain) and go on to <a href="#first-run">the first run</a>.</p>
+<p>Docker starts Fotobogen again by itself after a reboot. To update later: <code>git pull</code>, then <code>docker compose up -d --build</code>.</p>
+
+<h2 id="docker-forge">Docker on a Laravel Forge server</h2>
+<p>For a server that <a href="https://forge.laravel.com">Laravel Forge</a> set up. There, nginx already answers on ports 80 and 443 and Forge manages the certificate, so Fotobogen runs alone in Docker, listening only on the server itself, and Forge's nginx passes visitors to it.</p>
+<ol>
+  <li><strong>Install Docker on the server</strong> and let the <code>forge</code> user run it. Log in as <code>forge</code> with SSH:
+<pre tabindex="0"><code>curl -fsSL https://get.docker.com | sudo sh
+sudo usermod -aG docker forge</code></pre>
+  Log out and in again. On a 1 GB server, <a href="#swap">add swap</a> too.</li>
+  <li><strong>Create the site in Forge</strong> with your domain, and install the repository <code>cschweda/fotobogen</code> into it (branch <code>main</code>). If Forge offers to install Composer dependencies, decline; there are none.</li>
+  <li><strong>Start Fotobogen.</strong> In the site's folder (<code>/home/forge/photos.example.com</code>), open <code>docker-compose.forge.yml</code> and remove the <code>#</code> from <code># build: .</code>, as no image has been published yet. Then:
+<pre tabindex="0"><code>mkdir -p data
+PUID=$(id -u) PGID=$(id -g) docker compose -f docker-compose.forge.yml up -d --build</code></pre></li>
+  <li><strong>Point nginx at it.</strong> In Forge, open the site's nginx configuration and paste in the blocks from <a href="https://github.com/cschweda/fotobogen/blob/main/deploy/forge-nginx.conf"><code>deploy/forge-nginx.conf</code></a>, changing the two marked paths to your site's folder.</li>
+  <li><strong>Issue the certificate</strong> in Forge (Let's Encrypt).</li>
+  <li><strong>Read the setup token:</strong>
+<pre tabindex="0"><code>docker compose -f docker-compose.forge.yml logs app</code></pre></li>
+</ol>
+<p>Fotobogen listens on <code>127.0.0.1:5150</code> only. If something else on the server uses that port, set <code>PORT</code> in a <code>.env</code> file in the site's folder and use the same number in the nginx configuration.</p>
+<div class="note">
+  <p><strong>The deploy script.</strong> <a href="https://github.com/cschweda/fotobogen/blob/main/deploy/forge-deploy.sh"><code>deploy/forge-deploy.sh</code></a> is written for Forge's Deploy Script box, but it downloads a published image, and there is none yet. Until the first release, update by running the command in step 3 again after <code>git pull</code>.</p>
+</div>
+
+<h2 id="linux">Linux without Docker</h2>
+<p>For Ubuntu or Debian, running Fotobogen directly with Node.js, kept alive by <a href="https://pm2.keymetrics.io">pm2</a>, behind nginx.</p>
+<ol>
+  <li><strong>Install Node.js 24.</strong> The simplest way is <a href="https://github.com/nvm-sh/nvm#installing-and-updating">nvm</a>: install it as its page describes, then
+<pre tabindex="0"><code>nvm install 24
+npm install -g pnpm@10 pm2</code></pre></li>
+  <li>On a 1 GB server, <a href="#swap">add swap</a> before building.</li>
+  <li><strong>Get, build, and start:</strong>
+<pre tabindex="0"><code>git clone https://github.com/cschweda/fotobogen.git
+cd fotobogen
+pnpm install --frozen-lockfile
+pnpm build
+pm2 start ecosystem.config.cjs
+pm2 logs fotobogen</code></pre>
+  The last command shows the setup token.</li>
+  <li><strong>Start it at boot:</strong> run <code>pm2 save</code>, then <code>pm2 startup</code>, and run the line that prints.</li>
+  <li><strong>Put nginx in front of it</strong> with a certificate, using <a href="https://github.com/cschweda/fotobogen/blob/main/deploy/forge-nginx.conf"><code>deploy/forge-nginx.conf</code></a> as the server block. Visitors must reach the site over HTTPS, or logging in will not work.</li>
+</ol>
+<p>To update: <code>scripts/rebuild.sh</code>, which pulls the new code, builds it, and reloads.</p>
+
+<h2 id="docker-local">Docker on your own computer</h2>
+<p>If you already use Docker Desktop, OrbStack, or Colima and would rather not install Node.js:</p>
+<pre tabindex="0"><code>git clone https://github.com/cschweda/fotobogen.git
+cd fotobogen
+mkdir -p data
+cp .env.sample .env</code></pre>
+<p>Leave <code>DOMAIN</code> commented out in <code>.env</code>. In <code>docker-compose.yml</code>, remove the <code>#</code> from <code># build: .</code>, then:</p>
+<pre tabindex="0"><code>docker compose up -d --build
+docker compose logs app</code></pre>
+<p>The site is at <code>http://localhost</code>. The image has been built and run on macOS. On Windows this needs Docker Desktop or WSL and has not been tested.</p>
+
+<h2 id="first-run">The first run</h2>
+<p>However you installed it, you now have an address and a <strong>setup token</strong>: 32 letters and digits that Fotobogen printed when it started. The token proves that the person setting up the site is the person who can see the server.</p>
+<ol>
+  <li>Open the address in a browser. A six-step wizard opens.</li>
+  <li>Enter the token.</li>
+  <li>Name your site, and give it a tagline if you like.</li>
+  <li>Create the admin account: a username, and a password of at least 12 characters.</li>
+  <li>Choose the grid (photos keeping their shape, or equal squares) and whether a photo opens over the grid or on its own page. Both can be changed later.</li>
+  <li>Choose to start empty, or to download 25 sample photographs so there is something to look at. You can add or remove the samples later.</li>
+</ol>
+<p>The wizard then closes for good and you are logged in. The first page you see asks you to confirm that backups are your responsibility. After that: <a href="/docs/usage/">using Fotobogen</a>.</p>
+<p>The token is printed at every start until setup is finished, and is also in the file <code>data/setup-token</code>. If you lose it, restart Fotobogen or read that file.</p>
+
+<h2 id="settings">Settings on the server</h2>
+<p>Nothing has to be configured. To change something on one machine, copy <code>.env.sample</code> to <code>.env</code> in Fotobogen's folder and edit the copy. Docker reads the same file.</p>
+<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
+  <thead><tr><th>Setting</th><th>Default</th><th>What it does</th></tr></thead>
+  <tbody>
+    <tr><td><code>PORT</code></td><td><code>5150</code></td><td>The port. Left unset, a busy 5150 moves up to the next free port. Set, it is used exactly, and Fotobogen stops if it is taken.</td></tr>
+    <tr><td><code>DATA_DIR</code></td><td><code>./data</code></td><td>Where the site keeps everything.</td></tr>
+    <tr><td><code>DOMAIN</code></td><td>none</td><td>Docker quick start only: the domain Caddy gets a certificate for.</td></tr>
+    <tr><td><code>PUID</code>, <code>PGID</code></td><td><code>1000</code></td><td>Docker only: the user and group that own the files in <code>data</code>.</td></tr>
+    <tr><td><code>MAX_UPLOAD_MB</code></td><td><code>50</code></td><td>The largest file that can be uploaded. If you raise it, raise the limit in Caddy or nginx as well.</td></tr>
+    <tr><td><code>MAX_MEGAPIXELS</code></td><td><code>100</code></td><td>The largest image, as width times height.</td></tr>
+  </tbody>
+</table></div>
+<p>Every other value is written down, with a comment on each, in <a href="https://github.com/cschweda/fotobogen/blob/main/fotobogen.config.js"><code>fotobogen.config.js</code></a>.</p>
+<p><strong>Two copies on one machine.</strong> If Fotobogen is already running when you start it in a terminal, it asks whether to run both (the new one gets its own port), stop the running one, or cancel. Two copies never share a data folder.</p>
+
+<h2 id="monitoring">Watching that it is up</h2>
+<p>The address <code>/api/health</code> needs no login and answers <code>200</code> when the site and its database are working, and <code>503</code> when they are not. Point <a href="https://uptimerobot.com">UptimeRobot</a> or a similar monitor at <code>https://your-site.example/api/health</code>.</p>
+
+<h2 id="updating">Updating</h2>
+<p>Download a backup first (<a href="/docs/faq/#backups">how</a>). Then:</p>
+<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
+  <thead><tr><th>Installed with</th><th>Update with</th></tr></thead>
+  <tbody>
+    <tr><td>Node.js on a Mac or PC</td><td><code>git pull</code>, <code>pnpm install</code>, <code>pnpm build</code>, <code>pnpm start</code></td></tr>
+    <tr><td>Node.js and pm2</td><td><code>scripts/rebuild.sh</code></td></tr>
+    <tr><td>Docker</td><td><code>git pull</code>, then the same <code>docker compose … up -d --build</code> you installed with</td></tr>
+  </tbody>
+</table></div>
+<p>Changes to the database are applied by themselves when the new version starts. Under <strong>Admin, System</strong>, <strong>Check for updates</strong> asks GitHub whether a newer release exists; it does not check by itself unless you tick <strong>Check once a day</strong>.</p>
+    <p class="next">
+      <a href="/docs/">Back: Overview</a>
+      <a href="/docs/usage/">Next: Using Fotobogen</a>
+    </p>
+  </main>
+</div>
+<footer>
+  <div class="wrap">
+    <span>Fotobogen is free and open source, under the MIT licence.</span>
+    <span>It comes with no warranty. Keep backups of your photographs.</span>
+    <span>&copy; 2026 <a href="https://github.com/cschweda" data-goal="Author click">Christopher Schweda</a></span>
+  </div>
+</footer>
+</body>
+</html>
