@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Skins | Fotobogen documentation</title>
+<meta name="description" content="The four skins that come with Fotobogen, each with a light and a dark mode, how to switch between them, how a skin can set a look for every photo, and how to make your own.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f5f5f2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0a0a0b" media="(prefers-color-scheme: dark)">
+<link rel="canonical" href="https://fotobogen.com/docs/skins/">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://fotobogen.com/docs/skins/">
+<meta property="og:title" content="Skins | Fotobogen documentation">
+<meta property="og:description" content="The four skins that come with Fotobogen, each with a light and a dark mode, how to switch between them, how a skin can set a look for every photo, and how to make your own.">
+<meta property="og:image" content="https://fotobogen.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Fotobogen wordmark beside a contact sheet of sixteen numbered frames, one of them red. Above the wordmark: German for photo sheet, as in a contact sheet.">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230a0a0b'/%3E%3Crect x='6' y='9' width='20' height='14' fill='%23e30613'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/docs/docs.css">
+<script src="/docs/docs.js" defer></script>
+<!-- Privacy-friendly analytics by Plausible -->
+<script async src="https://plausible.io/js/pa-UXO2Zaq02zXvfaEecXWvD.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header>
+  <div class="wrap bar">
+    <a class="bar__name" href="/">Fotobogen<span>Documentation</span></a>
+    <div class="bar__links">
+      <a href="https://github.com/cschweda/fotobogen" data-goal="GitHub click" data-where="docs">Source on GitHub</a>
+      <button class="toggle" type="button" id="theme">Dark</button>
+    </div>
+  </div>
+</header>
+<div class="wrap layout">
+  <nav class="pages" aria-label="Documentation">
+    <ul class="pages__all">
+      <li><a href="/docs/">Overview</a></li>
+      <li><a href="/docs/installation/">Installation</a></li>
+      <li><a href="/docs/usage/">Using Fotobogen</a></li>
+      <li><a href="/docs/skins/" aria-current="page">Skins</a></li>
+      <li><a href="/docs/modules/">Modules</a></li>
+      <li><a href="/docs/faq/">Questions</a></li>
+    </ul>
+    <div class="pages__here">
+      <h2>On this page</h2>
+      <ul>
+        <li><a href="#choosing">Choosing a skin</a></li>
+        <li><a href="#options">Options</a></li>
+        <li><a href="#light-dark">Light and dark</a></li>
+        <li><a href="#tested">What the skins are tested for</a></li>
+        <li><a href="#looks">A skin that sets a look</a></li>
+        <li><a href="#installing">Adding a skin</a></li>
+        <li><a href="#making">Making your own</a></li>
+        <li><a href="#limits">What a skin cannot do</a></li>
+      </ul>
+    </div>
+  </nav>
+  <main id="main" class="doc">
+<h1>Skins</h1>
+<p class="lead">A skin decides how your public site looks. Four come with Fotobogen, each in light and dark. Switching takes effect at once: nothing is rebuilt and no photograph is touched.</p>
+
+<h2 id="choosing">Choosing a skin</h2>
+<p>Open <strong>Admin, Skins</strong>, pick one, and press <strong>Save</strong>. Each skin remembers its own options, so you can switch back and find them as you left them.</p>
+<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
+  <thead><tr><th>Skin</th><th>Shows first</th><th>What makes it itself</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Swiss</strong></td><td>Dark</td><td>The default. A small site name, hairline gaps between photos, one red accent. Off-white on near-black, or black on white.</td></tr>
+    <tr><td><strong>Papier</strong></td><td>Light</td><td>Warm white paper, heavy black rules, wide margins, photographs set apart like prints on a page. Dark mode is the same page reversed.</td></tr>
+    <tr><td><strong>Plakat</strong></td><td>Dark</td><td>A poster. The site's name set very large, photographs running edge to edge. White on black with a yellow bar, or black on yellow.</td></tr>
+    <tr><td><strong>Rangefinder Dreams</strong></td><td>Dark</td><td>Black and white throughout. No colour on the page, and every photograph shown in black and white, crisply sharpened.</td></tr>
+  </tbody>
+</table></div>
+
+<div class="pair">
+  <figure><img src="/screens/skin-swiss-photo.jpg" alt="The Swiss skin in dark mode: a photo page in off-white on near-black" width="1072" height="760" loading="lazy"><figcaption>Swiss, dark.</figcaption></figure>
+  <figure><img src="/screens/skin-swiss-light.jpg" alt="The Swiss skin in light mode: the same photo page in black on white" width="1072" height="760" loading="lazy"><figcaption>Swiss, light.</figcaption></figure>
+  <figure><img src="/screens/skin-papier.jpg" alt="The Papier skin in light mode: black type on warm white with a heavy rule under the site name" width="1072" height="760" loading="lazy"><figcaption>Papier, light.</figcaption></figure>
+  <figure><img src="/screens/skin-papier-dark.jpg" alt="The Papier skin in dark mode: warm white type on warm black" width="1072" height="760" loading="lazy"><figcaption>Papier, dark.</figcaption></figure>
+  <figure><img src="/screens/skin-plakat.jpg" alt="The Plakat skin in dark mode: the site name set very large in white on black above photographs" width="1072" height="760" loading="lazy"><figcaption>Plakat, dark.</figcaption></figure>
+  <figure><img src="/screens/skin-plakat-light.jpg" alt="The Plakat skin in light mode: the site name set very large in black on yellow above photographs" width="1072" height="760" loading="lazy"><figcaption>Plakat, light.</figcaption></figure>
+</div>
+
+<h2 id="options">Options</h2>
+<p>Every skin that comes with Fotobogen has the same three, on the Skins page:</p>
+<ul>
+  <li><strong>Accent colour</strong>, one for light mode and one for dark.</li>
+  <li><strong>Space between photos</strong>: none, a hairline, or wide.</li>
+  <li><strong>Columns on a wide screen</strong>, from 2 to 6. Narrow screens use fewer by themselves.</li>
+</ul>
+<p>If a colour you choose would make text hard to read, the page warns you and says by how much.</p>
+
+<h2 id="light-dark">Light and dark</h2>
+<p>Every skin has both modes. You decide which one a visitor sees first, under <strong>Light or dark</strong> on the Skins page:</p>
+<ul>
+  <li><strong>The skin's own choice</strong> (dark for Swiss, light for Papier, and so on). This is the setting to begin with.</li>
+  <li><strong>Light</strong>, or <strong>Dark</strong>, for everyone.</li>
+  <li><strong>Whatever their device is set to</strong>, so a visitor whose phone is in dark mode sees dark.</li>
+</ul>
+<p>Visitors can switch with the button at the top of your site. Their choice is remembered in a cookie named <code>fb-mode</code> that holds the single word <code>light</code> or <code>dark</code>. It is set only when they press the button, says nothing about who they are, and is not used for anything else.</p>
+
+<h2 id="tested">What the skins are tested for</h2>
+<p>Each skin is checked, in both modes, on a phone-sized screen (320 pixels wide) and a wide one, against WCAG 2.1 level AA:</p>
+<ul>
+  <li>every heading, link, and button label has a contrast of at least 4.5 to 1 with the page, measured from the colours the browser used;</li>
+  <li>nothing is cut off and the page never scrolls sideways;</li>
+  <li>everything works from the keyboard, with a visible focus ring;</li>
+  <li>an automated accessibility check (axe) finds nothing.</li>
+</ul>
+
+<h2 id="looks">A skin that sets a look</h2>
+<p>A skin can bring a look for every photograph with it. <strong>Rangefinder Dreams</strong> does: choosing it sets the Film look <a href="/docs/modules/">module</a> to black and white for the whole site.</p>
+<ol>
+  <li>When you pick such a skin, the Skins page says what its look is and shows a ticked box, <strong>Use this look for all photos</strong>. Untick it to have the skin without the look.</li>
+  <li>When you save, the copies of your photographs that visitors see are made again in the background. With a large library this takes a while; the files you uploaded are never changed.</li>
+</ol>
+<p>After that it is an ordinary look, and yours to change:</p>
+<ul>
+  <li><strong>For all photos:</strong> change it or switch it off under <strong>Admin, Modules</strong>.</li>
+  <li><strong>For one photo:</strong> open the photo in the library and choose a different look, or none.</li>
+  <li><strong>Choosing another skin</strong> takes away a look that a skin set. A look you set yourself is left alone.</li>
+</ul>
+
+<h2 id="installing">Adding a skin</h2>
+<ol>
+  <li>Copy the skin's folder into <code>data/skins/</code> on the server, so that you have <code>data/skins/&lt;name&gt;/skin.json</code> and <code>skin.css</code>.</li>
+  <li>Restart Fotobogen.</li>
+  <li>Choose it under <strong>Admin, Skins</strong>.</li>
+</ol>
+<p>A skin with a mistake in it is listed with the reason and cannot be chosen; it never breaks the site.</p>
+
+<h2 id="making">Making your own</h2>
+<p>A skin is two files. The quickest way to make one is to copy Swiss, change its colours and measures, and add a few rules of your own. Papier, Plakat, and Rangefinder Dreams were each made that way, and say so in their first lines.</p>
+<ol>
+  <li>Copy <code>skins/swiss/</code> to <code>data/skins/mine/</code>, and change <code>"name"</code> in <code>skin.json</code> to <code>mine</code>.</li>
+  <li>In <code>skin.json</code>, give the colours for both modes, and say which a visitor sees first:
+<pre tabindex="0"><code>"mode": "light",
+"modes": {
+  "light": { "ground": "#f4f1ea", "text": "#111111", "muted": "#55554f", "line": "#d6d2c8", "accent": "#d4040f" },
+  "dark":  { "ground": "#171613", "text": "#f4f1ea", "muted": "#aca89d", "line": "#37352f", "accent": "#ff5a4f" }
+},
+"contrast": [["text", "ground"], ["muted", "ground"]]</code></pre>
+  <code>ground</code> is the page, <code>text</code> the words, <code>muted</code> the quieter words, <code>line</code> the rules, and <code>accent</code> the one highlight. Both modes are required.</li>
+  <li>In <code>skin.css</code>, never write a colour for the page. Use the names instead, and both modes work:
+<pre tabindex="0"><code>.fb-public body { background: var(--fb-ground); color: var(--fb-text); }
+.fb-site-header { border-bottom: 4px solid var(--fb-text); }</code></pre></li>
+  <li>Add your own rules at the end. Plakat's headline is two lines:
+<pre tabindex="0"><code>.fb-site-title { font-size: clamp(2.75rem, 11vw, 8.5rem); line-height: 0.88; overflow-wrap: anywhere; }
+.fb-site-title::after { content: ""; display: block; width: 7rem; height: 0.7rem; background: var(--fb-accent); }</code></pre></li>
+  <li>To give it a look for every photo, add <code>look</code> to <code>skin.json</code>:
+<pre tabindex="0"><code>"look": [
+  { "module": "filmlooks", "transform": "film-look", "params": { "look": "Colour slide (Kodachrome style)" } }
+]</code></pre></li>
+  <li>Restart, choose it, and look at the grid, a photo, an album, and the slideshow, in both modes, on a phone and on a wide screen.</li>
+</ol>
+<p>The full reference, with the markup you are styling and every class name, is <a href="https://github.com/cschweda/fotobogen/blob/main/docs/SKINS.md">docs/SKINS.md</a> in the source.</p>
+
+<h2 id="limits">What a skin cannot do</h2>
+<p>A skin is a stylesheet and a list of settings. It cannot change the pages' structure, run scripts, or load anything from another site. That is deliberate: installing a skin someone else made cannot do more than change how your site looks.</p>
+    <p class="next">
+      <a href="/docs/usage/">Back: Using Fotobogen</a>
+      <a href="/docs/modules/">Next: Modules</a>
+    </p>
+  </main>
+</div>
+<footer>
+  <div class="wrap">
+    <span>Fotobogen is free and open source, under the MIT licence.</span>
+    <span>It comes with no warranty. Keep backups of your photographs.</span>
+    <span>&copy; 2026 <a href="https://github.com/cschweda" data-goal="Author click">Christopher Schweda</a></span>
+  </div>
+</footer>
+</body>
+</html>

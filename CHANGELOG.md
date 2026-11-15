@@ -76,6 +76,12 @@ uses [Semantic Versioning](https://semver.org/).
 - A documented public API (`docs/API.md`): read-only JSON for photos, albums, tags, and the slideshow, readable from other sites, with a version header.
 - `docs/UPGRADING.md`: how to upgrade, what a version number promises, and how to go back.
 - Webhooks: signed JSON messages when a photo is uploaded, goes live (including on a schedule), or is deleted; managed under **Admin, Webhooks**, with retries and a test button. Private-network addresses are refused unless `WEBHOOKS_ALLOW_PRIVATE=1`.
+- Site text: an admin page where the site's title, tagline, language, and every fixed piece of text on the public pages can be put in the owner's own words, with a line of their own for the footer. No public page says "Fotobogen"; a site with no title is called "Photographs".
+- Search and sharing: an admin page for the home page's title, the site's description, how page titles are written, the picture shown when the site is shared, whether search engines may list the site, the site's proper address, author and X username, and Google and Bing verification codes, with previews.
+- A Links panel on each photo's page in the library: the full address of the photo's page and of each size of the picture, and HTML to embed it, each with a Copy button.
+- `SITE_URL`: the site's proper address can be set on the server as well as in the admin, and is used for every full address the site writes out. The admin says when links still point at localhost and how to fix it.
+- Pages that cannot be shown (not found, or a failure) use the site's own frame, name, and words.
+- Documentation pages at fotobogen.com/docs: installation (macOS, Windows, Linux, Docker on a fresh VPS, Docker on a Laravel Forge server, with minimum and recommended server sizes), using Fotobogen, skins, modules, and questions (backups, restoring, and ways to start over). Their source is `docs/site/`.
 - Windows: CI installs, builds, and tests on Windows, including a PowerShell smoke test (`scripts/smoke-test.ps1`).
 
 ### Changed

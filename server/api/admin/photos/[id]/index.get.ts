@@ -1,4 +1,5 @@
 // One photo, for the edit screen: its details, its recipe, and its medium copy.
+import { siteOrigin } from '../../../../utils/public.ts'
 import { defineEventHandler, getRouterParam } from 'nuxt/server'
 import { siteRecipe } from '../../../../pipeline/render.ts'
 import { getPipeline } from '../../../../utils/app.ts'
@@ -24,6 +25,7 @@ export default defineEventHandler(async (event) => {
   } | undefined
   if (!photo) return fail(event, 404, 'There is no such photo.')
 
+  const origin = siteOrigin(event)
   const own = photo.recipe === null ? null : modules!.cleanRecipe(JSON.parse(photo.recipe))
   const site = siteRecipe(getPipeline())
   const recipe = own ?? site
@@ -60,5 +62,12 @@ export default defineEventHandler(async (event) => {
     // Steps whose module is switched off or missing; they are skipped when rendering.
     skipped: modules!.skipped(recipe).map(step => `${step.module}/${step.transform}`),
     medium: photo.path ? { url: storage.publicUrl(photo.path), width: photo.mediumWidth!, height: photo.mediumHeight! } : null,
+    // Full addresses, for pasting elsewhere: the photo's page, and each size of the picture.
+    links: {
+      origin,
+      page: `${origin}/photo/${encodeURIComponent(photo.slug)}`,
+      images: (sqlite.prepare(`select kind, path, width, height from derivatives where photo_id = ? order by width, kind`).all(photo.id) as { kind: string, path: string, width: number, height: number }[])
+        .map(copy => ({ kind: copy.kind, url: origin + storage.publicUrl(copy.path), width: copy.width, height: copy.height })),
+    },
   }
 })

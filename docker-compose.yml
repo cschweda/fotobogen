@@ -1,7 +1,7 @@
 # Quick start: Fotobogen behind Caddy, for a server with nothing on it but Docker.
 #
 #   mkdir -p data                 # so the data directory belongs to you, not root
-#   cp .env.example .env          # then set DOMAIN (leave it unset to try it on localhost)
+#   cp .env.sample .env           # then set DOMAIN (leave it unset to try it on localhost)
 #   docker compose up -d
 #   docker compose logs app       # shows the setup token
 #

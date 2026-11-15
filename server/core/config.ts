@@ -19,6 +19,8 @@ export interface Settings {
   host: string
   dataDir: string
   trustProxy: boolean
+  /** The site's proper address (an origin such as https://photos.example.com), or '' when none is set here. */
+  siteUrl: string
   maxUploadMb: number
   maxMegapixels: number
   /** Whether webhooks may call private and loopback addresses. */
@@ -26,6 +28,17 @@ export interface Settings {
 }
 
 /** The settings in force: environment first, then fotobogen.config.js. */
+/** An address reduced to its origin; anything that is not an http(s) address counts as not set. */
+function siteAddress(given: string): string {
+  try {
+    const url = new URL(given)
+    return url.protocol === 'https:' || url.protocol === 'http:' ? url.origin : ''
+  }
+  catch {
+    return ''
+  }
+}
+
 export function resolveSettings(env: Env): Settings {
   const port = positive(env.PORT)
   return {
@@ -34,6 +47,7 @@ export function resolveSettings(env: Env): Settings {
     host: env.HOST?.trim() || config.server.host,
     dataDir: env.DATA_DIR?.trim() || config.dataDir,
     trustProxy: env.TRUST_PROXY !== undefined ? env.TRUST_PROXY === '1' : config.server.trustProxy,
+    siteUrl: siteAddress(env.SITE_URL?.trim() || config.server.siteUrl || ''),
     maxUploadMb: positive(env.MAX_UPLOAD_MB) ?? config.uploads.maxUploadMb,
     maxMegapixels: positive(env.MAX_MEGAPIXELS) ?? config.uploads.maxMegapixels,
     webhooksAllowPrivate: env.WEBHOOKS_ALLOW_PRIVATE !== undefined ? env.WEBHOOKS_ALLOW_PRIVATE === '1' : config.webhooks.allowPrivate,

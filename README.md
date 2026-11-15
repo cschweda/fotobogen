@@ -32,6 +32,7 @@ plan is in [docs/DESIGN.md](docs/DESIGN.md); changes are recorded in
 - [Skins](#skins)
 - [Uploading photos](#uploading-photos)
 - [Managing photos](#managing-photos)
+- [Making the site your own](#making-the-site-your-own)
 - [Albums and tags](#albums-and-tags)
 - [Sample photos](#sample-photos)
 - [Modules](#modules)
@@ -362,6 +363,52 @@ recorded, the place included.
 whether photos open over the grid or on their own page, and the two privacy
 switches: camera details (on by default) and location (off by default).
 
+## Making the site your own
+
+Nothing a visitor sees has to say "Fotobogen". Three admin pages make the
+site yours:
+
+**Admin, Site text.** The site's title and tagline, the language its text is
+in, and every fixed piece of text on the public pages: the links at the top,
+the buttons, the labels beside a photo, the slideshow's controls, and the
+messages shown when a page cannot be. Each field shows the default wording;
+type your own to replace it, or leave it empty to keep the default. There is
+also a line of your own for the footer, empty to begin with (a copyright
+notice, say). Text is shown as text: markup typed into a field is not run.
+The language is a code such as `en` or `de`; it tells screen readers and
+search engines what language the words are in, and does not translate
+anything.
+
+**Admin, Search and sharing.** What search engines and social networks are
+told, with a preview of each:
+
+| Setting | Left alone |
+|---|---|
+| Title of the home page | The site's title |
+| Description of the site | The tagline |
+| How other pages' titles are written | `Photo | Site` |
+| Picture shown when the site is shared | The newest photo |
+| Let search engines list the site | Yes |
+| The site's proper address | The address each visitor used |
+| Photographer's name, X username | None |
+| Google and Bing verification codes | None |
+
+A link to one photo always shows that photo, with its own title,
+description, and alt text. Asking search engines not to list the site is a
+request the well-known ones honour; it does not make the site private.
+
+**Admin, Skins** changes how it looks ([Skins](#skins)).
+
+**Links to a photo.** The resized copies of every public photo are served
+at `/media/…` with no login, so they can be linked to from anywhere. Each
+photo's page in the library has a **Links** panel: the full address of the photo's page and of each size of the picture,
+and a line of HTML that shows the photo linked to its page, each with a Copy
+button. Together with the title, description, and alt text above it, that
+page is the photo's entry in the library. The links begin with your site's
+address; set it under **Search and sharing** or as `SITE_URL` (see
+[Settings](#settings)), or on your own machine they begin with
+`http://localhost:5150` and work only there.
+
 ## Albums and tags
 
 Two ways to group photos:
@@ -478,7 +525,7 @@ domain automatically.
 git clone https://github.com/cschweda/fotobogen.git
 cd fotobogen
 mkdir -p data                # so the data directory belongs to you, not root
-cp .env.example .env         # set DOMAIN; leave it unset to try it on http://localhost
+cp .env.sample .env         # set DOMAIN; leave it unset to try it on http://localhost
 docker compose up -d
 docker compose logs app      # shows the setup token
 ```
@@ -648,6 +695,7 @@ read by `docker compose`.
 | `DATA_DIR` | `./data` | Where the site keeps its data |
 | `PORT` | `5150` | Port the server listens on. Unset, a busy 5150 moves up to the next free port; set, it is used exactly |
 | `HOST` | all interfaces | Address the server listens on |
+| `SITE_URL` | none | The site's proper address, such as `https://photos.example.com`. Used wherever a full address is written out: a photo's links in the admin, the feed, the sitemap, and what search engines are told. Without it, the address each visitor used is given, which on your own machine is `http://localhost:5150`. It can also be set under **Admin, Search and sharing**; a value here wins |
 | `MAX_UPLOAD_MB` | `50` | Largest upload, in megabytes. If you raise it, raise the proxy's limit too (`max_size` in `deploy/Caddyfile`, `client_max_body_size` in nginx) |
 | `MAX_MEGAPIXELS` | `100` | Largest image, in megapixels (width times height) |
 | `FOTOBOGEN_SKIP_PREFLIGHT` | off | Set to `1` to start even when the preflight check fails. At your own risk |
@@ -672,14 +720,29 @@ Netlify, and each one costs build credits.
 
 ## The fotobogen.com placeholder page
 
-`site/` holds the single page shown at fotobogen.com: a visual guide to the
-software, with screens from the current build. It reports a few named
-events to Plausible (`GitHub click`, `Author click`, `Theme switch`,
-`Section viewed`, `Screenshot viewed`); add those names as goals in
-Plausible to see them counted. `netlify.toml` tells Netlify
-to publish only that folder. The application itself needs a persistent disk
-and never runs on Netlify. The social card is built from
-`docs/og/og.html` with `node docs/og/render.mjs`.
+`site/` holds what is shown at fotobogen.com: a front page that is a visual
+guide to the software, and the documentation at
+[fotobogen.com/docs](https://fotobogen.com/docs/) (installation, using it,
+skins, modules, and questions).
+
+The documentation's source is `docs/site/`: one HTML file per page in
+`docs/site/pages/`, a stylesheet, and a small script. Netlify publishes
+`site/` as it is, with no build step, so after changing a page run
+
+```bash
+node docs/site/build.mjs
+```
+
+and commit what it writes to `site/docs/`. A test fails if the built pages
+are out of date, link to something that does not exist, or lose their
+structure.
+
+The pages report a few named events to Plausible (`GitHub click`,
+`Author click`, `Docs click`, `Theme switch`, `Section viewed`,
+`Screenshot viewed`); add those names as goals in Plausible to see them
+counted. `netlify.toml` tells Netlify to publish only that folder. The
+application itself needs a persistent disk and never runs on Netlify. The
+social card is built from `docs/og/og.html` with `node docs/og/render.mjs`.
 
 ## Licence
 

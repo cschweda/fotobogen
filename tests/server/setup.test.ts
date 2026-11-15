@@ -217,6 +217,9 @@ describe('GET /api/site', () => {
       expect(response.status).toBe(200)
       expect(await response.json()).toEqual({
         title: 'Test Photos', tagline: 'Pictures of things', grid: 'masonry', photoView: 'modal', skinVersion: expect.stringMatching(/^[0-9a-f]{10}$/), mode: 'dark', hasAlbums: false,
+        // The site's words and search settings, all at their defaults on a new site.
+        language: 'en', text: {},
+        seo: { homeTitle: '', titlePattern: '{page} | {site}', description: '', indexing: true, siteUrl: '', author: '', twitter: '', googleVerification: '', bingVerification: '', card: null },
       })
     }
     finally { await server.stop() }

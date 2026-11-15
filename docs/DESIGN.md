@@ -109,7 +109,7 @@ IDs are random URL-safe strings (nanoid, 12 chars), not autoincrement integers, 
 
 `session_version` is copied into the session at login and compared on every guarded request. Changing the password increments it, which signs out every existing session. Sealed cookies cannot otherwise be revoked.
 
-**settings** — `key` (PK), `value` (JSON). Keys include `site.title`, `site.tagline`, `site.setup_complete`, `samples.requested` (the wizard's step 5 answer), `layout.grid` (`masonry` | `square`), `layout.photo_view` (`modal` | `page`), `skin.active`, `skin.options`, `skin.mode` (`skin` | `light` | `dark` | `auto`: the mode visitors see first), `privacy.show_exif`, `privacy.show_location` (default false), `privacy.allow_original_download` (default false).
+**settings** — `key` (PK), `value` (JSON). Keys include `site.title`, `site.tagline`, `site.setup_complete`, `samples.requested` (the wizard's step 5 answer), `layout.grid` (`masonry` | `square`), `layout.photo_view` (`modal` | `page`), `site.language` (a language code), `site.text` (the owner's replacements for the public pages' fixed text; see `shared/site-text.ts`), `seo.settings` (see `shared/seo.ts`), `skin.active`, `skin.options`, `skin.mode` (`skin` | `light` | `dark` | `auto`: the mode visitors see first), `privacy.show_exif`, `privacy.show_location` (default false), `privacy.allow_original_download` (default false).
 
 **photos**
 

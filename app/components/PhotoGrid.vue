@@ -14,6 +14,7 @@ interface Page { page: number, pages: number, total: number, tiles: Tile[] }
 const route = useRoute()
 const firstPage = Math.max(1, Math.floor(Number(route.query.page)) || 1)
 const { data: site } = await useFetch('/api/site', { key: 'site' })
+const { t } = useSiteText()
 const { data: first, error } = await useFetch<Page>(props.source, { query: { page: firstPage } })
 if (error.value) throw createError({ status: 404, statusText: 'Not found', fatal: true })
 
@@ -108,14 +109,14 @@ onBeforeUnmount(() => window.removeEventListener('popstate', onPopState))
 
 <template>
   <div>
-    <p v-if="tiles.length === 0" class="fb-empty">No photographs have been published yet.</p>
+    <p v-if="tiles.length === 0" class="fb-empty">{{ t('gridEmpty') }}</p>
     <div v-else class="fb-grid-wrap">
       <ul class="fb-grid" :class="square ? 'fb-grid--square' : 'fb-grid--masonry'">
         <li
           v-for="(tile, index) in tiles" :key="tile.slug" class="fb-tile"
           :style="{ '--fb-span': tile.span, 'backgroundImage': tile.placeholder ? `url(${tile.placeholder})` : undefined }"
         >
-          <a class="fb-tile__link" :href="`/photo/${tile.slug}`" :aria-label="tile.alt ? undefined : (tile.title ?? 'Untitled photo')" @click="openPhoto(tile, $event)">
+          <a class="fb-tile__link" :href="`/photo/${tile.slug}`" :aria-label="tile.alt ? undefined : (tile.title ?? t('untitledPhoto'))" @click="openPhoto(tile, $event)">
             <img
               class="fb-tile__image"
               :src="square ? tile.square.url : tile.thumb.url"
@@ -129,13 +130,13 @@ onBeforeUnmount(() => window.removeEventListener('popstate', onPopState))
     </div>
 
     <p class="fb-visually-hidden" role="status">{{ announcement }}</p>
-    <nav v-if="page < pages || firstPage > 1" class="fb-pager" aria-label="More photos">
-      <a v-if="firstPage > 1" class="fb-pager__more" :href="firstPage === 2 ? base : `${base}?page=${firstPage - 1}`">Previous page</a>
-      <a v-if="page < pages" class="fb-pager__more" :href="`${base}?page=${page + 1}`" @click="more">More photos</a>
+    <nav v-if="page < pages || firstPage > 1" class="fb-pager" :aria-label="t('gridMore')">
+      <a v-if="firstPage > 1" class="fb-pager__more" :href="firstPage === 2 ? base : `${base}?page=${firstPage - 1}`">{{ t('gridPrevious') }}</a>
+      <a v-if="page < pages" class="fb-pager__more" :href="`${base}?page=${page + 1}`" @click="more">{{ t('gridMore') }}</a>
     </nav>
 
-    <dialog ref="dialog" class="fb-modal" aria-label="Photo" @close="closed" @keydown="onKey">
-      <button type="button" class="fb-modal__close" @click="dialog?.close()">Close</button>
+    <dialog ref="dialog" class="fb-modal" :aria-label="t('photoDialog')" @close="closed" @keydown="onKey">
+      <button type="button" class="fb-modal__close" @click="dialog?.close()">{{ t('close') }}</button>
       <PhotoView v-if="open" :photo="open" heading-level="h2" @go="go" />
     </dialog>
   </div>

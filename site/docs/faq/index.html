@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Questions | Fotobogen documentation</title>
+<meta name="description" content="Backing up and restoring a Fotobogen site, starting over with a fresh installation, a forgotten password or setup token, moving to another server, and what Fotobogen does and does not do.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f5f5f2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0a0a0b" media="(prefers-color-scheme: dark)">
+<link rel="canonical" href="https://fotobogen.com/docs/faq/">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://fotobogen.com/docs/faq/">
+<meta property="og:title" content="Questions | Fotobogen documentation">
+<meta property="og:description" content="Backing up and restoring a Fotobogen site, starting over with a fresh installation, a forgotten password or setup token, moving to another server, and what Fotobogen does and does not do.">
+<meta property="og:image" content="https://fotobogen.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Fotobogen wordmark beside a contact sheet of sixteen numbered frames, one of them red. Above the wordmark: German for photo sheet, as in a contact sheet.">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230a0a0b'/%3E%3Crect x='6' y='9' width='20' height='14' fill='%23e30613'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/docs/docs.css">
+<script src="/docs/docs.js" defer></script>
+<!-- Privacy-friendly analytics by Plausible -->
+<script async src="https://plausible.io/js/pa-UXO2Zaq02zXvfaEecXWvD.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header>
+  <div class="wrap bar">
+    <a class="bar__name" href="/">Fotobogen<span>Documentation</span></a>
+    <div class="bar__links">
+      <a href="https://github.com/cschweda/fotobogen" data-goal="GitHub click" data-where="docs">Source on GitHub</a>
+      <button class="toggle" type="button" id="theme">Dark</button>
+    </div>
+  </div>
+</header>
+<div class="wrap layout">
+  <nav class="pages" aria-label="Documentation">
+    <ul class="pages__all">
+      <li><a href="/docs/">Overview</a></li>
+      <li><a href="/docs/installation/">Installation</a></li>
+      <li><a href="/docs/usage/">Using Fotobogen</a></li>
+      <li><a href="/docs/skins/">Skins</a></li>
+      <li><a href="/docs/modules/">Modules</a></li>
+      <li><a href="/docs/faq/" aria-current="page">Questions</a></li>
+    </ul>
+    <div class="pages__here">
+      <h2>On this page</h2>
+      <ul>
+        <li><a href="#backups">Backups</a></li>
+        <li><a href="#starting-over">Starting over</a></li>
+        <li><a href="#access">Getting in</a></li>
+        <li><a href="#running">Running it</a></li>
+        <li><a href="#about">What it does and does not do</a></li>
+      </ul>
+    </div>
+  </nav>
+  <main id="main" class="doc">
+<h1>Questions</h1>
+<p class="lead">Backups, starting over, and the things that go wrong.</p>
+
+<h2 id="backups">Backups</h2>
+<div class="note">
+  <p><strong>Keeping a copy of your photographs is up to you.</strong> Fotobogen is free software, provided as it is, with no warranty. If the server fails, is deleted, or is broken into, and you have no backup, nobody can get your photographs back. Keep a backup somewhere other than the server, and keep your original files as well.</p>
+</div>
+
+<h3>What is in a backup?</h3>
+<p>One zip file holding everything that cannot be made again: the database (titles, albums, tags, settings, your login), your photographs exactly as you uploaded them, and any skins and modules you installed. The resized copies are left out, because they are rebuilt from the originals. The secret key that seals logins is left out too, so a backup file by itself does not open your site.</p>
+
+<h3>How do I make one?</h3>
+<p><strong>In the admin:</strong> <strong>Admin, System, Download a backup</strong>. The site stays running. This works however Fotobogen was installed.</p>
+<p><strong>On the server</strong>, for an install without Docker:</p>
+<pre tabindex="0"><code>pnpm fotobogen backup                      # writes fotobogen-backup-&lt;date&gt;.zip here
+pnpm fotobogen backup /mnt/disk/site.zip   # or to a place you name</code></pre>
+<p><strong>Or copy the <code>data</code> folder.</strong> Everything a site owns is in it. Stop Fotobogen first, so the database is not copied half-written, then copy the whole folder.</p>
+
+<h3>How often?</h3>
+<p>After every batch of uploads you would not want to do again. The backup is about as large as your original files, so on a large site, download it over a good connection or use the command on the server.</p>
+
+<h3>How do I restore?</h3>
+<p>A restore replaces everything on the site with the backup, including the login.</p>
+<ul>
+  <li><strong>In the admin:</strong> <strong>Admin, System</strong>, choose the zip, and <strong>Upload and prepare restore</strong>. The file is checked and set aside. The restore happens the next time Fotobogen starts; until then nothing changes and it can be cancelled. Then restart Fotobogen.</li>
+  <li><strong>On the server, without Docker,</strong> with Fotobogen stopped:
+<pre tabindex="0"><code>pnpm fotobogen restore site.zip</code></pre></li>
+  <li><strong>On the server, with Docker or without:</strong> copy the zip into the data folder under the name <code>restore-pending.zip</code> and restart. Fotobogen finds it, checks it, and restores from it as it starts.
+<pre tabindex="0"><code>cp site.zip data/restore-pending.zip
+docker compose restart app</code></pre></li>
+</ul>
+<p>Use one of the server methods for a large backup: the web server in front of Fotobogen limits how large an upload can be.</p>
+<p><strong>What was there is not deleted.</strong> It is moved into a folder named <code>before-restore-&lt;time&gt;</code> inside the data folder, so a mistaken restore can be undone by hand. Delete that folder when you are sure. After a restore the resized copies are made again in the background, and photos reappear on the site as each one finishes.</p>
+<p>A backup that turns out to be damaged is refused and set aside as <code>restore-failed-&lt;time&gt;.zip</code>, and the site starts as it was. A backup made by a newer version of Fotobogen is refused until you update.</p>
+
+<h2 id="starting-over">Starting over</h2>
+<p>There are several ways, from mild to complete. Pick the mildest one that does what you want.</p>
+
+<h3>Remove only the sample photos</h3>
+<p>On the dashboard, <strong>Remove sample photos</strong> deletes the 25 samples and nothing else.</p>
+
+<h3>Remove all photos, keep the site</h3>
+<p>In <strong>Admin, Photos</strong>, press <strong>Select all</strong>, then <strong>Delete</strong>. Your account, settings, skin, and albums stay.</p>
+
+<h3>Go back to an earlier state</h3>
+<p><a href="#backups">Restore a backup.</a></p>
+
+<h3>Start again from nothing</h3>
+<p>Everything about a site is in its <code>data</code> folder. Without that folder, Fotobogen starts as a new installation: a new setup token, and the setup wizard. So: stop Fotobogen, move the folder out of the way, and start again.</p>
+<p>Renaming the folder, instead of deleting it, keeps the old site in case you want it back.</p>
+<p><strong>Installed with Node.js (Mac, Windows, Linux):</strong></p>
+<pre tabindex="0"><code># stop Fotobogen: Control + C in its window, or: pm2 stop fotobogen
+mv data data-old          # Windows PowerShell: Rename-Item data data-old
+pnpm start                # or: pm2 start fotobogen</code></pre>
+<p><strong>Installed with Docker:</strong></p>
+<pre tabindex="0"><code>docker compose down
+mv data data-old
+mkdir -p data
+docker compose up -d
+docker compose logs app   # the new setup token</code></pre>
+<p>On a Forge server, add <code>-f docker-compose.forge.yml</code> after each <code>docker compose</code>.</p>
+<p>When you are sure you do not want the old site, delete <code>data-old</code>. That deletes its photographs for good.</p>
+
+<h3>Put the old site back</h3>
+<p>Stop Fotobogen, move the new <code>data</code> aside, rename <code>data-old</code> to <code>data</code>, and start.</p>
+
+<h3>Reinstall the software, keep the site</h3>
+<p>The software and the site are separate. Updating, rebuilding, or cloning the source again does not touch <code>data</code>. To move to a fresh copy of the software, install it as new, stop it, and put your <code>data</code> folder in place of its empty one.</p>
+
+<h3>Remove Fotobogen completely</h3>
+<p>Take a backup if you want one. Stop Fotobogen (<code>docker compose down</code>, or <code>pm2 delete fotobogen</code>, or <kbd>Control</kbd> + <kbd>C</kbd>), then delete its folder. Nothing is installed anywhere else, apart from a small record of running copies in a folder named <code>.fotobogen</code> in your home folder, which can be deleted too.</p>
+
+<h2 id="access">Getting in</h2>
+
+<h3>I forgot the admin password</h3>
+<p>There is no reset by email, because Fotobogen sends no email. On the server:</p>
+<pre tabindex="0"><code>pnpm fotobogen reset-admin                                        # without Docker
+docker compose exec app node scripts/fotobogen.mjs reset-admin    # with Docker</code></pre>
+<p>It asks for a new password of at least 12 characters and signs out every session. Fotobogen does not need to be stopped.</p>
+
+<h3>I lost the setup token</h3>
+<p>It is printed every time Fotobogen starts, until setup is finished: restart it and read the output (<code>docker compose logs app</code>, or <code>pm2 logs fotobogen</code>). It is also in the file <code>data/setup-token</code>.</p>
+
+<h3>Logging in does nothing, or sends me back to the login page</h3>
+<p>The login is kept in a cookie that browsers accept only over HTTPS, or on <code>localhost</code>. If you opened the site by an address like <code>http://192.168.1.20:5150</code>, the cookie is refused. Use <code>http://localhost:5150</code> on the machine itself, or put the site behind HTTPS.</p>
+
+<h3>It says too many attempts</h3>
+<p>Five wrong passwords in 15 minutes from one address locks that address out until the 15 minutes pass. Wait, or reset the password as above.</p>
+
+<h2 id="running">Running it</h2>
+
+<h3>It will not start, and prints "FAIL"</h3>
+<p>That is the check Fotobogen runs before every start. Each failing line says what is wrong and what to do: usually too little memory, too little disk space, an old version of Node.js, or a data folder it may not write to. Run <code>pnpm preflight</code> to see the whole report. The limits are on the <a href="/docs/installation/#requirements">installation page</a>.</p>
+
+<h3>It started on port 5151, not 5150</h3>
+<p>Something else was using 5150, so it took the next free port and said so. To fix the port, set <code>PORT</code> in <code>.env</code>; then Fotobogen uses exactly that one, and stops with a message if it is taken.</p>
+
+<h3>Why 5150?</h3>
+<p>It is different enough from the ports everything else uses (3000, 8000, 8080) to be free on most machines. It is also a Van Halen album.</p>
+
+<h3>A photo says "failed"</h3>
+<p>Open it in the library to see why, and press <strong>Try again</strong>. The usual causes are a damaged file, or a server with too little free memory at that moment. The file you uploaded is still there.</p>
+
+<h3>An upload is refused as too large</h3>
+<p>The limit is 50 MB and 100 megapixels. Raise <code>MAX_UPLOAD_MB</code> or <code>MAX_MEGAPIXELS</code> in <code>.env</code>, and raise the limit of the web server in front of Fotobogen to match (<code>max_size</code> in <code>deploy/Caddyfile</code>, <code>client_max_body_size</code> in nginx). Larger photos need more memory.</p>
+
+<h3>How do I move to another server?</h3>
+<p>Install Fotobogen on the new server, stop it, copy your <code>data</code> folder over its empty one, and start. Or download a backup from the old site and restore it on the new one; you will log in with the old site's account. Then point your domain at the new server.</p>
+
+<h3>Can I run two sites on one server?</h3>
+<p>Yes: two copies of Fotobogen, each in its own folder with its own <code>data</code>, on different ports. Two copies cannot share a data folder, and Fotobogen refuses to try.</p>
+
+<h2 id="about">What it does and does not do</h2>
+
+<h3>Does it send my photographs or any information anywhere?</h3>
+<p>No. It makes three kinds of outside request, each only if you ask: downloading the sample photos, asking GitHub whether a newer version exists, and sending webhooks to addresses you enter. None of them carries your photographs or anything about your visitors.</p>
+
+<h3>Does it track visitors or set cookies?</h3>
+<p>It has no analytics and loads nothing from any other site. A visitor gets one cookie, and only if they press the light and dark switch: the word <code>light</code> or <code>dark</code>. The admin's login is a second cookie, for you alone.</p>
+
+<h3>Is where my photos were taken shown?</h3>
+<p>Not unless you switch it on in Settings. The copies visitors see and download carry no camera data at all.</p>
+
+<h3>Can several people have accounts?</h3>
+<p>No. There is one admin account.</p>
+
+<h3>Can visitors comment, or buy prints?</h3>
+<p>No. It publishes photographs; it has no comments, shop, or user accounts.</p>
+
+<h3>Can it run on Netlify, Vercel, or similar hosting?</h3>
+<p>No. It needs a disk that stays, for the database and the photographs, and those services do not give a site one. A small rented server does. (This website is on Netlify, but it is only these pages.)</p>
+
+<h3>Can it store photographs in S3 or similar?</h3>
+<p>Not yet. Storage is built so that this can be added, and it is on the <a href="https://github.com/cschweda/fotobogen/blob/main/docs/ROADMAP.md">roadmap</a>.</p>
+
+<h3>Does my site have to be called Fotobogen?</h3>
+<p>No. Nothing a visitor sees says "Fotobogen". The site carries the title you give it, and every word on it can be changed under <strong>Admin, Site text</strong>. <a href="/docs/usage/#own">More about that.</a></p>
+
+<h3>What does the name mean?</h3>
+<p>Fotobogen is German for "photo sheet", as in a contact sheet: the page of small prints made from a roll of film.</p>
+
+<h3>Where do I report a problem?</h3>
+<p>On GitHub, under <a href="https://github.com/cschweda/fotobogen/issues" data-goal="GitHub click" data-where="docs-issue">Issues</a>.</p>
+    <p class="next">
+      <a href="/docs/modules/">Back: Modules</a>
+      <a href="/">Fotobogen home</a>
+    </p>
+  </main>
+</div>
+<footer>
+  <div class="wrap">
+    <span>Fotobogen is free and open source, under the MIT licence.</span>
+    <span>It comes with no warranty. Keep backups of your photographs.</span>
+    <span>&copy; 2026 <a href="https://github.com/cschweda" data-goal="Author click">Christopher Schweda</a></span>
+  </div>
+</footer>
+</body>
+</html>

@@ -3,26 +3,25 @@
 definePageMeta({ layout: 'public' })
 const slug = String(useRoute().params.slug)
 const source = `/api/albums/${encodeURIComponent(slug)}`
-const { data: site } = await useFetch('/api/site', { key: 'site' })
+await useFetch('/api/site', { key: 'site' })
+const { t } = useSiteText()
 const { data, error } = await useFetch<{ album: { title: string, description: string | null, cover: { url: string } | null } }>(source, { key: `album-${slug}` })
 if (error.value || !data.value) throw createError({ status: 404, statusText: 'Album not found', fatal: true })
-const origin = useRequestURL().origin
 
-useSeoMeta({
-  title: () => `${data.value!.album.title} | ${site.value?.title || 'Fotobogen'}`,
-  description: () => data.value!.album.description || undefined,
-  ogTitle: () => data.value!.album.title,
-  ogDescription: () => data.value!.album.description || undefined,
-  ogImage: () => data.value!.album.cover ? origin + data.value!.album.cover.url : undefined,
+usePageSeo({
+  title: () => data.value!.album.title,
+  description: () => data.value!.album.description,
+  image: () => data.value!.album.cover,
+  path: () => `/album/${slug}`,
 })
 </script>
 
 <template>
   <div v-if="data">
-    <p class="fb-photo__back"><a href="/albums">All albums</a></p>
+    <p class="fb-photo__back"><a href="/albums">{{ t('backToAlbums') }}</a></p>
     <h1 class="fb-page-title">{{ data.album.title }}</h1>
     <p v-if="data.album.description" class="fb-page-description">{{ data.album.description }}</p>
-    <p class="fb-page-actions"><a :href="`/slideshow?album=${slug}`">Play as a slideshow</a></p>
+    <p class="fb-page-actions"><a :href="`/slideshow?album=${slug}`">{{ t('playSlideshow') }}</a></p>
     <PhotoGrid :source="source" :base="`/album/${slug}`" />
   </div>
 </template>

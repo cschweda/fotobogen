@@ -21,6 +21,7 @@ export interface PublicPhoto {
 }
 
 const props = defineProps<{ photo: PublicPhoto, headingLevel?: 'h1' | 'h2' }>()
+const { t } = useSiteText()
 /** In the modal, moving to a neighbour swaps the photo in place instead of loading a page. */
 const emit = defineEmits<{ go: [slug: string, event: MouseEvent] }>()
 
@@ -49,15 +50,15 @@ const settings = computed(() => {
       <component :is="headingLevel ?? 'h1'" v-if="photo.title" class="fb-photo__title">{{ photo.title }}</component>
       <p v-if="photo.description" class="fb-photo__description">{{ photo.description }}</p>
       <dl v-if="taken || photo.exif?.camera || photo.exif?.lens || settings" class="fb-photo__facts">
-        <div v-if="taken" class="fb-photo__fact"><dt>Taken</dt><dd>{{ taken }}</dd></div>
-        <div v-if="photo.exif?.camera" class="fb-photo__fact"><dt>Camera</dt><dd>{{ photo.exif.camera }}</dd></div>
-        <div v-if="photo.exif?.lens" class="fb-photo__fact"><dt>Lens</dt><dd>{{ photo.exif.lens }}</dd></div>
-        <div v-if="settings" class="fb-photo__fact"><dt>Settings</dt><dd>{{ settings }}</dd></div>
+        <div v-if="taken" class="fb-photo__fact"><dt>{{ t('factTaken') }}</dt><dd>{{ taken }}</dd></div>
+        <div v-if="photo.exif?.camera" class="fb-photo__fact"><dt>{{ t('factCamera') }}</dt><dd>{{ photo.exif.camera }}</dd></div>
+        <div v-if="photo.exif?.lens" class="fb-photo__fact"><dt>{{ t('factLens') }}</dt><dd>{{ photo.exif.lens }}</dd></div>
+        <div v-if="settings" class="fb-photo__fact"><dt>{{ t('factSettings') }}</dt><dd>{{ settings }}</dd></div>
       </dl>
       <p v-if="photo.albums.length" class="fb-photo__albums">
-        In <template v-for="(album, index) in photo.albums" :key="album.slug"><template v-if="index > 0">, </template><a :href="`/album/${album.slug}`">{{ album.title }}</a></template>
+        {{ t('inAlbums') }} <template v-for="(album, index) in photo.albums" :key="album.slug"><template v-if="index > 0">, </template><a :href="`/album/${album.slug}`">{{ album.title }}</a></template>
       </p>
-      <ul v-if="photo.tags.length" class="fb-tags" aria-label="Tags">
+      <ul v-if="photo.tags.length" class="fb-tags" :aria-label="t('tagsLabel')">
         <li v-for="tag in photo.tags" :key="tag.slug"><a class="fb-tag" :href="`/tag/${tag.slug}`" rel="tag">{{ tag.name }}</a></li>
       </ul>
       <p class="fb-photo__licence">
@@ -65,11 +66,11 @@ const settings = computed(() => {
         <template v-else>{{ photo.licence.label }}</template>
       </p>
       <p v-if="photo.download" class="fb-photo__download">
-        <a :href="photo.download.url" download>{{ photo.download.original ? 'Download the original' : 'Download' }}</a>
+        <a :href="photo.download.url" download>{{ photo.download.original ? t('downloadOriginal') : t('download') }}</a>
       </p>
-      <nav v-if="photo.previous || photo.next" class="fb-photo__nav" aria-label="Other photos">
-        <a v-if="photo.previous" class="fb-photo__prev" :href="`/photo/${photo.previous}`" rel="prev" @click="emit('go', photo.previous, $event)">Previous</a>
-        <a v-if="photo.next" class="fb-photo__next" :href="`/photo/${photo.next}`" rel="next" @click="emit('go', photo.next, $event)">Next</a>
+      <nav v-if="photo.previous || photo.next" class="fb-photo__nav" :aria-label="t('otherPhotos')">
+        <a v-if="photo.previous" class="fb-photo__prev" :href="`/photo/${photo.previous}`" rel="prev" @click="emit('go', photo.previous, $event)">{{ t('previous') }}</a>
+        <a v-if="photo.next" class="fb-photo__next" :href="`/photo/${photo.next}`" rel="next" @click="emit('go', photo.next, $event)">{{ t('next') }}</a>
       </nav>
     </div>
   </article>

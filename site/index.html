@@ -52,6 +52,8 @@ header .wrap.bar{display:flex;justify-content:space-between;align-items:center;p
 .label{font-size:.8125rem;letter-spacing:.14em;text-transform:uppercase;color:var(--low)}
 .toggle{font:inherit;font-size:.8125rem;letter-spacing:.14em;text-transform:uppercase;color:var(--fg);background:none;border:1px solid var(--rule);padding:8px 14px;cursor:pointer;border-radius:0}
 .toggle:hover{border-color:var(--fg)}
+.barlinks{display:flex;align-items:center;gap:20px;font-size:.9375rem}
+.go{margin-top:clamp(20px,3vw,32px);display:flex;flex-wrap:wrap;gap:12px 28px;font-size:1.125rem;font-weight:700}
 
 main{flex:1}
 .state{display:grid;grid-template-columns:repeat(12,1fr);column-gap:clamp(16px,2vw,24px);align-items:baseline;padding:18px 0;border-bottom:1px solid var(--rule);margin-bottom:clamp(44px,9vw,104px)}
@@ -157,7 +159,10 @@ footer .wrap{border-top:1px solid var(--rule);padding-top:20px;padding-bottom:28
 <header>
   <div class="wrap bar">
     <span class="label">Photo publishing platform</span>
-    <button class="toggle" type="button" id="theme" aria-label="Switch colour theme">Theme</button>
+    <span class="barlinks">
+      <a href="/docs/" data-goal="Docs click" data-where="header">Documentation</a>
+      <button class="toggle" type="button" id="theme" aria-label="Switch colour theme">Theme</button>
+    </span>
   </div>
 </header>
 
@@ -167,6 +172,7 @@ footer .wrap{border-top:1px solid var(--rule);padding-top:20px;padding-bottom:28
       <p class="state"><strong>In development</strong><span>It installs, takes your photographs, and publishes them. No release has been tagged yet; the source is on GitHub. This page shows what it looks like so far.</span></p>
       <h1 id="name">Fotobogen</h1>
       <p class="tag">Publish your photographs on a website of your own.</p>
+      <p class="go"><a href="/docs/installation/" data-goal="Docs click" data-where="hero-install">How to install it</a> <a href="/docs/" data-goal="Docs click" data-where="hero">Read the documentation</a></p>
     </section>
 
     <ul class="sheet" aria-hidden="true">
@@ -313,6 +319,7 @@ footer .wrap{border-top:1px solid var(--rule);padding-top:20px;padding-bottom:28
 
   // Named events for Plausible, so they can be set up as goals there:
   //   "GitHub click" (where: roadmap), "Author click",
+  //   "Docs click" (where: header | hero | hero-install),
   //   "Theme switch" (to: light | dark),
   //   "Section viewed" (section: tour | runs | plan), once each per visit,
   //   "Screenshot viewed" (screen: the file name), once each per visit.
