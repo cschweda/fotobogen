@@ -24,6 +24,7 @@ plan is in [docs/DESIGN.md](docs/DESIGN.md); changes are recorded in
 
 - [Screenshots](#screenshots)
 - [How it runs](#how-it-runs)
+- [Installing on your own computer](#installing-on-your-own-computer)
 - [Local development](#local-development)
 - [Running the built server](#running-the-built-server)
 - [The preflight check](#the-preflight-check)
@@ -132,22 +133,120 @@ dependencies ship prebuilt for macOS, Windows, and Linux, so nothing is
 compiled during install. Every change is tested on Linux and on Windows
 (see [Windows](#windows)). There is no double-click desktop installer.
 
-## Local development
+## Installing on your own computer
 
-Requirements: [Node 24](https://nodejs.org) and [pnpm](https://pnpm.io) 10.
+The quickest way to try Fotobogen, on a Mac, a Windows PC, or Linux. For a
+public site on a server, see [Docker quick start](#docker-quick-start),
+[Without Docker (pm2)](#without-docker-pm2), or
+[the installation guide](https://fotobogen.com/docs/installation/).
+
+**1. Have Node.js 24 and pnpm 10.**
 
 ```bash
-nvm use            # reads .nvmrc (Node 24)
+node --version      # must print v24 or later
+pnpm --version      # must print 10 or later
+```
+
+If Node.js is older, install 24 from [nodejs.org](https://nodejs.org), or
+with nvm: `nvm install 24` and `nvm use 24`. Then install pnpm:
+`npm install -g pnpm@10`.
+
+Two things about nvm that catch people out:
+
+- `nvm use 24` switches **the terminal you are in**. `nvm alias default 24`
+  only changes terminals you open afterwards.
+- nvm keeps tools such as pnpm **separately for each version** of Node.js.
+  After switching, `pnpm: command not found` means it needs installing for
+  that version: `npm install -g pnpm@10`.
+
+**2. Get it, build it, start it.**
+
+```bash
+git clone https://github.com/cschweda/fotobogen.git
+cd fotobogen
+pnpm install
+pnpm build
+pnpm start
+```
+
+If Node.js or pnpm is too old, `pnpm install` stops before fetching anything
+and prints what to do.
+
+**3. Open the address it prints**, `http://localhost:5150`, in a browser on
+the same computer, and enter the setup token shown in the terminal. Use the
+`localhost` address: logging in is kept by your browser only on this
+computer's own addresses or over https.
+
+Leave the terminal open while you use the site. Control + C stops it, and
+`pnpm start` starts it again with everything as you left it.
+
+### In a folder with another name
+
+`git clone` takes the folder's name as a second argument, so an install can
+sit beside a copy of the source, or beside another install:
+
+```bash
+git clone https://github.com/cschweda/fotobogen.git fotobogen-live
+cd fotobogen-live
+```
+
+Each folder is its own site, with its own `data` folder. If one copy is
+running when you start another, Fotobogen asks whether to run both; the
+second takes the next free port and prints its address. To give a copy a
+port of its own, put `PORT=5160` in a `.env` file in its folder.
+
+Run the commands from the folder you mean. `cd` into it first and check with
+`pwd`; cloning from inside an existing copy puts the new one inside the old.
+
+### Starting over
+
+Everything about a site is in the `data` folder inside the app's folder.
+Stop Fotobogen, then:
+
+```bash
+rm -rf data         # or, to keep the old site: mv data data-old
+pnpm start
+```
+
+It starts as a new install, with a new setup token. There is no need to
+delete the app's folder or install again.
+
+### If you installed under the wrong Node.js
+
+What was installed for one version of Node.js does not work under another.
+After switching versions, install again from the start:
+
+```bash
+rm -rf node_modules
+pnpm install
+pnpm build
+pnpm start
+```
+
+### Updating
+
+```bash
+git pull
+pnpm install
+pnpm build
+pnpm start
+```
+
+Your `data` folder is left alone, and changes to the database are applied by
+themselves when the new version starts.
+
+## Local development
+
+For working on Fotobogen itself. Requirements: [Node 24](https://nodejs.org)
+and [pnpm](https://pnpm.io) 10 (see
+[Installing on your own computer](#installing-on-your-own-computer) for
+getting them).
+
+```bash
+nvm use            # reads .nvmrc (Node 24); switches this terminal only
 pnpm install
 pnpm dev           # http://localhost:5150
 ```
-
-If your Node.js or pnpm is too old, `pnpm install` stops before fetching
-anything and says what to do. The usual cause is a terminal that is still on
-an older Node.js: with nvm, `nvm use 24` switches the terminal you are in
-(`nvm alias default 24` only affects terminals opened afterwards), and pnpm
-has to be installed again for that version (`npm install -g pnpm@10`),
-because nvm keeps such tools separately for each version of Node.js.
 
 On first start the terminal prints a setup token:
 
