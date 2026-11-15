@@ -92,4 +92,4 @@ for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => process.exi
 
 // A file URL, not a path: Windows paths are not valid import specifiers.
 await import(pathToFileURL(entry).href)
-console.log(`Fotobogen is running at http://localhost:${choice.port}`)
+console.log(`Fotobogen is running. Open it in a browser on this computer:\n\n    http://localhost:${choice.port}\n\nLogging in works at that address, or over https.`)

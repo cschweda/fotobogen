@@ -82,13 +82,19 @@ docker compose exec app node scripts/fotobogen.mjs reset-admin    # with Docker<
 <h3>I lost the setup token</h3>
 <p>It is printed every time Fotobogen starts, until setup is finished: restart it and read the output (<code>docker compose logs app</code>, or <code>pm2 logs fotobogen</code>). It is also in the file <code>data/setup-token</code>.</p>
 
-<h3>Logging in does nothing, or sends me back to the login page</h3>
-<p>The login is kept in a cookie that browsers accept only over HTTPS, or on <code>localhost</code>. If you opened the site by an address like <code>http://192.168.1.20:5150</code>, the cookie is refused. Use <code>http://localhost:5150</code> on the machine itself, or put the site behind HTTPS.</p>
+<h3>Logging in does nothing, or says my browser would not keep the login</h3>
+<p>The login is kept in a cookie that browsers accept only over https, or at an address that means "this computer": <code>localhost</code>, <code>127.0.0.1</code>, or <code>0.0.0.0</code>. Opened over plain http at any other address, such as <code>http://192.168.1.20:5150</code> or <code>http://my-mac.local:5150</code>, the browser would throw the login away, so the login page refuses and says why. Use <code>http://localhost:5150</code> on the machine itself, borrow it from another machine with <code>ssh -L 5150:localhost:5150 you@that-machine</code>, or put the site behind https.</p>
 
 <h3>It says too many attempts</h3>
 <p>Five wrong passwords in 15 minutes from one address locks that address out until the 15 minutes pass. Wait, or reset the password as above.</p>
 
 <h2 id="running">Running it</h2>
+
+<h3><code>pnpm install</code> stops and says Node.js is too old, but I installed Node.js 24</h3>
+<p>The terminal you are in is still using the older one. With nvm, run <code>nvm use 24</code> in that terminal; <code>nvm alias default 24</code> changes only terminals opened afterwards. Then install pnpm for that version, because nvm keeps such tools separately for each: <code>npm install -g pnpm@10</code>. If you had already installed under the older Node.js, delete the <code>node_modules</code> folder and run <code>pnpm install</code> again, since what was installed for one version does not work under another.</p>
+
+<h3><code>pnpm: command not found</code> after switching Node.js</h3>
+<p>Run <code>npm install -g pnpm@10</code>. With nvm, each version of Node.js has its own set of tools.</p>
 
 <h3>It will not start, and prints "FAIL"</h3>
 <p>That is the check Fotobogen runs before every start. Each failing line says what is wrong and what to do: usually too little memory, too little disk space, an old version of Node.js, or a data folder it may not write to. Run <code>pnpm preflight</code> to see the whole report. The limits are on the <a href="/docs/installation/#requirements">installation page</a>.</p>

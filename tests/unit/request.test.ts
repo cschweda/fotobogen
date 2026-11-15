@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { clientIpFrom, isLoopbackHost, originMatchesHost, rateLimitKey } from '../../server/core/request.ts'
+import { clientIpFrom, isLoopbackHost, loginCanStick, originMatchesHost, rateLimitKey } from '../../server/core/request.ts'
 import { newId } from '../../server/core/ids.ts'
 
 describe('originMatchesHost', () => {
@@ -59,3 +59,27 @@ describe('rateLimitKey', () => {
     expect(rateLimitKey(ip)).toBe(key)
   })
 })
+
+describe('whether a browser will keep the login', () => {
+  it('does at any name for this computer, over plain http', () => {
+    // 0.0.0.0 is the address the server prints when it listens on every interface.
+    for (const host of ['localhost:5150', '127.0.0.1:5150', '[::1]:5150', '0.0.0.0:5150', '[::]:5151', 'LOCALHOST']) {
+      expect(isLoopbackHost(host), host).toBe(true)
+      expect(loginCanStick(host, 'http:', undefined), host).toBe(true)
+    }
+  })
+  it('does over https anywhere, including behind a proxy that says so', () => {
+    expect(loginCanStick('photos.example.com', 'https:', undefined)).toBe(true)
+    expect(loginCanStick('photos.example.com', 'http:', 'https')).toBe(true)
+    expect(loginCanStick('photos.example.com', 'http:', 'https, http')).toBe(true)
+  })
+  it('does not over plain http at any other address', () => {
+    for (const host of ['192.168.1.20:5150', 'my-mac.local:5150', 'photos.example.com', '10.0.0.5', undefined]) {
+      expect(loginCanStick(host, 'http:', undefined), String(host)).toBe(false)
+      expect(loginCanStick(host, 'http:', 'http'), String(host)).toBe(false)
+    }
+    expect(isLoopbackHost('0.0.0.0.example.com')).toBe(false)
+    expect(isLoopbackHost('localhost.example.com')).toBe(false)
+  })
+})
+

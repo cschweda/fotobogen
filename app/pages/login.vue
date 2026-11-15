@@ -31,6 +31,13 @@ async function submit() {
     return
   }
   finally { busy.value = false }
+  // The server accepted the login. Make sure the browser kept it: if not, going
+  // on would only bring this page back, looking as if nothing had happened.
+  const { user } = await $fetch<{ user: unknown }>('/api/auth/me').catch(() => ({ user: null }))
+  if (!user) {
+    message.value = `Your password was right, but your browser did not keep the login. That happens when this page is opened over http at an address other than localhost. On the computer Fotobogen runs on, open http://localhost:${window.location.port || '5150'} and log in there, or use https.`
+    return
+  }
   await navigateTo('/admin')
 }
 </script>
