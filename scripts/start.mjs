@@ -12,7 +12,7 @@
 import { existsSync } from 'node:fs'
 import { createInterface } from 'node:readline/promises'
 import { resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { config, resolveSettings } from '../server/core/config.ts'
 import { choosePort, planStart, registerInstance, runningInstances, stopInstance } from '../server/core/instances.ts'
 import { dataPaths, resolveDataDir } from '../server/core/paths.ts'
@@ -90,5 +90,6 @@ const unregister = registerInstance({ port: choice.port, dataDir: resolve(dataDi
 process.on('exit', unregister)
 for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => process.exit(0))
 
-await import(entry)
+// A file URL, not a path: Windows paths are not valid import specifiers.
+await import(pathToFileURL(entry).href)
 console.log(`Fotobogen is running at http://localhost:${choice.port}`)
