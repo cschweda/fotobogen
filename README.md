@@ -106,10 +106,10 @@ After setup, the admin area sits behind a login:
 
 ![Log in page](docs/screenshots/login.png)
 
-The dashboard leads to uploading and can download or remove the sample
-photos at any time:
+The admin opens on Overview, with every other page in the menu down the
+side. Sample photos can be downloaded or removed from here at any time:
 
-![Admin dashboard showing site name, account, photo count, version, and a Download sample photos button](docs/screenshots/admin.png)
+![The admin's Overview page: a menu down the left grouped into Photos, Appearance, Site, and Server, beside the site's name, photo count, versions, and what is stored](docs/screenshots/admin.png)
 
 Each upload shows its progress and result; a duplicate or a file that is not
 a photo is explained on its own row. (The pictures here are generated
