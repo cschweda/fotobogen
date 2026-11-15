@@ -1,17 +1,20 @@
 // An RSS feed of the newest public photos.
 import { defineEventHandler } from 'nuxt/server'
 import { escapeXml, recentPhotos, siteOrigin } from '../utils/public.ts'
+import { cleanText, siteText, UNNAMED_SITE } from '../../shared/site-text.ts'
+import { seoSettings } from '../utils/seo.ts'
 import { getSetting } from '../utils/settings.ts'
 
 export default defineEventHandler((event) => {
   const origin = siteOrigin(event)
-  const title = getSetting('site.title', '') || 'Fotobogen'
+  const title = getSetting('site.title', '') || UNNAMED_SITE
+  const text = cleanText(getSetting<unknown>('site.text', {}))
   const items = recentPhotos(30).map((photo) => {
     const link = `${origin}/photo/${encodeURIComponent(photo.slug)}`
     const picture = photo.image ? `<p><img src="${escapeXml(origin + photo.image)}" alt=""></p>` : ''
     const words = photo.description ? `<p>${escapeXml(photo.description)}</p>` : ''
     return `    <item>
-      <title>${escapeXml(photo.title ?? 'Untitled')}</title>
+      <title>${escapeXml(photo.title ?? siteText(text, 'untitled'))}</title>
       <link>${escapeXml(link)}</link>
       <guid isPermaLink="true">${escapeXml(link)}</guid>
       <pubDate>${new Date(photo.createdAt).toUTCString()}</pubDate>
@@ -24,7 +27,7 @@ export default defineEventHandler((event) => {
   <channel>
     <title>${escapeXml(title)}</title>
     <link>${escapeXml(origin)}/</link>
-    <description>${escapeXml(getSetting('site.tagline', '') || `Photographs from ${title}`)}</description>
+    <description>${escapeXml(seoSettings().description || getSetting('site.tagline', '') || title)}</description>
     <atom:link href="${escapeXml(origin)}/feed.xml" rel="self" type="application/rss+xml"/>
 ${items.join('\n')}
   </channel>

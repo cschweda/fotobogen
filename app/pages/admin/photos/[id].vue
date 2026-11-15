@@ -13,6 +13,7 @@ interface Detail {
   id: string, slug: string, title: string | null, description: string | null, alt: string | null
   visibility: 'public' | 'hidden', publishAt: number | null, takenAt: number | null, filename: string, status: 'processing' | 'ready' | 'failed'
   width: number, height: number
+  links: { origin: string, page: string, images: { kind: string, url: string, width: number, height: number }[] }
   details: { camera: string | null, lens: string | null, focalLength: string | null, aperture: string | null, shutter: string | null, iso: number | null, location: { lat: number, lng: number } | null, bytes: number, mime: string }
   tags: string[], albums: string[], license: string | null, allowDownload: boolean | null
   own: RecipeStep[] | null, site: RecipeStep[], recipe: RecipeStep[], skipped: string[]
@@ -58,6 +59,18 @@ const form = reactive({
   tags: photo.value.tags.join(', '),
   albums: [...photo.value.albums],
 })
+// ── Links ────────────────────────────────────────────────────────────────
+const SIZE_NAMES: Record<string, string> = { thumb: 'Small picture', square: 'Square picture', medium: 'Medium picture', large: 'Large picture' }
+const linkImages = computed(() => photo.value!.links.images.map(image => ({ ...image, name: SIZE_NAMES[image.kind] ?? image.kind })))
+const live = computed(() => photo.value!.status === 'ready' && photo.value!.visibility === 'public' && !(photo.value!.publishAt && photo.value!.publishAt > Date.now()))
+const attribute = (text: string) => text.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+/** A picture that links to the photo's page, with its alt text, for pasting into a web page. */
+const embed = computed(() => {
+  const image = photo.value!.links.images.find(candidate => candidate.kind === 'medium') ?? photo.value!.links.images.at(-1)
+  if (!image) return ''
+  return `<a href="${attribute(photo.value!.links.page)}"><img src="${attribute(image.url)}" width="${image.width}" height="${image.height}" alt="${attribute(photo.value!.alt ?? '')}"></a>`
+})
+
 const errors = ref<Record<string, string>>({})
 const savingDetails = ref(false)
 
@@ -351,6 +364,18 @@ onBeforeUnmount(() => {
           </div>
         </form>
 
+        <section class="section" aria-labelledby="links-heading">
+          <h2 id="links-heading" class="edit__heading">Links</h2>
+          <p class="links__note">
+            Full addresses, to paste into an email, a post, or another site.
+            <template v-if="!live">This photo is not public yet, so they will not work for visitors until it is.</template>
+          </p>
+          <CopyField id="link-page" label="This photo's page" :value="photo.links.page" />
+          <CopyField v-for="image in linkImages" :id="`link-${image.kind}`" :key="image.kind" :label="`${image.name}, ${image.width} × ${image.height} pixels`" :value="image.url" />
+          <CopyField v-if="embed" id="link-embed" label="HTML that shows the photo and links to its page" :value="embed" :rows="4" />
+          <p class="links__note">The picture addresses change when the photo's look changes, because each address names one exact version of the picture. The page's address stays the same unless you change the photo's web address above.</p>
+        </section>
+
         <section class="section" aria-labelledby="file-heading">
           <h2 id="file-heading" class="edit__heading">The file</h2>
           <dl class="facts">
@@ -386,6 +411,7 @@ onBeforeUnmount(() => {
 .edit__view figcaption { margin-top: 0.5rem; }
 .edit__heading { margin: 0 0 1.25rem; font-size: 1.25rem; font-weight: 700; letter-spacing: -0.015em; }
 .edit__skipped { margin: 0 0 1rem; padding: 0.75rem 1rem; border-left: 4px solid var(--fb-error); background: var(--fb-panel); }
+.links__note { max-width: 40rem; margin: 0 0 1rem; color: var(--fb-muted); font-size: 0.9375rem; }
 .section { margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--fb-line); }
 .scope { display: grid; gap: 0.5rem; margin: 0 0 1rem; padding: 0; border: 0; }
 .scope__legend { padding: 0; margin-bottom: 0.5rem; font-weight: 700; }

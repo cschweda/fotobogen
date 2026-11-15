@@ -2,9 +2,13 @@
 import { defineEventHandler } from 'nuxt/server'
 import { publicAlbums } from '../utils/public.ts'
 import { getSetting } from '../utils/settings.ts'
+import { cleanLanguage, cleanText } from '../../shared/site-text.ts'
+import { seoSettings, sharingCard } from '../utils/seo.ts'
 import { activeSkin } from '../utils/skin.ts'
 
-export default defineEventHandler(() => ({
+export default defineEventHandler(() => {
+  const seo = seoSettings()
+  return {
   title: getSetting('site.title', ''),
   tagline: getSetting('site.tagline', ''),
   grid: getSetting<'masonry' | 'square'>('layout.grid', 'masonry'),
@@ -15,4 +19,22 @@ export default defineEventHandler(() => ({
   mode: activeSkin().mode,
   // Whether to offer visitors a link to the albums.
   hasAlbums: publicAlbums().length > 0,
-}))
+  // The language the site's words are in, for the page's lang attribute.
+  language: cleanLanguage(getSetting('site.language', 'en')),
+  // The owner's replacements for the fixed text on the pages. Empty means all defaults.
+  text: cleanText(getSetting<unknown>('site.text', {})),
+  // What search engines and social networks are told.
+  seo: {
+    homeTitle: seo.homeTitle,
+    titlePattern: seo.titlePattern,
+    description: seo.description,
+    indexing: seo.indexing,
+    siteUrl: seo.siteUrl,
+    author: seo.author,
+    twitter: seo.twitter,
+    googleVerification: seo.googleVerification,
+    bingVerification: seo.bingVerification,
+    card: sharingCard(seo),
+  },
+  }
+})

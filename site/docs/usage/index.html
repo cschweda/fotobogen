@@ -56,6 +56,7 @@
         <li><a href="#albums">Albums and tags</a></li>
         <li><a href="#public">What visitors see</a></li>
         <li><a href="#settings">Settings</a></li>
+        <li><a href="#own">Making the site your own</a></li>
         <li><a href="#samples">Sample photos</a></li>
         <li><a href="#system">Backups and updates</a></li>
         <li><a href="#keyboard">Keyboard and accessibility</a></li>
@@ -72,10 +73,12 @@
   <thead><tr><th>Page</th><th>What it is for</th></tr></thead>
   <tbody>
     <tr><td><strong>Upload photos</strong></td><td>Adding photographs</td></tr>
-    <tr><td><strong>Photos</strong></td><td>The library: order, hide, delete, edit</td></tr>
+    <tr><td><strong>Photos</strong></td><td>The library: order, hide, delete, edit, copy links</td></tr>
     <tr><td><strong>Albums</strong></td><td>Named sets of photos</td></tr>
     <tr><td><strong>Skins</strong></td><td>How the public site looks, and light or dark</td></tr>
     <tr><td><strong>Modules</strong></td><td>Looks applied to photos: film, frames, watermark</td></tr>
+    <tr><td><strong>Site text</strong></td><td>The site's name and every word on it</td></tr>
+    <tr><td><strong>Search and sharing</strong></td><td>What search engines and shared links show</td></tr>
     <tr><td><strong>Settings</strong></td><td>Title, layout, privacy, licence, slideshow</td></tr>
     <tr><td><strong>System</strong></td><td>Backup, restore, version, updates</td></tr>
   </tbody>
@@ -115,6 +118,9 @@
 </ul>
 <figure><img src="/screens/looks.jpg" alt="The edit page previewing a photo inside a film border with sprocket holes, above a strip of small previews of different film looks" width="1072" height="1060" loading="lazy"><figcaption>The strip of looks under a photo, with a film frame chosen.</figcaption></figure>
 <p>Beside the form is what the camera recorded in the file: camera, lens, exposure, and place.</p>
+
+<h3>Links to a photo</h3>
+<p>Further down the same page is a <strong>Links</strong> panel: the full address of the photo's page, the address of each size of the picture, and a line of HTML that shows the photo linked to its page. Each has a <strong>Copy</strong> button. Use them in an email, a post, or another website.</p>
 
 <h2 id="publishing">Publishing, scheduling, and drafts</h2>
 <p>On a photo's page, <strong>Publish</strong> has three choices:</p>
@@ -157,6 +163,34 @@
   <li><strong>new uploads start as drafts</strong>;</li>
   <li>the <strong>slideshow's</strong> timing and order.</li>
 </ul>
+
+<h2 id="own">Making the site your own</h2>
+<p>Nothing a visitor sees has to say "Fotobogen". It is your site, at your address, under your name.</p>
+<h3>Site text</h3>
+<p><strong>Admin, Site text</strong> holds the site's title and tagline, and every fixed piece of text on the public pages: the links at the top, the buttons, the labels beside a photo, the slideshow's controls, and what is shown when a page cannot be found. Each field shows the wording used now. Type your own to replace it; leave it empty to keep the default.</p>
+<ul>
+  <li>There is a <strong>line of your own for the footer</strong>, empty to begin with: a copyright notice, for instance.</li>
+  <li><strong>Language</strong> is a code such as <code>en</code>, <code>de</code>, or <code>pt-BR</code>. It tells screen readers how to pronounce your site and search engines what language it is in. It does not translate anything; you do that by rewording the fields.</li>
+  <li>One button puts every field back to its default.</li>
+</ul>
+<h3>Search and sharing</h3>
+<p><strong>Admin, Search and sharing</strong> decides what search engines show for your site and what appears when someone shares a link to it. Every field is optional, and the page previews the result as you type.</p>
+<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
+  <thead><tr><th>Setting</th><th>If you leave it alone</th></tr></thead>
+  <tbody>
+    <tr><td>Title of your home page</td><td>Your site's title</td></tr>
+    <tr><td>Description of your site</td><td>Your tagline</td></tr>
+    <tr><td>How the titles of other pages are written</td><td>"Photo | Site"</td></tr>
+    <tr><td>Picture shown when your site is shared</td><td>Your newest photo</td></tr>
+    <tr><td>Let search engines list this site</td><td>Yes</td></tr>
+    <tr><td>Your site's proper address</td><td>The address each visitor used</td></tr>
+    <tr><td>Photographer's name, and username on X</td><td>None</td></tr>
+    <tr><td>Google and Bing verification codes</td><td>None</td></tr>
+  </tbody>
+</table></div>
+<p>A link to one photo always shows that photo, with its own title, description, and alt text. Asking search engines not to list the site is a request the well-known ones honour; it does not make the site private.</p>
+<h3>How it looks</h3>
+<p><a href="/docs/skins/">Skins</a> change the look, the colours, and light or dark.</p>
 
 <h2 id="samples">Sample photos</h2>
 <p>Fotobogen can download 25 photographs so that a new site has something to show. They come from <a href="https://picsum.photos">Lorem Picsum</a> (Unsplash photographs, credited to their photographers) and are not part of the software. The dashboard always has <strong>Download sample photos</strong>, and <strong>Remove sample photos</strong> deletes all of them, and only them.</p>

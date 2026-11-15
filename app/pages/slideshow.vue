@@ -10,6 +10,8 @@
      photos change without the fade. Class names are part of the skin
      contract (docs/SKINS.md). -->
 <script setup lang="ts">
+import { pageTitle } from '~~/shared/seo'
+
 definePageMeta({ layout: false })
 
 interface Slide {
@@ -21,12 +23,13 @@ interface Show { title: string | null, back: string, seconds: number, order: 'se
 const route = useRoute()
 const scope = typeof route.query.album === 'string' ? { album: route.query.album } : typeof route.query.tag === 'string' ? { tag: route.query.tag } : {}
 const { data: site } = await useFetch('/api/site', { key: 'site' })
+const { t, siteName } = useSiteText()
 const { data: show, error } = await useFetch<Show>('/api/slideshow', { query: scope })
 if (error.value || !show.value) throw createError({ status: 404, statusText: 'Nothing to show', fatal: true })
 
 useHead({
-  htmlAttrs: { 'lang': 'en', 'class': 'fb-public', 'data-fb-mode': useSkinMode(() => site.value?.mode).mode },
-  title: () => `Slideshow${show.value?.title ? `: ${show.value.title}` : ''} | ${site.value?.title || 'Fotobogen'}`,
+  htmlAttrs: { 'lang': () => site.value?.language || 'en', 'class': 'fb-public', 'data-fb-mode': useSkinMode(() => site.value?.mode).mode },
+  title: () => pageTitle({ homeTitle: '', titlePattern: site.value?.seo?.titlePattern ?? '{page} | {site}' }, siteName.value, `${t('slideshowTitle')}${show.value?.title ? `: ${show.value.title}` : ''}`),
   link: [{ rel: 'stylesheet', href: () => `/skin.css?v=${site.value?.skinVersion ?? ''}` }],
   meta: [{ name: 'robots', content: 'noindex' }],
 })
@@ -102,13 +105,13 @@ async function step(by: number, byHand: boolean) {
   const back = front.value === 0 ? 1 : 0
   layers.value[back] = slide
   front.value = back
-  if (byHand) announcement.value = `${slide.title ?? 'Untitled photo'}, ${next + 1} of ${order.value.length}`
+  if (byHand) announcement.value = t('slidePosition', { title: slide.title ?? t('untitledPhoto'), n: next + 1, total: order.value.length })
   schedule()
 }
 
 function togglePlaying() {
   playing.value = !playing.value
-  announcement.value = playing.value ? 'Slideshow playing.' : 'Slideshow paused.'
+  announcement.value = playing.value ? t('slideshowPlaying') : t('slideshowPaused')
   schedule()
 }
 
@@ -177,11 +180,11 @@ onBeforeUnmount(() => {
 <template>
   <main ref="stage" class="fb-slideshow" :class="{ 'fb-slideshow--details': details }">
     <h1 class="fb-visually-hidden">Slideshow{{ show?.title ? `: ${show.title}` : '' }}</h1>
-    <p v-if="!slides.length" class="fb-slideshow__empty">There are no photographs to show yet. <a :href="show?.back ?? '/'">Go back</a></p>
+    <p v-if="!slides.length" class="fb-slideshow__empty">{{ t('slideshowEmpty') }} <a :href="show?.back ?? '/'">{{ t('goBack') }}</a></p>
 
     <template v-else>
       <!-- The photo is a button: pressing it shows or hides its details. -->
-      <button type="button" class="fb-slideshow__photo" :aria-expanded="details" aria-controls="slide-details" :aria-label="details ? 'Hide details and carry on' : 'Show details and hold this photo'" @click="toggleDetails">
+      <button type="button" class="fb-slideshow__photo" :aria-expanded="details" aria-controls="slide-details" :aria-label="details ? t('hideDetails') : t('showDetails')" @click="toggleDetails">
         <template v-for="(slide, index) in layers" :key="index">
           <img
             v-if="slide" class="fb-slideshow__image" :class="{ 'fb-slideshow__image--front': front === index }"
@@ -191,21 +194,21 @@ onBeforeUnmount(() => {
       </button>
 
       <div v-if="details && current" id="slide-details" class="fb-slideshow__details">
-        <h2 class="fb-slideshow__title">{{ current.title ?? 'Untitled' }}</h2>
+        <h2 class="fb-slideshow__title">{{ current.title ?? t('untitled') }}</h2>
         <p v-if="current.description" class="fb-slideshow__description">{{ current.description }}</p>
         <p v-if="taken(current) || current.camera" class="fb-slideshow__facts">
           {{ [taken(current), current.camera].filter(Boolean).join(' · ') }}
         </p>
-        <p><a :href="`/photo/${current.slug}`">Open this photo's page</a></p>
+        <p><a :href="`/photo/${current.slug}`">{{ t('openPhotoPage') }}</a></p>
       </div>
 
-      <nav class="fb-slideshow__controls" aria-label="Slideshow controls">
-        <button type="button" class="fb-slideshow__control" @click="step(-1, true)">Previous</button>
-        <button type="button" class="fb-slideshow__control" :aria-pressed="!playing" @click="togglePlaying">{{ playing ? 'Pause' : 'Play' }}</button>
-        <button type="button" class="fb-slideshow__control" @click="step(1, true)">Next</button>
+      <nav class="fb-slideshow__controls" :aria-label="t('slideshowControls')">
+        <button type="button" class="fb-slideshow__control" @click="step(-1, true)">{{ t('previous') }}</button>
+        <button type="button" class="fb-slideshow__control" :aria-pressed="!playing" @click="togglePlaying">{{ playing ? t('pause') : t('play') }}</button>
+        <button type="button" class="fb-slideshow__control" @click="step(1, true)">{{ t('next') }}</button>
         <span class="fb-slideshow__count">{{ position + 1 }} / {{ slides.length }}</span>
-        <button type="button" class="fb-slideshow__control" @click="toggleFullscreen">{{ fullscreen ? 'Leave full screen' : 'Full screen' }}</button>
-        <a class="fb-slideshow__control" :href="show?.back ?? '/'" @click.prevent="close">Close</a>
+        <button type="button" class="fb-slideshow__control" @click="toggleFullscreen">{{ fullscreen ? t('leaveFullScreen') : t('fullScreen') }}</button>
+        <a class="fb-slideshow__control" :href="show?.back ?? '/'" @click.prevent="close">{{ t('close') }}</a>
       </nav>
       <p class="fb-visually-hidden" role="status">{{ announcement }}</p>
     </template>

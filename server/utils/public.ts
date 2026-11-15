@@ -1,5 +1,6 @@
 // What the public pages and feeds may know about photos. Only photos that
 // are processed and public are ever returned from here.
+import { cleanSeo } from '../../shared/seo.ts'
 import { thumbHashToDataURL } from 'thumbhash'
 import { DEFAULT_LICENCE, licenceFor } from '../../shared/licences.ts'
 import { resolveSettings } from '../core/config.ts'
@@ -274,6 +275,9 @@ export function publicDownload(slug: string): { area: 'originals' | 'derivatives
 
 /** The site's own address as visitors see it, for links in feeds and social cards. */
 export function siteOrigin(event: RequestEvent): string {
+  // The address the owner gave as the site's proper one wins over the one the visitor used.
+  const fixed = cleanSeo(getSetting<unknown>('seo.settings', {})).settings.siteUrl
+  if (fixed) return fixed
   const url = getRequestURL(event)
   // Behind our own proxy, the visitor's scheme is in X-Forwarded-Proto.
   const forwarded = resolveSettings(process.env).trustProxy ? getRequestHeader(event, 'x-forwarded-proto')?.split(',')[0]?.trim() : undefined

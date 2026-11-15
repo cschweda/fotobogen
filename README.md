@@ -32,6 +32,7 @@ plan is in [docs/DESIGN.md](docs/DESIGN.md); changes are recorded in
 - [Skins](#skins)
 - [Uploading photos](#uploading-photos)
 - [Managing photos](#managing-photos)
+- [Making the site your own](#making-the-site-your-own)
 - [Albums and tags](#albums-and-tags)
 - [Sample photos](#sample-photos)
 - [Modules](#modules)
@@ -361,6 +362,48 @@ recorded, the place included.
 **Admin, Settings** holds the site title and tagline, the grid layout,
 whether photos open over the grid or on their own page, and the two privacy
 switches: camera details (on by default) and location (off by default).
+
+## Making the site your own
+
+Nothing a visitor sees has to say "Fotobogen". Three admin pages make the
+site yours:
+
+**Admin, Site text.** The site's title and tagline, the language its text is
+in, and every fixed piece of text on the public pages: the links at the top,
+the buttons, the labels beside a photo, the slideshow's controls, and the
+messages shown when a page cannot be. Each field shows the default wording;
+type your own to replace it, or leave it empty to keep the default. There is
+also a line of your own for the footer, empty to begin with (a copyright
+notice, say). Text is shown as text: markup typed into a field is not run.
+The language is a code such as `en` or `de`; it tells screen readers and
+search engines what language the words are in, and does not translate
+anything.
+
+**Admin, Search and sharing.** What search engines and social networks are
+told, with a preview of each:
+
+| Setting | Left alone |
+|---|---|
+| Title of the home page | The site's title |
+| Description of the site | The tagline |
+| How other pages' titles are written | `Photo | Site` |
+| Picture shown when the site is shared | The newest photo |
+| Let search engines list the site | Yes |
+| The site's proper address | The address each visitor used |
+| Photographer's name, X username | None |
+| Google and Bing verification codes | None |
+
+A link to one photo always shows that photo, with its own title,
+description, and alt text. Asking search engines not to list the site is a
+request the well-known ones honour; it does not make the site private.
+
+**Admin, Skins** changes how it looks ([Skins](#skins)).
+
+**Links to a photo.** Each photo's page in the library has a **Links**
+panel: the full address of the photo's page and of each size of the picture,
+and a line of HTML that shows the photo linked to its page, each with a Copy
+button. Together with the title, description, and alt text above it, that
+page is the photo's entry in the library.
 
 ## Albums and tags
 
