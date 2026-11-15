@@ -35,6 +35,7 @@ The admin's own endpoints under `/api/admin/` are not part of this; they need a 
   "photoView": "modal",
   "skinVersion": "126418a685",
   "mode": "dark",
+  "brand": { "icon": null, "logo": null },
   "language": "en",
   "text": { "navPhotos": "Fotografias" },
   "seo": { "homeTitle": "", "titlePattern": "{page} | {site}", "description": "", "indexing": true, "siteUrl": "", "author": "", "twitter": "", "googleVerification": "", "bingVerification": "", "card": null },
@@ -42,7 +43,7 @@ The admin's own endpoints under `/api/admin/` are not part of this; they need a 
 }
 ```
 
-`language` is the language code of the site's text. `text` holds the owner's replacements for the fixed text on the pages, keyed as in [`shared/site-text.ts`](../shared/site-text.ts); a key that is absent uses the default there. `seo` is what the owner set under Search and sharing; `card` is the picture used when the site is shared (`url`, `width`, `height`, `alt`), or `null`.
+`brand` holds the owner's icon (`small`, `touch`, `large` addresses) and logo (`light` and `dark`, each with `url`, `width`, `height`), or `null` for each that is not set. `language` is the language code of the site's text. `text` holds the owner's replacements for the fixed text on the pages, keyed as in [`shared/site-text.ts`](../shared/site-text.ts); a key that is absent uses the default there. `seo` is what the owner set under Search and sharing; `card` is the picture used when the site is shared (`url`, `width`, `height`, `alt`), or `null`.
 
 ## Photos
 

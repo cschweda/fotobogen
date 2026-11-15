@@ -208,6 +208,11 @@ export function renderCss(skin: Skin, values: SkinValues): string {
 :root.fb-public { ${colours('light')} }
 :root.fb-public[data-fb-mode="dark"] { ${colours('dark')} }
 @media (prefers-color-scheme: dark) { :root.fb-public[data-fb-mode="auto"] { ${colours('dark')} } }
+/* The owner's logo: the one for the mode in use is shown, at the size the page gives it. */
+.fb-site-logo { display: block; max-width: 100%; height: auto; }
+.fb-site-logo--dark { display: none; }
+[data-fb-mode="dark"] .fb-site-logo--dark { display: block; } [data-fb-mode="dark"] .fb-site-logo--light { display: none; }
+@media (prefers-color-scheme: dark) { [data-fb-mode="auto"] .fb-site-logo--dark { display: block; } [data-fb-mode="auto"] .fb-site-logo--light { display: none; } }
 /* The switch names the mode it changes to. */
 .fb-mode__to-light { display: none; }
 [data-fb-mode="dark"] ${toDark.replace(' .fb-mode__to-light', ' [data-fb-mode="dark"] .fb-mode__to-light')}

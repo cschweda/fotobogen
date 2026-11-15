@@ -397,6 +397,17 @@ A link to one photo always shows that photo, with its own title,
 description, and alt text. Asking search engines not to list the site is a
 request the well-known ones honour; it does not make the site private.
 
+**Admin, Icon and logo.** Two optional pictures. The **icon** appears in the
+browser tab, in bookmarks, and on a phone's home screen; upload a square
+picture (512 by 512 is a good size) and the sizes needed are made from it.
+The **logo** is shown at the top of every page in place of the site's name,
+which stays as its description for screen readers. A logo can be given for
+light mode, dark mode, or both, and its height set from 20 to 120 pixels.
+PNG, JPEG, and WebP are accepted, up to 5 MB; SVG is not, because an SVG
+file can carry scripts. Each picture is redrawn before it is kept, and both
+are stored in the database, so they are in every backup. Fotobogen's own
+mark appears only in the admin.
+
 **Admin, Skins** changes how it looks ([Skins](#skins)).
 
 **Links to a photo.** The resized copies of every public photo are served

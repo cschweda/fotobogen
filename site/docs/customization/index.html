@@ -53,6 +53,7 @@
         <li><a href="#where">Where things are changed</a></li>
         <li><a href="#menu">Finding your way round the admin</a></li>
         <li><a href="#name">Its name and its words</a></li>
+        <li><a href="#identity">Its icon and logo</a></li>
         <li><a href="#look">Its look</a></li>
         <li><a href="#photos">How photographs look</a></li>
         <li><a href="#layout">How the site is laid out</a></li>
@@ -89,9 +90,10 @@
     <tr><td rowspan="3">Photos</td><td><strong>Upload</strong></td><td>Adds photographs</td></tr>
     <tr><td><strong>Library</strong></td><td>Order, visibility, and each photo's title, description, alt text, tags, look, licence, and links</td></tr>
     <tr><td><strong>Albums</strong></td><td>Named sets of photos</td></tr>
-    <tr><td rowspan="3">Appearance</td><td><strong>Skins</strong></td><td>The look, the colours, light or dark, columns and spacing</td></tr>
+    <tr><td rowspan="4">Appearance</td><td><strong>Skins</strong></td><td>The look, the colours, light or dark, columns and spacing</td></tr>
     <tr><td><strong>Modules</strong></td><td>Looks applied to photos: film, frames, watermark, sharpening</td></tr>
     <tr><td><strong>Site text</strong></td><td>The site's name, tagline, language, and every word on it</td></tr>
+    <tr><td><strong>Icon and logo</strong></td><td>The picture in the browser tab, and a logo in place of the site's name</td></tr>
     <tr><td rowspan="2">Site</td><td><strong>Settings</strong></td><td>Layout, privacy, licence, downloads, drafts, slideshow</td></tr>
     <tr><td><strong>Search and sharing</strong></td><td>Titles, description, sharing picture, search engines, the site's address</td></tr>
     <tr><td rowspan="2">Server</td><td><strong>System</strong></td><td>Backup, restore, updates</td></tr>
@@ -115,6 +117,20 @@
 </table></div>
 <p>The groups of text are: header and footer; the photo grid; a photo; albums and tags; the slideshow; and what is shown when a page cannot be. To run the site in another language, set the language code and reword the fields. A few pieces of text contain names in curly brackets, such as <code>{count}</code>; keep those, as they are filled in when the page is shown.</p>
 <p><strong>What cannot be changed here:</strong> your photos' own titles and descriptions (those are on each photo's page in the Library), album names (Albums), and the licence wording (Settings). Text is always shown as text: HTML typed into a field appears as typed and is not run.</p>
+
+<h2 id="identity">Its icon and logo</h2>
+<p><strong>Where:</strong> Admin, Appearance, <strong>Icon and logo</strong>. Both are optional. Without them the site shows its name as text, and the browser tab has no icon.</p>
+<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
+  <thead><tr><th>What</th><th>How</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>Icon</td><td><strong>Choose an icon</strong>, and pick a picture</td><td>Shown in the browser tab, in bookmarks, and on a phone's home screen. Use a square picture of 512 by 512 pixels; at least 64. One that is not square is cropped to its middle. A simple shape reads better than a photograph at this size.</td></tr>
+    <tr><td>Logo</td><td><strong>Choose a logo</strong>, for light mode, dark mode, or both</td><td>Shown at the top of every page in place of the site's name. The name stays as its description for screen readers and search engines. A PNG with a transparent background works best.</td></tr>
+    <tr><td>A different logo for dark mode</td><td>Upload a second one under <strong>For dark mode</strong></td><td>A logo that reads well on a light page may vanish on a dark one. With only one, it is used for both.</td></tr>
+    <tr><td>How tall the logo is</td><td>The slider, then <strong>Save size</strong></td><td>From 20 to 120 pixels; 40 to begin with. A logo is never drawn larger than the picture you gave.</td></tr>
+    <tr><td>Going back</td><td><strong>Remove</strong> beside each</td><td>The name returns as text.</td></tr>
+  </tbody>
+</table></div>
+<p><strong>What is accepted:</strong> PNG, JPEG, or WebP, up to 5 MB, judged by what is inside the file. SVG is refused, because an SVG file can carry scripts; export it as a PNG. The picture is redrawn before it is kept, so only its pixels are stored. Both pictures are kept in the site's database, so they are in every backup.</p>
 
 <h2 id="look">Its look</h2>
 <p><strong>Where:</strong> Admin, Appearance, <strong>Skins</strong>. <a href="/docs/skins/">The skins page</a> has the details.</p>
@@ -223,7 +239,6 @@
   <li><strong>The admin's own appearance.</strong> It is dark and says "Fotobogen". Only you see it.</li>
   <li><strong>The structure of the public pages.</strong> A skin restyles them thoroughly but cannot rearrange or add to them. There are no custom pages (an "About" page, say) yet.</li>
   <li><strong>The menu at the top of the site.</strong> Its links can be reworded, but not removed, reordered, or added to.</li>
-  <li><strong>A site icon or logo.</strong> The site's name is shown as text, and the browser tab has no icon of its own.</li>
   <li><strong>The sizes of the resized copies.</strong> They are fixed; see <a href="/docs/configuration/#derivatives">why</a>.</li>
   <li><strong>More than one account.</strong> There is one admin.</li>
 </ul>
