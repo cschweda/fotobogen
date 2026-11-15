@@ -1,10 +1,12 @@
 // The queued part of an upload (DESIGN.md section 7): read the camera
 // details, then make the resized copies and the placeholder.
 //
-// Memory: the original is decoded once, straight down to a working raster
-// of at most 2560 px on its long edge (about 20 MB). Every derivative is
-// made from that raster, so a 40-megapixel original never sits in memory
-// at full size.
+// Memory: the original is decoded once into a working raster of at most
+// 2560 px on its long edge (about 20 MB), and every derivative is made from
+// that. JPEG, ordinary PNG, and TIFF are shrunk as they are read, so a
+// 100-megapixel original peaks at a few hundred MB. AVIF, WebP, and
+// interlaced PNG are held whole while decoding, which is why acceptUpload
+// gives them lower pixel limits (see limits.ts).
 import { createHash } from 'node:crypto'
 import { readFile, rm } from 'node:fs/promises'
 import { join } from 'node:path'

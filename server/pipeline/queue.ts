@@ -55,7 +55,7 @@ export function createQueue(ctx: PipelineContext, options: QueueOptions = {}): Q
   }
 
   /** Claim the oldest waiting job, counting the attempt before any work is done. */
-  const take = sqlite.transaction((): Job | undefined => {
+  const claim = sqlite.transaction((): Job | undefined => {
     const row = sqlite.prepare(`
       select id, type, photo_id as photoId, attempts from jobs
       where status = 'queued' order by created_at, rowid limit 1
@@ -65,18 +65,43 @@ export function createQueue(ctx: PipelineContext, options: QueueOptions = {}): Q
       .run(Date.now(), row.id)
     return { ...row, attempts: row.attempts + 1 }
   })
+  // "immediate" takes the write lock up front, so another process working
+  // the same database (pnpm seed:fetch) waits its turn instead of failing.
+  const take = (): Job | undefined => claim.immediate()
+
+  // Jobs this process claimed but could not record the outcome of (the disk
+  // filled, say). They are put back the next time the worker starts.
+  const stranded = new Set<string>()
 
   async function work(): Promise<void> {
+    for (const id of stranded) {
+      sqlite.prepare(`update jobs set status = 'queued' where id = ? and status = 'running'`).run(id)
+      stranded.delete(id)
+    }
     for (let job = take(); job; job = take()) {
+      let failure: { error: unknown } | undefined
       try {
         await run(ctx, job)
-        sqlite.prepare(`update jobs set status = 'done', error = null, finished_at = ? where id = ?`).run(Date.now(), job.id)
       }
       catch (error) {
+        failure = { error }
         options.onError?.(job, error)
-        const message = error instanceof Error ? error.message : String(error)
-        if (job.attempts >= maxAttempts) fail(job, message)
-        else sqlite.prepare(`update jobs set status = 'queued', error = ? where id = ?`).run(message.slice(0, ERROR_LIMIT), job.id)
+      }
+      try {
+        if (!failure) {
+          sqlite.prepare(`update jobs set status = 'done', error = null, finished_at = ? where id = ?`).run(Date.now(), job.id)
+        }
+        else {
+          const message = failure.error instanceof Error ? failure.error.message : String(failure.error)
+          if (job.attempts >= maxAttempts) fail(job, message)
+          else sqlite.prepare(`update jobs set status = 'queued', error = ? where id = ?`).run(message.slice(0, ERROR_LIMIT), job.id)
+        }
+      }
+      catch (error) {
+        // The database itself refused. Stop here rather than spin; the job
+        // is put back when the worker next starts.
+        stranded.add(job.id)
+        throw error
       }
       // Let waiting requests run between jobs.
       await new Promise(resume => setImmediate(resume))
@@ -85,7 +110,9 @@ export function createQueue(ctx: PipelineContext, options: QueueOptions = {}): Q
 
   function kick(): void {
     if (working) return
-    working = work().finally(() => { working = undefined })
+    working = work()
+      .catch(error => options.onError?.({ id: '', type: 'ingest', photoId: '(queue)', attempts: 0 }, error))
+      .finally(() => { working = undefined })
   }
 
   return {
@@ -101,7 +128,7 @@ export function createQueue(ctx: PipelineContext, options: QueueOptions = {}): Q
       for (const job of interrupted) {
         // A job that keeps taking the server down with it (out of memory,
         // for example) must not be retried forever.
-        if (job.attempts >= maxAttempts) fail(job, 'The server stopped while processing this photo, three times.')
+        if (job.attempts >= maxAttempts) fail(job, `The server stopped while processing this photo, ${maxAttempts} times.`)
         else sqlite.prepare(`update jobs set status = 'queued' where id = ?`).run(job.id)
       }
       return interrupted.length

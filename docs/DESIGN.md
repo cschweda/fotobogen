@@ -217,7 +217,7 @@ The password strength indicator is a small built-in estimate (length and charact
 
 Never upscale. A size the original cannot fill is made at the original's own size instead, so every photo has a thumb, a square, and a medium; `large` is skipped when it would be identical to `medium`.
 
-The original is decoded once, straight down to a working raster of at most 2560 px on the long edge, and every derivative is made from that. This is what keeps a 40-megapixel original inside 1 GB.
+The original is decoded once, straight down to a working raster of at most 2560 px on the long edge, and every derivative is made from that. JPEG, ordinary PNG, and TIFF are shrunk as they are read, so even a 100-megapixel original peaks at a few hundred MB (a 40 MP JPEG, PNG, and TIFF peaked at 250 MB in a 1 GB container with no swap). AVIF, WebP, and interlaced PNG are held whole while decoding (measured: AVIF about 27 MB per megapixel), so they have lower pixel limits: 16, 60, and 40 megapixels.
 
 5. Compute thumbhash, set `status = ready`.
 

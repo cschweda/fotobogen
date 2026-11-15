@@ -133,3 +133,22 @@ describe('acceptUpload', () => {
     ])
   })
 })
+
+describe('formats that are costly to open', () => {
+  it('holds AVIF to 16 megapixels and says what to do instead', async () => {
+    const ctx = testContext()
+    const tmpPath = await imageFile(join(ctx.tmpDir, 'big-avif'), { format: 'avif', width: 4100, height: 4000 })
+    const outcome = await acceptUpload(ctx, { tmpPath, filename: 'big.avif' })
+    expect(outcome).toMatchObject({ result: 'rejected', reason: 'too-many-pixels' })
+    expect((outcome as { message: string }).message).toBe(
+      'This photo is 16.4 megapixels; the limit for AVIF files is 16 megapixels, because they take much more memory to open. Save it as a JPEG and upload that.',
+    )
+  })
+  it('accepts an AVIF within its limit, and a JPEG of the same size as the refused AVIF', async () => {
+    const ctx = testContext()
+    const small = await imageFile(join(ctx.tmpDir, 'ok-avif'), { format: 'avif', width: 1200, height: 800 })
+    expect((await acceptUpload(ctx, { tmpPath: small, filename: 'ok.avif' })).result).toBe('accepted')
+    const jpeg = await imageFile(join(ctx.tmpDir, 'big-jpeg'), { format: 'jpeg', width: 4100, height: 4000 })
+    expect((await acceptUpload(ctx, { tmpPath: jpeg, filename: 'big.jpg' })).result).toBe('accepted')
+  })
+})

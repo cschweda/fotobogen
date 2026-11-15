@@ -5,7 +5,7 @@
 definePageMeta({ middleware: 'admin' })
 useHead({ title: 'Upload photos | Fotobogen' })
 
-type State = 'waiting' | 'uploading' | 'processing' | 'ready' | 'duplicate' | 'rejected' | 'failed'
+type State = 'waiting' | 'uploading' | 'processing' | 'ready' | 'duplicate' | 'rejected' | 'failed' | 'removed'
 
 interface Item {
   key: number
@@ -32,6 +32,7 @@ const LABELS: Record<State, string> = {
   duplicate: 'Already in your library',
   rejected: 'Not accepted',
   failed: 'Could not be processed',
+  removed: 'Removed',
 }
 
 const items = ref<Item[]>([])
@@ -96,7 +97,11 @@ async function sendNext() {
     }
     else {
       item.state = 'rejected'
-      item.message = typeof body.message === 'string' ? body.message : 'The upload did not reach the server. Check your connection and try again.'
+      item.message = typeof body.message === 'string'
+        ? body.message
+        : status === 413 ? 'This file is larger than the server accepts.'
+          : status === 0 ? 'The upload did not reach the server. Check your connection and try again.'
+            : `The server could not take this upload (error ${status}). Try again.`
     }
     if (item.state !== 'processing') announcement.value = `${item.name}: ${LABELS[item.state]}. ${item.message}`
   }
@@ -109,15 +114,25 @@ async function watch() {
   const pending = items.value.filter(item => item.state === 'processing')
   if (pending.length === 0) return
   try {
-    const { photos } = await $fetch<{ photos: Listed[] }>('/api/admin/photos')
-    for (const item of pending) {
+    // Ask about these photos by id, so a large library cannot hide them.
+    const asked = pending.slice(0, 100)
+    const { photos } = await $fetch<{ photos: Listed[] }>('/api/admin/photos', { query: { ids: asked.map(item => item.photoId).join(',') } })
+    const finished: string[] = []
+    for (const item of asked) {
       const photo = photos.find(listed => listed.id === item.photoId)
-      if (!photo || photo.status === 'processing') continue
-      item.state = photo.status
-      item.thumb = photo.thumb ?? undefined
-      item.message = photo.status === 'failed' ? (photo.error ?? '') : ''
-      announcement.value = `${item.name}: ${LABELS[item.state]}.`
+      if (photo?.status === 'processing') continue
+      if (!photo) {
+        item.state = 'removed'
+        item.message = 'This photo was removed from the library.'
+      }
+      else {
+        item.state = photo.status
+        item.thumb = photo.thumb ?? undefined
+        item.message = photo.status === 'failed' ? (photo.error ?? '') : ''
+      }
+      finished.push(`${item.name}: ${LABELS[item.state]}.`)
     }
+    if (finished.length > 0) announcement.value = finished.length > 3 ? `${finished.length} photos finished processing.` : finished.join(' ')
     void refreshLibrary()
   }
   catch { /* try again on the next tick */ }
@@ -238,7 +253,7 @@ onBeforeUnmount(() => clearTimeout(poll))
 .item--ready .item__state { color: var(--fb-text); }
 .item__size::before { content: "/"; margin: 0 0.35em; color: var(--fb-edge); }
 .item__message { color: var(--fb-error); font-size: 0.875rem; }
-.item--duplicate .item__message { color: var(--fb-muted); }
+.item--duplicate .item__message, .item--removed .item__message { color: var(--fb-muted); }
 .item__bar { width: 100%; height: 0.25rem; appearance: none; border: 0; background: var(--fb-frame); }
 .item__bar::-webkit-progress-bar { background: var(--fb-frame); }
 .item__bar::-webkit-progress-value { background: var(--fb-text); }

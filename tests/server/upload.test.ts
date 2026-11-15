@@ -100,6 +100,13 @@ describe('uploading photos', () => {
     expect((await get(server, `/media/${original}`)).status).toBe(404)
   })
 
+  it('reports on chosen photos by id, leaving out ids that do not exist', async () => {
+    const { photos } = await listPhotos(server, cookie)
+    const response = await get(server, `/api/admin/photos?ids=${photos[0]!.id},gone-gone-gone,../x`, { cookie })
+    const chosen = await response.json() as { photos: { id: string }[] }
+    expect(chosen.photos.map(photo => photo.id)).toEqual([photos[0]!.id])
+  })
+
   it('retries only photos that failed', async () => {
     const { photos } = await listPhotos(server, cookie)
     const retry = (id: string) => fetch(`${server.url}/api/admin/photos/${id}/retry`, { method: 'POST', headers: { origin: server.url, cookie } })

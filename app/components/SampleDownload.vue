@@ -20,6 +20,8 @@ const status = ref<Status | null>(null)
 const busy = ref(false)
 const problem = ref('')
 const announcement = ref('')
+const root = ref<HTMLElement>()
+const heading = ref<HTMLElement>()
 let timer: ReturnType<typeof setTimeout> | undefined
 
 async function refresh() {
@@ -27,11 +29,18 @@ async function refresh() {
   try {
     const next = await $fetch<Status>('/api/admin/samples')
     const before = status.value?.state
+    // The buttons differ from one state to the next. If the one that had
+    // focus is about to disappear, move focus to the heading rather than
+    // letting it fall back to the top of the page.
+    const hadFocus = before !== undefined && before !== next.state && root.value?.contains(document.activeElement)
     status.value = next
+    if (hadFocus) {
+      await nextTick()
+      if (!root.value?.contains(document.activeElement)) heading.value?.focus()
+    }
     if (before === 'running' && next.state !== 'running') {
-      announcement.value = next.state === 'done'
-        ? `All ${next.total} sample photos were downloaded.`
-        : next.state === 'failed' ? 'The sample photo download did not finish.' : ''
+      if (next.state === 'done') announcement.value = `All ${next.total} sample photos were downloaded.`
+      else if (next.state === 'failed') announcement.value = 'The sample photo download did not finish.'
       emit('changed')
     }
   }
@@ -73,8 +82,8 @@ const stuck = computed(() => (status.value?.failedRuns ?? 0) >= 2)
 </script>
 
 <template>
-  <section class="samples" aria-labelledby="samples-heading">
-    <h2 id="samples-heading" class="samples__heading">Sample photos</h2>
+  <section ref="root" class="samples" aria-labelledby="samples-heading">
+    <h2 id="samples-heading" ref="heading" class="samples__heading" tabindex="-1">Sample photos</h2>
     <p class="fb-visually-hidden" role="status">{{ announcement }}</p>
     <div class="fb-alert" role="alert">{{ problem }}</div>
 
@@ -138,6 +147,7 @@ const stuck = computed(() => (status.value?.failedRuns ?? 0) >= 2)
 <style scoped>
 .samples { max-width: 34rem; margin-top: 2.5rem; padding-top: 1.25rem; border-top: 1px solid var(--fb-line); }
 .samples__heading { margin: 0 0 0.75rem; font-size: 1rem; font-weight: 700; }
+.samples__heading:focus { outline: none; } /* focused by script when the buttons change */
 .samples__count { margin: 0 0 0.75rem; color: var(--fb-muted); }
 .samples__number { color: var(--fb-text); font-size: 2rem; font-weight: 700; letter-spacing: -0.03em; margin-right: 0.15em; }
 .samples__strip { display: grid; grid-template-columns: repeat(25, 1fr); gap: 3px; margin-bottom: 1rem; }

@@ -22,6 +22,7 @@ const entries = manifest.photos as SampleEntry[]
 const idle = (): SampleStatus => ({ state: 'idle', total: entries.length, done: 0, failed: 0, failedRuns: 0, message: null })
 let status = idle()
 let current: { stop: AbortController, finished: Promise<void> } | undefined
+let removing = false
 
 export const sampleStatus = (): SampleStatus => status
 
@@ -32,7 +33,7 @@ export function samplesInLibrary(): number {
 
 /** Starts the download and returns at once. False when one is already running. */
 export function startSampleFetch(): boolean {
-  if (current) return false
+  if (current || removing) return false
   const failedRuns = status.failedRuns
   status = { ...idle(), state: 'running', failedRuns }
   const queue = getQueue()
@@ -47,7 +48,7 @@ export function startSampleFetch(): boolean {
       status = { ...status, done: progress.added + progress.skipped, failed: progress.failed.length }
     },
   }).then((result) => {
-    if (result.cancelled) return // cancelSampleFetch sets the status
+    if (result.cancelled) return // removeSamples, which cancelled it, resets the status
     const done = result.added + result.skipped
     const failed = result.failed.length
     if (failed === 0) {
@@ -83,8 +84,17 @@ export async function cancelSampleFetch(): Promise<void> {
 
 /** Stops any download, then removes every sample photo and its files. */
 export async function removeSamples(): Promise<number> {
-  await cancelSampleFetch()
-  const removed = await deletePhotos(getPipeline(), 'samples')
-  status = idle()
-  return removed
+  removing = true
+  try {
+    await cancelSampleFetch()
+    const removed = await deletePhotos(getPipeline(), 'samples')
+    if (removed.leftBehind.length > 0) {
+      console.warn(`Sample photos: ${removed.leftBehind.length} files could not be deleted and were left in the data directory: ${removed.leftBehind.join(', ')}`)
+    }
+    return removed.count
+  }
+  finally {
+    removing = false
+    status = idle()
+  }
 }

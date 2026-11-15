@@ -1,7 +1,13 @@
 // Deleting photos: the rows, then the files they pointed at.
 import type { PipelineContext } from './context.ts'
 
-export async function deletePhotos(ctx: PipelineContext, where: 'samples' | { ids: string[] }): Promise<number> {
+export interface DeleteResult {
+  count: number
+  /** Files that could not be deleted; their rows are gone. */
+  leftBehind: string[]
+}
+
+export async function deletePhotos(ctx: PipelineContext, where: 'samples' | { ids: string[] }): Promise<DeleteResult> {
   const { sqlite, storage } = ctx
   const removed = sqlite.transaction(() => {
     const photos = where === 'samples'
@@ -20,6 +26,10 @@ export async function deletePhotos(ctx: PipelineContext, where: 'samples' | { id
     return { count: photos.length, files }
   })()
   // Files last: a crash here leaves stray files, never rows without files.
-  for (const file of removed.files) await storage.delete(file.area, file.key)
-  return removed.count
+  // One file that cannot be deleted (still open, on Windows) must not stop the rest.
+  const leftBehind: string[] = []
+  for (const file of removed.files) {
+    await storage.delete(file.area, file.key).catch(() => leftBehind.push(`${file.area}/${file.key}`))
+  }
+  return { count: removed.count, leftBehind }
 }

@@ -116,4 +116,36 @@ describe('the job queue', () => {
     expect(queue.retry(id)).toBe(false) // not failed any more
     expect(queue.retry('no-such-id')).toBe(false)
   })
+
+  it('survives the database refusing to record an outcome, and picks the job up again later', async () => {
+    const ctx = testContext()
+    await upload(ctx, 1)
+    const reported: string[] = []
+    let breakIt = true
+    const queue = createQueue(ctx, {
+      onError: (_job, error) => reported.push(String((error as Error).message)),
+      run: async () => {
+        // Stands in for a full disk: the next statement the queue runs fails.
+        if (breakIt) ctx.sqlite.exec('alter table jobs rename to jobs_away')
+      },
+    })
+    queue.kick()
+    await queue.idle() // resolves; nothing is thrown into the void
+    expect(reported.join(' ')).toMatch(/no such table/)
+
+    ctx.sqlite.exec('alter table jobs_away rename to jobs')
+    breakIt = false
+    expect(jobs(ctx).map(j => j.status)).toEqual(['running']) // stranded for now
+    queue.kick()
+    await queue.idle()
+    expect(jobs(ctx).map(j => [j.status, j.attempts])).toEqual([['done', 2]])
+  })
+
+  it('reports how many times it tried when giving up after a restart', async () => {
+    const ctx = testContext()
+    await upload(ctx, 1)
+    ctx.sqlite.prepare(`update jobs set status = 'running', attempts = 2`).run()
+    createQueue(ctx, { maxAttempts: 2 }).recover()
+    expect(jobs(ctx)[0]!.error).toBe('The server stopped while processing this photo, 2 times.')
+  })
 })

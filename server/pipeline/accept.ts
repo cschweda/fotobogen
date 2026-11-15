@@ -8,6 +8,7 @@ import { basename, extname } from 'node:path'
 import { newId } from '../core/ids.ts'
 import type { PipelineContext } from './context.ts'
 import sharp from './image.ts'
+import { pixelLimitFor } from './limits.ts'
 import { slugify, uniqueSlug } from './slug.ts'
 
 export type ImageFormat = 'jpeg' | 'png' | 'webp' | 'tiff' | 'avif'
@@ -78,13 +79,14 @@ function sha256(path: string): Promise<string> {
 }
 
 /** Pixel dimensions as the photo is viewed, after EXIF rotation; null when unreadable. */
-async function readDimensions(path: string, format: ImageFormat): Promise<{ width: number, height: number } | null> {
+async function readDimensions(path: string, format: ImageFormat): Promise<{ width: number, height: number, interlaced: boolean } | null> {
   try {
     const meta = await sharp(path).metadata()
     const read = meta.format === 'heif' ? (meta.compression === 'av1' ? 'avif' : null) : meta.format
     if (read !== format || !meta.width || !meta.height) return null
     const turned = (meta.orientation ?? 1) >= 5 // orientations 5 to 8 swap the sides
-    return turned ? { width: meta.height, height: meta.width } : { width: meta.width, height: meta.height }
+    const interlaced = meta.isProgressive === true
+    return turned ? { width: meta.height, height: meta.width, interlaced } : { width: meta.width, height: meta.height, interlaced }
   }
   catch {
     return null
@@ -117,11 +119,15 @@ export async function acceptUpload(ctx: PipelineContext, input: UploadInput): Pr
 
     const size = await readDimensions(input.tmpPath, format)
     if (!size) return { result: 'rejected', reason: 'not-an-image', message: NOT_AN_IMAGE }
-    if (size.width * size.height > ctx.limits.maxPixels) {
+    const limit = pixelLimitFor(format, size.interlaced, ctx.limits)
+    if (size.width * size.height > limit.maxPixels) {
+      const NAMES: Record<string, string> = { 'avif': 'AVIF', 'webp': 'WebP', 'interlaced png': 'interlaced PNG' }
       return {
         result: 'rejected',
         reason: 'too-many-pixels',
-        message: `This photo is ${megapixels(size.width * size.height)}; the limit is ${megapixels(ctx.limits.maxPixels)}.`,
+        message: limit.kind
+          ? `This photo is ${megapixels(size.width * size.height)}; the limit for ${NAMES[limit.kind]} files is ${megapixels(limit.maxPixels)}, because they take much more memory to open. Save it as a JPEG and upload that.`
+          : `This photo is ${megapixels(size.width * size.height)}; the limit is ${megapixels(limit.maxPixels)}.`,
       }
     }
 

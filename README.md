@@ -136,7 +136,9 @@ them on the page; each one shows its progress and result.
 - Accepted: JPEG, PNG, WebP, TIFF, and AVIF. A file is judged by its
   contents, not its name.
 - Limits: 50 MB per file and 100 megapixels per image by default
-  (see [Settings](#settings)).
+  (see [Settings](#settings)). AVIF is held to 16 megapixels, WebP to 60, and
+  interlaced PNG to 40, because those formats need far more memory to open;
+  a larger one is refused with a note to upload a JPEG instead.
 - The same file is not stored twice; a duplicate is refused and the page
   names the photo that already has it.
 - The file you upload is kept untouched in `data/originals/`. Resized WebP

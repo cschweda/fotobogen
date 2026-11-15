@@ -69,6 +69,8 @@ test('when the download fails, setup offers another try, and after two failures 
     picsum.down = false
     await page.getByRole('button', { name: 'Download sample photos' }).click()
     await expect(page.getByText('All 25 sample photos are in your library.')).toBeVisible({ timeout: 30_000 })
+    // The button that was pressed is gone; focus stays in the section instead of jumping to the top.
+    await expect(page.getByRole('heading', { name: 'Sample photos' })).toBeFocused()
     await expectNoAxeViolations(page)
     await page.getByRole('button', { name: 'Remove sample photos' }).click()
     await expect(page.getByRole('button', { name: 'Download sample photos' })).toBeVisible()
