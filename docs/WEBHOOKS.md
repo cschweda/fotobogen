@@ -78,6 +78,6 @@ Because a message can arrive twice (a slow answer followed by a retry), make you
 
 ## Which addresses can be called
 
-Only addresses on the public internet, by default. A webhook pointed at this machine or a private network (`localhost`, `192.168.…`, `10.…`, and so on) is refused, both when it is added and each time it would be called. That stops a webhook being used to reach things that are not meant to be reachable from outside.
+Only addresses on the public internet, by default. A webhook pointed at this machine or a private network (`localhost`, `192.168.…`, `10.…`, and so on) is refused, both when it is added and each time it would be called. That stops a webhook being used to reach things that are not meant to be reachable from outside. The check is made on the address the connection is actually made to, so a name that is pointed somewhere else later does not get round it, and every way of writing a private address counts, including IPv6 forms that wrap an IPv4 one.
 
 If you do want to call something on your own network, such as an automation tool on the same server, set `WEBHOOKS_ALLOW_PRIVATE=1` in `.env` and restart.

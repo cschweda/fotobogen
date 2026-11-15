@@ -3,7 +3,7 @@
 import { createHmac, randomBytes } from 'node:crypto'
 import { resolveSettings } from '../core/config.ts'
 import { newId } from '../core/ids.ts'
-import { checkWebhookAddress } from '../core/webhook-address.ts'
+import { checkWebhookAddress, parseWebhookUrl, postJson } from '../core/webhook-address.ts'
 import { getSetting, setSettings } from './settings.ts'
 
 export const EVENTS = ['photo.uploaded', 'photo.published', 'photo.deleted'] as const
@@ -55,29 +55,20 @@ export function removeWebhook(id: string): boolean {
 async function send(hook: Webhook, body: string): Promise<Delivery> {
   const event = (JSON.parse(body) as { event: string }).event
   const result = (ok: boolean, detail: string): Delivery => ({ at: Date.now(), event, ok, detail })
-  // Checked every time: the name may point somewhere else than when it was added.
-  const address = await checkWebhookAddress(hook.url, allowPrivate())
-  if (!address.ok) return result(false, address.message)
-  try {
-    const response = await fetch(address.url, {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'user-agent': 'fotobogen-webhook',
-        'x-fotobogen-event': event,
-        'x-fotobogen-signature': `sha256=${createHmac('sha256', hook.secret).update(body).digest('hex')}`,
-      },
-      body,
-      // A redirect could lead somewhere the address check never saw.
-      redirect: 'manual',
-      signal: AbortSignal.timeout(TIMEOUT_MS),
-    })
-    await response.body?.cancel()
-    return response.status >= 200 && response.status < 300 ? result(true, `Answered ${response.status}`) : result(false, `Answered ${response.status}`)
-  }
-  catch (error) {
-    return result(false, error instanceof Error && error.name === 'TimeoutError' ? 'Did not answer within 10 seconds' : 'Could not be reached')
-  }
+  const parsed = parseWebhookUrl(hook.url)
+  if (!parsed.ok) return result(false, parsed.message)
+  // postJson resolves the name itself and connects only to what it resolved,
+  // refusing private addresses there, so the check cannot be sidestepped by
+  // a name that changes where it points.
+  const outcome = await postJson(parsed.url, {
+    'content-type': 'application/json',
+    'user-agent': 'fotobogen-webhook',
+    'x-fotobogen-event': event,
+    'x-fotobogen-signature': `sha256=${createHmac('sha256', hook.secret).update(body).digest('hex')}`,
+  }, body, { allowPrivate: allowPrivate(), timeoutMs: TIMEOUT_MS })
+  if ('refused' in outcome) return result(false, outcome.refused)
+  if ('failed' in outcome) return result(false, outcome.failed === 'timeout' ? 'Did not answer within 10 seconds' : 'Could not be reached')
+  return result(outcome.status >= 200 && outcome.status < 300, `Answered ${outcome.status}`)
 }
 
 async function deliver(hook: Webhook, body: string, attempt = 0): Promise<Delivery> {
