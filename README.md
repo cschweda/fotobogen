@@ -9,10 +9,12 @@ A self-hosted publishing platform for photographs: install it on a small
 server, answer a few first-run questions, and get a public photo site with an
 admin backend. Think "WordPress for photos".
 
-**Status: early development.** What exists today is the foundation: the app
-boots, creates its data directory, can be claimed once through a
-token-protected setup wizard, and guards an admin area behind a login.
-Uploading, the photo grid, skins, and modules are not built yet. The full
+**Status: early development.** What exists today: the app boots, creates its
+data directory, can be claimed once through a token-protected setup wizard,
+and guards an admin area behind a login. From the admin you can upload
+photographs, which are checked, stored, and resized for every screen, and
+download or remove 25 sample photos. The public photo grid, the photo
+library, skins, and modules are not built yet. The full
 plan is in [docs/DESIGN.md](docs/DESIGN.md); changes are recorded in
 [CHANGELOG.md](CHANGELOG.md).
 
@@ -22,7 +24,10 @@ plan is in [docs/DESIGN.md](docs/DESIGN.md); changes are recorded in
 - [How it runs](#how-it-runs)
 - [Local development](#local-development)
 - [Running the built server](#running-the-built-server)
+- [Uploading photos](#uploading-photos)
+- [Sample photos](#sample-photos)
 - [Tests](#tests)
+- [Windows](#windows)
 - [Docker quick start](#docker-quick-start)
 - [Laravel Forge](#laravel-forge)
 - [Without Docker (pm2)](#without-docker-pm2)
@@ -69,9 +74,9 @@ it from any web browser. The setup wizard is a web page; there is nothing to
 install on the computers you browse from.
 
 The machine that hosts it needs **either** Docker **or** Node 24. Its
-dependencies ship prebuilt for macOS, Windows, and Linux, so nothing should
-need compiling; so far it has been run on macOS and on Linux in Docker, not
-on Windows. There is no double-click desktop installer.
+dependencies ship prebuilt for macOS, Windows, and Linux, so nothing is
+compiled during install. Every change is tested on Linux and on Windows
+(see [Windows](#windows)). There is no double-click desktop installer.
 
 ## Local development
 
@@ -109,6 +114,47 @@ No environment variables are required. The server listens on port 3000
 (`PORT` changes it) and keeps its data in `./data` (`DATA_DIR` changes it).
 Restarting keeps you logged in and does not change the setup token.
 
+## Uploading photos
+
+Log in, then choose **Upload photos** on the dashboard. Pick files or drop
+them on the page; each one shows its progress and result.
+
+- Accepted: JPEG, PNG, WebP, TIFF, and AVIF. A file is judged by its
+  contents, not its name.
+- Limits: 50 MB per file and 100 megapixels per image by default
+  (see [Settings](#settings)).
+- The same file is not stored twice; a duplicate is refused and the page
+  names the photo that already has it.
+- The file you upload is kept untouched in `data/originals/`. Resized WebP
+  copies (480 px thumbnail, 480 px square, 1280 px, and 2560 px) go in
+  `data/derivatives/`. Nothing is ever enlarged.
+- Resizing happens one photo at a time in the background, so a small server
+  stays within its memory. A photo that cannot be processed after three
+  tries is marked failed, with the reason and a **Try again** button.
+
+The public gallery that shows these photos is the next stage; for now the
+upload page shows each thumbnail once it is ready.
+
+## Sample photos
+
+Fotobogen can download 25 placeholder photographs so a new site has
+something to show. They come from [Lorem Picsum](https://picsum.photos)
+(Unsplash photographs, credited to their photographers) and are never part
+of the software itself. This is the only outside request Fotobogen makes,
+and only when you ask.
+
+- **During setup**, step 5 offers "Start empty" (the default) or "Download
+  25 sample photos". The last step then shows a counter while they arrive.
+  Setup is already finished at that point, so you never have to wait.
+- **If the download fails**, you can try again or skip. After two failures
+  the page leads with skipping, so nobody is stuck retrying a service that
+  is down.
+- **Later**, the dashboard always has **Download sample photos**, and
+  **Remove sample photos** deletes all of them, and only them, in one click.
+- In a source checkout, `pnpm seed:fetch` does the same from the terminal.
+
+See [seed/README.md](seed/README.md) for the list and the licence.
+
 ## Tests
 
 ```bash
@@ -119,7 +165,36 @@ pnpm typecheck                           # TypeScript check of app and server co
 ```
 
 Both commands build the app first. Set `FB_SKIP_BUILD=1` to reuse an
-existing build while iterating.
+existing build while iterating. The tests never use the network: sample
+downloads are pointed at a stand-in server.
+
+## Windows
+
+Fotobogen installs and runs on Windows with Node 24 and pnpm; no compiler or
+Visual Studio is needed. In PowerShell:
+
+```powershell
+git clone https://github.com/cschweda/fotobogen.git
+cd fotobogen
+pnpm install
+pnpm build
+node .output/server/index.mjs     # prints the setup token; open http://localhost:3000
+```
+
+CI repeats this on a Windows machine for every change: install, build, the
+full test suite, the browser tests, and [scripts/smoke-test.ps1](scripts/smoke-test.ps1),
+which starts the built server and walks through setup, login, and a password
+reset. You can run that script yourself after `pnpm build`:
+
+```powershell
+./scripts/smoke-test.ps1
+```
+
+Two differences from Linux and macOS: the `secret` and `setup-token` files
+are not restricted to your user by the app (Windows has no equivalent of
+file mode `0600`; they inherit the folder's permissions), and the Docker
+path needs Docker Desktop or WSL, which is not covered by the Windows test
+run.
 
 ## Docker quick start
 
@@ -200,7 +275,9 @@ means copying it.
 | `fotobogen.db` | The SQLite database |
 | `secret` | The key that seals login cookies. Keep it private; deleting it signs everyone out |
 | `setup-token` | The one-time setup token. Exists only until setup is complete |
-| `originals/`, `derivatives/` | Uploaded photos and their resized copies (later versions) |
+| `originals/` | The photos exactly as you uploaded them. Back these up |
+| `derivatives/` | Resized copies. They can always be made again from the originals |
+| `tmp/` | Uploads in progress. Emptied every time the server starts |
 | `skins/`, `modules/` | Skins and modules you install (later versions) |
 
 ## Settings
@@ -212,6 +289,8 @@ All optional.
 | `DATA_DIR` | `./data` | Where the site keeps its data |
 | `PORT` | `3000` | Port the server listens on |
 | `HOST` | all interfaces | Address the server listens on |
+| `MAX_UPLOAD_MB` | `50` | Largest upload, in megabytes. If you raise it, raise the proxy's limit too (`max_size` in `deploy/Caddyfile`, `client_max_body_size` in nginx) |
+| `MAX_MEGAPIXELS` | `100` | Largest image, in megapixels (width times height) |
 | `TRUST_PROXY` | off | Set to `1` only when the app is reachable solely through your own reverse proxy. It makes the login limit use the visitor's address from `X-Forwarded-For`. The shipped Docker and pm2 files set it |
 
 Login cookies are marked `Secure`, so logging in works over HTTPS, and over
@@ -232,9 +311,11 @@ Netlify, and each one costs build credits.
 
 ## The fotobogen.com placeholder page
 
-`site/` holds the single page currently shown at fotobogen.com, and
-`netlify.toml` tells Netlify to publish only that folder. It is unrelated to
-the application, which needs a persistent disk and never runs on Netlify.
+`site/` holds the single page shown at fotobogen.com: a visual guide to the
+software, with screens from the current build. `netlify.toml` tells Netlify
+to publish only that folder. The application itself needs a persistent disk
+and never runs on Netlify. The social card is built from
+`docs/og/og.html` with `node docs/og/render.mjs`.
 
 ## Licence
 
