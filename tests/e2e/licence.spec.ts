@@ -29,8 +29,8 @@ test('the licence and downloads are set for the site and for one photo, and visi
 
   await page.goto(server.url + '/photo/harbour')
   await expect(page.getByRole('link', { name: 'CC BY-NC 4.0' })).toHaveAttribute('href', 'https://creativecommons.org/licenses/by-nc/4.0/')
-  const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('link', { name: 'Download the original' }).click()])
-  expect(download.suggestedFilename()).toBe('harbour.jpg')
+  const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('link', { name: 'Download', exact: true }).click()])
+  expect(download.suggestedFilename()).toBe('harbour.webp')
   await expectNoAxeViolations(page)
 
   // One photo can go its own way.

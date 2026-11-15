@@ -300,9 +300,10 @@ itself. In Settings you can make every new upload start as a draft.
 published under (all rights reserved by default, or a Creative Commons
 licence) and a switch that lets visitors download them (off by default). A
 photo can have its own licence and its own download setting on its page. A
-download is the file exactly as you uploaded it, with one exception: if the
-file records where it was taken and your site keeps locations private,
-visitors get the largest resized copy instead, which carries no metadata.
+download is a large copy (up to 2560 pixels) with all camera data removed.
+Only a site that also shows where photos were taken hands out the file
+exactly as you uploaded it, because that file carries everything the camera
+recorded, the place included.
 
 **Admin, Settings** holds the site title and tagline, the grid layout,
 whether photos open over the grid or on their own page, and the two privacy

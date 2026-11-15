@@ -54,15 +54,18 @@ describe('licences and downloads', () => {
     expect((await send('PUT', '/api/admin/settings', { ...settings, licence: 'wtfpl' })).status).toBe(422)
   })
 
-  it('lets visitors download the file exactly as uploaded when the site allows it', async () => {
+  it('gives visitors a large copy with no camera data when the site allows downloads', async () => {
     await send('PUT', '/api/admin/settings', { ...settings, allowDownload: true })
-    expect((await photo()).download).toEqual({ url: '/api/photos/harbour/download', original: true })
+    expect((await photo()).download).toEqual({ url: '/api/photos/harbour/download', original: false })
     const response = await get(server, '/api/photos/harbour/download')
     expect(response.status).toBe(200)
-    expect(response.headers.get('content-disposition')).toBe('attachment; filename="harbour.jpg"')
-    expect(response.headers.get('content-type')).toBe('image/jpeg')
-    expect(Buffer.from(await response.arrayBuffer()).equals(uploaded)).toBe(true)
-    expect(await (await get(server, '/photo/harbour')).text()).toContain('Download the original')
+    expect(response.headers.get('content-disposition')).toBe('attachment; filename="harbour.webp"')
+    expect(response.headers.get('content-type')).toBe('image/webp')
+    const meta = await sharp(Buffer.from(await response.arrayBuffer())).metadata()
+    expect([meta.format, meta.width, meta.exif, meta.xmp]).toEqual(['webp', 1600, undefined, undefined])
+    const page = await (await get(server, '/photo/harbour')).text()
+    expect(page).toContain('>Download</a>')
+    expect(page).not.toContain('Download the original')
   })
 
   it('lets one photo opt out, or opt in when the site does not allow downloads', async () => {
@@ -77,20 +80,20 @@ describe('licences and downloads', () => {
     expect((await send('PATCH', `/api/admin/photos/${id}`, { allowDownload: 'maybe' })).status).toBe(422)
   })
 
-  it('never hands out a file that records a location the site keeps private', async () => {
+  it('hands out the file itself only on a site that shows where photos were taken', async () => {
     await send('PATCH', `/api/admin/photos/${id}`, { allowDownload: true })
-    setLocation(47.37)
-    expect((await photo()).download).toEqual({ url: '/api/photos/harbour/download', original: false })
-    const copy = await get(server, '/api/photos/harbour/download')
-    expect(copy.headers.get('content-type')).toBe('image/webp')
-    expect(copy.headers.get('content-disposition')).toBe('attachment; filename="harbour.webp"')
-    const meta = await sharp(Buffer.from(await copy.arrayBuffer())).metadata()
-    expect([meta.format, meta.width, meta.exif]).toEqual(['webp', 1600, undefined])
-    expect(await (await get(server, '/photo/harbour')).text()).not.toContain('Download the original')
-    // With locations shown, the original is fair game again.
+    // Whatever the app did or did not read from the file, the original stays put...
+    for (const lat of [null, 47.37]) {
+      setLocation(lat)
+      expect((await get(server, '/api/photos/harbour/download')).headers.get('content-type')).toBe('image/webp')
+    }
+    // ...until the owner chooses to show locations.
     await send('PUT', '/api/admin/settings', { ...settings, showLocation: true })
-    expect((await photo()).download!.original).toBe(true)
-    expect((await get(server, '/api/photos/harbour/download')).headers.get('content-type')).toBe('image/jpeg')
+    expect((await photo()).download).toEqual({ url: '/api/photos/harbour/download', original: true })
+    const original = await get(server, '/api/photos/harbour/download')
+    expect(original.headers.get('content-disposition')).toBe('attachment; filename="harbour.jpg"')
+    expect(Buffer.from(await original.arrayBuffer()).equals(uploaded)).toBe(true)
+    expect(await (await get(server, '/photo/harbour')).text()).toContain('Download the original')
     await send('PUT', '/api/admin/settings', settings)
     setLocation(null)
   })
@@ -113,9 +116,11 @@ describe('licences and downloads', () => {
     const shown = await (await get(server, '/api/photos/harbour')).json() as { images: { url: string }[] }
     const marked = await sharp(Buffer.from(await (await get(server, shown.images.at(-1)!.url)).arrayBuffer())).raw().toBuffer({ resolveWithObject: true })
     const plain = await sharp(uploaded).raw().toBuffer({ resolveWithObject: true })
-    // The bottom-right corner differs from the upload; the original download does not.
+    // The bottom-right corner differs from the upload.
     const corner = (image: { data: Buffer, info: sharp.OutputInfo }) => image.data.subarray(image.data.length - image.info.width * image.info.channels * 60)
     expect(corner(marked).equals(corner(plain))).toBe(false)
+    // A downloaded original is the file as uploaded, without the mark.
+    await send('PUT', '/api/admin/settings', { ...settings, showLocation: true })
     expect(Buffer.from(await (await get(server, '/api/photos/harbour/download')).arrayBuffer()).equals(uploaded)).toBe(true)
   })
 })
