@@ -221,3 +221,31 @@ describe('review fixes', () => {
     finally { await server.stop() }
   })
 })
+
+describe('the backup notice', () => {
+  it('is unacknowledged for a new site, and acknowledged once, by a logged-in admin only', async () => {
+    const server = await startServer()
+    try {
+      const cookie = await completeSetup(server, { acknowledge: false })
+      const me = async () => await (await get(server, '/api/auth/me', { cookie })).json() as { user: unknown, acknowledged?: boolean }
+      expect(await me()).toMatchObject({ acknowledged: false })
+      expect(await (await get(server, '/api/auth/me')).json()).toEqual({ user: null })
+
+      const anonymous = await fetch(server.url + '/api/admin/acknowledge', { method: 'POST', headers: { origin: server.url } })
+      expect(anonymous.status).toBe(401)
+      expect(await me()).toMatchObject({ acknowledged: false })
+
+      const accepted = await fetch(server.url + '/api/admin/acknowledge', { method: 'POST', headers: { origin: server.url, cookie } })
+      expect(accepted.status).toBe(200)
+      expect(await me()).toMatchObject({ acknowledged: true })
+      const [{ value: first }] = query<{ value: string }>(server, `select value from settings where key = 'admin.backup_notice_ack'`)
+      expect(Number(first)).toBeGreaterThan(Date.now() - 60_000)
+      // Pressing again does not move the recorded time.
+      await fetch(server.url + '/api/admin/acknowledge', { method: 'POST', headers: { origin: server.url, cookie } })
+      expect(query(server, `select value from settings where key = 'admin.backup_notice_ack'`)).toEqual([{ value: first }])
+    }
+    finally {
+      await server.stop()
+    }
+  })
+})
