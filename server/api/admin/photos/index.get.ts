@@ -7,7 +7,7 @@ import { requireAdmin } from '../../../utils/session.ts'
 
 interface Row {
   id: string, slug: string, title: string | null, filename: string, status: 'processing' | 'ready' | 'failed'
-  width: number, height: number, isSample: number, createdAt: number, visibility: 'public' | 'hidden', alt: string | null
+  width: number, height: number, isSample: number, createdAt: number, visibility: 'public' | 'hidden', alt: string | null, publishAt: number | null
   thumb: string | null, thumbWidth: number | null, thumbHeight: number | null, error: string | null
 }
 
@@ -18,8 +18,8 @@ export default defineEventHandler(async (event) => {
   await requireAdmin(event)
   const { sqlite, storage } = getPipeline()
   const wanted = String(getQuery(event).ids ?? '').split(',').filter(id => /^[A-Za-z0-9_-]{1,32}$/.test(id)).slice(0, MAX_IDS)
-  // ?show=hidden | missing-alt | failed narrows the list.
-  const FILTERS: Record<string, string> = { 'hidden': `p.visibility = 'hidden'`, 'missing-alt': `(p.alt is null or p.alt = '')`, 'failed': `p.status = 'failed'` }
+  // ?show=hidden | scheduled | missing-alt | failed narrows the list.
+  const FILTERS: Record<string, string> = { 'hidden': `p.visibility = 'hidden'`, 'scheduled': `p.visibility = 'public' and p.publish_at > ${Date.now()}`, 'missing-alt': `(p.alt is null or p.alt = '')`, 'failed': `p.status = 'failed'` }
   const narrowed = FILTERS[String(getQuery(event).show ?? '')]
   // ?album=<id> lists one album's photos.
   const album = String(getQuery(event).album ?? '')
@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
   const filter = conditions.length > 0 ? `where ${conditions.join(' and ')}` : ''
   const rows = sqlite.prepare(`
     select p.id, p.slug, p.title, p.original_filename as filename, p.status, p.width, p.height,
-      p.is_sample as isSample, p.created_at as createdAt, p.visibility, p.alt,
+      p.is_sample as isSample, p.created_at as createdAt, p.visibility, p.alt, p.publish_at as publishAt,
       d.path as thumb, d.width as thumbWidth, d.height as thumbHeight,
       (select error from jobs where photo_id = p.id and status = 'failed' order by created_at desc, rowid desc limit 1) as error
     from photos p
@@ -56,6 +56,8 @@ export default defineEventHandler(async (event) => {
       height: row.height,
       isSample: row.isSample === 1,
       hidden: row.visibility === 'hidden',
+      // Public, but not until this time.
+      scheduledFor: row.visibility === 'public' && row.publishAt !== null && row.publishAt > Date.now() ? row.publishAt : null,
       missingAlt: !row.alt,
       createdAt: row.createdAt,
       thumb: row.thumb ? { url: storage.publicUrl(row.thumb), width: row.thumbWidth!, height: row.thumbHeight! } : null,

@@ -8,6 +8,7 @@ import { receiveUpload, type Received } from '../../../pipeline/receive.ts'
 import { getPipeline, getQueue } from '../../../utils/app.ts'
 import { fail } from '../../../utils/respond.ts'
 import { requireAdmin } from '../../../utils/session.ts'
+import { getSetting } from '../../../utils/settings.ts'
 
 // Room for the multipart boundaries and headers around the file.
 const ENVELOPE_BYTES = 64 * 1024
@@ -41,7 +42,12 @@ export default defineEventHandler(async (event) => {
     return tooLarge()
   }
 
-  const outcome: AcceptResult = await acceptUpload(ctx, { tmpPath: received.tmpPath, filename: received.filename })
+  const outcome: AcceptResult = await acceptUpload(ctx, {
+    tmpPath: received.tmpPath,
+    filename: received.filename,
+    // New uploads go straight to the site, or wait as drafts, as the owner chose in Settings.
+    visibility: getSetting<'public' | 'hidden'>('uploads.default_visibility', 'public'),
+  })
   if (outcome.result === 'accepted') {
     getQueue().kick()
     return outcome

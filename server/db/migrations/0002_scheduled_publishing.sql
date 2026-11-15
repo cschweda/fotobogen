@@ -1,0 +1,1 @@
+ALTER TABLE `photos` ADD `publish_at` integer;

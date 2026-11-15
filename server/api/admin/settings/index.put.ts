@@ -13,6 +13,7 @@ const schema = z.object({
   photoView: z.enum(['modal', 'page']),
   showExif: z.boolean(),
   showLocation: z.boolean(),
+  newUploads: z.enum(['public', 'hidden']).default('public'),
 })
 
 export default defineEventHandler(async (event) => {
@@ -27,6 +28,7 @@ export default defineEventHandler(async (event) => {
     'layout.photo_view': settings.photoView,
     'privacy.show_exif': settings.showExif,
     'privacy.show_location': settings.showLocation,
+    'uploads.default_visibility': settings.newUploads,
   })
   return { ok: true }
 })

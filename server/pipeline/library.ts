@@ -11,6 +11,8 @@ export interface PhotoEdit {
   /** Milliseconds since 1970, or null for "unknown". */
   takenAt?: number | null
   visibility?: 'public' | 'hidden'
+  /** When a public photo goes live, in milliseconds since 1970; null for at once. */
+  publishAt?: number | null
 }
 
 export type EditResult
@@ -55,6 +57,12 @@ export function updatePhoto(ctx: PipelineContext, id: string, edit: Record<strin
     if (edit.visibility === 'public' || edit.visibility === 'hidden') visibility = edit.visibility
     else errors.visibility = 'Choose public or hidden.'
   }
+  let publishAt: number | null | undefined
+  if (edit.publishAt !== undefined) {
+    if (edit.publishAt === null) publishAt = null
+    else if (typeof edit.publishAt === 'number' && Number.isFinite(edit.publishAt) && edit.publishAt > 0 && edit.publishAt < 8.64e15) publishAt = Math.round(edit.publishAt)
+    else errors.publishAt = 'This is not a date and time.'
+  }
   if (Object.keys(errors).length > 0) return { ok: false, reason: 'invalid', errors }
 
   return sqlite.transaction((): EditResult => {
@@ -76,6 +84,7 @@ export function updatePhoto(ctx: PipelineContext, id: string, edit: Record<strin
     set('slug', slug)
     set('taken_at', takenAt)
     set('visibility', visibility)
+    set('publish_at', publishAt)
     if (sets.length > 0) sqlite.prepare(`update photos set ${sets.join(', ')}, updated_at = ? where id = ?`).run(...values, Date.now(), id)
     return { ok: true, slug: slug ?? current.slug }
   })()

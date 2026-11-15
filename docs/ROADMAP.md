@@ -10,8 +10,8 @@ The feature list agreed on 2026-11-15, in the order it is being built. Each item
 | 2 | Full library: edit title, caption, and alt text; reorder, hide, delete; bulk actions | Done |
 | 3 | Albums and tags | Done |
 | 4 | Backup and restore from the admin; export everything as a zip | Done |
-| 5 | Scheduled publishing and drafts | Next |
-| 6 | Slideshow (following openMantel) | Planned |
+| 5 | Scheduled publishing and drafts | Done |
+| 6 | Slideshow (following openMantel) | Next |
 | 7 | Download and licence settings per photo; a watermark module | Planned |
 | 8 | RSS, sitemap, and social cards per photo | Done |
 | 9 | A notice in the admin when a new version exists | Planned |

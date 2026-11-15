@@ -281,6 +281,12 @@ your site.
   the switched-on modules offer. Choosing one sets it up for that photo,
   with a larger preview, and nothing changes until you save.
 
+**Scheduling and drafts.** On a photo's page, **Publish** has three
+choices: public now, public from a date and time you pick (in your own time
+zone), or hidden as a draft. A scheduled photo is in your library but not on
+the site, the feed, or the sitemap until its time, and then appears by
+itself. In Settings you can make every new upload start as a draft.
+
 **Admin, Settings** holds the site title and tagline, the grid layout,
 whether photos open over the grid or on their own page, and the two privacy
 switches: camera details (on by default) and location (off by default).

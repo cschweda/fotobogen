@@ -29,7 +29,12 @@ interface Row {
   squarePath: string, squareWidth: number, squareHeight: number
 }
 
-const VISIBLE = `p.status = 'ready' and p.visibility = 'public'`
+/**
+ * The test every public query applies: processed, public, and, if it was
+ * scheduled, past its time. Worked out at the moment of the query, so a
+ * scheduled photo appears by itself when its time comes.
+ */
+const visible = (): string => `p.status = 'ready' and p.visibility = 'public' and (p.publish_at is null or p.publish_at <= ${Date.now()})`
 
 function placeholder(thumbhash: string | null): string | null {
   if (!thumbhash) return null
@@ -55,7 +60,7 @@ export function publicTiles(page: number, scope?: Scope): { tiles: Tile[], total
   const order = scope && 'album' in scope ? `ap.position` : `p.sort_order desc`
   const key = scope ? ['album' in scope ? scope.album : scope.tag] : []
 
-  const { total } = sqlite.prepare(`select count(*) as total ${from} where ${VISIBLE}`).get(...key) as { total: number }
+  const { total } = sqlite.prepare(`select count(*) as total ${from} where ${visible()}`).get(...key) as { total: number }
   const rows = sqlite.prepare(`
     select p.slug, p.title, p.alt, p.thumbhash,
       t.path as thumbPath, t.width as thumbWidth, t.height as thumbHeight,
@@ -63,7 +68,7 @@ export function publicTiles(page: number, scope?: Scope): { tiles: Tile[], total
     ${from}
     join derivatives t on t.photo_id = p.id and t.kind = 'thumb'
     join derivatives s on s.photo_id = p.id and s.kind = 'square'
-    where ${VISIBLE}
+    where ${visible()}
     order by ${order}
     limit ? offset ?
   `).all(...key, PAGE_SIZE, (page - 1) * PAGE_SIZE) as Row[]
@@ -98,7 +103,7 @@ export function publicAlbums(): PublicAlbum[] {
   const { sqlite, storage } = getPipeline()
   const albums = sqlite.prepare(`
     select a.id, a.slug, a.title, a.description, a.cover_photo_id as coverId,
-      (select count(*) from album_photos ap join photos p on p.id = ap.photo_id where ap.album_id = a.id and ${VISIBLE}) as count
+      (select count(*) from album_photos ap join photos p on p.id = ap.photo_id where ap.album_id = a.id and ${visible()}) as count
     from albums a where a.visibility = 'public' order by a.sort_order desc
   `).all() as { id: string, slug: string, title: string, description: string | null, coverId: string | null, count: number }[]
   // The chosen cover if a visitor may see it, else the album's first visible photo.
@@ -106,7 +111,7 @@ export function publicAlbums(): PublicAlbum[] {
     select d.path, d.width, d.height from album_photos ap
     join photos p on p.id = ap.photo_id
     join derivatives d on d.photo_id = p.id and d.kind = 'square'
-    where ap.album_id = ? and ${VISIBLE}
+    where ap.album_id = ? and ${visible()}
     order by (p.id = ?) desc, ap.position limit 1
   `)
   return albums.filter(album => album.count > 0).map(({ coverId, ...album }) => {
@@ -122,7 +127,7 @@ export function publicTag(slug: string): { id: string, slug: string, name: strin
   const { sqlite } = getPipeline()
   const tag = sqlite.prepare(`
     select t.id, t.slug, t.name from tags t
-    where t.slug = ? and exists (select 1 from photo_tags pt join photos p on p.id = pt.photo_id where pt.tag_id = t.id and ${VISIBLE})
+    where t.slug = ? and exists (select 1 from photo_tags pt join photos p on p.id = pt.photo_id where pt.tag_id = t.id and ${visible()})
   `).get(slug) as { id: string, slug: string, name: string } | undefined
   return tag ?? null
 }
@@ -151,7 +156,7 @@ export function publicPhoto(slug: string): PublicPhoto | null {
   const photo = sqlite.prepare(`
     select p.id, p.slug, p.title, p.description, p.alt, p.thumbhash, p.taken_at as takenAt, p.sort_order as sortOrder,
       p.camera, p.lens, p.focal_length as focalLength, p.aperture, p.shutter, p.iso, p.lat, p.lng
-    from photos p where p.slug = ? and ${VISIBLE}
+    from photos p where p.slug = ? and ${visible()}
   `).get(slug) as (Record<string, never> & {
     id: string, slug: string, title: string | null, description: string | null, alt: string | null, thumbhash: string | null
     takenAt: number | null, sortOrder: number, camera: string | null, lens: string | null, focalLength: string | null
@@ -163,7 +168,7 @@ export function publicPhoto(slug: string): PublicPhoto | null {
     .all(photo.id) as { path: string, width: number, height: number }[]
   // The grid runs from the highest sort_order down, so "previous" is the one above.
   const neighbour = (comparison: '>' | '<', direction: 'asc' | 'desc') => (sqlite
-    .prepare(`select p.slug from photos p where ${VISIBLE} and p.sort_order ${comparison} ? order by p.sort_order ${direction} limit 1`)
+    .prepare(`select p.slug from photos p where ${visible()} and p.sort_order ${comparison} ? order by p.sort_order ${direction} limit 1`)
     .get(photo.sortOrder) as { slug: string } | undefined)?.slug ?? null
 
   return {
@@ -201,9 +206,9 @@ export const escapeXml = (text: string): string =>
 export function recentPhotos(limit: number): { slug: string, title: string | null, description: string | null, createdAt: number, updatedAt: number, image: string | null }[] {
   const { sqlite, storage } = getPipeline()
   const rows = sqlite.prepare(`
-    select p.slug, p.title, p.description, p.created_at as createdAt, p.updated_at as updatedAt, d.path
+    select p.slug, p.title, p.description, coalesce(p.publish_at, p.created_at) as createdAt, p.updated_at as updatedAt, d.path
     from photos p left join derivatives d on d.photo_id = p.id and d.kind = 'medium'
-    where ${VISIBLE} order by p.sort_order desc limit ?
+    where ${visible()} order by p.sort_order desc limit ?
   `).all(limit) as { slug: string, title: string | null, description: string | null, createdAt: number, updatedAt: number, path: string | null }[]
   return rows.map(({ path, ...row }) => ({ ...row, image: path ? storage.publicUrl(path) : null }))
 }

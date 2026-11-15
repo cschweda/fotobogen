@@ -56,6 +56,8 @@ uses [Semantic Versioning](https://semver.org/).
 - Tags: labels on photos, each with a public page; added one photo at a time or to several at once.
 - Backup and restore: download a zip of the database, the uploaded photos, and installed skins and modules from **Admin, System**, or with `pnpm fotobogen backup`; restore from the admin (applied at the next start) or with `pnpm fotobogen restore`. What a restore replaces is kept in a `before-restore` folder.
 - A System page: version, what is stored, and free space.
+- Scheduled publishing: a photo can be set to go public at a date and time, and appears by itself when it comes.
+- Drafts: a setting makes new uploads start hidden until published.
 - Windows: CI installs, builds, and tests on Windows, including a PowerShell smoke test (`scripts/smoke-test.ps1`).
 
 ### Changed

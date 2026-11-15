@@ -10,7 +10,7 @@ definePageMeta({ middleware: 'admin' })
 
 interface Detail {
   id: string, slug: string, title: string | null, description: string | null, alt: string | null
-  visibility: 'public' | 'hidden', takenAt: number | null, filename: string, status: 'processing' | 'ready' | 'failed'
+  visibility: 'public' | 'hidden', publishAt: number | null, takenAt: number | null, filename: string, status: 'processing' | 'ready' | 'failed'
   width: number, height: number
   details: { camera: string | null, lens: string | null, focalLength: string | null, aperture: string | null, shutter: string | null, iso: number | null, location: { lat: number, lng: number } | null, bytes: number, mime: string }
   tags: string[], albums: string[]
@@ -34,13 +34,22 @@ const failure = (caught: unknown, fallback: string) => (caught as { data?: { mes
 
 // ── Details ──────────────────────────────────────────────────────────────
 const toDate = (ms: number | null) => ms === null ? '' : new Date(ms).toISOString().slice(0, 10)
+/** Milliseconds to the `YYYY-MM-DDTHH:MM` a date-and-time field wants, in local time. */
+function toLocal(ms: number | null): string {
+  if (ms === null) return ''
+  const date = new Date(ms - new Date(ms).getTimezoneOffset() * 60_000)
+  return date.toISOString().slice(0, 16)
+}
 const form = reactive({
   title: photo.value.title ?? '',
   slug: photo.value.slug,
   description: photo.value.description ?? '',
   alt: photo.value.alt ?? '',
   taken: toDate(photo.value.takenAt),
-  visibility: photo.value.visibility,
+  // "now": public at once. "later": public from a date and time. "hidden": a draft.
+  publish: (photo.value.visibility === 'hidden' ? 'hidden' : photo.value.publishAt && photo.value.publishAt > Date.now() ? 'later' : 'now') as 'now' | 'later' | 'hidden',
+  // The browser's date-and-time field works in local time.
+  publishAt: toLocal(photo.value.publishAt),
   // Typed as one line, separated by commas.
   tags: photo.value.tags.join(', '),
   albums: [...photo.value.albums],
@@ -57,7 +66,9 @@ async function saveDetails() {
     const result = await $fetch<{ slug: string, tags?: string[] }>(`/api/admin/photos/${id}`, {
       method: 'PATCH',
       body: {
-        title: form.title, slug: form.slug, description: form.description, alt: form.alt, visibility: form.visibility,
+        title: form.title, slug: form.slug, description: form.description, alt: form.alt,
+        visibility: form.publish === 'hidden' ? 'hidden' : 'public',
+        publishAt: form.publish === 'later' && form.publishAt ? new Date(form.publishAt).getTime() : null,
         takenAt: form.taken ? Date.parse(`${form.taken}T00:00:00Z`) : null,
         tags: form.tags.split(','), albums: form.albums,
       },
@@ -281,13 +292,18 @@ onBeforeUnmount(() => {
             </label>
           </fieldset>
           <fieldset class="scope">
-            <legend class="scope__legend">Visibility</legend>
-            <label class="scope__choice"><input v-model="form.visibility" type="radio" name="visibility" value="public"><span>Public: shown on your site</span></label>
-            <label class="scope__choice"><input v-model="form.visibility" type="radio" name="visibility" value="hidden"><span>Hidden: only you see it</span></label>
+            <legend class="scope__legend">Publish</legend>
+            <label class="scope__choice"><input v-model="form.publish" type="radio" name="publish" value="now"><span>Public: shown on your site</span></label>
+            <label class="scope__choice"><input v-model="form.publish" type="radio" name="publish" value="later"><span>Scheduled: public from a date and time</span></label>
+            <label class="scope__choice"><input v-model="form.publish" type="radio" name="publish" value="hidden"><span>Hidden: a draft only you see</span></label>
           </fieldset>
+          <FbField
+            v-if="form.publish === 'later'" id="publishAt" v-model="form.publishAt" label="Goes public on" type="datetime-local"
+            hint="In your own time zone. Until then the photo is in your library but not on your site." :error="errors.publishAt"
+          />
           <div class="actions">
             <button type="submit" class="fb-button" :aria-disabled="savingDetails">Save details</button>
-            <a v-if="photo.visibility === 'public' && photo.status === 'ready'" class="fb-button fb-button--quiet" :href="`/photo/${photo.slug}`">View on site</a>
+            <a v-if="photo.visibility === 'public' && photo.status === 'ready' && !(photo.publishAt && photo.publishAt > Date.now())" class="fb-button fb-button--quiet" :href="`/photo/${photo.slug}`">View on site</a>
           </div>
         </form>
 
