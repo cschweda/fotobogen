@@ -65,6 +65,9 @@ async function cancel() {
       <p class="about">
         One zip file with everything that cannot be made again: your photos exactly as you uploaded them, their titles, albums, and tags, your settings, and any skins and modules you installed. Resized copies are left out and rebuilt after a restore. Your login's secret key is left out too, so the file does not open your site.
       </p>
+      <p class="about reminder">
+        Keeping a copy is up to you. Fotobogen is provided as it is, with no warranty; neither the software nor its author is responsible for lost photographs. Download a backup regularly and keep it somewhere other than this server.
+      </p>
       <a class="fb-button" href="/api/admin/backup" download>Download a backup</a>
       <p v-if="system" class="fb-small note">About {{ size(system.originalsBytes + system.databaseBytes) }}.</p>
     </section>
@@ -102,6 +105,7 @@ async function cancel() {
 .heading { margin: 0 0 0.75rem; font-size: 1.25rem; font-weight: 700; letter-spacing: -0.015em; }
 .about { margin: 0 0 1.25rem; color: var(--fb-muted); }
 .about code, .note code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: var(--fb-text); }
+.reminder { padding: 0.75rem 1rem; border-left: 4px solid var(--fb-red); background: var(--fb-panel); color: var(--fb-text); }
 .note { margin-top: 0.75rem; }
 .pending { padding: 1rem; border-left: 4px solid var(--fb-text); background: var(--fb-panel); }
 .pending p { margin: 0 0 1rem; }

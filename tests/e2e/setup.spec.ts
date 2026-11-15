@@ -105,7 +105,18 @@ test('the whole wizard can be completed with the keyboard alone', async ({ page 
   await tabTo(page, page.getByRole('link', { name: 'Open admin' }))
   await page.keyboard.press('Enter')
 
-  // Logged in, on the placeholder dashboard
+  // Logged in. First, and only once, the notice about backups: nothing else
+  // in the admin opens until it is accepted.
+  await expect(page).toHaveURL(server.url + '/admin/welcome')
+  await expect(heading(page, 'Back up your photographs')).toBeVisible()
+  await expect(page.getByText('no warranty')).toBeVisible()
+  await expectNoAxeViolations(page)
+  await page.goto(server.url + '/admin/upload')
+  await expect(page).toHaveURL(server.url + '/admin/welcome')
+  await tabTo(page, page.getByRole('button', { name: 'I understand' }))
+  await page.keyboard.press('Enter')
+
+  // Then the dashboard, and the notice does not come back.
   await expect(page).toHaveURL(server.url + '/admin')
   await expect(heading(page, 'Admin')).toBeVisible()
   await expect(page.getByText(`Signed in as ${ADMIN.username}`)).toBeVisible()

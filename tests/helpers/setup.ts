@@ -20,9 +20,15 @@ export function setupAnswers(server: TestServer, overrides: Record<string, unkno
 
 /** Runs the wizard's final submit and returns the admin's session cookie. */
 export async function completeSetup(server: TestServer, overrides: Record<string, unknown> = {}): Promise<string> {
-  const response = await post(server, '/api/setup/complete', setupAnswers(server, overrides))
+  const { acknowledge: _acknowledge, ...answers } = overrides
+  const response = await post(server, '/api/setup/complete', setupAnswers(server, answers))
   if (response.status !== 200) throw new Error(`Setup failed: ${response.status} ${await response.text()}`)
-  return sessionCookie(response)!
+  const cookie = sessionCookie(response)!
+  // An owner presses "I understand" on the backup notice once; most tests start after that.
+  if (overrides.acknowledge !== false) {
+    await fetch(server.url + '/api/admin/acknowledge', { method: 'POST', headers: { origin: server.url, cookie } })
+  }
+  return cookie
 }
 
 /** Reads the site's database directly, for checking what the server wrote. */

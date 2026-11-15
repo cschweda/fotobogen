@@ -63,6 +63,7 @@ uses [Semantic Versioning](https://semver.org/).
 - Downloads: visitors can download photos when the site or a photo allows it. A download is a large copy with no camera data; the file as uploaded is handed out only by a site that shows where photos were taken.
 - Watermark module: a line of text in a corner of each photo.
 - Modules can declare a `text` parameter.
+- A one-time notice in the admin: backups are the owner's responsibility and the software comes with no warranty. The admin opens once "I understand" is pressed.
 - Windows: CI installs, builds, and tests on Windows, including a PowerShell smoke test (`scripts/smoke-test.ps1`).
 
 ### Changed
