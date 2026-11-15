@@ -46,7 +46,7 @@ Do not start Phase 2. No upload handling, no image processing, no skins, no modu
 ## How to work
 
 - A pre-build review was done on 2026-11-14 and its outcomes are in DESIGN.md (section 16 lists them). Begin by giving me a short plan for Phases 0 and 1 and anything further you find ambiguous or think is a mistake. Wait for my reply before coding.
-- Commit in small, coherent steps with clear messages. Work on a branch and open a pull request; do not push to `main` without being asked.
+- Commit in small, coherent steps with clear messages. Work on a feature branch and open a pull request against `staging`. `main` is updated only by a single `staging` to `main` pull request (merge commit, never squash) when I ask for it.
 - Write tests as you go. At minimum, cover: a fresh install redirects pages to `/setup` and answers `/api/health`; the token survives a restart; the wizard rejects a wrong token; setup cannot be completed twice; `/setup` returns 404 after completion; `/api/admin/*` rejects unauthenticated requests; a mutating request with a missing or foreign `Origin` is rejected; the rate limit triggers; `reset-admin` invalidates an existing session. Add axe checks for the wizard and login.
 - Accessibility is a requirement from the first screen, not a later pass. The wizard and login must be fully keyboard-operable, with labelled fields, errors associated with their inputs and announced, and visible focus. Target WCAG 2.2 AA.
 - Prefer boring, readable code over clever abstractions. This project will be read by people deciding whether to trust it on their own server.

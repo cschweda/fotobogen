@@ -28,6 +28,7 @@ plan is in [docs/DESIGN.md](docs/DESIGN.md); changes are recorded in
 - [Resetting the admin password](#resetting-the-admin-password)
 - [The data directory](#the-data-directory)
 - [Settings](#settings)
+- [Branches](#branches)
 - [The fotobogen.com placeholder page](#the-fotobogencom-placeholder-page)
 - [Licence](#licence)
 
@@ -186,6 +187,19 @@ All optional.
 
 Login cookies are marked `Secure`, so logging in works over HTTPS, and over
 plain HTTP only on `localhost`.
+
+## Branches
+
+- `staging` is where work collects. Feature branches open pull requests
+  against `staging` (`gh pr create --base staging`).
+- `main` is updated only by one pull request from `staging`, merged with a
+  merge commit (never squashed), when a batch is ready. A fix made directly on
+  `main` is merged back into `staging`.
+- Version tags (`v1.2.3`), which publish the Docker image, are made on `main`.
+
+The batching matters because a push to `main` that changes `site/` or
+`netlify.toml` triggers a production deploy of the placeholder page on
+Netlify, and each one costs build credits.
 
 ## The fotobogen.com placeholder page
 
