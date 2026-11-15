@@ -1,5 +1,6 @@
 // One photo, for the edit screen: its details, its recipe, and its medium copy.
 import { defineEventHandler, getRouterParam } from 'nuxt/server'
+import { siteRecipe } from '../../../../pipeline/render.ts'
 import { getPipeline } from '../../../../utils/app.ts'
 import { fail } from '../../../../utils/respond.ts'
 import { requireAdmin } from '../../../../utils/session.ts'
@@ -18,7 +19,9 @@ export default defineEventHandler(async (event) => {
   } | undefined
   if (!photo) return fail(event, 404, 'There is no such photo.')
 
-  const recipe = modules!.cleanRecipe(photo.recipe ? JSON.parse(photo.recipe) : [])
+  const own = photo.recipe === null ? null : modules!.cleanRecipe(JSON.parse(photo.recipe))
+  const site = siteRecipe(getPipeline())
+  const recipe = own ?? site
   return {
     id: photo.id,
     slug: photo.slug,
@@ -27,6 +30,10 @@ export default defineEventHandler(async (event) => {
     status: photo.status,
     width: photo.width,
     height: photo.height,
+    // The photo's own recipe; null when it follows the site-wide one.
+    own,
+    site,
+    // What is actually applied.
     recipe,
     // Steps whose module is switched off or missing; they are skipped when rendering.
     skipped: modules!.skipped(recipe).map(step => `${step.module}/${step.transform}`),

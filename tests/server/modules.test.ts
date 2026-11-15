@@ -8,7 +8,7 @@ import { upload, whenProcessed } from '../helpers/photos.ts'
 import { get, startServer, type TestServer } from '../helpers/server.ts'
 import { completeSetup, query } from '../helpers/setup.ts'
 
-interface Detail { status: string, recipe: { module: string, transform: string, params: Record<string, unknown> }[], skipped: string[], medium: { url: string, width: number, height: number } | null }
+interface Detail { status: string, own: unknown[] | null, site: unknown[], recipe: { module: string, transform: string, params: Record<string, unknown> }[], skipped: string[], medium: { url: string, width: number, height: number } | null }
 
 describe('modules and recipes', () => {
   let server: TestServer
@@ -40,11 +40,13 @@ describe('modules and recipes', () => {
   it('lists the bundled module and the installed one, with the controls each declares', async () => {
     const { modules } = await (await get(server, '/api/admin/modules', { cookie })).json() as { modules: { name: string, source: string, enabled: boolean, error: string | null, transforms: { id: string, params: Record<string, { type: string }> }[] }[] }
     const byName = Object.fromEntries(modules.map(module => [module.name, module]))
-    expect(byName.filmframe).toMatchObject({ source: 'bundled', enabled: true, error: null })
+    // Everything starts switched off.
+    expect(byName.filmframe).toMatchObject({ source: 'bundled', enabled: false, error: null })
+    expect(byName.filmlooks).toMatchObject({ source: 'bundled', enabled: false, error: null })
     expect(Object.entries(byName.filmframe!.transforms[0]!.params).map(([key, spec]) => [key, spec.type])).toEqual([
-      ['thickness', 'range'], ['raggedness', 'range'], ['markings', 'boolean'], ['stock', 'select'],
+      ['thickness', 'range'], ['raggedness', 'range'], ['markings', 'boolean'], ['sprockets', 'boolean'], ['stock', 'select'],
     ])
-    expect(byName.invert).toMatchObject({ source: 'installed', enabled: true, error: null })
+    expect(byName.invert).toMatchObject({ source: 'installed', enabled: false, error: null })
     expect(byName.broken!.error).toBeTruthy()
     expect(server.output()).toContain('Module "broken" could not be loaded')
   })
@@ -56,14 +58,23 @@ describe('modules and recipes', () => {
     expect(anonymous.status).toBe(401)
   })
 
+  it('does nothing with a module until it is switched on', async () => {
+    const off = await send('POST', `/api/admin/photos/${id}/preview`, { recipe: [frame({ thickness: 10 })] })
+    const meta = await sharp(Buffer.from(await off.arrayBuffer())).metadata()
+    expect([meta.width, meta.height]).toEqual([1000, 800])
+    for (const name of ['filmframe', 'filmlooks', 'invert']) {
+      expect((await send('PUT', `/api/admin/modules/${name}`, { enabled: true })).status).toBe(200)
+    }
+  })
+
   it('previews a recipe without saving anything', async () => {
-    const response = await send('POST', `/api/admin/photos/${id}/preview`, { recipe: [frame({ thickness: 10, raggedness: 0, markings: false })] })
+    const response = await send('POST', `/api/admin/photos/${id}/preview`, { recipe: [frame({ thickness: 10, raggedness: 0, markings: false, sprockets: false })] })
     expect(response.status).toBe(200)
     expect(response.headers.get('content-type')).toBe('image/webp')
     const meta = await sharp(Buffer.from(await response.arrayBuffer())).metadata()
     // 1000 x 800 with an 80 px border and 40 px of paper on each side.
     expect([meta.width, meta.height]).toEqual([1240, 1040])
-    expect((await detail()).recipe).toEqual([])
+    expect(await detail()).toMatchObject({ own: null, recipe: [] })
   })
 
   it('applies a saved recipe to every copy, leaving the original file alone', async () => {
@@ -78,6 +89,7 @@ describe('modules and recipes', () => {
     expect(after.status).toBe('ready')
     expect(after.medium).toMatchObject({ width: 1240, height: 1040 })
     expect(query(server, `select type, status from jobs order by created_at, rowid`)).toEqual([{ type: 'ingest', status: 'done' }, { type: 'rerender', status: 'done' }])
+    expect(query(server, 'select camera, title from photos')).toHaveLength(1)
     expect(query(server, 'select checksum, bytes from photos')[0]).toEqual(before)
     const image = await sharp(Buffer.from(await (await get(server, after.medium!.url)).arrayBuffer())).raw().toBuffer({ resolveWithObject: true })
     expect([...image.data.subarray(0, 3)].every(value => value > 225)).toBe(true) // paper in the corner
@@ -86,16 +98,19 @@ describe('modules and recipes', () => {
   it('skips a module that is switched off, and says so, without losing the recipe', async () => {
     expect((await send('PUT', '/api/admin/modules/filmframe', { enabled: false })).status).toBe(200)
     expect((await detail()).skipped).toEqual(['filmframe/negative-edge'])
-    expect((await send('PUT', `/api/admin/photos/${id}/recipe`, { recipe: (await detail()).recipe })).status).toBe(200)
+    // Switching a module off or on renders the photos that use it again.
     await whenProcessed(server, cookie)
     expect((await detail()).medium).toMatchObject({ width: 1000, height: 800 })
     expect((await detail()).recipe).toHaveLength(1)
-    expect((await send('PUT', '/api/admin/modules/filmframe', { enabled: true })).status).toBe(200)
+    const on = await send('PUT', '/api/admin/modules/filmframe', { enabled: true })
+    expect(await on.json()).toEqual({ ok: true, queued: 1 })
+    await whenProcessed(server, cookie)
+    expect((await detail()).medium).toMatchObject({ width: 1240, height: 1040 })
     expect((await send('PUT', '/api/admin/modules/no-such-module', { enabled: true })).status).toBe(404)
   })
 
   it('runs an installed module, and chains transforms in order', async () => {
-    const recipe = [{ module: 'invert', transform: 'negative', params: {} }, frame({ thickness: 10, raggedness: 0, markings: false })]
+    const recipe = [{ module: 'invert', transform: 'negative', params: {} }, frame({ thickness: 10, raggedness: 0, markings: false, sprockets: false })]
     expect((await send('PUT', `/api/admin/photos/${id}/recipe`, { recipe })).status).toBe(200)
     await whenProcessed(server, cookie)
     const after = await detail()
@@ -103,14 +118,54 @@ describe('modules and recipes', () => {
     expect(after.medium).toMatchObject({ width: 1240, height: 1040 })
   })
 
-  it('restores the photo exactly when the recipe is cleared', async () => {
-    const original = query<{ path: string }>(server, `select path from derivatives where kind = 'medium'`)
+  it('restores the photo when its recipe is cleared', async () => {
     expect((await send('PUT', `/api/admin/photos/${id}/recipe`, { recipe: [] })).status).toBe(200)
     await whenProcessed(server, cookie)
-    expect((await detail()).medium).toMatchObject({ width: 1000, height: 800 })
-    expect(query(server, 'select recipe_json from photos')).toEqual([{ recipe_json: null }])
-    // Same pixels as the very first render give the same content-hashed name as a fresh upload would.
-    expect(query<{ path: string }>(server, `select path from derivatives where kind = 'medium'`)[0]!.path).not.toBe(original[0]!.path)
+    expect(await detail()).toMatchObject({ own: [], recipe: [], medium: { width: 1000, height: 800 } })
+  })
+
+  describe('for all photos at once', () => {
+    let second: string
+    const medium = (photo: string) => query<{ width: number }>(server, `select width from derivatives where kind = 'medium' and photo_id = '${photo}'`)[0]!.width
+
+    it('applies a site-wide recipe to every photo that has none of its own', async () => {
+      const response = await upload(server, cookie, await imageBuffer({ width: 1000, height: 800, seed: 6 }), 'second.jpg')
+      second = (await response.json() as { photo: { id: string } }).photo.id
+      await whenProcessed(server, cookie)
+
+      const saved = await send('PUT', '/api/admin/site-recipe', { recipe: [frame({ thickness: 10, raggedness: 0, markings: false, sprockets: false })] })
+      // Only the second photo follows the site: the first has its own (empty) recipe.
+      expect(await saved.json()).toMatchObject({ queued: 1, recipe: [{ module: 'filmframe' }] })
+      await whenProcessed(server, cookie)
+      expect(medium(second)).toBe(1240)
+      expect(medium(id)).toBe(1000)
+    })
+
+    it('applies it to photos uploaded afterwards', async () => {
+      const response = await upload(server, cookie, await imageBuffer({ width: 1000, height: 800, seed: 7 }), 'third.jpg')
+      const third = (await response.json() as { photo: { id: string } }).photo.id
+      await whenProcessed(server, cookie)
+      expect(medium(third)).toBe(1240)
+    })
+
+    it('lets one photo follow the site again, or keep its own choice', async () => {
+      expect((await send('PUT', `/api/admin/photos/${id}/recipe`, { recipe: null })).status).toBe(200)
+      await whenProcessed(server, cookie)
+      expect(await detail()).toMatchObject({ own: null, recipe: [{ module: 'filmframe' }], medium: { width: 1240 } })
+      expect((await send('PUT', `/api/admin/photos/${second}/recipe`, { recipe: [] })).status).toBe(200)
+      await whenProcessed(server, cookie)
+      expect(medium(second)).toBe(1000)
+    })
+
+    it('switches the site-wide recipe off again for everyone who follows it', async () => {
+      const cleared = await send('PUT', '/api/admin/site-recipe', { recipe: [] })
+      expect(await cleared.json()).toEqual({ recipe: [], queued: 2 })
+      await whenProcessed(server, cookie)
+      expect(medium(id)).toBe(1000)
+      expect((await send('PUT', '/api/admin/site-recipe', { recipe: 'all of them' })).status).toBe(422)
+      const anonymous = await fetch(`${server.url}/api/admin/site-recipe`, { method: 'PUT', headers: { origin: server.url, 'content-type': 'application/json' }, body: '{"recipe":[]}' })
+      expect(anonymous.status).toBe(401)
+    })
   })
 
   it('refuses a recipe for a photo that does not exist or a body that is not a list', async () => {

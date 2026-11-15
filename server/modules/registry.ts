@@ -55,7 +55,7 @@ function failed(manifest: ModuleManifest, source: LoadedModule['source'], error:
   return { manifest, source, transforms: [], enabled: false, error: error instanceof Error ? error.message : String(error) }
 }
 
-async function loadInstalled(dir: string, folder: string): Promise<LoadedModule> {
+async function loadInstalled(dir: string, folder: string, sqliteGiven: boolean): Promise<LoadedModule> {
   const fallback: ModuleManifest = { name: folder, version: '?', label: folder, entry: '' }
   let manifest = fallback
   try {
@@ -65,13 +65,17 @@ async function loadInstalled(dir: string, folder: string): Promise<LoadedModule>
     if (!existsSync(entry)) throw new Error(`The entry file ${manifest.entry} is missing.`)
     const imported = await import(/* @vite-ignore */ pathToFileURL(entry).href) as { default?: unknown }
     const definition: ModuleDefinition = checkDefinition(imported.default)
-    return { manifest, source: 'installed', transforms: definition.transforms, enabled: true, error: null }
+    return { manifest, source: 'installed', transforms: definition.transforms, enabled: sqliteGiven === false, error: null }
   }
   catch (error) {
     return failed(manifest === fallback ? { ...fallback, name: /^[a-z][a-z0-9-]{0,39}$/.test(folder) ? folder : 'invalid' } : manifest, 'installed', error)
   }
 }
 
+/**
+ * With a database, modules start switched off and the admin's choices are
+ * remembered there. Without one (tests, tools), every module is on.
+ */
 export async function createRegistry(options: { bundled: BundledModule[], installedDir?: string, sqlite?: Database }): Promise<Registry> {
   const modules = new Map<string, LoadedModule>()
 
@@ -79,7 +83,7 @@ export async function createRegistry(options: { bundled: BundledModule[], instal
     let manifest: ModuleManifest | undefined
     try {
       manifest = checkManifest(bundled.manifest)
-      modules.set(manifest.name, { manifest, source: 'bundled', transforms: checkDefinition(bundled.definition).transforms, enabled: true, error: null })
+      modules.set(manifest.name, { manifest, source: 'bundled', transforms: checkDefinition(bundled.definition).transforms, enabled: options.sqlite === undefined, error: null })
     }
     catch (error) {
       if (manifest) modules.set(manifest.name, failed(manifest, 'bundled', error))
@@ -89,7 +93,7 @@ export async function createRegistry(options: { bundled: BundledModule[], instal
   if (options.installedDir && existsSync(options.installedDir)) {
     const folders = readdirSync(options.installedDir, { withFileTypes: true }).filter(entry => entry.isDirectory()).map(entry => entry.name).sort()
     for (const folder of folders) {
-      const loaded = await loadInstalled(options.installedDir, folder)
+      const loaded = await loadInstalled(options.installedDir, folder, options.sqlite !== undefined)
       if (modules.has(loaded.manifest.name)) {
         // A bundled module cannot be replaced by dropping in a folder of the same name.
         continue
@@ -105,7 +109,8 @@ export async function createRegistry(options: { bundled: BundledModule[], instal
     const upsert = sqlite.prepare(`insert into modules (name, version, enabled) values (?, ?, ?) on conflict(name) do update set version = excluded.version`)
     for (const module of modules.values()) {
       if (module.error) continue
-      module.enabled = known.get(module.manifest.name) ?? true
+      // Off until the admin switches a module on.
+      module.enabled = known.get(module.manifest.name) ?? false
       upsert.run(module.manifest.name, module.manifest.version, module.enabled ? 1 : 0)
     }
   }

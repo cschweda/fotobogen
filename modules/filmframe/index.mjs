@@ -1,9 +1,10 @@
 // Film frame: a worked example of a Fotobogen module.
 //
-// It surrounds the photo with the black edge of a negative, the way a print
-// looks when the negative carrier has been filed out so the film's border
-// shows. The border can be thicker or thinner, clean or ragged, and can
-// carry edge markings: a stock name and frame numbers.
+// It makes the photo look contact printed: the whole negative laid on the
+// paper, so the film's own border prints too. The film base prints nearly
+// black, the sprocket holes print fully black, and the edge markings (a
+// stock name and frame numbers) print light. The border can be thicker or
+// thinner, and its outer edge clean or ragged, as from a filed-out carrier.
 //
 // The stock names are invented. They imitate the idea of edge printing, not
 // any real manufacturer's marks.
@@ -128,11 +129,12 @@ export default {
     {
       id: 'negative-edge',
       label: 'Negative edge',
-      description: 'A black film border around the photo, on white paper.',
+      description: 'The photo as a contact print: the film\'s border, perforations, and edge printing around it, on white paper.',
       params: {
         thickness: { type: 'range', label: 'Frame thickness', min: 2, max: 14, step: 0.5, default: 6 },
         raggedness: { type: 'range', label: 'Ragged edge', min: 0, max: 100, step: 5, default: 60 },
         markings: { type: 'boolean', label: 'Film edge markings', default: true },
+        sprockets: { type: 'boolean', label: 'Sprocket holes (35 mm)', default: true },
         stock: { type: 'select', label: 'Film stock (made up)', options: STOCKS, default: STOCKS[0] },
       },
 
@@ -148,19 +150,41 @@ export default {
         const amount = Math.min(paper * 0.8, border * 0.4) * params.raggedness / 100
         const edge = outline(paper, paper, canvasWidth - paper, canvasHeight - paper, amount, Math.max(6, border / 2.5), random)
 
+        // Where things sit across the film edge, measured from the photo
+        // outward. On 35 mm film the perforations are nearest the picture
+        // and the printing runs along the outside.
+        const inner = paper + border // top of the photo
+        const below = inner + height // bottom of the photo
+        const first = paper + border
+        let holes = ''
+        if (params.sprockets) {
+          const holeHeight = border * 0.36
+          const holeWidth = border * 0.5
+          const pitch = border * 0.86
+          const count = Math.floor((width + border) / pitch)
+          const start = first - border * 0.4 + (width + border * 0.8 - (count - 1) * pitch - holeWidth) / 2
+          for (let i = 0; i < count; i++) {
+            const x = round(start + i * pitch)
+            const shape = `width="${round(holeWidth)}" height="${round(holeHeight)}" rx="${round(holeHeight * 0.22)}"`
+            holes += `<rect x="${x}" y="${round(inner - border * 0.12 - holeHeight)}" ${shape}/>`
+            holes += `<rect x="${x}" y="${round(below + border * 0.12)}" ${shape}/>`
+          }
+        }
+
         let marks = ''
         if (params.markings) {
-          const dot = Math.max(1, border * 0.062)
-          const bandTop = paper + (border - 7 * dot) / 2
-          const bandBottom = canvasHeight - paper - border + (border - 7 * dot) / 2
-          const first = paper + border
+          // With perforations the printing shares the edge with them and is smaller.
+          const dot = Math.max(1, border * (params.sprockets ? 0.034 : 0.062))
+          const textHeight = 7 * dot
+          const bandTop = params.sprockets ? paper + border * 0.13 : paper + (border - textHeight) / 2
+          const bandBottom = params.sprockets ? below + border * 0.87 - textHeight : below + (border - textHeight) / 2
           const room = width
-          // Top edge: the stock name, repeated along the film.
+          // One edge: the stock name, repeated along the film.
           const name = String(params.stock)
           const nameWidth = textWidth(name, dot)
           const gap = Math.max(nameWidth * 1.9, room / 2)
           for (let x = first + border * 0.5; x + nameWidth <= first + room; x += gap) marks += textDots(name, x, bandTop, dot)
-          // Bottom edge: frame numbers, as on 35 mm film.
+          // The other edge: frame numbers.
           const frame = 1 + Math.floor(random() * 36)
           for (const [label, at] of [[`>${frame}`, 0.18], [`${frame}A`, 0.68]]) {
             const x = first + room * at
@@ -168,9 +192,12 @@ export default {
           }
         }
 
+        // A contact print: paper, then the film base (nearly black), with
+        // the holes in it fully black and the printing on it light.
         const frame = `<svg xmlns="http://www.w3.org/2000/svg" width="${canvasWidth}" height="${canvasHeight}">`
           + `<rect width="100%" height="100%" fill="#f4f1e9"/>`
-          + `<path d="${edge}" fill="#0b0b0b"/>`
+          + `<path d="${edge}" fill="#201f1d"/>`
+          + `<g fill="#000000">${holes}</g>`
           + `<g fill="#e8e2d0" opacity="0.85">${marks}</g>`
           + `</svg>`
 

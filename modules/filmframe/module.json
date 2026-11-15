@@ -2,6 +2,6 @@
   "name": "filmframe",
   "version": "1.0.0",
   "label": "Film frame",
-  "description": "Prints the photo with the black edge of the negative showing, as from a filed-out negative carrier, with optional made-up film-stock markings.",
+  "description": "Makes a photo look contact printed, with the negative's border showing: film edge, sprocket holes, and made-up stock markings.",
   "entry": "index.mjs"
 }

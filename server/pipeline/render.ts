@@ -45,6 +45,52 @@ async function workingRaster(ctx: PipelineContext, path: string, edge: number): 
   return { data, width: info.width, height: info.height, channels: info.channels }
 }
 
+export const SITE_RECIPE_KEY = 'modules.site_recipe'
+
+/** The recipe applied to every photo that does not have its own. */
+export function siteRecipe(ctx: PipelineContext): RecipeStep[] {
+  const row = ctx.sqlite.prepare(`select value from settings where key = ?`).get(SITE_RECIPE_KEY) as { value: string } | undefined
+  return ctx.modules?.cleanRecipe(row ? JSON.parse(row.value) : []) ?? []
+}
+
+/**
+ * A photo's own recipe wins, even an empty one ("none for this photo").
+ * A photo with no recipe of its own (null) follows the site-wide one.
+ */
+export function effectiveRecipe(ctx: PipelineContext, own: string | null): RecipeStep[] {
+  return own === null ? siteRecipe(ctx) : ctx.modules?.cleanRecipe(JSON.parse(own)) ?? []
+}
+
+function queueRerender(ctx: PipelineContext, where: string, ...values: unknown[]): number {
+  const { sqlite } = ctx
+  const ids = (sqlite.prepare(`select id from photos where status in ('ready', 'failed') and ${where}`).all(...values) as { id: string }[]).map(row => row.id)
+  const now = Date.now()
+  for (const id of ids) {
+    sqlite.prepare(`update photos set status = 'processing', updated_at = ? where id = ?`).run(now, id)
+    sqlite.prepare(`insert into jobs (id, type, photo_id, status, attempts, created_at) values (?, 'rerender', ?, 'queued', 0, ?)`).run(newId(), id, now)
+  }
+  return ids.length
+}
+
+/** Store the site-wide recipe and queue every photo that follows it. Returns how many were queued. */
+export function setSiteRecipe(ctx: PipelineContext, recipe: unknown): { recipe: RecipeStep[], queued: number } {
+  const clean = ctx.modules?.cleanRecipe(recipe) ?? []
+  const queued = ctx.sqlite.transaction(() => {
+    ctx.sqlite.prepare(`insert into settings (key, value) values (?, ?) on conflict(key) do update set value = excluded.value`)
+      .run(SITE_RECIPE_KEY, JSON.stringify(clean))
+    return queueRerender(ctx, 'recipe_json is null')
+  })()
+  return { recipe: clean, queued }
+}
+
+/** Queue every photo that uses a module, after it is switched on or off. */
+export function rerenderForModule(ctx: PipelineContext, name: string): number {
+  // cleanRecipe keeps the steps of a module that is switched off, so this sees it either way.
+  const usedBySite = siteRecipe(ctx).some(step => step.module === name)
+  return ctx.sqlite.transaction(() => queueRerender(ctx,
+    usedBySite ? `(recipe_json is null or recipe_json like ?)` : `recipe_json like ?`, `%"module":"${name}"%`))()
+}
+
 const PREVIEW_EDGE = 1024
 
 /**
@@ -60,22 +106,19 @@ export async function renderPreview(ctx: PipelineContext, photoId: string, recip
 }
 
 /**
- * Store a new recipe for a photo and queue it to be rendered again. Returns
- * the cleaned recipe, or null when there is no such photo or it is busy.
+ * Store a photo's own recipe and queue it to be rendered again. `null`
+ * means "follow the site-wide recipe"; an empty list means "none for this
+ * photo". Returns false when there is no such photo or it is busy.
  */
-export function setRecipe(ctx: PipelineContext, photoId: string, recipe: unknown): RecipeStep[] | null {
-  if (!ctx.modules) return null
-  const clean = ctx.modules.cleanRecipe(recipe)
-  const { sqlite } = ctx
-  const saved = sqlite.transaction(() => {
-    const changed = sqlite.prepare(`update photos set recipe_json = ?, status = 'processing', updated_at = ? where id = ? and status in ('ready', 'failed')`)
-      .run(clean.length > 0 ? JSON.stringify(clean) : null, Date.now(), photoId).changes
-    if (changed === 0) return false
-    sqlite.prepare(`insert into jobs (id, type, photo_id, status, attempts, created_at) values (?, 'rerender', ?, 'queued', 0, ?)`)
-      .run(newId(), photoId, Date.now())
-    return true
+export function setRecipe(ctx: PipelineContext, photoId: string, recipe: unknown): { recipe: RecipeStep[] | null } | false {
+  if (!ctx.modules) return false
+  const clean = recipe === null ? null : ctx.modules.cleanRecipe(recipe)
+  const saved = ctx.sqlite.transaction(() => {
+    const changed = ctx.sqlite.prepare(`update photos set recipe_json = ? where id = ? and status in ('ready', 'failed')`)
+      .run(clean === null ? null : JSON.stringify(clean), photoId).changes
+    return changed > 0 && queueRerender(ctx, 'id = ?', photoId) > 0
   })()
-  return saved ? clean : null
+  return saved ? { recipe: clean } : false
 }
 
 export interface ProcessOptions {
@@ -94,7 +137,7 @@ export async function processPhoto(ctx: PipelineContext, photoId: string, option
 
   const exif = options.readMetadata === false ? undefined : await readExif(original)
 
-  const recipe = ctx.modules?.cleanRecipe(photo.recipe_json ? JSON.parse(photo.recipe_json) : []) ?? []
+  const recipe = effectiveRecipe(ctx, photo.recipe_json)
   const decoded = await workingRaster(ctx, original, WORKING_EDGE)
   // The recipe is applied to the working copy; the original file is never changed.
   const working = recipe.length > 0 && ctx.modules ? await ctx.modules.apply(decoded, recipe) : decoded
