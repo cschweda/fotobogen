@@ -106,10 +106,10 @@ describe('the public site', () => {
   })
 
   it('pages the grid with real links', async () => {
-    const values = Array.from({ length: 31 }, (_, index) => `('x${index}', 'extra-${index}', 'x${index}.jpg', 'x${index}.jpg', 'image/jpeg', 1, 'sum${index}', 300, 200, 'ready', 'public', 0, ${100 + index}, 1, 1)`).join(', ')
+    const values = Array.from({ length: 31 }, (_, index) => `('zz-extra-${index}', 'extra-${index}', 'zz-extra-${index}.jpg', 'zz-extra-${index}.jpg', 'image/jpeg', 1, 'sum${index}', 300, 200, 'ready', 'public', 0, ${100 + index}, 1, 1)`).join(', ')
     sql(`insert into photos (id, slug, original_path, original_filename, mime, bytes, checksum, width, height, status, visibility, is_sample, sort_order, created_at, updated_at) values ${values}`)
-    sql(`insert into derivatives (id, photo_id, kind, format, width, height, path, bytes) select 't' || id, id, 'thumb', 'webp', 300, 200, id || '-thumb-00000000.webp', 1 from photos where id like 'x%'`)
-    sql(`insert into derivatives (id, photo_id, kind, format, width, height, path, bytes) select 's' || id, id, 'square', 'webp', 200, 200, id || '-square-00000000.webp', 1 from photos where id like 'x%'`)
+    sql(`insert into derivatives (id, photo_id, kind, format, width, height, path, bytes) select 't' || id, id, 'thumb', 'webp', 300, 200, id || '-thumb-00000000.webp', 1 from photos where id like 'zz-extra-%'`)
+    sql(`insert into derivatives (id, photo_id, kind, format, width, height, path, bytes) select 's' || id, id, 'square', 'webp', 200, 200, id || '-square-00000000.webp', 1 from photos where id like 'zz-extra-%'`)
     const first = await tiles(1)
     expect(first).toMatchObject({ pages: 2, total: 34 })
     expect(first.tiles).toHaveLength(30)
@@ -117,7 +117,7 @@ describe('the public site', () => {
     expect((await tiles(99)).tiles).toEqual([])
     expect(await (await get(server, '/')).text()).toContain('href="/?page=2"')
     expect(await (await get(server, '/?page=2')).text()).toContain('Previous page')
-    sql(`delete from photos where id like 'x%'`)
+    sql(`delete from photos where id like 'zz-extra-%'`)
   })
 
   it('publishes a feed, a sitemap, and robots.txt with full addresses', async () => {
