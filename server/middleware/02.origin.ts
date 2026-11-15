@@ -8,7 +8,7 @@ import { fail } from '../utils/respond.ts'
 const SAFE_METHODS = ['GET', 'HEAD', 'OPTIONS']
 
 export default defineEventHandler((event) => {
-  if (SAFE_METHODS.includes(event.method)) return
+  if (SAFE_METHODS.includes(event.req.method)) return
   if (!originMatchesHost(getRequestHeader(event, 'origin'), getRequestHeader(event, 'host'))) {
     return fail(event, 403, 'This request did not come from this site.')
   }

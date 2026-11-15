@@ -4,7 +4,7 @@ import { defineEventHandler, readBody } from 'nuxt/server'
 import { fieldErrors, setupSchema } from '../../../shared/schemas.ts'
 import { newId } from '../../core/ids.ts'
 import { hashPassword } from '../../core/password.ts'
-import { deleteSetupToken, loadOrCreateSetupToken, tokensMatch } from '../../core/setup-token.ts'
+import { deleteSetupToken, readSetupToken, tokensMatch } from '../../core/setup-token.ts'
 import { users } from '../../db/schema.ts'
 import { getDb, getPaths, markSetupComplete } from '../../utils/app.ts'
 import { failureLimiter, limiterKey, tooManyAttempts } from '../../utils/limiter.ts'
@@ -20,7 +20,7 @@ export default defineEventHandler(async (event) => {
   // No await between the block check and counting a failure, so attempts
   // made at the same moment are all counted.
   if (failureLimiter.isBlocked(key)) return tooManyAttempts(event, key)
-  if (!tokensMatch(given, loadOrCreateSetupToken(getPaths().setupToken))) {
+  if (!tokensMatch(given, readSetupToken(getPaths().setupToken) ?? '')) {
     failureLimiter.recordFailure(key)
     return fail(event, 401, 'That setup token is not correct. Copy it from the server log and try again.')
   }

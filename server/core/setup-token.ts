@@ -13,6 +13,16 @@ export function loadOrCreateSetupToken(file: string): string {
   return token
 }
 
+/**
+ * The current token, or undefined when there is none. Request handlers use
+ * this: only boot may create a token, because only boot prints it.
+ */
+export function readSetupToken(file: string): string | undefined {
+  if (!existsSync(file)) return undefined
+  const token = readFileSync(file, 'utf8').trim()
+  return /^[0-9a-f]{32}$/.test(token) ? token : undefined
+}
+
 export function deleteSetupToken(file: string): void {
   rmSync(file, { force: true })
 }

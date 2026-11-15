@@ -85,6 +85,7 @@ Restarting keeps you logged in and does not change the setup token.
 pnpm test                                # unit tests, then tests against the built server
 pnpm exec playwright install chromium    # once
 pnpm test:e2e                            # browser tests, including axe accessibility checks
+pnpm typecheck                           # TypeScript check of app and server code
 ```
 
 Both commands build the app first. Set `FB_SKIP_BUILD=1` to reuse an
@@ -136,6 +137,8 @@ Building takes more memory than running; on a 1 GB server, add 2 GB of swap
 first.
 
 ```bash
+git clone https://github.com/cschweda/fotobogen.git
+cd fotobogen
 pnpm install --frozen-lockfile
 pnpm build
 pm2 start ecosystem.config.cjs

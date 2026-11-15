@@ -47,3 +47,15 @@ describe('setup token', () => {
     expect(tokensMatch('', '')).toBe(false)
   })
 })
+
+describe('readSetupToken', () => {
+  it('returns the token without ever creating the file', async () => {
+    const { readSetupToken } = await import('../../server/core/setup-token.ts')
+    const { existsSync } = await import('node:fs')
+    const file = join(tmp(), 'setup-token')
+    expect(readSetupToken(file)).toBeUndefined()
+    expect(existsSync(file)).toBe(false)
+    const token = loadOrCreateSetupToken(file)
+    expect(readSetupToken(file)).toBe(token)
+  })
+})

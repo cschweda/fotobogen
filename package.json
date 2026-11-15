@@ -27,6 +27,7 @@
     "test": "vitest run",
     "test:unit": "vitest run tests/unit",
     "test:e2e": "playwright test",
+    "typecheck": "nuxt typecheck",
     "db:generate": "drizzle-kit generate",
     "fotobogen": "node scripts/fotobogen.mjs"
   },
@@ -55,10 +56,12 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",
+    "@golar/vue": "^0.1.11",
     "@playwright/test": "^1.65.1",
     "@types/better-sqlite3": "^9.6.0",
     "@types/node": "^24.19.2",
     "drizzle-kit": "^0.31.11",
+    "golar": "^0.1.11",
     "typescript": "^7.0.2",
     "vitest": "^5.1.0"
   }

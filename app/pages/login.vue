@@ -38,7 +38,8 @@ async function submit() {
         <button type="submit" class="fb-button" :aria-disabled="busy">Log in</button>
       </form>
       <p class="fb-small login__help">
-        Forgot the password? Run <code>pnpm fotobogen reset-admin</code> on the server.
+        Forgot the password? Run <code>pnpm fotobogen reset-admin</code> on the server, or with Docker,
+        <code>docker compose exec app node scripts/fotobogen.mjs reset-admin</code>.
       </p>
     </div>
   </FbShell>
