@@ -40,6 +40,7 @@ plan is in [docs/DESIGN.md](docs/DESIGN.md); changes are recorded in
 - [Docker quick start](#docker-quick-start)
 - [Laravel Forge](#laravel-forge)
 - [Without Docker (pm2)](#without-docker-pm2)
+- [Backup and restore](#backup-and-restore)
 - [Resetting the admin password](#resetting-the-admin-password)
 - [The data directory](#the-data-directory)
 - [Settings](#settings)
@@ -439,6 +440,43 @@ pm2 logs fotobogen           # shows the setup token
 
 Put nginx in front of it with [deploy/forge-nginx.conf](deploy/forge-nginx.conf).
 Update with `scripts/rebuild.sh`.
+
+## Backup and restore
+
+A backup is one zip file holding everything that cannot be made again: the
+database (titles, albums, tags, settings, your login), your photos exactly
+as you uploaded them, and any skins and modules you installed. Resized
+copies are left out, because they are rebuilt from the originals. The secret
+key that seals logins is left out too, so a backup file does not open your
+site.
+
+**To back up:** **Admin, System, Download a backup**. Or on the server:
+
+```bash
+pnpm fotobogen backup                    # writes fotobogen-backup-<date>.zip
+pnpm fotobogen backup /mnt/disk/site.zip
+```
+
+The site can stay running; the database is copied as a consistent snapshot.
+
+**To restore:** **Admin, System**, choose the zip, and **Upload and prepare
+restore**. The file is checked and set aside, and the restore happens the
+next time Fotobogen starts; until then nothing changes and it can be
+cancelled. Or, with Fotobogen stopped:
+
+```bash
+pnpm fotobogen restore site.zip
+```
+
+Use the command for a large backup: the web server in front of Fotobogen
+usually limits upload size.
+
+A restore replaces everything on the site with the backup, including the
+login. What was there is **not deleted**: it is moved into a folder named
+`before-restore-<time>` in the data directory. After a restore the resized
+copies are made again in the background, and photos reappear on the site as
+each finishes. A backup made by a newer version of Fotobogen is refused
+until you update.
 
 ## Resetting the admin password
 

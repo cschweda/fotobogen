@@ -132,11 +132,12 @@ test('skins and their options are changed from the admin and show at once', asyn
 })
 
 test('a site set to open photos on their own page uses plain links, and the square grid has equal cells', async ({ page }) => {
-  const db = (await import('better-sqlite3')).default
-  const { join } = await import('node:path')
-  const sqlite = new db(join(server.dataDir, 'fotobogen.db'))
-  sqlite.exec(`update settings set value = '"page"' where key = 'layout.photo_view'; update settings set value = '"square"' where key = 'layout.grid'`)
-  sqlite.close()
+  const saved = await fetch(server.url + '/api/admin/settings', {
+    method: 'PUT',
+    headers: { origin: server.url, cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ siteTitle: 'Test Photos', tagline: '', grid: 'square', photoView: 'page', showExif: true, showLocation: false }),
+  })
+  expect(saved.status).toBe(200)
   await page.goto(server.url + '/')
   const boxes = await page.locator('.fb-tile').evaluateAll(elements => elements.map((element) => {
     const box = element.getBoundingClientRect()
