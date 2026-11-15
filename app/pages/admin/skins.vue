@@ -4,18 +4,20 @@ definePageMeta({ middleware: 'admin' })
 useHead({ title: 'Skins | Fotobogen' })
 
 type Option
-  = | { type: 'color', label?: string, default: string }
+  = | { type: 'color', label?: string, default: { light: string, dark: string } }
     | { type: 'select', label?: string, options: string[], default: string }
     | { type: 'range', label?: string, min: number, max: number, step?: number, default: number }
+type Values = Record<string, string | number | { light: string, dark: string }>
 interface Skin {
-  name: string, label: string, version: string, description: string | null, source: 'bundled' | 'installed'
-  error: string | null, options: Record<string, Option>, values: Record<string, string | number>, warnings: string[]
+  name: string, label: string, version: string, description: string | null, source: 'bundled' | 'installed', mode: 'light' | 'dark'
+  error: string | null, options: Record<string, Option>, values: Values, warnings: string[]
 }
 
-const { data, refresh } = await useFetch<{ active: string, skins: Skin[] }>('/api/admin/skins')
+const { data, refresh } = await useFetch<{ active: string, mode: string, skins: Skin[] }>('/api/admin/skins')
 const skins = computed(() => data.value?.skins ?? [])
 const chosen = ref(data.value?.active ?? 'swiss')
-const values = ref<Record<string, Record<string, string | number>>>(Object.fromEntries(skins.value.map(skin => [skin.name, { ...skin.values }])))
+const mode = ref(data.value?.mode ?? 'skin')
+const values = ref<Record<string, Values>>(Object.fromEntries(skins.value.map(skin => [skin.name, structuredClone(toRaw(skin.values))])))
 const current = computed(() => skins.value.find(skin => skin.name === chosen.value))
 const message = ref('')
 const problem = ref('')
@@ -27,7 +29,7 @@ async function save() {
   busy.value = true
   problem.value = ''
   try {
-    const result = await $fetch<{ warnings: string[] }>('/api/admin/skins', { method: 'PUT', body: { active: chosen.value, options: values.value[chosen.value] } })
+    const result = await $fetch<{ warnings: string[] }>('/api/admin/skins', { method: 'PUT', body: { active: chosen.value, mode: mode.value, options: values.value[chosen.value] } })
     warnings.value = result.warnings
     message.value = `Saved. Your site now uses ${current.value?.label}.`
     await refresh()
@@ -63,15 +65,37 @@ async function save() {
         </label>
       </fieldset>
 
+      <div class="skins__options">
+        <h2 class="skins__heading">Light or dark</h2>
+        <p class="skins__note">Every skin has a light and a dark mode. Choose which one visitors see first. They can switch with the button at the top of your site, and their choice is remembered on their device.</p>
+        <div class="option">
+          <label class="option__label" for="skin-mode">Visitors first see</label>
+          <select id="skin-mode" v-model="mode" class="option__select">
+            <option value="skin">The skin's own choice{{ current ? ` (${current.mode} for ${current.label})` : '' }}</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+            <option value="auto">Whatever their device is set to</option>
+          </select>
+        </div>
+      </div>
+
       <fieldset v-if="current && Object.keys(current.options).length" class="skins__options">
         <legend class="skins__heading">{{ current.label }} options</legend>
         <div v-for="(option, key) in current.options" :key="key" class="option">
-          <label class="option__label" :for="`option-${key}`">{{ option.label ?? key }}</label>
-          <input v-if="option.type === 'color'" :id="`option-${key}`" v-model="values[current.name]![key]" class="option__color" type="color">
-          <select v-else-if="option.type === 'select'" :id="`option-${key}`" v-model="values[current.name]![key]" class="option__select">
+          <template v-if="option.type === 'color'">
+            <span class="option__label">{{ option.label ?? key }}</span>
+            <span class="option__pair">
+              <label v-for="shade in (['light', 'dark'] as const)" :key="shade" class="option__shade">
+                <input v-model="(values[current.name]![key] as { light: string, dark: string })[shade]" class="option__color" type="color">
+                {{ option.label ?? key }}, {{ shade }} mode
+              </label>
+            </span>
+          </template>
+          <label v-else class="option__label" :for="`option-${key}`">{{ option.label ?? key }}</label>
+          <select v-if="option.type === 'select'" :id="`option-${key}`" v-model="values[current.name]![key]" class="option__select">
             <option v-for="choice in option.options" :key="choice" :value="choice">{{ choice }}</option>
           </select>
-          <template v-else>
+          <template v-else-if="option.type === 'range'">
             <input
               :id="`option-${key}`" v-model.number="values[current.name]![key]" class="option__range" type="range"
               :min="option.min" :max="option.max" :step="option.step ?? 1"
@@ -113,6 +137,9 @@ async function save() {
 .skin--broken { cursor: default; }
 .option { display: grid; grid-template-columns: 1fr auto; gap: 0.25rem 0.75rem; align-items: center; padding: 0.75rem 0; border-top: 1px solid var(--fb-line); }
 .option__label { grid-column: 1 / -1; font-size: 0.875rem; color: var(--fb-muted); }
+.skins__note { max-width: 40rem; margin: 0 0 0.75rem; color: var(--fb-muted); }
+.option__pair { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 0.75rem 2rem; }
+.option__shade { display: flex; align-items: center; gap: 0.6rem; }
 .option__color { width: 4rem; height: 2.5rem; padding: 0; border: 1px solid var(--fb-edge); background: none; }
 .option__select { min-height: 2.5rem; padding: 0 0.6rem; border: 1px solid var(--fb-edge); background: var(--fb-panel); color: var(--fb-text); font: inherit; border-radius: 0; }
 .option__range { width: 100%; accent-color: var(--fb-text); }

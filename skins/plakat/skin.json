@@ -2,13 +2,23 @@
   "name": "plakat",
   "version": "1.0.0",
   "label": "Plakat",
-  "description": "Dark, like a poster: black, the site's name set very large, photographs edge to edge, and a yellow accent.",
-  "tokens": {
-    "ground": "#000000",
-    "text": "#ffffff",
-    "muted": "#b4b4b4",
-    "line": "#333333",
-    "accent": "#ffd400"
+  "description": "A poster: the site's name set very large, photographs edge to edge. White on black with a yellow bar, or black on yellow.",
+  "mode": "dark",
+  "modes": {
+    "light": {
+      "ground": "#ffd400",
+      "text": "#000000",
+      "muted": "#4a4000",
+      "line": "#d9b400",
+      "accent": "#000000"
+    },
+    "dark": {
+      "ground": "#000000",
+      "text": "#ffffff",
+      "muted": "#b4b4b4",
+      "line": "#333333",
+      "accent": "#ffd400"
+    }
   },
   "contrast": [
     [
@@ -24,7 +34,10 @@
     "accent": {
       "type": "color",
       "label": "Accent colour",
-      "default": "#ffd400"
+      "default": {
+        "light": "#000000",
+        "dark": "#ffd400"
+      }
     },
     "gutter": {
       "type": "select",

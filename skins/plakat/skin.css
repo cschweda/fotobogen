@@ -6,12 +6,10 @@
   It is the Swiss skin's rules with different values and a few changes at
   the end. docs/SKINS.md explains how to make one like it.
 */
+/* Colours are not set here. They come from "modes" in skin.json, once for
+   light and once for dark, and arrive as --fb-ground, --fb-text, --fb-muted,
+   --fb-line, and --fb-accent. */
 :root.fb-public {
-  --fb-ground: #000000;
-  --fb-text: #ffffff;
-  --fb-muted: #b4b4b4;
-  --fb-line: #333333;
-  --fb-accent: #ffd400;
   --fb-gutter: 0px;
   --fb-columns: 4;
   --fb-font: "Helvetica Neue", Helvetica, "Nimbus Sans", Arial, sans-serif;
@@ -31,6 +29,10 @@
 .fb-public :focus-visible { outline: 2px solid var(--fb-text); outline-offset: 3px; }
 .fb-skip { position: absolute; left: -999rem; }
 .fb-skip:focus { left: var(--fb-margin); top: 0.75rem; z-index: 3; padding: 0.5rem 0.75rem; background: var(--fb-ground); }
+
+/* The light and dark switch, in the header. */
+.fb-mode { min-height: 2.25rem; padding: 0 0.75rem; border: 1px solid var(--fb-muted); background: none; color: inherit; font: inherit; cursor: pointer; }
+.fb-mode:hover { border-color: var(--fb-text); }
 
 /* Header: the site's name top-left, small. */
 .fb-site-header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 1.5rem; padding: 1.5rem var(--fb-margin) 1rem; }
@@ -166,7 +168,7 @@
 
 /* The site's name as a poster headline, with a bar of the accent under it. */
 .fb-site-header { display: grid; gap: 0.5rem; padding: clamp(1.5rem, 5vw, 4rem) var(--fb-margin) 1.25rem; }
-.fb-site-title { font-size: clamp(2.75rem, 11vw, 8.5rem); line-height: 0.88; letter-spacing: -0.055em; margin-left: -0.04em; }
+.fb-site-title { font-size: clamp(2.75rem, 11vw, 8.5rem); line-height: 0.88; letter-spacing: -0.055em; margin-left: -0.04em; overflow-wrap: anywhere; }
 .fb-site-title::after { content: ""; display: block; width: clamp(3rem, 10vw, 7rem); height: clamp(0.4rem, 1vw, 0.7rem); margin-top: clamp(0.9rem, 2vw, 1.6rem); background: var(--fb-accent); }
 .fb-site-tagline { font-size: 1rem; }
 .fb-nav { margin-left: 0; margin-top: 0.5rem; font-size: 1rem; font-weight: 700; }

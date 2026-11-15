@@ -29,7 +29,7 @@ describe('the public site', () => {
     // A skin the owner installed: a folder in data/skins.
     mkdirSync(join(dataDir, 'skins', 'paper'), { recursive: true })
     writeFileSync(join(dataDir, 'skins', 'paper', 'skin.json'), JSON.stringify({
-      name: 'paper', version: '0.1.0', label: 'Paper', tokens: { ground: '#ffffff', text: '#999999' }, contrast: [['text', 'ground']],
+      name: 'paper', version: '0.1.0', label: 'Paper', modes: { light: { ground: '#ffffff', text: '#999999' }, dark: { ground: '#000000', text: '#ffffff' } }, contrast: [['text', 'ground']],
       options: { ink: { type: 'color', default: '#111111' } },
     }))
     writeFileSync(join(dataDir, 'skins', 'paper', 'skin.css'), ':root.fb-public { background: white; }')
@@ -160,7 +160,7 @@ describe('the public site', () => {
       const listed = await skins()
       expect(listed.active).toBe('swiss')
       expect(listed.skins.map(skin => [skin.name, skin.source, skin.error])).toEqual([['papier', 'bundled', null], ['plakat', 'bundled', null], ['swiss', 'bundled', null], ['paper', 'installed', null]])
-      expect(listed.skins.find(skin => skin.name === 'paper')!.warnings[0]).toContain('"text" on "ground" has a contrast of 2.8:1')
+      expect(listed.skins.find(skin => skin.name === 'paper')!.warnings[0]).toBe('In light mode, "text" on "ground" has a contrast of 2.8:1. Text needs at least 4.5:1 to be readable.')
     })
 
     it('changes options and switches skin with no rebuild, giving the stylesheet a new address', async () => {
@@ -178,14 +178,42 @@ describe('the public site', () => {
     })
 
     it('switches to each skin that comes with Fotobogen, light and dark', async () => {
-      for (const [name, ground] of [['papier', '#f4f1ea'], ['plakat', '#000000'], ['swiss', '#0a0a0b']] as const) {
+      for (const [name, light, dark] of [['papier', '#f4f1ea', '#171613'], ['plakat', '#ffd400', '#000000'], ['swiss', '#ffffff', '#0a0a0b']] as const) {
         expect((await send('PUT', '/api/admin/skins', { active: name, options: {} })).status).toBe(200)
         const stylesheet = await css()
-        expect(stylesheet).toContain(`--fb-ground: ${ground};`)
+        expect(stylesheet).toContain(`:root.fb-public { --fb-ground: ${light};`)
+        expect(stylesheet).toContain(`:root.fb-public[data-fb-mode="dark"] { --fb-ground: ${dark};`)
         // Every skin lays out the masonry grid and the slideshow.
         expect(stylesheet).toContain('.fb-grid--masonry')
         expect(stylesheet).toContain('.fb-slideshow__image--front')
       }
+    })
+
+    it('shows visitors the mode the owner chose, until a visitor chooses for themselves', async () => {
+      const page = async (headers = {}) => (await (await get(server, '/', headers)).text()).match(/data-fb-mode="(\w+)"/)?.[1]
+      const site = async () => (await (await get(server, '/api/site')).json() as { mode: string }).mode
+      // Left alone, each skin shows the mode its author chose: dark for Swiss, light for Papier.
+      expect(await site()).toBe('dark')
+      expect(await page()).toBe('dark')
+      await send('PUT', '/api/admin/skins', { active: 'papier', options: {} })
+      expect(await page()).toBe('light')
+
+      for (const mode of ['dark', 'light', 'auto'] as const) {
+        expect((await send('PUT', '/api/admin/skins', { active: 'papier', options: {}, mode })).status).toBe(200)
+        expect(await site()).toBe(mode)
+        expect(await page()).toBe(mode)
+      }
+      // The visitor's own choice, kept in a cookie, wins over the site's.
+      expect(await page({ cookie: 'fb-mode=dark' })).toBe('dark')
+      expect(await page({ cookie: 'fb-mode=light' })).toBe('light')
+      expect(await page({ cookie: 'fb-mode=purple' })).toBe('auto')
+      expect((await (await get(server, '/slideshow', { cookie: 'fb-mode=light' })).text())).toContain('data-fb-mode="light"')
+
+      // A mode that does not exist changes nothing; leaving it out keeps what was set.
+      await send('PUT', '/api/admin/skins', { active: 'swiss', options: {}, mode: 'sepia' })
+      expect(await site()).toBe('auto')
+      await send('PUT', '/api/admin/skins', { active: 'swiss', options: {}, mode: 'skin' })
+      expect(await site()).toBe('dark')
     })
 
     it('refuses an unknown skin, and needs a logged-in admin', async () => {

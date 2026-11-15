@@ -11,6 +11,8 @@ export default defineEventHandler(async (event) => {
   const saved = getSetting<Record<string, unknown>>('skin.options', {})
   return {
     active: activeSkin().skin.name,
+    // 'skin' (each skin's own), 'light', 'dark', or 'auto' (the visitor's device).
+    mode: getSetting('skin.mode', 'skin'),
     skins: getSkins().list().map((skin) => {
       const values = cleanValues(skin, saved[skin.name])
       return {
@@ -19,6 +21,7 @@ export default defineEventHandler(async (event) => {
         version: skin.version,
         description: skin.description,
         source: skin.source,
+        mode: skin.mode,
         error: skin.error,
         options: skin.options,
         values,

@@ -5,6 +5,7 @@ A skin changes how the public site looks. It is a stylesheet and a short descrip
 ## Contents
 
 - [The skins that come with Fotobogen](#the-skins-that-come-with-fotobogen)
+- [Light and dark](#light-and-dark)
 - [Making your own from one of them](#making-your-own-from-one-of-them)
 - [Installing a skin](#installing-a-skin)
 - [What a skin is](#what-a-skin-is)
@@ -17,42 +18,80 @@ A skin changes how the public site looks. It is a stylesheet and a short descrip
 
 ## The skins that come with Fotobogen
 
-Three, all in the Swiss manner: one typeface, a strict grid, flat colour, no rounded corners or shadows. Switch between them at any time under **Admin, Skins**; nothing is rebuilt and no photo is touched.
+Three, all in the Swiss manner: one typeface, a strict grid, flat colour, no rounded corners or shadows. **Each has a light and a dark mode.** Switch skins at any time under **Admin, Skins**; nothing is rebuilt and no photo is touched.
 
-| Skin | | What makes it itself |
-|---|---|---|
-| **Swiss** | dark | Off-white on near-black, a small site name, hairline gaps between photos, a red accent. The default. |
-| **Papier** | light | Warm white paper, black type, heavy black rules above and below, wide margins and wide gaps, so photos sit like prints on a page. |
-| **Plakat** | dark | Pure black, the site's name set very large and tight like a poster headline with a bar of yellow under it, photographs edge to edge with no gaps. |
+| Skin | Shows first | Light | Dark |
+|---|---|---|---|
+| **Swiss** (the default) | dark | Black on white | Off-white on near-black. A small site name, hairline gaps between photos, a red accent. |
+| **Papier** | light | Black on warm white paper, heavy black rules above and below, wide margins and wide gaps, so photos sit like prints on a page. | The same page reversed: warm white on warm black. |
+| **Plakat** | dark | Black on poster yellow | White on pure black with a bar of yellow. The site's name is set very large and tight like a poster headline, and photographs run edge to edge. |
 
-![The Papier skin: a light page with a heavy black rule under the site name and photographs set apart](screenshots/skin-papier.jpg)
+![The Papier skin in light mode: a light page with a heavy black rule under the site name](screenshots/skin-papier.jpg)
 
-![The Plakat skin: a black page with the site name set very large above photographs that run edge to edge](screenshots/skin-plakat.jpg)
+![The Papier skin in dark mode: the same page in warm white on warm black](screenshots/skin-papier-dark.jpg)
 
-Each has the same three options: accent colour, space between photos, and columns on a wide screen.
+![The Plakat skin in dark mode: a black page with the site name set very large above photographs that run edge to edge](screenshots/skin-plakat.jpg)
+
+![The Plakat skin in light mode: the same poster in black on yellow](screenshots/skin-plakat-light.jpg)
+
+Each has the same three options: accent colour (one for each mode), space between photos, and columns on a wide screen.
+
+## Light and dark
+
+Every skin can be seen in both modes. This is a rule, not an option: a skin that names colours for only one mode is not loaded, and the Skins page says why.
+
+- **The owner chooses what visitors see first**, under **Admin, Skins, Light or dark**: the skin's own choice, light, dark, or whatever each visitor's device is set to.
+- **A visitor can switch** with the button in the site's header. Their choice is kept in a cookie named `fb-mode`, holding the one word `light` or `dark`, so the next page arrives in the right colours with no flash. Nothing else is stored and nothing identifies the visitor.
+- **How it reaches your stylesheet.** The `<html>` element carries `data-fb-mode="light"`, `"dark"`, or `"auto"`. You do not need to read it. Fotobogen writes your colours from `skin.json` after your stylesheet, once for each mode, as the custom properties `--fb-<name>`. Use `var(--fb-ground)`, `var(--fb-text)`, and so on, and both modes work.
+
+What Fotobogen appends to `skin.css` looks like this:
+
+```css
+:root.fb-public { --fb-ground: #f4f1ea; --fb-text: #111111; /* … */ color-scheme: light; }
+:root.fb-public[data-fb-mode="dark"] { --fb-ground: #171613; --fb-text: #f4f1ea; /* … */ color-scheme: dark; }
+@media (prefers-color-scheme: dark) { :root.fb-public[data-fb-mode="auto"] { /* the dark colours again */ } }
+```
+
+So: **never write a colour for the page into `skin.css`.** Write `var(--fb-…)`. A fixed `#111111` would be right in one mode and unreadable in the other. (The slideshow is the exception: it is a black stage in both modes, like a darkened room.)
 
 ## Making your own from one of them
 
-Papier and Plakat are worked examples of the quickest way to make a skin: **take Swiss, change the values at the top, and add a few rules at the end.** Their stylesheets say so in their first lines, and each ends with a section headed "What makes this Papier rather than Swiss".
+Papier and Plakat are worked examples of the quickest way to make a skin: **take Swiss, change its colours and measures, and add a few rules at the end.** Their stylesheets say so in their first lines, and each ends with a section headed "What makes this Papier rather than Swiss".
 
 1. Copy `skins/swiss/` to `data/skins/mine/` and change `"name"` in `skin.json` to `mine`.
-2. In `skin.css`, change the values in the first block. This alone gives you a new palette:
+2. In `skin.json`, give the colours for both modes, and say which mode the skin shows first:
+
+   ```json
+   "mode": "light",
+   "modes": {
+     "light": { "ground": "#f4f1ea", "text": "#111111", "muted": "#55554f", "line": "#d6d2c8", "accent": "#d4040f" },
+     "dark":  { "ground": "#171613", "text": "#f4f1ea", "muted": "#aca89d", "line": "#37352f", "accent": "#ff5a4f" }
+   },
+   "contrast": [["text", "ground"], ["muted", "ground"]]
+   ```
+
+   | Colour | Used for |
+   |---|---|
+   | `ground` | the page |
+   | `text` | words, headings, links, focus rings |
+   | `muted` | quieter words: the tagline, dates, the footer |
+   | `line` | rules, and the space behind a photo while it loads |
+   | `accent` | marks a hovered link; bars and underlines |
+
+   Both modes must name the same colours. You may add your own (`"panel": "#…"` arrives as `--fb-panel`).
+
+3. In `skin.css`, change the measures in the first block:
 
    ```css
    :root.fb-public {
-     --fb-ground: #f4f1ea;   /* the page */
-     --fb-text: #111111;     /* words */
-     --fb-muted: #55554f;    /* quieter words */
-     --fb-line: #d6d2c8;     /* rules, and the space behind a loading photo */
-     --fb-accent: #d4040f;   /* marks a hovered link, a focused tag */
      --fb-gutter: 1.25rem;   /* space between photos */
      --fb-columns: 3;        /* columns on a wide screen */
      --fb-margin: clamp(1.25rem, 6vw, 5rem);   /* space at the sides */
-     color-scheme: light;    /* for a light skin: light scroll bars and form controls */
    }
    ```
 
-3. Put the same colours in `skin.json` under `tokens`, so the contrast check knows them, and set each option's `default` to match.
+   and set each option's `default` in `skin.json` to match.
+
 4. Add your own rules at the end. Papier's are about fifteen lines:
 
    ```css
@@ -63,17 +102,23 @@ Papier and Plakat are worked examples of the quickest way to make a skin: **take
    Plakat's make the site's name a headline:
 
    ```css
-   .fb-site-title { font-size: clamp(2.75rem, 11vw, 8.5rem); line-height: 0.88; letter-spacing: -0.055em; }
+   .fb-site-title { font-size: clamp(2.75rem, 11vw, 8.5rem); line-height: 0.88; letter-spacing: -0.055em; overflow-wrap: anywhere; }
    .fb-site-title::after { content: ""; display: block; width: 7rem; height: 0.7rem; background: var(--fb-accent); }
    ```
 
-5. Restart, choose it under **Admin, Skins**, and look at the grid, a photo page, an album, and the slideshow.
+5. Restart, choose it under **Admin, Skins**, and look at the grid, a photo page, an album, and the slideshow, **in both modes, on a phone and on a wide screen.**
 
-Three things to get right:
+### What to get right
 
-- **Start every rule from `.fb-public`** (or `:root.fb-public`). The admin's stylesheet is loaded on the same pages; a bare `a { … }` or `body { … }` would fight with it or leak into it.
-- **Set the text colour on the body too** (`.fb-public body { color: var(--fb-text) }`), as the bundled skins do, or a light skin inherits the admin's light-on-dark text.
-- **Keep text readable.** Text needs a contrast of at least 4.5:1 with what is behind it. The Skins page warns you when a `contrast` pair in `skin.json` falls short. Do not use the accent as a text colour unless it passes; the bundled skins use it for underlines and bars.
+The bundled skins are tested, in both modes, at 320 and 1280 pixels wide, against WCAG 2.1 level AA. A skin of yours should hold to the same:
+
+- **Readable text (1.4.3).** Text, headings, and links need a contrast of at least 4.5:1 with the page, in both modes. List the pairs under `contrast` and the Skins page warns you when one falls short. Do not use the accent as a text colour unless it passes; the bundled skins use it for underlines and bars.
+- **Set the text colour on the body** (`.fb-public body { color: var(--fb-text) }`), as the bundled skins do. The admin's stylesheet is loaded on the same pages and gives the body a pale colour of its own; without this line, headings and links on a light page are nearly invisible.
+- **Start every rule from `.fb-public`** (or `:root.fb-public`). A bare `a { … }` or `body { … }` would fight with the admin or leak into it.
+- **No sideways scrolling at 320 pixels (1.4.10).** Size large type with `clamp()` and a viewport unit, and let a long name wrap (`overflow-wrap: anywhere`).
+- **A visible focus ring (2.4.7)** in the text colour, which contrasts with the page in both modes: `.fb-public :focus-visible { outline: 2px solid var(--fb-text); }`.
+- **Respect reduced motion**: keep the `prefers-reduced-motion` block at the end of the Swiss stylesheet.
+- **Style the switch**, `.fb-mode`, a `<button>` in the header's navigation.
 
 ## Installing a skin
 
@@ -97,24 +142,25 @@ data/skins/paper/
   "version": "1.0.0",
   "label": "Paper",
   "description": "Black on white, with wide margins.",
-  "tokens": { "ground": "#ffffff", "text": "#111111", "muted": "#555555" },
+  "mode": "light",
+  "modes": {
+    "light": { "ground": "#ffffff", "text": "#111111", "muted": "#555555" },
+    "dark": { "ground": "#111111", "text": "#f2f2f2", "muted": "#a6a6a6" }
+  },
   "contrast": [["text", "ground"], ["muted", "ground"]],
   "options": {
-    "accent": { "type": "color", "label": "Accent colour", "default": "#0044cc" }
+    "accent": { "type": "color", "label": "Accent colour", "default": { "light": "#0044cc", "dark": "#7fb0ff" } }
   }
 }
 ```
 
-`name` must be the folder's name. `skin.css` is an ordinary stylesheet. Public pages carry the class `fb-public` on the `<html>` element; **start every rule from it** so your skin and the admin never interfere:
+`name` must be the folder's name. `modes` is required, with a `light` and a `dark` set naming the same colours; `mode` says which a visitor sees first unless the owner chooses otherwise (`light` if you leave it out).
+
+`skin.css` is an ordinary stylesheet. Public pages carry the class `fb-public` on the `<html>` element; **start every rule from it** so your skin and the admin never interfere, and take every colour from a custom property:
 
 ```css
-:root.fb-public {
-  --fb-ground: #ffffff;
-  --fb-text: #111111;
-  --fb-accent: #0044cc;
-  background: var(--fb-ground);
-  color: var(--fb-text);
-}
+:root.fb-public { background: var(--fb-ground); color: var(--fb-text); }
+.fb-public body { background: var(--fb-ground); color: var(--fb-text); }
 .fb-public a:hover { text-decoration-color: var(--fb-accent); }
 ```
 
@@ -124,15 +170,15 @@ Options are settings the site's owner can change under **Admin, Skins**. Each on
 
 | Type | Declaration | Control | Becomes |
 |---|---|---|---|
-| `color` | `{ "type": "color", "default": "#e30613" }` | Colour picker | `--fb-accent: #e30613` |
+| `color` | `{ "type": "color", "default": { "light": "#e30613", "dark": "#ff5a4f" } }` | Two colour pickers, one for each mode | `--fb-accent: #e30613` in light, `#ff5a4f` in dark |
 | `select` | `{ "type": "select", "options": ["none", "wide"], "default": "none", "values": { "none": "0px", "wide": "1.25rem" } }` | Menu | `--fb-gutter: 1.25rem` |
 | `range` | `{ "type": "range", "min": 2, "max": 6, "step": 1, "default": 4 }` | Slider | `--fb-columns: 4` |
 
-A `select` shows the names in `options`; `values` maps each name to what is written into the stylesheet. Without `values`, the name itself is written.
+A `color` default may also be a single colour, used in both modes. A `select` shows the names in `options`; `values` maps each name to what is written into the stylesheet. Without `values`, the name itself is written.
 
 ## The contrast check
 
-`tokens` names the colours your skin uses, and `contrast` lists which are text on which background. When the skin loads, and whenever a colour option changes, Fotobogen measures each pair. Anything under 4.5:1 (the WCAG AA minimum for text) is shown as a warning on the Skins page. A colour option with the same name as a token replaces it in the check.
+`modes` names the colours your skin uses, and `contrast` lists which are text on which background. When the skin loads, and whenever a colour option changes, Fotobogen measures each pair in light and in dark. Anything under 4.5:1 (the WCAG AA minimum for text) is shown as a warning on the Skins page. A colour option with the same name as a colour in `modes` replaces it, in the check and on the page.
 
 ## The markup you are styling
 

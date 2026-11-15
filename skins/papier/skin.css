@@ -6,18 +6,14 @@
   It is the Swiss skin's rules with different values and a few changes at
   the end. docs/SKINS.md explains how to make one like it.
 */
+/* Colours are not set here. They come from "modes" in skin.json, once for
+   light and once for dark, and arrive as --fb-ground, --fb-text, --fb-muted,
+   --fb-line, and --fb-accent. */
 :root.fb-public {
-  --fb-ground: #f4f1ea;
-  --fb-text: #111111;
-  --fb-muted: #55554f;
-  --fb-line: #d6d2c8;
-  --fb-accent: #d4040f;
   --fb-gutter: 1.25rem;
   --fb-columns: 3;
   --fb-font: "Helvetica Neue", Helvetica, "Nimbus Sans", Arial, sans-serif;
   --fb-margin: clamp(1.25rem, 6vw, 5rem);
-  /* Form controls and scroll bars follow the light page. */
-  color-scheme: light;
   background: var(--fb-ground);
   color: var(--fb-text);
   font-family: var(--fb-font);
@@ -33,6 +29,10 @@
 .fb-public :focus-visible { outline: 2px solid var(--fb-text); outline-offset: 3px; }
 .fb-skip { position: absolute; left: -999rem; }
 .fb-skip:focus { left: var(--fb-margin); top: 0.75rem; z-index: 3; padding: 0.5rem 0.75rem; background: var(--fb-ground); }
+
+/* The light and dark switch, in the header. */
+.fb-mode { min-height: 2.25rem; padding: 0 0.75rem; border: 1px solid var(--fb-muted); background: none; color: inherit; font: inherit; cursor: pointer; }
+.fb-mode:hover { border-color: var(--fb-text); }
 
 /* Header: the site's name top-left, small. */
 .fb-site-header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 1.5rem; padding: 1.5rem var(--fb-margin) 1rem; }

@@ -3,10 +3,12 @@
      stylesheet is linked here. -->
 <script setup lang="ts">
 const { data: site } = await useFetch('/api/site', { key: 'site' })
+const { mode, toggle } = useSkinMode(() => site.value?.mode)
 
 useHead({
   // The skin's rules all start from this class (docs/SKINS.md).
-  htmlAttrs: { lang: 'en', class: 'fb-public' },
+  // data-fb-mode picks the skin's light or dark colours; 'auto' follows the visitor's device.
+  htmlAttrs: { 'lang': 'en', 'class': 'fb-public', 'data-fb-mode': mode },
   link: [
     { rel: 'stylesheet', href: () => `/skin.css?v=${site.value?.skinVersion ?? ''}` },
     { rel: 'alternate', type: 'application/rss+xml', title: () => site.value?.title || 'Photographs', href: '/feed.xml' },
@@ -24,6 +26,10 @@ useHead({
         <a href="/">Photos</a>
         <a v-if="site?.hasAlbums" href="/albums">Albums</a>
         <a href="/slideshow">Slideshow</a>
+        <!-- The stylesheet shows whichever label names the other mode. -->
+        <button type="button" class="fb-mode" @click="toggle">
+          <span class="fb-mode__to-dark">Dark mode</span><span class="fb-mode__to-light">Light mode</span>
+        </button>
       </nav>
     </header>
     <main id="main" class="fb-main">
