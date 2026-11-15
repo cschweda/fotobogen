@@ -18,7 +18,8 @@ describe('the documentation pages', () => {
   it('are built: what is committed in site/docs is what the sources produce', () => {
     for (const [path, contents] of files) {
       expect(existsSync(onDisk(path)), `${path} is missing: run "node docs/site/build.mjs"`).toBe(true)
-      expect(readFileSync(onDisk(path), 'utf8') === contents, `${path} is out of date: run "node docs/site/build.mjs"`).toBe(true)
+      // Line endings aside: Windows checks the files out with its own.
+      expect(readFileSync(onDisk(path), 'utf8').replace(/\r\n/g, '\n') === contents, `${path} is out of date: run "node docs/site/build.mjs"`).toBe(true)
     }
   })
 

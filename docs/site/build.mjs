@@ -24,11 +24,13 @@ export const PAGES = [
   { slug: 'faq', file: 'faq', nav: 'Questions' },
 ]
 const address = page => page.slug ? `/docs/${page.slug}/` : '/docs/'
+// Windows checks text out with its own line endings; what is built is the same everywhere.
+const text = path => readFileSync(path, 'utf8').replace(/\r\n/g, '\n')
 const escape = text => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 
 /** A page's source: a first-line comment holding { title, description }, then its HTML. */
 function read(page) {
-  const source = readFileSync(join(here, 'pages', `${page.file}.html`), 'utf8')
+  const source = text(join(here, 'pages', `${page.file}.html`))
   const meta = source.match(/^<!--\s*(\{.*?\})\s*-->\n/s)
   if (!meta) throw new Error(`${page.file}.html must begin with <!-- {"title": "...", "description": "..."} -->`)
   // Code and tables scroll inside themselves when they are too wide. A keyboard
@@ -119,11 +121,11 @@ ${body}
 /** Every file the documentation consists of: path under site/, and its contents. */
 export function build() {
   // The front page carries the typeface inside itself; the same two rules go in front of the docs stylesheet.
-  const fonts = readFileSync(join(root, 'site', 'index.html'), 'utf8').split('\n').filter(line => line.startsWith('@font-face'))
+  const fonts = text(join(root, 'site', 'index.html')).split('\n').filter(line => line.startsWith('@font-face'))
   if (fonts.length !== 2) throw new Error('Expected two @font-face rules in site/index.html.')
   const files = new Map()
-  files.set('docs/docs.css', `${fonts.join('\n')}\n${readFileSync(join(here, 'docs.css'), 'utf8')}`)
-  files.set('docs/docs.js', readFileSync(join(here, 'docs.js'), 'utf8'))
+  files.set('docs/docs.css', `${fonts.join('\n')}\n${text(join(here, 'docs.css'))}`)
+  files.set('docs/docs.js', text(join(here, 'docs.js')))
   PAGES.forEach((page, index) => files.set(`docs/${page.slug ? `${page.slug}/` : ''}index.html`, render(page, index)))
   return files
 }
