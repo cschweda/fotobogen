@@ -66,6 +66,8 @@ uses [Semantic Versioning](https://semver.org/).
 - A one-time notice in the admin: backups are the owner's responsibility and the software comes with no warranty. The admin opens once "I understand" is pressed.
 - Update notice: the admin can check GitHub for a newer release, on request or (if switched on) once a day; the dashboard says when one exists.
 - fotobogen.com shows the gallery, a photo page, film looks, and the library, and sends named events to Plausible for use as goals.
+- A documented public API (`docs/API.md`): read-only JSON for photos, albums, tags, and the slideshow, readable from other sites, with a version header.
+- `docs/UPGRADING.md`: how to upgrade, what a version number promises, and how to go back.
 - Windows: CI installs, builds, and tests on Windows, including a PowerShell smoke test (`scripts/smoke-test.ps1`).
 
 ### Changed

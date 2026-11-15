@@ -260,6 +260,9 @@ Visitors see two kinds of page:
 Only photos that are processed and public are ever shown. Location is never
 shown unless you switch that on.
 
+For other programs: the same data is available as a read-only JSON API,
+readable from any other site. See [docs/API.md](docs/API.md).
+
 For search engines and sharing: every photo page has social-card tags using
 its 1280 px copy, and the site publishes `/feed.xml` (RSS), `/sitemap.xml`,
 and `/robots.txt`. Setup, login, and the admin are marked not to be indexed.
@@ -544,6 +547,9 @@ Fotobogen has been released, and the dashboard then says so until you have
 updated. Fotobogen does not check by itself unless you tick **Check once a
 day**. The check is a plain request for the latest release; nothing about
 your site is sent.
+
+[docs/UPGRADING.md](docs/UPGRADING.md) says what a version number promises
+and how to go back.
 
 To update a Docker install: `docker compose pull && docker compose up -d`.
 To update a source install: `scripts/rebuild.sh`, or `git pull`, `pnpm
