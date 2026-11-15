@@ -204,5 +204,5 @@ curl -H "Authorization: Bearer fb_YOUR_TOKEN" -F "file=@photo.jpg" https://photo
 { "result": "accepted", "photo": { "id": "V1StGXR8_Z5j", "slug": "photo" } }
 ```
 
-The photo is processed in the background; `GET /api/admin/photos/<id>` shows `"status": "ready"` when it is done, or `"failed"` with the reason. A duplicate or a file that is not an accepted photo answers `409` or `422` with a `message` saying why. Unlike the public API, the admin API is not covered by the version promise in [UPGRADING.md](UPGRADING.md) until 1.0.
+The photo is processed in the background; `GET /api/admin/photos/<id>` shows `"status": "ready"` when it is done, or `"failed"` with the reason. A duplicate or a file that is not an accepted photo answers `409` or `422` with a `message` saying why. Unlike the public API, the admin API is not covered by the version promise in [UPGRADING.md](UPGRADING.md): it may change in a minor release, and the changelog will say so.
 

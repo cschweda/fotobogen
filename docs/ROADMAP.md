@@ -1,5 +1,7 @@
 # Roadmap
 
+**Version 1.0.0, the first release, is out** (15 November 2026): see [CHANGELOG.md](../CHANGELOG.md). Everything marked Done below is in it. What is marked Planned or Later comes after.
+
 The feature list agreed on 2026-11-15, in the order it is being built. Each item lands as one pull request against `staging`.
 
 ## For the site's owner and visitors

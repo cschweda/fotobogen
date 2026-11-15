@@ -9,16 +9,24 @@ A self-hosted publishing platform for photographs: install it on a small
 server, answer a few first-run questions, and get a public photo site with an
 admin backend. Think "WordPress for photos".
 
-**Status: early development.** What exists today: the app boots, creates its
-data directory, can be claimed once through a token-protected setup wizard,
-and guards an admin area behind a login. From the admin you can upload
-photographs, which are checked, stored, and resized for every screen, and
-download or remove 25 sample photos, and apply modules (a film frame and
-film looks). Visitors get a photo grid and a page for each photo, styled by
-a skin. Editing titles and captions, albums, and more are on the
-[roadmap](docs/ROADMAP.md). The full
-plan is in [docs/DESIGN.md](docs/DESIGN.md); changes are recorded in
-[CHANGELOG.md](CHANGELOG.md).
+**Version 1.0.0**, the first release (15 November 2026). It installs on
+macOS, Windows, and Linux; takes your photographs, resizes them for every
+screen, and publishes them on a site you can restyle, reword, and put under
+your own name, with an admin behind a login.
+
+- **What is in it:** [CHANGELOG.md](CHANGELOG.md), also published as
+  [Releases](https://fotobogen.com/docs/changelog/).
+- **How to install and use it:** the
+  [documentation](https://fotobogen.com/docs/), or read on.
+- **What comes next:** [docs/ROADMAP.md](docs/ROADMAP.md).
+- **How it was designed:** [docs/DESIGN.md](docs/DESIGN.md).
+
+Two things to know about this release. No Docker image has been published
+yet, so a Docker install builds the image on your own machine (the
+instructions say how). And it has not yet been tried on a Laravel Forge
+server or on a real 1 GB server; a 1 GB memory limit was tested in Docker.
+Fotobogen is free software with no warranty: keep backups of your
+photographs.
 
 ## Contents
 
@@ -341,7 +349,7 @@ distributions may well work, but are reported as untested.
 `/api/health` needs no login and answers `GET` and `HEAD`:
 
 ```json
-{ "status": "ok", "version": "0.1.0", "database": "ok", "queue": { "depth": 0 }, "uptime": 86400 }
+{ "status": "ok", "version": "1.0.0", "database": "ok", "queue": { "depth": 0 }, "uptime": 86400 }
 ```
 
 It returns `200` when the app and its database are working and `503` when
@@ -694,7 +702,7 @@ For a server with nothing on it but Docker. This runs Fotobogen behind
 [Caddy](https://caddyserver.com), which obtains an HTTPS certificate for your
 domain automatically.
 
-> No image has been published yet. Until the first release, uncomment the
+> No Docker image has been published yet for 1.0.0. Until one is, uncomment the
 > `build: .` line in `docker-compose.yml` to build the image locally.
 
 ```bash
@@ -1095,6 +1103,7 @@ is added there. Switching demo mode off ends every demo session at once.
   merge commit (never squashed), when a batch is ready. A fix made directly on
   `main` is merged back into `staging`.
 - Version tags (`v1.2.3`), which publish the Docker image, are made on `main`.
+  Version 1.0.0 is recorded in the changelog and has not been tagged yet.
 
 The batching matters because a push to `main` that changes `site/` or
 `netlify.toml` triggers a production deploy of the placeholder page on
