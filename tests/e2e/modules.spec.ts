@@ -22,7 +22,7 @@ test.beforeEach(async ({ page }) => {
   await page.getByLabel('Username').fill(ADMIN.username)
   await page.getByLabel('Password', { exact: true }).fill(ADMIN.password)
   await page.getByRole('button', { name: 'Log in' }).click()
-  await expect(heading(page, 'Admin')).toBeVisible()
+  await expect(heading(page, 'Overview')).toBeVisible()
 })
 
 const mediumWidths = () => query<{ width: number }>(server, `select d.width from derivatives d join photos p on p.id = d.photo_id where d.kind = 'medium' order by p.original_filename`).map(row => row.width)
@@ -45,7 +45,7 @@ test('modules start switched off, and are switched on from the Modules page', as
 })
 
 test('one photo can be given a frame, with a preview before saving and controls built from the module', async ({ page }) => {
-  await page.getByRole('link', { name: 'Photos', exact: true }).click()
+  await page.getByRole('link', { name: 'Library', exact: true }).click()
   await expect(heading(page, 'Photos')).toBeVisible()
   await expectNoAxeViolations(page)
   await page.getByRole('link', { name: 'Edit pier.jpg' }).click()

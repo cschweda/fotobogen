@@ -30,7 +30,10 @@ if (error.value || !show.value) throw createError({ status: 404, statusText: 'No
 useHead({
   htmlAttrs: { 'lang': () => site.value?.language || 'en', 'class': 'fb-public', 'data-fb-mode': useSkinMode(() => site.value?.mode).mode },
   title: () => pageTitle({ homeTitle: '', titlePattern: site.value?.seo?.titlePattern ?? '{page} | {site}' }, siteName.value, `${t('slideshowTitle')}${show.value?.title ? `: ${show.value.title}` : ''}`),
-  link: [{ rel: 'stylesheet', href: () => `/skin.css?v=${site.value?.skinVersion ?? ''}` }],
+  link: [
+    { rel: 'stylesheet' as const, href: () => `/skin.css?v=${site.value?.skinVersion ?? ''}` },
+    ...(site.value?.brand?.icon ? [{ key: 'icon', rel: 'icon' as const, type: 'image/png', href: site.value.brand.icon.small }] : []),
+  ],
   meta: [{ name: 'robots', content: 'noindex' }],
 })
 

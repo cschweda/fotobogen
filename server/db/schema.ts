@@ -136,3 +136,21 @@ export const modules = sqliteTable('modules', {
   version: text('version').notNull(),
   enabled: integer('enabled', { mode: 'boolean' }).notNull().default(true),
 })
+
+/**
+ * Tokens that let a script or another program use part of the admin's API
+ * without the admin's password. Only a hash of each token is kept, so a
+ * copy of the database does not reveal them.
+ */
+export const apiTokens = sqliteTable('api_tokens', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  /** SHA-256 of the token, in hex. */
+  tokenHash: text('token_hash').notNull().unique(),
+  /** The token's first characters, shown in the admin so tokens can be told apart. */
+  prefix: text('prefix').notNull(),
+  /** 'upload' or 'manage': what the token may do. */
+  scope: text('scope').notNull(),
+  createdAt: integer('created_at').notNull(),
+  lastUsedAt: integer('last_used_at'),
+})

@@ -92,6 +92,8 @@ export default {
       squareSize: 480, // square crop for the square grid
       mediumEdge: 1280, // long edge, for small screens
       largeEdge: 2560, // long edge, for large screens; also the working size
+      // How hard each copy is compressed. These are the "Standard" choice
+      // under Settings, Picture quality, in the admin; change it there.
       webpQuality: { thumb: 78, square: 78, medium: 82, large: 82 },
       previewEdge: 1024, // unsaved previews in the admin
     },

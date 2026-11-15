@@ -24,7 +24,7 @@ describe('the documentation pages', () => {
   })
 
   it('cover installation, usage, skins, modules, and questions', () => {
-    expect(PAGES.map((page: { slug: string }) => page.slug)).toEqual(['', 'installation', 'usage', 'skins', 'modules', 'faq'])
+    expect(PAGES.map((page: { slug: string }) => page.slug)).toEqual(['', 'installation', 'configuration', 'usage', 'customization', 'skins', 'modules', 'faq'])
     const text = (slug: string) => files.get(`docs/${slug}/index.html`)!
     // Installation: each system, both Docker routes, and server sizes.
     for (const id of ['requirements', 'macos', 'windows', 'linux', 'docker-vps', 'docker-forge', 'docker-local', 'first-run']) {
@@ -35,6 +35,34 @@ describe('the documentation pages', () => {
     expect(text('faq')).toContain('<h2 id="backups">')
     expect(text('faq')).toContain('<h2 id="starting-over">')
     expect(text('faq')).toContain('Start again from nothing')
+  })
+
+  it('explain every single setting in fotobogen.config.js, and every name in .env.sample', async () => {
+    const config = (await import('../../fotobogen.config.js')).default as Record<string, unknown>
+    const page = files.get('docs/configuration/index.html')!
+    // Every value in the file, by its full name: server.port, internals.auth.sessionDays, ...
+    const names: string[] = []
+    const walk = (value: unknown, path: string[]) => {
+      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+        for (const [key, inner] of Object.entries(value)) walk(inner, [...path, key])
+      }
+      else names.push(path.join('.'))
+    }
+    walk(config, [])
+    expect(names.length).toBeGreaterThan(30)
+    for (const name of names) {
+      // "internals.auth.sessionDays" is written as auth.sessionDays under the internals.auth heading;
+      // the keys of a small table of values (webpQuality.thumb, formatMegapixels.avif) are listed with it.
+      const parts = name.split('.')
+      const written = [name, parts.slice(-2).join('.'), parts.at(-1)!].some(form => page.includes(`<code>${form}</code>`) || page.includes(`<code>${form}:`))
+      expect(written, `${name} is not explained on the configuration page`).toBe(true)
+    }
+    // Every group under internals has its own heading saying it is not to be changed.
+    for (const group of Object.keys(config.internals as object)) expect(page, group).toContain(`<code>internals.${group}</code>`)
+    // And every setting .env.sample offers is documented by its .env name.
+    const env = [...readFileSync('.env.sample', 'utf8').matchAll(/^# ([A-Z_]+)=/gm)].map(match => match[1]!)
+    expect(env.length).toBeGreaterThan(6)
+    for (const name of env) expect(page.includes(`<code>${name}`), `${name} from .env.sample is not on the configuration page`).toBe(true)
   })
 
   it('link only to pages, sections, and images that exist', () => {

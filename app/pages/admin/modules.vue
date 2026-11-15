@@ -54,8 +54,7 @@ async function applyToAll() {
 </script>
 
 <template>
-  <FbShell context="Admin" wordmark-href="/">
-    <p class="back"><NuxtLink class="fb-link" to="/admin">Admin</NuxtLink></p>
+  <FbShell context="Admin" wordmark-href="/" nav>
     <h1 class="fb-h1">Modules</h1>
     <p class="fb-lead">
       Modules change how photos look without touching the files you uploaded. Every module starts switched off, and switching one off puts your photos back as they were.

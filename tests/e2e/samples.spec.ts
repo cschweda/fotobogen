@@ -64,7 +64,7 @@ test('when the download fails, setup offers another try, and after two failures 
     // Setup itself was never held up: the admin opens.
     await page.getByRole('link', { name: 'Open admin' }).click()
     await page.getByRole('button', { name: 'I understand' }).click() // the one-time backup notice
-    await expect(heading(page, 'Admin')).toBeVisible()
+    await expect(heading(page, 'Overview')).toBeVisible()
 
     // The admin can always download them later.
     picsum.down = false

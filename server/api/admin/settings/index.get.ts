@@ -1,6 +1,7 @@
 // The site's settings, for the admin's settings page.
 import { defineEventHandler } from 'nuxt/server'
 import { DEFAULT_LICENCE } from '../../../../shared/licences.ts'
+import { DEFAULT_QUALITY, isQualityPreset, type QualityPreset } from '../../../../shared/media.ts'
 import { requireAdmin } from '../../../utils/session.ts'
 import { getSetting } from '../../../utils/settings.ts'
 
@@ -18,6 +19,8 @@ export default defineEventHandler(async (event) => {
     licence: getSetting('site.license', DEFAULT_LICENCE),
     allowDownload: getSetting('privacy.allow_original_download', false),
     newUploads: getSetting<'public' | 'hidden'>('uploads.default_visibility', 'public'),
+    // How hard the copies made for the web are compressed: smaller, standard, or high.
+    photoQuality: isQualityPreset(getSetting<unknown>('media.quality', DEFAULT_QUALITY)) ? getSetting<QualityPreset>('media.quality', DEFAULT_QUALITY) : DEFAULT_QUALITY,
     // The slideshow: seconds each photo is shown, and whether the order is yours or shuffled.
     slideshowSeconds: getSetting('slideshow.seconds', 8),
     slideshowOrder: getSetting<'sequence' | 'random'>('slideshow.order', 'sequence'),

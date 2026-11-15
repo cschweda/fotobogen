@@ -20,7 +20,7 @@ export default defineNuxtConfig({
         { name: 'color-scheme', content: 'dark' },
         { name: 'theme-color', content: '#0a0a0b' },
       ],
-      link: [{ rel: 'icon', href: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230a0a0b'/%3E%3Crect x='6' y='9' width='20' height='14' fill='%23e30613'/%3E%3C/svg%3E" }],
+      // The icon is set by the page: the admin's own mark there (FbShell), the owner's on the public site.
     },
   },
 

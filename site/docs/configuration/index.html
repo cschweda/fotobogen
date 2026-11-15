@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Configuration | Fotobogen documentation</title>
+<meta name="description" content="Every setting in fotobogen.config.js: what it does, its default, how to change it, and which values are safe to change and which are not.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f5f5f2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0a0a0b" media="(prefers-color-scheme: dark)">
+<link rel="canonical" href="https://fotobogen.com/docs/configuration/">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://fotobogen.com/docs/configuration/">
+<meta property="og:title" content="Configuration | Fotobogen documentation">
+<meta property="og:description" content="Every setting in fotobogen.config.js: what it does, its default, how to change it, and which values are safe to change and which are not.">
+<meta property="og:image" content="https://fotobogen.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Fotobogen wordmark beside a contact sheet of sixteen numbered frames, one of them red. Above the wordmark: German for photo sheet, as in a contact sheet.">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230a0a0b'/%3E%3Crect x='6' y='9' width='20' height='14' fill='%23e30613'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/docs/docs.css">
+<script src="/docs/docs.js" defer></script>
+<!-- Privacy-friendly analytics by Plausible -->
+<script async src="https://plausible.io/js/pa-UXO2Zaq02zXvfaEecXWvD.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header>
+  <div class="wrap bar">
+    <a class="bar__name" href="/">Fotobogen<span>Documentation</span></a>
+    <div class="bar__links">
+      <a href="https://github.com/cschweda/fotobogen" data-goal="GitHub click" data-where="docs">Source on GitHub</a>
+      <button class="toggle" type="button" id="theme">Dark</button>
+    </div>
+  </div>
+</header>
+<div class="wrap layout">
+  <nav class="pages" aria-label="Documentation">
+    <ul class="pages__all">
+      <li><a href="/docs/">Overview</a></li>
+      <li><a href="/docs/installation/">Installation</a></li>
+      <li><a href="/docs/configuration/" aria-current="page">Configuration</a></li>
+      <li><a href="/docs/usage/">Using Fotobogen</a></li>
+      <li><a href="/docs/customization/">Customization</a></li>
+      <li><a href="/docs/skins/">Skins</a></li>
+      <li><a href="/docs/modules/">Modules</a></li>
+      <li><a href="/docs/faq/">Questions</a></li>
+    </ul>
+    <div class="pages__here">
+      <h2>On this page</h2>
+      <ul>
+        <li><a href="#how">How a setting is decided</a></li>
+        <li><a href="#server">Okay to change: the server</a></li>
+        <li><a href="#data">Okay to change: where data is kept</a></li>
+        <li><a href="#uploads">Okay to change: uploads</a></li>
+        <li><a href="#webhooks">Okay to change: webhooks</a></li>
+        <li><a href="#internals">Do not touch: internals</a></li>
+        <li><a href="#env-only">Settings that exist only in .env</a></li>
+        <li><a href="#all">Every setting at a glance</a></li>
+      </ul>
+    </div>
+  </nav>
+  <main id="main" class="doc">
+<h1>Configuration</h1>
+<p class="lead">Every value Fotobogen runs on is written down in one file, <code>fotobogen.config.js</code>. This page lists all of them: what each does, what you can change, and what you should leave alone.</p>
+
+<h2 id="how">How a setting is decided</h2>
+<p>For each setting, Fotobogen uses the first of these that has a value:</p>
+<ol>
+  <li><strong>An environment variable</strong> set when the app is started.</li>
+  <li><strong>The <code>.env</code> file</strong> in Fotobogen's folder.</li>
+  <li><strong><code>fotobogen.config.js</code></strong>, which holds the defaults.</li>
+</ol>
+<p>So the file is the list of defaults, and <code>.env</code> is where you change them for one server.</p>
+
+<h3>Changing a setting: use <code>.env</code></h3>
+<pre tabindex="0"><code>cp .env.sample .env     # once; then edit .env</code></pre>
+<p>Write one setting to a line, such as <code>PORT=8080</code>, and restart Fotobogen. Three reasons to do it this way and not edit the config file:</p>
+<ul>
+  <li><strong>It survives updates.</strong> <code>.env</code> is yours and is never touched by <code>git pull</code>. An edited <code>fotobogen.config.js</code> will conflict with the next update.</li>
+  <li><strong>It needs no rebuild.</strong> <code>.env</code> is read each time Fotobogen starts. A change to <code>fotobogen.config.js</code> takes effect only after <code>pnpm build</code>.</li>
+  <li><strong>It is never committed.</strong> <code>.env</code> is in <code>.gitignore</code>; <code>.env.sample</code>, the template, is not.</li>
+</ul>
+<p>Docker reads the same <code>.env</code> file.</p>
+
+<h3>The two parts of the file</h3>
+<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
+  <thead><tr><th>Part</th><th>What is in it</th><th>Change it?</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Okay to change</strong></td><td>The port, the address, where data is kept, upload limits, webhooks</td><td>Yes. Each has a name to use in <code>.env</code>, except <code>portAttempts</code>.</td></tr>
+    <tr><td><strong>Do not touch</strong> (<code>internals</code>)</td><td>Image sizes, memory limits, queue and login rules, what a machine must have</td><td>No. They have no <code>.env</code> names on purpose. The app is built and tested around these values.</td></tr>
+  </tbody>
+</table></div>
+<p>Settings about the <em>site</em> (its title, its look, its words, what search engines are told) are not in this file at all. They are set in the admin and stored in the site's database. See <a href="/docs/customization/">Customization</a>.</p>
+
+<h2 id="server">Okay to change: the server</h2>
+
+<h3><code>server.port</code></h3>
+<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
+  <tbody>
+    <tr><th scope="row">Default</th><td><code>5150</code></td></tr>
+    <tr><th scope="row">In <code>.env</code></th><td><code>PORT=5150</code></td></tr>
+  </tbody>
+</table></div>
+<p>The port Fotobogen listens on. 5150 keeps clear of the ports other tools take first (3000, 8000, 8080).</p>
+<ul>
+  <li><strong>Left at its default</strong> and busy, Fotobogen tries the next port up (5151, 5152, and so on) and says which it took.</li>
+  <li><strong>Set by you</strong>, it is used exactly. If it is taken, Fotobogen stops and says so, instead of moving somewhere you did not ask for.</li>
+</ul>
+<p>With Docker, this is the port on the host that is passed to the app (the Forge compose file), and the app inside the container always uses 5150.</p>
+
+<h3><code>server.portAttempts</code></h3>
+<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
+  <tbody>
+    <tr><th scope="row">Default</th><td><code>10</code></td></tr>
+    <tr><th scope="row">In <code>.env</code></th><td>None. Change it in the file, then <code>pnpm build</code>.</td></tr>
+  </tbody>
+</table></div>
+<p>How many ports above the default to try before giving up. With the default, Fotobogen tries 5150 to 5159. There is rarely a reason to change it.</p>
+
+<h3><code>server.host</code></h3>
+<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
+  <tbody>
+    <tr><th scope="row">Default</th><td><code>'0.0.0.0'</code> (every network interface)</td></tr>
+    <tr><th scope="row">In <code>.env</code></th><td><code>HOST=127.0.0.1</code></td></tr>
+  </tbody>
+</table></div>
+<p>The network address to listen on. <code>0.0.0.0</code> accepts connections from other machines. Use <code>127.0.0.1</code> when a proxy on the same machine (nginx, Caddy) is the only thing that should reach the app, so that nobody can go around the proxy.</p>
+
+<h3><code>server.trustProxy</code></h3>
+<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
+  <tbody>
+    <tr><th scope="row">Default</th><td><code>false</code></td></tr>
+    <tr><th scope="row">In <code>.env</code></th><td><code>TRUST_PROXY=1</code></td></tr>
+  </tbody>
+</table></div>
+<p>Tells Fotobogen that every request reaches it through your own reverse proxy, so the visitor's real address is in the <code>X-Forwarded-For</code> header and the scheme (http or https) in <code>X-Forwarded-Proto</code>. The login limit then counts failures by visitor, not by proxy.</p>
+<p><strong>Turn it on only when the app cannot be reached directly.</strong> If it is on and the app is exposed, anyone can send those headers themselves and dodge the login limit. The Docker and pm2 files that come with Fotobogen turn it on, because they put the app behind a proxy.</p>
+
+<h3><code>server.siteUrl</code></h3>
+<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
+  <tbody>
+    <tr><th scope="row">Default</th><td><code>''</code> (none)</td></tr>
+    <tr><th scope="row">In <code>.env</code></th><td><code>SITE_URL=https://photos.example.com</code></td></tr>
+    <tr><th scope="row">In the admin</th><td>Search and sharing, "Your site's proper address"</td></tr>
+  </tbody>
+</table></div>
+<p>The site's proper address. It is used wherever a full address is written out: the links on a photo's admin page, canonical links, the RSS feed, the sitemap, and <code>robots.txt</code>.</p>
+<ul>
+  <li><strong>Left empty</strong>, the address each visitor used is given. On your own machine that is <code>http://localhost:5150</code>, so links copied from the admin work only on that machine.</li>
+  <li>Only the address itself is kept: <code>https://photos.example.com/some/page</code> becomes <code>https://photos.example.com</code>.</li>
+  <li>Anything that is not a web address is ignored.</li>
+  <li>A value here or in <code>.env</code> wins over the one in the admin, and the admin says so.</li>
+</ul>
+
+<h2 id="data">Okay to change: where data is kept</h2>
+
+<h3><code>dataDir</code></h3>
+<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
+  <tbody>
+    <tr><th scope="row">Default</th><td><code>'./data'</code></td></tr>
+    <tr><th scope="row">In <code>.env</code></th><td><code>DATA_DIR=/srv/photos</code></td></tr>
+  </tbody>
+</table></div>
+<p>The folder that holds everything the site owns: the database, your photographs as uploaded, the resized copies, and installed skins and modules. A path that does not start with <code>/</code> is taken from the folder Fotobogen is started in.</p>
+<ul>
+  <li>Fotobogen must be able to create it and write to it, or it will not start.</li>
+  <li>Put it on a disk with room for your photographs, and include it in your backups.</li>
+  <li>Two copies of Fotobogen can never share one data folder.</li>
+  <li>With Docker, leave this alone: the container always uses <code>/data</code>, which the compose file maps to <code>./data</code> on the host.</li>
+</ul>
+
+<h2 id="uploads">Okay to change: uploads</h2>
+
+<h3><code>uploads.maxUploadMb</code></h3>
+<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
+  <tbody>
+    <tr><th scope="row">Default</th><td><code>50</code></td></tr>
+    <tr><th scope="row">In <code>.env</code></th><td><code>MAX_UPLOAD_MB=120</code></td></tr>
+  </tbody>
+</table></div>
+<p>The largest file accepted, in megabytes. A larger upload is refused with a message saying so.</p>
+<p>If you raise it, <strong>raise the limit of the web server in front of Fotobogen too</strong>, or that will refuse the upload first with a less helpful message: <code>max_size</code> in <code>deploy/Caddyfile</code>, or <code>client_max_body_size</code> in nginx.</p>
+
+<h3><code>uploads.maxMegapixels</code></h3>
+<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
+  <tbody>
+    <tr><th scope="row">Default</th><td><code>100</code></td></tr>
+    <tr><th scope="row">In <code>.env</code></th><td><code>MAX_MEGAPIXELS=60</code></td></tr>
+  </tbody>
+</table></div>
+<p>The largest image accepted, in megapixels: its width times its height, divided by a million. A 9504 by 6336 photograph is 60 megapixels. This limit exists because a small file can unpack into an enormous image that fills the server's memory.</p>
+<p>Lower it on a server with little memory. Raising it above 100 is safe only with memory to match. Three formats have their own lower limits, which this setting does not raise; see <a href="#format-megapixels"><code>formatMegapixels</code></a>.</p>
+
+<h2 id="webhooks">Okay to change: webhooks</h2>
+
+<h3><code>webhooks.allowPrivate</code></h3>
+<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
+  <tbody>
+    <tr><th scope="row">Default</th><td><code>false</code></td></tr>
+    <tr><th scope="row">In <code>.env</code></th><td><code>WEBHOOKS_ALLOW_PRIVATE=1</code></td></tr>
+  </tbody>
+</table></div>
+<p>A webhook sends a message to an address you enter in the admin. By default it may only call addresses on the public internet, so that a webhook cannot be pointed at this machine or at the private network behind it. The check is made again at the moment of connecting, so a name that changes what it points to does not get through.</p>
+<p>Turn this on only if you want to call something on your own network, such as an automation tool on the same server.</p>
+
+<h2 id="internals">Do not touch: internals</h2>
+<div class="note">
+  <p><strong>These are listed so you can read them, not so you can tune them.</strong> The rest of the app is built and tested around these values. Changing one can break a site that already has photos, waste disk space, or run a small server out of memory. None has a name in <code>.env</code>. If one of them is wrong for you, that is worth <a href="https://github.com/cschweda/fotobogen/issues" data-goal="GitHub click" data-where="docs-issue">raising as an issue</a>, so it can be made a proper setting.</p>
+</div>
+
+<h3 id="derivatives"><code>internals.derivatives</code>: the resized copies</h3>
+<p>The sizes of the copies made of every photo, in pixels. Nothing is ever enlarged: a photo smaller than a size gets a copy at its own size.</p>
+<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
+  <thead><tr><th>Setting</th><th>Value</th><th>What it is</th></tr></thead>
+  <tbody>
+    <tr><td><code>derivatives.thumbWidth</code></td><td><code>480</code></td><td>The thumbnail in the grid: this wide, whatever height keeps the photo's shape.</td></tr>
+    <tr><td><code>derivatives.squareSize</code></td><td><code>480</code></td><td>The square crop used by the square grid, cut around the most interesting part of the photo.</td></tr>
+    <tr><td><code>derivatives.mediumEdge</code></td><td><code>1280</code></td><td>The long side of the medium copy, shown on small screens and used as the sharing picture.</td></tr>
+    <tr><td><code>derivatives.largeEdge</code></td><td><code>2560</code></td><td>The long side of the large copy, shown on large screens and handed out as a download. Also the size every photo is reduced to before anything else is done, which is what keeps memory use small.</td></tr>
+    <tr><td><code>derivatives.webpQuality</code></td><td><code>thumb: 78</code>, <code>square: 78</code>, <code>medium: 82</code>, <code>large: 82</code></td><td>How hard each copy is compressed as WebP, from 1 to 100. Higher is larger and closer to the original. These are the values of the <strong>Standard</strong> choice; to use others, choose <strong>Smaller files</strong> or <strong>High</strong> in the admin under <strong>Settings, Picture quality</strong>, which is the supported way to change them.</td></tr>
+    <tr><td><code>derivatives.previewEdge</code></td><td><code>1024</code></td><td>The size of the unsaved previews in the admin, when trying a look.</td></tr>
+  </tbody>
+</table></div>
+<p><strong>Why not to change them:</strong> photos already processed keep the sizes they were made at, so a change leaves a site with a mixture. The skins' layouts and the sharing cards assume these sizes. A larger <code>largeEdge</code> raises memory use for every photo.</p>
+
+<h3 id="format-megapixels"><code>internals.formatMegapixels</code></h3>
+<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
+  <thead><tr><th>Format</th><th>Limit, in megapixels</th></tr></thead>
+  <tbody>
+    <tr><td><code>avif</code></td><td><code>16</code></td></tr>
+    <tr><td><code>webp</code></td><td><code>60</code></td></tr>
+    <tr><td><code>interlaced png</code></td><td><code>40</code></td></tr>
+  </tbody>
+</table></div>
+<p>JPEG, ordinary PNG, and TIFF can be read a strip at a time. These three formats must be held whole in memory to open, so they are held to smaller sizes. The limits were measured so that one photo stays under about 450 MB. A larger file in one of these formats is refused with a note to upload a JPEG instead.</p>
+<p><strong>Why not to change them:</strong> raising one can crash a 1 GB server in the middle of an upload.</p>
+
+<h3><code>internals.moduleOutputMegapixels</code></h3>
+<p>Value: <code>40</code>. The largest picture a <a href="/docs/modules/">module</a> may produce. A module can make a photo bigger (the film frame adds a border); this stops a faulty or careless one from producing an image that fills memory or disk.</p>
+
+<h3><code>internals.queue</code></h3>
+<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
+  <thead><tr><th>Setting</th><th>Value</th><th>What it is</th></tr></thead>
+  <tbody>
+    <tr><td><code>queue.maxAttempts</code></td><td><code>3</code></td><td>How many times a photo is tried before it is marked failed. A failed photo shows the reason and a Try again button, and the uploaded file is kept.</td></tr>
+  </tbody>
+</table></div>
+
+<h3><code>internals.auth</code>: logging in</h3>
+<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
+  <thead><tr><th>Setting</th><th>Value</th><th>What it is</th></tr></thead>
+  <tbody>
+    <tr><td><code>auth.sessionDays</code></td><td><code>30</code></td><td>How long a login lasts without being used. Each use renews it for another 30 days.</td></tr>
+    <tr><td><code>auth.maxFailures</code></td><td><code>5</code></td><td>Wrong passwords, or wrong setup tokens, allowed from one address…</td></tr>
+    <tr><td><code>auth.failureWindowMinutes</code></td><td><code>15</code></td><td>…within this many minutes, before that address has to wait.</td></tr>
+    <tr><td><code>auth.passwordMinLength</code></td><td><code>12</code></td><td>The shortest password accepted, in the setup wizard, in the browser, and by <code>reset-admin</code>.</td></tr>
+  </tbody>
+</table></div>
+<p><strong>Why not to change them:</strong> these are the site's defences against password guessing. Loosening them makes the one account that controls the site easier to break into.</p>
+
+<h3><code>internals.samples</code>: the sample photos</h3>
+<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
+  <thead><tr><th>Setting</th><th>Value</th><th>What it is</th></tr></thead>
+  <tbody>
+    <tr><td><code>samples.source</code></td><td><code>'https://picsum.photos'</code></td><td>Where the 25 sample photographs are downloaded from, when you ask for them.</td></tr>
+    <tr><td><code>samples.timeoutSeconds</code></td><td><code>20</code></td><td>How long to wait for each one.</td></tr>
+    <tr><td><code>samples.giveUpAfter</code></td><td><code>3</code></td><td>If this many in a row fail at the start, the service is treated as unreachable and the download stops, so nobody waits through 25 failures.</td></tr>
+  </tbody>
+</table></div>
+
+<h3><code>internals.requirements</code>: what a machine must have</h3>
+<p>The figures the preflight check uses each time Fotobogen starts. Below a <code>fail</code> figure it refuses to run; below a <code>warn</code> figure it runs and says what to improve.</p>
+<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
+  <thead><tr><th>Setting</th><th>Value</th><th>What it is</th></tr></thead>
+  <tbody>
+    <tr><td><code>requirements.nodeMajor</code></td><td><code>24</code></td><td>The oldest version of Node.js it will run on.</td></tr>
+    <tr><td><code>requirements.memoryMb</code></td><td><code>fail: 900</code>, <code>warn: 1900</code></td><td>Memory available, in megabytes. In a container, the container's limit counts, not the host's.</td></tr>
+    <tr><td><code>requirements.freeDiskMb</code></td><td><code>fail: 500</code>, <code>warn: 2000</code></td><td>Free space on the disk holding the data folder, in megabytes.</td></tr>
+    <tr><td><code>requirements.platforms</code></td><td><code>linux</code>, <code>darwin</code> (macOS), <code>win32</code> (Windows)</td><td>The systems it is tested on. Another one gets a warning, not a refusal.</td></tr>
+    <tr><td><code>requirements.architectures</code></td><td><code>x64</code>, <code>arm64</code></td><td>The processors its image and database libraries are built for. Another one is refused.</td></tr>
+    <tr><td><code>requirements.linuxFamilies</code></td><td><code>debian</code>, <code>ubuntu</code></td><td>The Linux families it is tested on. Another one gets a warning that it is untested.</td></tr>
+  </tbody>
+</table></div>
+<p><strong>Why not to change them:</strong> the check exists so that an installation never half-works. To start anyway on a machine that fails it, at your own risk, there is a setting for exactly that, below.</p>
+
+<h2 id="env-only">Settings that exist only in <code>.env</code></h2>
+<p>These are not in <code>fotobogen.config.js</code>, because they are about one start of the app or about Docker, not about the app itself.</p>
+<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
+  <thead><tr><th>Setting</th><th>What it does</th></tr></thead>
+  <tbody>
+    <tr><td><code>FOTOBOGEN_SKIP_PREFLIGHT=1</code></td><td>Starts even when the preflight check fails. At your own risk: the check failed for a reason, and the usual result is a site that runs out of memory or disk while processing a photo.</td></tr>
+    <tr><td><code>DOMAIN</code></td><td>Docker quick start only. The domain name Caddy gets an HTTPS certificate for. Left unset, the site is plain HTTP on <code>localhost</code>.</td></tr>
+    <tr><td><code>PUID</code>, <code>PGID</code></td><td>Docker only. The user and group that own the files in <code>data</code>. Use what <code>id -u</code> and <code>id -g</code> print; 1000 is the usual first user on Linux.</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="all">Every setting at a glance</h2>
+<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
+  <thead><tr><th>In the file</th><th>Default</th><th>In <code>.env</code></th><th>Change it?</th></tr></thead>
+  <tbody>
+    <tr><td><code>server.port</code></td><td>5150</td><td><code>PORT</code></td><td>Yes</td></tr>
+    <tr><td><code>server.portAttempts</code></td><td>10</td><td>none</td><td>Rarely needed</td></tr>
+    <tr><td><code>server.host</code></td><td>0.0.0.0</td><td><code>HOST</code></td><td>Yes</td></tr>
+    <tr><td><code>server.trustProxy</code></td><td>false</td><td><code>TRUST_PROXY</code></td><td>Only behind your own proxy</td></tr>
+    <tr><td><code>server.siteUrl</code></td><td>none</td><td><code>SITE_URL</code></td><td>Yes, on a public site</td></tr>
+    <tr><td><code>dataDir</code></td><td>./data</td><td><code>DATA_DIR</code></td><td>Yes</td></tr>
+    <tr><td><code>uploads.maxUploadMb</code></td><td>50</td><td><code>MAX_UPLOAD_MB</code></td><td>Yes, with the proxy's limit</td></tr>
+    <tr><td><code>uploads.maxMegapixels</code></td><td>100</td><td><code>MAX_MEGAPIXELS</code></td><td>Yes, with memory to match</td></tr>
+    <tr><td><code>webhooks.allowPrivate</code></td><td>false</td><td><code>WEBHOOKS_ALLOW_PRIVATE</code></td><td>Only for your own network</td></tr>
+    <tr><td><code>internals.derivatives</code></td><td>see above</td><td>none</td><td>No</td></tr>
+    <tr><td><code>internals.formatMegapixels</code></td><td>16, 60, 40</td><td>none</td><td>No</td></tr>
+    <tr><td><code>internals.moduleOutputMegapixels</code></td><td>40</td><td>none</td><td>No</td></tr>
+    <tr><td><code>internals.queue</code></td><td>3 attempts</td><td>none</td><td>No</td></tr>
+    <tr><td><code>internals.auth</code></td><td>see above</td><td>none</td><td>No</td></tr>
+    <tr><td><code>internals.samples</code></td><td>see above</td><td>none</td><td>No</td></tr>
+    <tr><td><code>internals.requirements</code></td><td>see above</td><td>none</td><td>No</td></tr>
+  </tbody>
+</table></div>
+<p>The file itself, with a comment on every value, is <a href="https://github.com/cschweda/fotobogen/blob/main/fotobogen.config.js"><code>fotobogen.config.js</code></a>.</p>
+    <p class="next">
+      <a href="/docs/installation/">Back: Installation</a>
+      <a href="/docs/usage/">Next: Using Fotobogen</a>
+    </p>
+  </main>
+</div>
+<footer>
+  <div class="wrap">
+    <span>Fotobogen is free and open source, under the MIT licence.</span>
+    <span>It comes with no warranty. Keep backups of your photographs.</span>
+    <span>&copy; 2026 <a href="https://github.com/cschweda" data-goal="Author click">Christopher Schweda</a></span>
+  </div>
+</footer>
+</body>
+</html>

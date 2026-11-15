@@ -4,11 +4,16 @@
 import { defineEventHandler, getRequestHeader } from 'nuxt/server'
 import { originMatchesHost } from '../core/request.ts'
 import { fail } from '../utils/respond.ts'
+import { bearerToken } from '../utils/tokens.ts'
 
 const SAFE_METHODS = ['GET', 'HEAD', 'OPTIONS']
 
 export default defineEventHandler((event) => {
   if (SAFE_METHODS.includes(event.req.method)) return
+  // A request that presents an API token is not from a browser page, and is
+  // judged by the token alone (its login cookie, if any, is ignored), so
+  // there is no logged-in browser for another site to borrow.
+  if (bearerToken(getRequestHeader(event, 'authorization'))) return
   if (!originMatchesHost(getRequestHeader(event, 'origin'), getRequestHeader(event, 'host'))) {
     return fail(event, 403, 'This request did not come from this site.')
   }

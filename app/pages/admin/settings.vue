@@ -1,13 +1,14 @@
 <!-- Site settings: its name, how photos are shown, and what is revealed about them. -->
 <script setup lang="ts">
 import { LICENCES } from '~~/shared/licences'
+import { QUALITY_PRESETS } from '~~/shared/media'
 
 definePageMeta({ middleware: 'admin' })
 useHead({ title: 'Settings | Fotobogen' })
 
-interface Settings { siteTitle: string, tagline: string, grid: 'masonry' | 'square', photoView: 'modal' | 'page', showExif: boolean, showLocation: boolean, newUploads: 'public' | 'hidden', slideshowSeconds: number, slideshowOrder: 'sequence' | 'random', licence: string, allowDownload: boolean }
+interface Settings { siteTitle: string, tagline: string, grid: 'masonry' | 'square', photoView: 'modal' | 'page', showExif: boolean, showLocation: boolean, newUploads: 'public' | 'hidden', slideshowSeconds: number, slideshowOrder: 'sequence' | 'random', photoQuality: 'smaller' | 'standard' | 'high', licence: string, allowDownload: boolean }
 const { data } = await useFetch<Settings>('/api/admin/settings')
-const form = reactive<Settings>({ siteTitle: '', tagline: '', grid: 'masonry', photoView: 'modal', showExif: true, showLocation: false, newUploads: 'public', slideshowSeconds: 8, slideshowOrder: 'sequence', licence: 'arr', allowDownload: false, ...data.value })
+const form = reactive<Settings>({ siteTitle: '', tagline: '', grid: 'masonry', photoView: 'modal', showExif: true, showLocation: false, newUploads: 'public', slideshowSeconds: 8, slideshowOrder: 'sequence', photoQuality: 'standard', licence: 'arr', allowDownload: false, ...data.value })
 const errors = ref<Record<string, string>>({})
 const message = ref('')
 const problem = ref('')
@@ -20,8 +21,8 @@ async function save() {
   problem.value = ''
   message.value = ''
   try {
-    await $fetch('/api/admin/settings', { method: 'PUT', body: form })
-    message.value = 'Settings saved.'
+    const result = await $fetch<{ queued: number }>('/api/admin/settings', { method: 'PUT', body: form })
+    message.value = result.queued > 0 ? `Settings saved. The copies of ${result.queued} ${result.queued === 1 ? 'photo are' : 'photos are'} being made again at the new quality; this takes a while.` : 'Settings saved.'
   }
   catch (error) {
     const response = (error as { data?: { message?: string, errors?: Record<string, string> } }).data
@@ -35,8 +36,7 @@ async function save() {
 </script>
 
 <template>
-  <FbShell context="Admin" wordmark-href="/">
-    <p class="back"><NuxtLink class="fb-link" to="/admin">Admin</NuxtLink></p>
+  <FbShell context="Admin" wordmark-href="/" nav>
     <h1 class="fb-h1">Settings</h1>
     <form class="settings" novalidate @submit.prevent="save">
       <div class="fb-alert" role="alert">{{ problem }}</div>
@@ -100,6 +100,16 @@ async function save() {
         Off by default. Visitors get a large copy (up to 2560 pixels) with all camera data removed. Only if "Show where photos were taken" is also on do they get the file exactly as you uploaded it, which includes everything the camera recorded.
       </p>
 
+      <h2 class="settings__heading">Picture quality</h2>
+      <fieldset class="uploads">
+        <legend class="quality__legend">How much the copies shown on your site are compressed</legend>
+        <p class="check__note quality__note">Your uploaded files are never changed. This is about the resized copies made from them for the web. Changing it makes every photo's copies again, in the background.</p>
+        <label v-for="(preset, key) in QUALITY_PRESETS" :key="key" class="quality">
+          <input v-model="form.photoQuality" type="radio" name="photoQuality" :value="key">
+          <span class="quality__text"><span class="quality__name">{{ preset.label }}</span><span class="quality__about">{{ preset.about }}</span></span>
+        </label>
+      </fieldset>
+
       <h2 class="settings__heading">Privacy</h2>
       <label class="check">
         <input v-model="form.showExif" type="checkbox" aria-describedby="exif-note">
@@ -128,6 +138,13 @@ async function save() {
 .check { display: flex; align-items: center; gap: 0.6rem; font-weight: 700; cursor: pointer; }
 .check input { width: 1.25rem; height: 1.25rem; margin: 0; accent-color: var(--fb-red); }
 .uploads { margin: 0; padding: 0; border: 0; }
+.quality__legend { padding: 0; font-weight: 700; }
+.quality__note { margin-left: 0; }
+.quality { display: grid; grid-template-columns: auto 1fr; gap: 0.75rem; padding: 0.7rem 0; border-top: 1px solid var(--fb-line); cursor: pointer; }
+.quality input { width: 1.25rem; height: 1.25rem; margin: 0.15rem 0 0; accent-color: var(--fb-red); }
+.quality__text { display: grid; gap: 0.15rem; }
+.quality__name { font-weight: 700; }
+.quality__about { color: var(--fb-muted); font-size: 0.9375rem; }
 .uploads__second { margin-top: 0.6rem; }
 .seconds { margin-bottom: 1.5rem; }
 .seconds__label { display: block; padding: 0; font-weight: 700; }
@@ -137,6 +154,7 @@ async function save() {
 .licence { display: block; width: 100%; max-width: 24rem; height: 2.75rem; margin-top: 0.5rem; padding: 0 0.6rem; border: 1px solid var(--fb-edge); background: var(--fb-panel); color: var(--fb-text); font: inherit; border-radius: 0; }
 .licence__note { margin-left: 0; }
 .check__note { margin: 0.25rem 0 1.25rem 1.85rem; max-width: 34rem; color: var(--fb-muted); font-size: 0.875rem; }
-.actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 2.5rem; }
+/* The save bar stays in view at the foot of the window on a long page. */
+.actions { position: sticky; bottom: 0; z-index: 1; display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 2.5rem; padding: 0.9rem 0; border-top: 1px solid var(--fb-line); background: var(--fb-ground); }
 .saved { margin-top: 0.75rem; }
 </style>

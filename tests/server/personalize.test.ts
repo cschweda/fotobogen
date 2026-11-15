@@ -1,10 +1,11 @@
 // The owner can put the whole public site in their own words, and decide
 // what search engines and social networks are told about it.
+import sharp from 'sharp'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { imageBuffer } from '../helpers/images.ts'
 import { upload, whenProcessed } from '../helpers/photos.ts'
 import { get, startServer, type TestServer } from '../helpers/server.ts'
-import { completeSetup } from '../helpers/setup.ts'
+import { completeSetup, query } from '../helpers/setup.ts'
 
 describe('a site in its owner\'s own words', () => {
   let server: TestServer
@@ -232,6 +233,46 @@ describe('a site whose address is set on the server', () => {
     try {
       await completeSetup(server)
       expect(await (await get(server, '/robots.txt')).text()).toContain(`Sitemap: ${server.url}/sitemap.xml`)
+    }
+    finally { await server.stop() }
+  })
+})
+
+describe('picture quality', () => {
+  it('makes every photo\'s copies again, smaller or larger, when the owner changes it, and leaves them alone otherwise', async () => {
+    const server = await startServer()
+    try {
+      const cookie = await completeSetup(server)
+      // A detailed picture, so that quality makes a clear difference to its size.
+      await upload(server, cookie, await sharp({ create: { width: 1600, height: 1200, channels: 3, noise: { type: 'gaussian', mean: 128, sigma: 40 } } }).jpeg({ quality: 95 }).toBuffer(), 'detail.jpg')
+      await whenProcessed(server, cookie)
+      const settings = async () => await (await get(server, '/api/admin/settings', { cookie })).json() as Record<string, unknown>
+      const save = async (changes: Record<string, unknown>) => {
+        const response = await fetch(server.url + '/api/admin/settings', { method: 'PUT', headers: { origin: server.url, cookie, 'content-type': 'application/json' }, body: JSON.stringify({ ...await settings(), ...changes }) })
+        return { status: response.status, body: await response.json() as { queued?: number, errors?: Record<string, string> } }
+      }
+      const large = () => query<{ path: string, bytes: number }>(server, `select path, bytes from derivatives where kind = 'medium'`)[0]!
+
+      expect((await settings()).photoQuality).toBe('standard')
+      const standard = large()
+      // Saving without changing the quality renders nothing.
+      expect((await save({ tagline: 'Same quality' })).body.queued).toBe(0)
+
+      expect((await save({ photoQuality: 'smaller' })).body.queued).toBe(1)
+      await whenProcessed(server, cookie)
+      const smaller = large()
+      expect(smaller.bytes).toBeLessThan(standard.bytes * 0.9)
+      // A new version of the picture has a new address, so browsers do not keep the old one.
+      expect(smaller.path).not.toBe(standard.path)
+
+      expect((await save({ photoQuality: 'high' })).body.queued).toBe(1)
+      await whenProcessed(server, cookie)
+      expect(large().bytes).toBeGreaterThan(standard.bytes * 1.1)
+      expect((await settings()).photoQuality).toBe('high')
+
+      const bad = await save({ photoQuality: 'lossless' })
+      expect(bad.status).toBe(422)
+      expect((await settings()).photoQuality).toBe('high')
     }
     finally { await server.stop() }
   })

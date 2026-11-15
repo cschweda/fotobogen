@@ -81,6 +81,13 @@ uses [Semantic Versioning](https://semver.org/).
 - A Links panel on each photo's page in the library: the full address of the photo's page and of each size of the picture, and HTML to embed it, each with a Copy button.
 - `SITE_URL`: the site's proper address can be set on the server as well as in the admin, and is used for every full address the site writes out. The admin says when links still point at localhost and how to fix it.
 - Pages that cannot be shown (not found, or a failure) use the site's own frame, name, and words.
+- README and docs: a complete nginx site file for an install without Docker, with each line explained and a table of what goes wrong; pm2 start-on-boot; and step-by-step Laravel Forge with pm2 (no Docker), including the deploy script.
+- API tokens: made in the admin, shown once, stored as a hash, and limited to a kind (Upload only, or Manage photos). A script or another program sends one in an `Authorization: Bearer` header in place of logging in. No token can change the site's settings, reach a backup, or manage tokens. Adds the `api_tokens` table (migration 0004, applied by itself).
+- Picture quality: Settings has a choice of Smaller files, Standard, or High for the copies shown on the site; changing it makes every photo's copies again.
+- Icon and logo: an admin page to upload a site icon (browser tab, bookmarks, phone home screen) and a logo shown in place of the site's name, with a separate logo for dark mode and an adjustable height. Uploads are checked by content, redrawn, and kept in the database. Fotobogen's own mark now appears only in the admin.
+- The admin has a menu down the side, grouped (Photos, Appearance, Site, Server), in place of a row of buttons on the dashboard; on a phone it folds behind a Menu button. The dashboard is now Overview: the site, the Fotobogen and Node.js versions, what is stored, and free space.
+- Save buttons stay in view at the foot of the window on the long admin pages.
+- Two more documentation pages: Configuration (every value in `fotobogen.config.js` and `.env.sample`, what it does, and whether to change it) and Customization (everything that can be made your own, where it is set, and how). A test fails if a setting is added without being documented.
 - Documentation pages at fotobogen.com/docs: installation (macOS, Windows, Linux, Docker on a fresh VPS, Docker on a Laravel Forge server, with minimum and recommended server sizes), using Fotobogen, skins, modules, and questions (backups, restoring, and ways to start over). Their source is `docs/site/`.
 - Windows: CI installs, builds, and tests on Windows, including a PowerShell smoke test (`scripts/smoke-test.ps1`).
 

@@ -88,7 +88,8 @@ describe('modules and recipes', () => {
     const after = await detail()
     expect(after.status).toBe('ready')
     expect(after.medium).toMatchObject({ width: 1240, height: 1040 })
-    expect(query(server, `select type, status from jobs order by created_at, rowid`)).toEqual([{ type: 'ingest', status: 'done' }, { type: 'rerender', status: 'done' }])
+    // A photo is marked ready a moment before its job is recorded as done, so wait for that.
+    await expect.poll(() => query(server, `select type, status from jobs order by created_at, rowid`), { timeout: 10_000 }).toEqual([{ type: 'ingest', status: 'done' }, { type: 'rerender', status: 'done' }])
     expect(query(server, 'select camera, title from photos')).toHaveLength(1)
     expect(query(server, 'select checksum, bytes from photos')[0]).toEqual(before)
     const image = await sharp(Buffer.from(await (await get(server, after.medium!.url)).arrayBuffer())).raw().toBuffer({ resolveWithObject: true })
