@@ -1,0 +1,7 @@
+{
+  "name": "filmframe",
+  "version": "1.0.0",
+  "label": "Film frame",
+  "description": "Prints the photo with the black edge of the negative showing, as from a filed-out negative carrier, with optional made-up film-stock markings.",
+  "entry": "index.mjs"
+}
