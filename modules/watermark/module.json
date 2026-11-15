@@ -1,0 +1,7 @@
+{
+  "name": "watermark",
+  "version": "1.0.0",
+  "label": "Watermark",
+  "description": "Prints a line of text, such as your name, in a corner of each photo.",
+  "entry": "index.mjs"
+}

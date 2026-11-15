@@ -12,9 +12,9 @@ The feature list agreed on 2026-11-15, in the order it is being built. Each item
 | 4 | Backup and restore from the admin; export everything as a zip | Done |
 | 5 | Scheduled publishing and drafts | Done |
 | 6 | Slideshow (following openMantel) | Done |
-| 7 | Download and licence settings per photo; a watermark module | Next |
+| 7 | Download and licence settings per photo; a watermark module | Done |
 | 8 | RSS, sitemap, and social cards per photo | Done |
-| 9 | A notice in the admin when a new version exists | Planned |
+| 9 | A notice in the admin when a new version exists | Next |
 
 Visit counting is left to Plausible, which already tracks fotobogen.com; the placeholder site gets named goals instead.
 

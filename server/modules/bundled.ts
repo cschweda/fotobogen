@@ -5,6 +5,8 @@ import filmframe from '../../modules/filmframe/index.mjs'
 import filmframeManifest from '../../modules/filmframe/module.json'
 import filmlooks from '../../modules/filmlooks/index.mjs'
 import filmlooksManifest from '../../modules/filmlooks/module.json'
+import watermark from '../../modules/watermark/index.mjs'
+import watermarkManifest from '../../modules/watermark/module.json'
 import type { BundledModule } from './registry.ts'
 
 export const bundledModules: BundledModule[] = [
@@ -12,4 +14,6 @@ export const bundledModules: BundledModule[] = [
   // before the frame goes around it.
   { manifest: filmlooksManifest, definition: filmlooks },
   { manifest: filmframeManifest, definition: filmframe },
+  // Last, so the mark sits on top of everything else.
+  { manifest: watermarkManifest, definition: watermark },
 ]

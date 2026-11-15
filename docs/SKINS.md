@@ -53,7 +53,7 @@ data/skins/paper/
   background: var(--fb-ground);
   color: var(--fb-text);
 }
-.fb-public a:hover { color: var(--fb-accent); }
+.fb-public a:hover { text-decoration-color: var(--fb-accent); }
 ```
 
 ## Options
@@ -129,6 +129,8 @@ These class names are stable. A skin may rely on them.
     <!-- Inside .fb-photo__text, when the photo has them -->
     <p class="fb-photo__albums">In <a>Album name</a></p>
     <ul class="fb-tags"><li><a class="fb-tag">tag</a></li></ul>
+    <p class="fb-photo__licence">All rights reserved</p>
+    <p class="fb-photo__download"><a>Download the original</a></p>
 
     <dialog class="fb-modal">
       <button class="fb-modal__close">Close</button>

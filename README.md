@@ -296,6 +296,14 @@ zone), or hidden as a draft. A scheduled photo is in your library but not on
 the site, the feed, or the sitemap until its time, and then appears by
 itself. In Settings you can make every new upload start as a draft.
 
+**Licence and downloads.** Settings has the licence your photos are
+published under (all rights reserved by default, or a Creative Commons
+licence) and a switch that lets visitors download them (off by default). A
+photo can have its own licence and its own download setting on its page. A
+download is the file exactly as you uploaded it, with one exception: if the
+file records where it was taken and your site keeps locations private,
+visitors get the largest resized copy instead, which carries no metadata.
+
 **Admin, Settings** holds the site title and tagline, the grid layout,
 whether photos open over the grid or on their own page, and the two privacy
 switches: camera details (on by default) and location (off by default).
@@ -338,8 +346,8 @@ See [seed/README.md](seed/README.md) for the list and the licence.
 
 ## Modules
 
-Modules change how photos look without touching the files you uploaded. Two
-come with Fotobogen, both switched off until you switch them on under
+Modules change how photos look without touching the files you uploaded. Three
+come with Fotobogen, all switched off until you switch them on under
 **Admin, Modules**:
 
 - **Film frame** makes a photo look contact printed: the negative's border,
@@ -350,6 +358,10 @@ come with Fotobogen, both switched off until you switch them on under
   pushed black-and-white, a saturated colour slide, a soft colour negative,
   with the grain turned up or down. These are impressions, not measured
   emulations of any product.
+
+- **Watermark** prints a line of text, such as your name, in a corner of
+  each photo, at a size, opacity, and position you choose. It marks the
+  copies visitors see; a downloaded original is untouched.
 
 A transform can be set for all photos at once, or chosen for one photo from
 its edit page, with a preview before saving.

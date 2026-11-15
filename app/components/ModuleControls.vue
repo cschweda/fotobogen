@@ -7,6 +7,7 @@ type ParamSpec
   = | { type: 'range', label?: string, min: number, max: number, step?: number, default: number }
     | { type: 'select', label?: string, options: string[], default: string }
     | { type: 'boolean', label?: string, default: boolean }
+    | { type: 'text', label?: string, default: string, maxLength?: number }
 
 export interface ModuleInfo {
   name: string
@@ -86,6 +87,14 @@ const fieldId = (module: string, transform: string, key: string) => `${props.idP
             <option v-for="option in spec.options" :key="option" :value="option">{{ option }}</option>
           </select>
         </template>
+        <template v-else-if="spec.type === 'text'">
+          <label :for="fieldId(module.name, transform.id, key)" class="param__label">{{ spec.label ?? key }}</label>
+          <input
+            :id="fieldId(module.name, transform.id, key)" class="param__text" type="text" :maxlength="spec.maxLength ?? 80"
+            :value="stepFor(module.name, transform.id)!.params[key]"
+            @input="setParam(module.name, transform.id, key, ($event.target as HTMLInputElement).value)"
+          >
+        </template>
         <label v-else class="param__check">
           <input
             type="checkbox" :checked="stepFor(module.name, transform.id)!.params[key] === true"
@@ -114,5 +123,6 @@ input[type="checkbox"] { width: 1.25rem; height: 1.25rem; margin: 0; accent-colo
   grid-column: 1 / -1; min-height: 2.5rem; padding: 0 0.6rem; border: 1px solid var(--fb-edge);
   background: var(--fb-panel); color: var(--fb-text); font: inherit; border-radius: 0;
 }
+.param__text { grid-column: 1 / -1; min-height: 2.5rem; padding: 0 0.6rem; border: 1px solid var(--fb-edge); background: var(--fb-panel); color: var(--fb-text); font: inherit; border-radius: 0; }
 .param__check { grid-column: 1 / -1; display: flex; align-items: center; gap: 0.6rem; cursor: pointer; }
 </style>

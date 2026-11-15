@@ -1,9 +1,10 @@
 # Writing and installing a module
 
-A module changes how photos look: a film look, a border, a tint. Two come with Fotobogen and double as worked examples:
+A module changes how photos look: a film look, a border, a tint. Three come with Fotobogen and double as worked examples:
 
 - [`modules/filmframe`](../modules/filmframe/index.mjs): makes a photo look contact printed, with the negative's border, sprocket holes, and made-up stock markings. It changes the photo's size.
 - [`modules/filmlooks`](../modules/filmlooks/index.mjs): tone and grain in the manner of a few kinds of film. It keeps the photo's size.
+- [`modules/watermark`](../modules/watermark/index.mjs): a line of text in a corner. It shows a `text` parameter and drawing over the photo.
 
 ## Contents
 
@@ -32,7 +33,7 @@ No. Some systems (Strapi is one) compile their admin panel, so adding a plugin m
 - A module is loaded by the **server** when it starts. It is plain JavaScript in a folder; there is no build step and no package to install.
 - The **admin** has no code for any particular module. A module declares its parameters ("a number from 2 to 14 called thickness"), the server passes those declarations to the admin, and the admin draws a slider, a menu, or a checkbox for each. That is why a new module's controls appear without the admin being touched.
 
-The cost of this is a limit: a module cannot add its own screens or its own kind of control to the admin. It gets sliders, menus, and checkboxes.
+The cost of this is a limit: a module cannot add its own screens or its own kind of control to the admin. It gets sliders, menus, checkboxes, and one-line text fields.
 
 ## What a module is
 
@@ -89,15 +90,16 @@ That is the whole module. There is nothing to import: `image` is a [sharp](https
 
 ## Parameters
 
-Each parameter is one of three kinds. The admin builds the control; the server checks every value before `apply` sees it, so `apply` can trust what it is given.
+Each parameter is one of four kinds. The admin builds the control; the server checks every value before `apply` sees it, so `apply` can trust what it is given.
 
 | Type | Declaration | Control | What `apply` receives |
 |---|---|---|---|
 | `range` | `{ type: 'range', min, max, step, default }` | Slider | A number between `min` and `max` |
 | `select` | `{ type: 'select', options: [...], default }` | Menu | One of the listed strings |
 | `boolean` | `{ type: 'boolean', default }` | Checkbox | `true` or `false` |
+| `text` | `{ type: 'text', default, maxLength }` | One-line text field | A string of at most `maxLength` characters (80 unless you say; 200 at most), with no line breaks |
 
-All three take an optional `label`. Parameter names are letters and digits.
+All four take an optional `label`. Text is drawn by your module, and the server has no fonts you can count on: the bundled watermark draws its letters as dots for that reason. Parameter names are letters and digits.
 
 ## The apply function
 

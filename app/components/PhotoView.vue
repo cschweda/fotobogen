@@ -14,6 +14,8 @@ export interface PublicPhoto {
   images: { url: string, width: number, height: number }[]
   tags: { slug: string, name: string }[]
   albums: { slug: string, title: string }[]
+  licence: { label: string, url: string | null }
+  download: { url: string, original: boolean } | null
   previous: string | null
   next: string | null
 }
@@ -58,6 +60,13 @@ const settings = computed(() => {
       <ul v-if="photo.tags.length" class="fb-tags" aria-label="Tags">
         <li v-for="tag in photo.tags" :key="tag.slug"><a class="fb-tag" :href="`/tag/${tag.slug}`" rel="tag">{{ tag.name }}</a></li>
       </ul>
+      <p class="fb-photo__licence">
+        <a v-if="photo.licence.url" :href="photo.licence.url" rel="license">{{ photo.licence.label }}</a>
+        <template v-else>{{ photo.licence.label }}</template>
+      </p>
+      <p v-if="photo.download" class="fb-photo__download">
+        <a :href="photo.download.url" download>{{ photo.download.original ? 'Download the original' : 'Download' }}</a>
+      </p>
       <nav v-if="photo.previous || photo.next" class="fb-photo__nav" aria-label="Other photos">
         <a v-if="photo.previous" class="fb-photo__prev" :href="`/photo/${photo.previous}`" rel="prev" @click="emit('go', photo.previous, $event)">Previous</a>
         <a v-if="photo.next" class="fb-photo__next" :href="`/photo/${photo.next}`" rel="next" @click="emit('go', photo.next, $event)">Next</a>
