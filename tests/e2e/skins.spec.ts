@@ -31,6 +31,7 @@ const GROUNDS = {
   swiss: { light: 'rgb(255, 255, 255)', dark: 'rgb(10, 10, 11)' },
   papier: { light: 'rgb(244, 241, 234)', dark: 'rgb(23, 22, 19)' },
   plakat: { light: 'rgb(255, 212, 0)', dark: 'rgb(0, 0, 0)' },
+  rangefinder: { light: 'rgb(241, 241, 239)', dark: 'rgb(12, 12, 12)' },
 } as const
 
 /**
@@ -58,10 +59,11 @@ const faintText = (page: import('@playwright/test').Page) => page.evaluate(() =>
   return found
 })
 
-for (const skin of ['swiss', 'papier', 'plakat'] as const) {
+for (const skin of ['swiss', 'papier', 'plakat', 'rangefinder'] as const) {
   for (const mode of ['light', 'dark'] as const) {
     test(`${skin} in ${mode} mode is accessible and fits a phone and a wide screen`, async ({ page }) => {
-      await choose({ active: skin, mode })
+      // The look a skin may bring is left out here: this test is about the page, not the photos.
+      await choose({ active: skin, mode, useLook: false })
       for (const width of [320, 1280]) {
         await page.setViewportSize({ width, height: 800 })
         for (const path of ['/', '/photo/tower', '/slideshow']) {
@@ -133,5 +135,32 @@ test('the admin sets the mode visitors see first, and a colour for each mode', a
   await page.goto(server.url + '/')
   expect(await ground(page)).toBe(GROUNDS.papier.dark)
   expect(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--fb-accent').trim())).toBe('#00ff88')
+  await choose({ active: 'swiss', mode: 'skin' })
+})
+
+test('a skin that brings a look says so, and the owner can take the skin with or without it', async ({ page }) => {
+  const recipe = async () => (await (await fetch(server.url + '/api/admin/modules', { headers: { cookie } })).json() as { siteRecipe: { module: string }[] }).siteRecipe.map(step => step.module)
+  await page.context().addCookies(cookie.split('; ').map((pair) => {
+    const [name, ...rest] = pair.split('=')
+    return { name: name!, value: rest.join('='), url: server.url }
+  }))
+  await page.goto(server.url + '/admin/skins')
+  // Swiss brings no look, so nothing is offered.
+  await expect(page.getByLabel('Use this look for all photos')).toHaveCount(0)
+
+  await page.getByRole('radio', { name: /Rangefinder Dreams/ }).check()
+  await expect(page.getByText('Film look: B&W 400 (Tri-X style)')).toBeVisible()
+  await expect(page.getByLabel('Use this look for all photos')).toBeChecked()
+  await expectNoAxeViolations(page)
+  await page.getByRole('button', { name: 'Save' }).click()
+  await expect(page.getByText(/Your site now uses Rangefinder Dreams\. 3 photos are being made again/).first()).toBeVisible()
+  expect(await recipe()).toEqual(['filmlooks'])
+  await whenProcessed(server, cookie)
+
+  // Unticking the box keeps the skin and drops the look.
+  await page.getByLabel('Use this look for all photos').uncheck()
+  await page.getByRole('button', { name: 'Save' }).click()
+  await expect.poll(recipe).toEqual([])
+  await whenProcessed(server, cookie)
   await choose({ active: 'swiss', mode: 'skin' })
 })

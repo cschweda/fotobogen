@@ -65,6 +65,18 @@ const round = value => Math.round(value * 10) / 10
 /** The text as it will be drawn: capitals, with "©" spelled out. */
 const drawable = text => text.replaceAll('©', '(C)').toUpperCase()
 
+/**
+ * Sharpening, from 0 (none) to 100 (crisp, with visible edge contrast).
+ * Around 25 is what a print or a scan is normally given.
+ */
+function sharpened(image, amount) {
+  const strength = Math.max(0, Math.min(100, Number(amount) || 0)) / 100
+  if (strength === 0) return image
+  // sigma: how wide an edge is treated. m1 and m2: how much flat and
+  // detailed areas are sharpened; flat areas get less, so skies stay smooth.
+  return image.sharpen({ sigma: 0.6 + strength * 0.9, m1: strength * 1.5, m2: 1 + strength * 3 })
+}
+
 export default {
   transforms: [
     {
@@ -77,9 +89,12 @@ export default {
         size: { type: 'range', label: 'Size', min: 1, max: 6, step: 0.5, default: 2 },
         opacity: { type: 'range', label: 'Opacity (percent)', min: 10, max: 100, step: 5, default: 60 },
         colour: { type: 'select', label: 'Colour', options: ['light', 'dark'], default: 'light' },
+        sharpen: { type: 'range', label: 'Sharpening of the photo (0 is none, 25 is normal)', min: 0, max: 100, step: 5, default: 0 },
       },
 
       apply(image, params, { width, height }) {
+        // The photo is sharpened; the mark is drawn on top afterwards.
+        image = sharpened(image, params.sharpen)
         const text = drawable(String(params.text)).trim()
         if (!text) return image
 

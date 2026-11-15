@@ -68,6 +68,9 @@ uses [Semantic Versioning](https://semver.org/).
 - fotobogen.com shows the gallery, a photo page, film looks, and the library, and sends named events to Plausible for use as goals.
 - Two more skins, Papier and Plakat (a poster), with a guide to making a skin from one of them.
 - Every skin has a light and a dark mode. The owner chooses which visitors see first, or lets it follow each visitor's device; a button in the header lets a visitor switch. A skin's colours now live in `skin.json` under `modes`, and a colour option holds one colour for each mode.
+- A skin can bring a look for every photo (`look` in `skin.json`). Choosing the skin sets it as the site-wide look and switches on the modules it needs; the owner can decline it, change it, or switch it off, and a photo can still have its own.
+- Rangefinder Dreams: a fourth skin, black and white throughout, which shows every photo in black and white.
+- A sharpening slider on every bundled module. Film looks sharpens normally by default; the frame and the watermark leave the photo alone unless asked.
 - The bundled skins are tested in both modes at phone and desktop widths against WCAG 2.1 AA, including a measured contrast check on every heading and link.
 - `pnpm fotobogen module new <name>` starts a module from a working example, and `pnpm fotobogen module test <name>` runs it on a test picture and reports what is wrong.
 - A documented public API (`docs/API.md`): read-only JSON for photos, albums, tags, and the slideshow, readable from other sites, with a version header.
@@ -83,5 +86,6 @@ uses [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Changing a look while photos were still being made left those photos with the old look. They now get another pass.
 - Skins set the text colour on the page body, so a light skin no longer inherits the admin's light text.
 - Installing no longer compiles `better-sqlite3` from source. It failed on Windows without Visual Studio; the package's own prebuilt binaries are used on every platform.

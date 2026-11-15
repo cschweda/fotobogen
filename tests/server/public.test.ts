@@ -159,7 +159,7 @@ describe('the public site', () => {
     it('lists installed skins and warns about text that would be hard to read', async () => {
       const listed = await skins()
       expect(listed.active).toBe('swiss')
-      expect(listed.skins.map(skin => [skin.name, skin.source, skin.error])).toEqual([['papier', 'bundled', null], ['plakat', 'bundled', null], ['swiss', 'bundled', null], ['paper', 'installed', null]])
+      expect(listed.skins.map(skin => [skin.name, skin.source, skin.error])).toEqual([['papier', 'bundled', null], ['plakat', 'bundled', null], ['rangefinder', 'bundled', null], ['swiss', 'bundled', null], ['paper', 'installed', null]])
       expect(listed.skins.find(skin => skin.name === 'paper')!.warnings[0]).toBe('In light mode, "text" on "ground" has a contrast of 2.8:1. Text needs at least 4.5:1 to be readable.')
     })
 

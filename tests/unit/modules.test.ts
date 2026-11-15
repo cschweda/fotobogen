@@ -46,9 +46,9 @@ describe('the module contract', () => {
   it('turns whatever parameters were sent into valid ones', () => {
     const specs = checkDefinition(filmframe).transforms[0]!.params
     expect(coerceParams(specs, { thickness: 999, raggedness: 'lots', markings: 'yes', stock: 'KODAK', extra: 1 })).toEqual({
-      thickness: 14, raggedness: 60, markings: true, sprockets: true, stock: 'FOTOBOGEN 400',
+      thickness: 14, raggedness: 60, markings: true, sprockets: true, stock: 'FOTOBOGEN 400', sharpen: 0,
     })
-    expect(coerceParams(specs, undefined)).toEqual({ thickness: 6, raggedness: 60, markings: true, sprockets: true, stock: 'FOTOBOGEN 400' })
+    expect(coerceParams(specs, undefined)).toEqual({ thickness: 6, raggedness: 60, markings: true, sprockets: true, stock: 'FOTOBOGEN 400', sharpen: 0 })
   })
 })
 
@@ -164,7 +164,7 @@ describe('the module registry', () => {
       { module: 'ghost', transform: 'x', params: {} },
       { module: 'filmframe', transform: 'no-such-transform' },
       'garbage',
-    ])).toEqual([{ module: 'filmframe', transform: 'negative-edge', params: { thickness: 2, raggedness: 60, markings: true, sprockets: true, stock: 'FOTOBOGEN 400' } }])
+    ])).toEqual([{ module: 'filmframe', transform: 'negative-edge', params: { thickness: 2, raggedness: 60, markings: true, sprockets: true, stock: 'FOTOBOGEN 400', sharpen: 0 } }])
     expect(registry.cleanRecipe('not a list')).toEqual([])
     expect(registry.cleanRecipe(Array.from({ length: 20 }, () => step()))).toHaveLength(8)
   })
@@ -238,6 +238,33 @@ describe('the film looks module', () => {
       'Colour slide (Kodachrome style)', 'Colour negative, soft',
     ])
     expect([params.grain!.min, params.grain!.max, params.grain!.default]).toEqual([0, 200, 100])
+  })
+
+  it('sharpens: normal by default, none at 0, crisp when turned up, and never sharpens the grain', async () => {
+    const params = filmlooks.transforms[0]!.params as Record<string, { min?: number, max?: number, default: unknown }>
+    expect([params.sharpen!.min, params.sharpen!.max, params.sharpen!.default]).toEqual([0, 100, 25])
+    // The frame and the watermark can sharpen too, but leave the photo alone unless asked.
+    expect((filmframe.transforms[0]!.params as Record<string, { default: unknown }>).sharpen!.default).toBe(0)
+
+    // A soft edge between two greys. Sharpening makes each side overshoot next to the edge.
+    const width = 200, height = 60
+    const edge = Buffer.alloc(width * height * 3)
+    for (let i = 0; i < width * height; i++) edge.fill(i % width < width / 2 ? 96 : 160, i * 3, i * 3 + 3)
+    const { data, info } = await sharp(edge, { raw: { width, height, channels: 3 } }).blur(1.5).raw().toBuffer({ resolveWithObject: true })
+    const soft: Raster = { data, width: info.width, height: info.height, channels: info.channels }
+    const registry = await createRegistry({ bundled })
+    const spread = async (sharpen: number) => {
+      const out = await registry.apply(soft, [{ module: 'filmlooks', transform: 'film-look', params: { look: 'B&W 100, fine grain', grain: 0, sharpen } as never }])
+      const row = Array.from({ length: width }, (_, x) => pixel(out, x, 30)[0]!)
+      return Math.max(...row) - Math.min(...row)
+    }
+    const [none, normal, crisp] = [await spread(0), await spread(25), await spread(100)]
+    expect(normal).toBeGreaterThan(none)
+    expect(crisp).toBeGreaterThan(normal + 10)
+    // On a flat grey there is nothing to sharpen, so grain alone decides the texture.
+    const grey = await raster(300, 200, '#808080')
+    const grain = async (sharpen: number) => stats(await registry.apply(grey, [{ module: 'filmlooks', transform: 'film-look', params: { look: 'B&W 400 (Tri-X style)', grain: 100, sharpen } as never }])).deviation
+    expect(await grain(100)).toBeCloseTo(await grain(0), 5)
   })
 
   it('turns a colour photo black and white for the black-and-white looks, keeping its size', async () => {

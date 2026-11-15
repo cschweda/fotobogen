@@ -39,7 +39,11 @@ export interface Queue {
 const ERROR_LIMIT = 500
 
 function runJob(ctx: PipelineContext, job: Job): Promise<void> {
-  return processPhoto(ctx, job.photoId, { readMetadata: job.type === 'ingest' })
+  return processPhoto(ctx, job.photoId, {
+    readMetadata: job.type === 'ingest',
+    // This job is "running"; a "queued" one for the same photo is a later pass, with a newer recipe.
+    anotherPassWaiting: () => ctx.sqlite.prepare(`select 1 from jobs where photo_id = ? and status = 'queued'`).get(job.photoId) !== undefined,
+  })
 }
 
 export function createQueue(ctx: PipelineContext, options: QueueOptions = {}): Queue {

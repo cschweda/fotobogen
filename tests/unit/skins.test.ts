@@ -107,7 +107,7 @@ describe('reading skins', () => {
 })
 
 describe('the skins that come with Fotobogen', () => {
-  const bundled = ['swiss', 'papier', 'plakat'].map(name => parseSkin({ name, json: readFileSync(`skins/${name}/skin.json`, 'utf8'), css: readFileSync(`skins/${name}/skin.css`, 'utf8') }, 'bundled'))
+  const bundled = ['swiss', 'papier', 'plakat', 'rangefinder'].map(name => parseSkin({ name, json: readFileSync(`skins/${name}/skin.json`, 'utf8'), css: readFileSync(`skins/${name}/skin.css`, 'utf8') }, 'bundled'))
 
   it('all load, with readable text and the same three options', () => {
     for (const skin of bundled) {
@@ -117,7 +117,7 @@ describe('the skins that come with Fotobogen', () => {
     }
   })
   it('each have a light and a dark mode, and say which they show first', () => {
-    expect(bundled.map(skin => [skin.label, skin.mode])).toEqual([['Swiss', 'dark'], ['Papier', 'light'], ['Plakat', 'dark']])
+    expect(bundled.map(skin => [skin.label, skin.mode])).toEqual([['Swiss', 'dark'], ['Papier', 'light'], ['Plakat', 'dark'], ['Rangefinder Dreams', 'dark']])
     for (const skin of bundled) {
       // Light really is light and dark really is dark: black text reads on one, white on the other.
       expect(contrastRatio(skin.modes.light.ground!, '#000000'), `${skin.name} light`).toBeGreaterThan(10)
@@ -128,6 +128,24 @@ describe('the skins that come with Fotobogen', () => {
         expect(contrastRatio(skin.modes[mode].muted!, skin.modes[mode].ground!), `${skin.name} ${mode} quiet text`).toBeGreaterThanOrEqual(4.5)
       }
     }
+  })
+  it('can bring a look for every photo: Rangefinder Dreams is black and white, in its photos and its page', () => {
+    const rangefinder = bundled.find(skin => skin.name === 'rangefinder')!
+    expect(rangefinder.look).toEqual([{ module: 'filmlooks', transform: 'film-look', params: { look: 'B&W 400 (Tri-X style)', grain: 100, sharpen: 60 } }])
+    expect(bundled.filter(skin => skin.look.length > 0).map(skin => skin.name)).toEqual(['rangefinder'])
+    // No colour anywhere on the page either: every colour is a grey.
+    const channels = (hex: string) => [1, 3, 5].map(at => Number.parseInt(hex.slice(at, at + 2), 16))
+    for (const colour of [...Object.values(rangefinder.modes.light), ...Object.values(rangefinder.modes.dark)]) {
+      expect(Math.max(...channels(colour)) - Math.min(...channels(colour)), colour).toBeLessThanOrEqual(3)
+    }
+  })
+  it('reads a look from skin.json, and says what is wrong with a bad one', () => {
+    const skin = parseSkin(files('toned', { look: [{ module: 'filmlooks', transform: 'film-look', params: { look: 'Colour slide (Kodachrome style)', nested: { no: 1 } } }] }), 'installed')
+    expect(skin.error).toBeNull()
+    expect(skin.look).toEqual([{ module: 'filmlooks', transform: 'film-look', params: { look: 'Colour slide (Kodachrome style)' } }])
+    expect(parseSkin(files('plain', {}), 'installed').look).toEqual([])
+    expect(parseSkin(files('bad', { look: 'kodachrome' }), 'installed').error).toMatch(/"look" must be a list/)
+    expect(parseSkin(files('bad', { look: [{ module: 'filmlooks' }] }), 'installed').error).toMatch(/needs a "module" and a "transform"/)
   })
   it('each start every rule from the public pages, and style every part of them', () => {
     const parts = ['.fb-site-header', '.fb-grid--masonry', '.fb-grid--square', '.fb-tile', '.fb-photo__title', '.fb-modal', '.fb-albums', '.fb-tag', '.fb-pager__more', '.fb-slideshow__controls', '.fb-photo__licence']

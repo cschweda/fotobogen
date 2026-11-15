@@ -270,19 +270,22 @@ and `/robots.txt`. Setup, login, and the admin are marked not to be indexed.
 
 ## Skins
 
-A skin changes how the public site looks. Three come with Fotobogen, all in
+A skin changes how the public site looks. Four come with Fotobogen, all in
 the Swiss manner, and you can switch between them at any time under
 **Admin, Skins**:
 
 - **Swiss** (the default): a small site name, hairline gaps, a red accent.
 - **Papier**: warm paper, heavy rules, wide margins, photographs set apart
   like prints on a page.
+- **Rangefinder Dreams**: black and white throughout. Choosing it also
+  shows every photo in black and white, crisply sharpened (you can decline
+  that, change it, or switch it off for one photo or all of them).
 - **Plakat**: a poster. The site's name set very large, photographs edge
   to edge.
 
 **Every skin has a light and a dark mode.** You choose which one visitors
 see first (or let it follow each visitor's device), and a button at the top
-of the site lets a visitor switch. All three are tested in both modes, on a
+of the site lets a visitor switch. All four are tested in both modes, on a
 phone and on a wide screen, against WCAG 2.1 level AA: text and headings
 have a contrast of at least 4.5:1, nothing scrolls sideways, and everything
 works from the keyboard.

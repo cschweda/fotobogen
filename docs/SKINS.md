@@ -6,6 +6,7 @@ A skin changes how the public site looks. It is a stylesheet and a short descrip
 
 - [The skins that come with Fotobogen](#the-skins-that-come-with-fotobogen)
 - [Light and dark](#light-and-dark)
+- [A look for every photo](#a-look-for-every-photo)
 - [Making your own from one of them](#making-your-own-from-one-of-them)
 - [Installing a skin](#installing-a-skin)
 - [What a skin is](#what-a-skin-is)
@@ -18,12 +19,13 @@ A skin changes how the public site looks. It is a stylesheet and a short descrip
 
 ## The skins that come with Fotobogen
 
-Three, all in the Swiss manner: one typeface, a strict grid, flat colour, no rounded corners or shadows. **Each has a light and a dark mode.** Switch skins at any time under **Admin, Skins**; nothing is rebuilt and no photo is touched.
+Four, all in the Swiss manner: one typeface, a strict grid, flat colour, no rounded corners or shadows. **Each has a light and a dark mode.** Switch skins at any time under **Admin, Skins**; nothing is rebuilt and no photo is touched.
 
 | Skin | Shows first | Light | Dark |
 |---|---|---|---|
 | **Swiss** (the default) | dark | Black on white | Off-white on near-black. A small site name, hairline gaps between photos, a red accent. |
 | **Papier** | light | Black on warm white paper, heavy black rules above and below, wide margins and wide gaps, so photos sit like prints on a page. | The same page reversed: warm white on warm black. |
+| **Rangefinder Dreams** | dark | Black on pale grey | Pale grey on black. No colour anywhere, light widely spaced type, and **every photograph in black and white**: the skin brings a look with it (see below). |
 | **Plakat** | dark | Black on poster yellow | White on pure black with a bar of yellow. The site's name is set very large and tight like a poster headline, and photographs run edge to edge. |
 
 ![The Papier skin in light mode: a light page with a heavy black rule under the site name](screenshots/skin-papier.jpg)
@@ -53,6 +55,48 @@ What Fotobogen appends to `skin.css` looks like this:
 ```
 
 So: **never write a colour for the page into `skin.css`.** Write `var(--fb-…)`. A fixed `#111111` would be right in one mode and unreadable in the other. (The slideshow is the exception: it is a black stage in both modes, like a darkened room.)
+
+## A look for every photo
+
+A skin can bring a look with it: transforms from the [modules](MODULES.md), applied to every photo. **Rangefinder Dreams** does this. Choosing it sets the Film look module to black and white, crisply sharpened, for the whole site.
+
+What happens when the owner chooses such a skin:
+
+1. The Skins page says what the look is and shows a ticked box, **Use this look for all photos**. Unticking it uses the skin without its look.
+2. On saving, the look becomes the site-wide look, exactly as if it had been set under **Admin, Modules**, and the modules it needs are switched on.
+3. The copies visitors see are made again in the background. The uploaded files are never changed.
+
+After that the look is an ordinary site-wide look:
+
+- **Change it or switch it off for all photos** under **Admin, Modules**. From then on it is the owner's own, and changing skins leaves it alone.
+- **Give one photo a different look, or none,** on that photo's page in the library. A photo with its own choice ignores the site-wide look.
+- **Choosing another skin** removes a look that a skin set, and applies the new skin's look if it has one.
+
+To give your own skin a look, add `look` to `skin.json`: a list of steps, each naming a module, one of its transforms, and the parameters to use. Parameters you leave out take the module's defaults.
+
+```json
+{
+  "name": "kodachrome-days",
+  "version": "1.0.0",
+  "label": "Kodachrome Days",
+  "mode": "light",
+  "modes": { "light": { "…": "…" }, "dark": { "…": "…" } },
+  "look": [
+    { "module": "filmlooks", "transform": "film-look", "params": { "look": "Colour slide (Kodachrome style)", "sharpen": 25 } }
+  ]
+}
+```
+
+That skin shows every photo as a saturated colour slide. Add a second step to put each one in a film frame as well:
+
+```json
+"look": [
+  { "module": "filmlooks", "transform": "film-look", "params": { "look": "Colour slide (Kodachrome style)" } },
+  { "module": "filmframe", "transform": "negative-edge", "params": { "thickness": 5 } }
+]
+```
+
+The names to use are on the **Admin, Modules** page and in each module's `index.mjs`. A step that names a module the site does not have is left out, and up to four steps are allowed.
 
 ## Making your own from one of them
 
