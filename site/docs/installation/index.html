@@ -123,8 +123,14 @@ pnpm start</code></pre>
   <li><code>pnpm start</code> checks the machine, then prints the address and a setup token:
 <pre tabindex="0"><code>Fotobogen setup token: 3b213e46bd70894ad18f1357791b1f18
 Open the site in a browser and enter this token to finish setup.
-Fotobogen is running at http://localhost:5150</code></pre></li>
+Fotobogen is running. Open it in a browser on this computer:
+
+    http://localhost:5150
+
+Logging in works at that address, or over https.</code></pre></li>
 </ol>
+<p><strong>If <code>pnpm install</code> stops and says Node.js is too old,</strong> the terminal you are in is using an older version, even if a newer one is installed. With nvm, <code>nvm use 24</code> switches the terminal you are in; <code>nvm alias default 24</code> only affects terminals opened afterwards. nvm keeps tools separately for each version of Node.js, so install pnpm again after switching: <code>npm install -g pnpm@10</code>.</p>
+<p><strong>To keep it beside a copy of the source,</strong> give the folder another name when you clone: <code>git clone https://github.com/cschweda/fotobogen.git fotobogen-live</code>. Each folder is its own site with its own <code>data</code>.</p>
 <p>Leave that Terminal window open while you use the site; <kbd>Control</kbd> + <kbd>C</kbd> stops it, and <code>pnpm start</code> starts it again with everything as you left it. Go on to <a href="#first-run">the first run</a>.</p>
 <p>To reach it from another device on your home network, use the Mac's name or address in place of <code>localhost</code>, for example <code>http://my-mac.local:5150</code>. You can look around the public site that way, but <strong>logging in works only over HTTPS or on <code>localhost</code></strong>, so do the admin work on the Mac itself. From another computer you can borrow the Mac's <code>localhost</code> over SSH: run <code>ssh -L 5150:localhost:5150 you@my-mac.local</code> there, leave it open, and browse to <code>http://localhost:5150</code>.</p>
 

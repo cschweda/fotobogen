@@ -46,7 +46,7 @@ export function evaluate(facts: Facts): Check[] {
 
   const major = Number(facts.nodeVersion.split('.')[0])
   if (major >= requirements.nodeMajor) add('ok', 'Node.js', `version ${facts.nodeVersion}`)
-  else add('fail', 'Node.js', `version ${facts.nodeVersion} is too old`, `Install Node ${requirements.nodeMajor} or later (https://nodejs.org), then start Fotobogen again.`)
+  else add('fail', 'Node.js', `version ${facts.nodeVersion} is too old`, `Install Node ${requirements.nodeMajor} or later (https://nodejs.org); with nvm, run "nvm use ${requirements.nodeMajor}" in this terminal. Then install again from the start, because what was installed under the old Node will not work under the new one: delete the node_modules folder, then pnpm install, pnpm build, pnpm start. (With nvm, install pnpm for the new Node first: npm install -g pnpm@10.)`)
 
   const names: Record<string, string> = { linux: 'Linux', darwin: 'macOS', win32: 'Windows' }
   if (!requirements.platforms.includes(facts.platform)) {

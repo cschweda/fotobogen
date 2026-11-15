@@ -83,6 +83,8 @@ describe('the admin area', () => {
         headers: {
           'host': 'photos.example.com',
           'origin': 'https://photos.example.com',
+          // As the proxy in front of a public site reports it. (Over plain http the login is refused instead.)
+          'x-forwarded-proto': 'https',
           'content-type': 'application/json',
           'content-length': Buffer.byteLength(body),
         },
@@ -247,5 +249,57 @@ describe('the backup notice', () => {
     finally {
       await server.stop()
     }
+  })
+})
+
+describe('logging in at an address where the browser would not keep the login', () => {
+  /** A login request claiming a Host, the way a browser pointed at that address would send it. */
+  const loginAt = (server: TestServer, host: string, headers: Record<string, string> = {}) => new Promise<{ status: number, body: string, cookie: string | undefined }>((resolve, reject) => {
+    const body = JSON.stringify({ username: ADMIN.username, password: ADMIN.password })
+    const outgoing = request(`${server.url}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'host': host, 'origin': `http://${host}`, 'content-type': 'application/json', 'content-length': Buffer.byteLength(body), ...headers },
+    }, (response) => {
+      let text = ''
+      response.on('data', chunk => { text += chunk })
+      response.on('end', () => resolve({ status: response.statusCode ?? 0, body: text, cookie: response.headers['set-cookie']?.[0] }))
+    })
+    outgoing.on('error', reject)
+    outgoing.end(body)
+  })
+
+  it('lets you in at every name for this computer, including the 0.0.0.0 the server prints, with a cookie plain http keeps', async () => {
+    const server = await startServer()
+    try {
+      await completeSetup(server)
+      const port = new URL(server.url).port
+      for (const host of [`localhost:${port}`, `127.0.0.1:${port}`, `0.0.0.0:${port}`]) {
+        const answer = await loginAt(server, host)
+        expect(answer.status, host).toBe(200)
+        expect(answer.cookie, host).toMatch(/^fotobogen=/)
+        expect(answer.cookie, host).not.toMatch(/;\s*Secure/i)
+      }
+    }
+    finally { await server.stop() }
+  })
+
+  it('refuses over plain http anywhere else, and says where to go, even with the right password', async () => {
+    const server = await startServer()
+    try {
+      await completeSetup(server)
+      for (const host of ['192.168.1.20:5150', 'my-mac.local:5150']) {
+        const answer = await loginAt(server, host)
+        expect(answer.status, host).toBe(400)
+        expect(answer.cookie, host).toBeUndefined()
+        const message = (JSON.parse(answer.body) as { message: string }).message
+        expect(message).toContain(`You are using http://${host}, where your browser would not keep the login.`)
+        expect(message).toContain('open http://localhost:5150 instead')
+      }
+      // Behind a proxy that says the visitor used https, logging in goes ahead, with a Secure cookie.
+      const secure = await loginAt(server, 'photos.example.com', { 'x-forwarded-proto': 'https', 'origin': 'https://photos.example.com' })
+      expect(secure.status).toBe(200)
+      expect(secure.cookie).toMatch(/;\s*Secure/i)
+    }
+    finally { await server.stop() }
   })
 })
