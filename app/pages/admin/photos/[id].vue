@@ -144,6 +144,8 @@ async function saveLook() {
     latest++
     preview.value = null
     message.value = 'Saved. Rendering the photo again.'
+    // Say so at once, rather than showing the old copy as current until the first check.
+    if (photo.value) photo.value.status = 'processing'
     await watchProcessing()
   }
   catch (caught) {
