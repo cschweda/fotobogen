@@ -122,6 +122,19 @@ describe('a demo site', () => {
     expect((await login(server, 'demo', 'wrong')).status).toBe(401)
   })
 
+  it('does not let a demo login reset the count of wrong guesses at the owner\'s password', async () => {
+    // The owner logging in properly starts the count afresh.
+    expect((await login(server, ADMIN.username, ADMIN.password)).status).toBe(200)
+    // Four wrong guesses, a demo login, then more guesses: the count carries on, and the fifth wrong guess locks the address out.
+    for (let guess = 0; guess < 4; guess++) expect((await login(server, ADMIN.username, `wrong guess ${guess}`)).status).toBe(401)
+    expect((await login(server, 'demo', 'demo')).status).toBe(200)
+    expect((await login(server, ADMIN.username, 'wrong guess 4')).status).toBe(401)
+    expect((await login(server, ADMIN.username, 'wrong guess 5')).status).toBe(429)
+    // Even the right password waits now; a demo login, which can change nothing, does not.
+    expect((await login(server, ADMIN.username, ADMIN.password)).status).toBe(429)
+    expect((await login(server, 'demo', 'demo')).status).toBe(200)
+  })
+
   it('can log out', async () => {
     const entered = await login(server, 'demo', 'demo')
     expect((await as(entered.cookie, 'POST', '/api/auth/logout')).status).toBe(200)
@@ -148,3 +161,19 @@ describe('a site that is not a demo', () => {
     finally { await server.stop() }
   })
 })
+
+describe('a demo site whose owner is called demo', () => {
+  it('has no demo login: the name is the owner\'s, with the owner\'s password and full control', async () => {
+    const server = await startServer({ env: { DEMO_MODE: '1' } })
+    try {
+      await completeSetup(server, { username: 'demo' })
+      expect(await (await get(server, '/api/auth/demo')).json()).toEqual({ enabled: false })
+      expect((await login(server, 'demo', 'demo')).status).toBe(401)
+      const owner = await login(server, 'demo', ADMIN.password)
+      expect(owner.status).toBe(200)
+      expect((await (await get(server, '/api/auth/me', { cookie: owner.cookie })).json() as { demo: boolean }).demo).toBe(false)
+    }
+    finally { await server.stop() }
+  })
+})
+

@@ -938,6 +938,11 @@ and offers a way in: the username `demo` and the password `demo`.
   including hidden and scheduled photos and your settings. Do not switch it
   on for a site with anything in the admin you would not show a stranger.
 
+A demo login never touches the limit on wrong passwords: it is not counted
+as a failure, and it does not clear the count, so it cannot be used to get
+more guesses at your password. If your own account is called `demo`, there
+is no demo login; the name is yours.
+
 It is set on the server only; there is no switch for it in the admin, so a
 site cannot become a demo by accident. What a demo visitor may read is a
 short list of named addresses (`server/utils/demo.ts`); anything not on the

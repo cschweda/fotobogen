@@ -17,6 +17,19 @@ export default defineEventHandler(async (event) => {
   const key = limiterKey(event)
   const parsed = loginSchema.safeParse(await readBody(event).catch(() => null))
 
+  // On a demo site, demo / demo lets anyone in to look, with no power to
+  // change anything. It is handled here, before the limit on wrong
+  // passwords, and never touches that limit: it neither counts as a failure
+  // (many visitors may share one address) nor clears the count (or someone
+  // guessing the owner's password could log in as demo between guesses to
+  // start the count again). If the owner's own account is called "demo",
+  // there is no demo login: the name belongs to the owner.
+  if (demoModeOn() && parsed.success && parsed.data.username.trim() === DEMO_USERNAME && parsed.data.password === DEMO_PASSWORD
+    && !getDb().select().from(users).where(eq(users.username, DEMO_USERNAME)).get()) {
+    await signInDemo(event)
+    return { ok: true, demo: true }
+  }
+
   // Count the attempt before the slow password check, with no await between
   // the block check and the count. Otherwise a burst of simultaneous guesses
   // would all pass the check before any of them was counted.
@@ -30,16 +43,7 @@ export default defineEventHandler(async (event) => {
   decoyHash ??= hashPassword('decoy password, never valid')
   const passwordOk = await verifyPassword(user?.passwordHash ?? await decoyHash, parsed.success ? parsed.data.password : '')
 
-  if (!user || !passwordOk) {
-    // On a demo site, demo / demo lets anyone in to look, with no power to change anything.
-    // (The owner's own account is checked first, so an owner who is called "demo" is unaffected.)
-    if (demoModeOn() && parsed.success && parsed.data.username.trim() === DEMO_USERNAME && parsed.data.password === DEMO_PASSWORD) {
-      failureLimiter.clear(key)
-      await signInDemo(event)
-      return { ok: true, demo: true }
-    }
-    return fail(event, 401, 'Wrong username or password.')
-  }
+  if (!user || !passwordOk) return fail(event, 401, 'Wrong username or password.')
 
   failureLimiter.clear(key)
   getDb().update(users).set({ lastLoginAt: Date.now() }).where(eq(users.id, user.id)).run()

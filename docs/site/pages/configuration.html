@@ -112,6 +112,7 @@
   <li><strong>Your own login is unaffected</strong> and keeps full control. Use it to change the site.</li>
   <li><strong>Kept from a demo visitor altogether:</strong> downloading a backup (it holds your login and every original file), restoring, API tokens, webhooks, and where photos were taken.</li>
   <li><strong>What a demo visitor does see:</strong> everything else in the admin, including hidden and scheduled photos, their file names, and your settings. Do not switch this on for a site with anything in the admin you would not show a stranger.</li>
+  <li>A demo login never touches the limit on wrong passwords: it is not counted as a failure and does not clear the count, so it cannot be used to get more guesses at your password. If your own account is called <code>demo</code>, there is no demo login.</li>
   <li>It is set on the server only. There is no switch for it in the admin, so a site cannot become a demo by accident. Switching it off ends every demo visitor's session at once.</li>
 </ul>
 

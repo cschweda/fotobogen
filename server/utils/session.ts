@@ -7,7 +7,7 @@ import { config } from '../core/config.ts'
 import { isLoopbackHost } from '../core/request.ts'
 import { users } from '../db/schema.ts'
 import { getDb, getSecret } from './app.ts'
-import { demoModeOn } from './demo.ts'
+import { DEMO_HIDDEN, DEMO_REFUSAL, demoAllows, demoModeOn } from './demo.ts'
 import { bearerToken, findToken, tokenAllows } from './tokens.ts'
 
 interface SessionData extends Record<string, unknown> {
@@ -108,5 +108,12 @@ async function lookUpAdmin(event: RequestEvent): Promise<AdminUser | null> {
 export async function requireAdmin(event: RequestEvent): Promise<AdminUser> {
   const admin = await currentAdmin(event)
   if (!admin) throw createError({ status: 401, message: 'Log in to continue.' })
+  // A demo visitor may read what is listed for them and change nothing. It is
+  // checked here, where every admin endpoint asks who is calling, as well as
+  // in the guard that runs first, so the rule holds however a request got here.
+  if (admin.demo) {
+    const allowed = demoAllows(event.req.method, getRequestURL(event).pathname)
+    if (allowed !== 'yes') throw createError({ status: 403, message: allowed === 'changes' ? DEMO_REFUSAL : DEMO_HIDDEN })
+  }
   return admin
 }
