@@ -53,7 +53,12 @@ const faintText = (page: import('@playwright/test').Page) => page.evaluate(() =>
   for (const element of document.querySelectorAll<HTMLElement>('.fb-site h1, .fb-site h2, .fb-site h3, .fb-site-title, .fb-site-tagline, .fb-site a, .fb-site button, .fb-site p, .fb-site dt, .fb-site dd')) {
     if (!element.innerText.trim() || element.closest('.fb-tile') || !element.checkVisibility()) continue
     const text = luminance(getComputedStyle(element).color)
-    const ratio = (Math.max(text, page) + 0.05) / (Math.min(text, page) + 0.05)
+    // Text is measured against what is behind it: the element's own background if it has a solid one
+    // (the Full screen button is light text on its own dark chip, whatever the page), otherwise the page.
+    const own = getComputedStyle(element).backgroundColor
+    const alpha = Number((own.match(/[\d.]+/g) ?? [])[3] ?? 1)
+    const behind = own !== 'rgba(0, 0, 0, 0)' && alpha > 0.7 ? luminance(own) : page
+    const ratio = (Math.max(text, behind) + 0.05) / (Math.min(text, behind) + 0.05)
     if (ratio < 4.5) found.push(`${element.tagName.toLowerCase()}.${element.className} "${element.innerText.trim().slice(0, 30)}" ${ratio.toFixed(1)}:1`)
   }
   return found

@@ -3,7 +3,7 @@ import { imageBuffer } from '../helpers/images.ts'
 import { upload, whenProcessed } from '../helpers/photos.ts'
 import { startServer, type TestServer } from '../helpers/server.ts'
 import { ADMIN, completeSetup } from '../helpers/setup.ts'
-import { expectNoAxeViolations, heading } from './helpers.ts'
+import { expectNoAxeViolations, heading, tabTo } from './helpers.ts'
 
 let server: TestServer
 let cookie: string
@@ -149,4 +149,81 @@ test('a site set to open photos on their own page uses plain links, and the squa
   await expect(page.getByRole('dialog')).toBeHidden()
   await expect(page.getByRole('link', { name: 'All photos' })).toBeVisible()
   await expectNoAxeViolations(page)
+})
+
+test('a photo shows its size, sits beside its words, and opens full screen from a button over it', async ({ page }) => {
+  await page.setViewportSize({ width: 1400, height: 900 })
+  // The test browser has no screen and refuses real full screen, so the browser's
+  // part is stood in for: asking for full screen records which element asked and
+  // announces the change, as a browser does. What is tested is the page's part.
+  await page.addInitScript(() => {
+    let shown: Element | null = null
+    Object.defineProperty(document, 'fullscreenElement', { get: () => shown, configurable: true })
+    Element.prototype.requestFullscreen = async function () {
+      shown = this
+      document.dispatchEvent(new Event('fullscreenchange'))
+    }
+    document.exitFullscreen = async () => {
+      shown = null
+      document.dispatchEvent(new Event('fullscreenchange'))
+    }
+  })
+  await fetch(server.url + '/api/admin/settings', {
+    method: 'PUT', headers: { origin: server.url, cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ siteTitle: 'Test Photos', tagline: '', grid: 'masonry', photoView: 'page', showExif: true, showLocation: false }),
+  })
+  // An upright photo: 600 wide, 900 tall.
+  await page.goto(server.url + '/photo/tower')
+  const image = page.locator('.fb-photo__image')
+  await expect(image).toBeVisible()
+
+  // Every photo has a size, even one with no camera details.
+  await expect(page.locator('.fb-photo__facts')).toContainText('Size')
+  await expect(page.locator('.fb-photo__facts')).toContainText('600 × 900 pixels')
+
+  // The words begin just to the right of the picture, not across the page from it.
+  const picture = (await image.boundingBox())!
+  const words = (await page.locator('.fb-photo__text').boundingBox())!
+  expect(words.x - (picture.x + picture.width)).toBeLessThan(60)
+  expect(words.x - (picture.x + picture.width)).toBeGreaterThan(10)
+
+  // The button is over the photo: hidden until the photo is hovered or the button has focus.
+  const expand = page.getByRole('button', { name: 'Full screen' })
+  await expect(expand).toHaveCSS('opacity', '0')
+  await image.hover()
+  await expect(expand).toHaveCSS('opacity', '1')
+  await expectNoAxeViolations(page)
+
+  await expand.click()
+  await expect.poll(() => page.evaluate(() => document.fullscreenElement?.className ?? '')).toContain('fb-photo__figure')
+  // The photo alone, on black, and the button now offers the way back and stays in view.
+  const shrink = page.getByRole('button', { name: 'Leave full screen' })
+  await expect(shrink).toHaveAttribute('aria-pressed', 'true')
+  await expect(shrink).toHaveCSS('opacity', '1')
+  expect(await page.locator('.fb-photo__figure').evaluate(figure => getComputedStyle(figure).backgroundColor)).toBe('rgb(0, 0, 0)')
+  await shrink.click()
+  await expect.poll(() => page.evaluate(() => document.fullscreenElement === null)).toBe(true)
+  await expect(page.getByRole('button', { name: 'Full screen' })).toHaveAttribute('aria-pressed', 'false')
+
+  // A click on the photo itself does the same, for mouse users.
+  await image.click()
+  await expect(page.getByRole('button', { name: 'Leave full screen' })).toBeVisible()
+  await image.click()
+  await expect(page.getByRole('button', { name: 'Full screen' })).toBeVisible()
+
+  // From the keyboard: the button can be reached and worked without a mouse, and shows itself when it has focus.
+  await page.mouse.move(0, 0)
+  await tabTo(page, page.getByRole('button', { name: 'Full screen' }))
+  await expect(page.getByRole('button', { name: 'Full screen' })).toHaveCSS('opacity', '1')
+  await page.keyboard.press('Enter')
+  await expect(page.getByRole('button', { name: 'Leave full screen' })).toBeVisible()
+  await page.keyboard.press('Enter')
+
+  // With camera details switched off, the size goes with them.
+  await fetch(server.url + '/api/admin/settings', {
+    method: 'PUT', headers: { origin: server.url, cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ siteTitle: 'Test Photos', tagline: '', grid: 'masonry', photoView: 'page', showExif: false, showLocation: false }),
+  })
+  await page.goto(server.url + '/photo/tower')
+  await expect(page.locator('.fb-photo__facts')).toHaveCount(0)
 })

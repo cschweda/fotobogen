@@ -44,7 +44,9 @@
       <li><a href="/docs/usage/">Using Fotobogen</a></li>
       <li><a href="/docs/customization/">Customization</a></li>
       <li><a href="/docs/skins/">Skins</a></li>
+      <li><a href="/docs/writing-a-skin/">Writing a skin</a></li>
       <li><a href="/docs/modules/" aria-current="page">Modules</a></li>
+      <li><a href="/docs/writing-a-module/">Writing a module</a></li>
       <li><a href="/docs/faq/">Questions</a></li>
     </ul>
     <div class="pages__here">
@@ -160,13 +162,13 @@ export default {
 <p>Two commands, run from a copy of the source, start a module and tell you whether it works before you put it on a site:</p>
 <pre tabindex="0"><code>pnpm fotobogen module new my-module     # writes a working example to data/modules/my-module/
 pnpm fotobogen module test my-module    # runs it on a test picture and reports</code></pre>
-<p>The three bundled modules are written to be read as examples, and the full guide is <a href="https://github.com/cschweda/fotobogen/blob/main/docs/MODULES.md">docs/MODULES.md</a> in the source.</p>
+<p>That is the short version. <a href="/docs/writing-a-module/"><strong>Writing a module</strong></a> is the full guide: every field, the four kinds of setting, five worked examples, testing, installing, and every error message.</p>
 
 <h2 id="limits">What a module cannot do</h2>
 <p>A module changes the picture, and can change its size up to 40 megapixels. It cannot add screens to the admin, change a photo's title or other details, or alter the uploaded file.</p>
     <p class="next">
-      <a href="/docs/skins/">Back: Skins</a>
-      <a href="/docs/faq/">Next: Questions</a>
+      <a href="/docs/writing-a-skin/">Back: Writing a skin</a>
+      <a href="/docs/writing-a-module/">Next: Writing a module</a>
     </p>
   </main>
 </div>

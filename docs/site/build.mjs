@@ -22,7 +22,9 @@ export const PAGES = [
   { slug: 'usage', file: 'usage', nav: 'Using Fotobogen' },
   { slug: 'customization', file: 'customization', nav: 'Customization' },
   { slug: 'skins', file: 'skins', nav: 'Skins' },
+  { slug: 'writing-a-skin', file: 'writing-a-skin', nav: 'Writing a skin' },
   { slug: 'modules', file: 'modules', nav: 'Modules' },
+  { slug: 'writing-a-module', file: 'writing-a-module', nav: 'Writing a module' },
   { slug: 'faq', file: 'faq', nav: 'Questions' },
 ]
 const address = page => page.slug ? `/docs/${page.slug}/` : '/docs/'

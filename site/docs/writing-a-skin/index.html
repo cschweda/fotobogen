@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Writing a skin | Fotobogen documentation</title>
+<meta name="description" content="A complete, step-by-step guide to writing a Fotobogen skin: the two files, every field of skin.json, light and dark colours, options, a look for every photo, the full markup and class names, the grid, accessibility, testing, and every error message.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f5f5f2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0a0a0b" media="(prefers-color-scheme: dark)">
+<link rel="canonical" href="https://fotobogen.com/docs/writing-a-skin/">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://fotobogen.com/docs/writing-a-skin/">
+<meta property="og:title" content="Writing a skin | Fotobogen documentation">
+<meta property="og:description" content="A complete, step-by-step guide to writing a Fotobogen skin: the two files, every field of skin.json, light and dark colours, options, a look for every photo, the full markup and class names, the grid, accessibility, testing, and every error message.">
+<meta property="og:image" content="https://fotobogen.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Fotobogen wordmark beside a contact sheet of sixteen numbered frames, one of them red. Above the wordmark: German for photo sheet, as in a contact sheet.">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230a0a0b'/%3E%3Crect x='6' y='9' width='20' height='14' fill='%23e30613'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/docs/docs.css">
+<script src="/docs/docs.js" defer></script>
+<!-- Privacy-friendly analytics by Plausible -->
+<script async src="https://plausible.io/js/pa-UXO2Zaq02zXvfaEecXWvD.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header>
+  <div class="wrap bar">
+    <a class="bar__name" href="/">Fotobogen<span>Documentation</span></a>
+    <div class="bar__links">
+      <a href="https://github.com/cschweda/fotobogen" data-goal="GitHub click" data-where="docs">Source on GitHub</a>
+      <button class="toggle" type="button" id="theme">Dark</button>
+    </div>
+  </div>
+</header>
+<div class="wrap layout">
+  <nav class="pages" aria-label="Documentation">
+    <ul class="pages__all">
+      <li><a href="/docs/">Overview</a></li>
+      <li><a href="/docs/installation/">Installation</a></li>
+      <li><a href="/docs/configuration/">Configuration</a></li>
+      <li><a href="/docs/usage/">Using Fotobogen</a></li>
+      <li><a href="/docs/customization/">Customization</a></li>
+      <li><a href="/docs/skins/">Skins</a></li>
+      <li><a href="/docs/writing-a-skin/" aria-current="page">Writing a skin</a></li>
+      <li><a href="/docs/modules/">Modules</a></li>
+      <li><a href="/docs/writing-a-module/">Writing a module</a></li>
+      <li><a href="/docs/faq/">Questions</a></li>
+    </ul>
+    <div class="pages__here">
+      <h2>On this page</h2>
+      <ul>
+        <li><a href="#overview">What you are making</a></li>
+        <li><a href="#start">Step 1: copy a skin that works</a></li>
+        <li><a href="#json">Step 2: skin.json</a></li>
+        <li><a href="#colours">Step 3: colours, for light and for dark</a></li>
+        <li><a href="#options">Step 4: options</a></li>
+        <li><a href="#css">Step 5: skin.css</a></li>
+        <li><a href="#markup">The HTML you are styling</a></li>
+        <li><a href="#grid">The grid</a></li>
+        <li><a href="#look">A look for every photo</a></li>
+        <li><a href="#accessibility">Make it work for everyone</a></li>
+        <li><a href="#test">Step 6: look at all of it</a></li>
+        <li><a href="#install">Step 7: install it on a site</a></li>
+        <li><a href="#errors">When something goes wrong</a></li>
+        <li><a href="#checklist">Before you share it</a></li>
+      </ul>
+    </div>
+  </nav>
+  <main id="main" class="doc">
+<h1>Writing a skin</h1>
+<p class="lead">A skin is a stylesheet and a short settings file that decide how a Fotobogen site looks. If you can write CSS, you can write one. Nothing is compiled, and a skin cannot break a site.</p>
+
+<h2 id="overview">What you are making</h2>
+<pre tabindex="0"><code>data/skins/harbour/
+├── skin.json     its name, its colours for light and dark, its options
+└── skin.css      an ordinary stylesheet for the public pages</code></pre>
+<p>Fotobogen's public pages have fixed HTML with stable class names. Your stylesheet styles them. That division is what makes skins safe and switchable:</p>
+<ul>
+  <li><strong>Switching skins takes effect at once.</strong> Nothing is rebuilt and no photograph is touched.</li>
+  <li><strong>Every skin has a light and a dark mode.</strong> You give the colours for each; Fotobogen writes them into the page and handles the visitor's switch. You never write a mode selector.</li>
+  <li><strong>Your options become controls in the admin</strong> without any interface code: a colour picker, a menu, or a slider for each.</li>
+  <li><strong>A skin with a mistake in it is listed with the reason and cannot be chosen.</strong> The site carries on with the skin it had.</li>
+</ul>
+
+<h3>What a skin cannot do</h3>
+<p>Change the HTML, add pages, run scripts, or load anything from another website (fonts included: a font file must be served from your own site). It styles the public site only, never the admin. This is deliberate: installing someone else's skin can do no more than change how a site looks.</p>
+
+<h2 id="start">Step 1: copy a skin that works</h2>
+<p>Do not start from an empty file. The public pages include a masonry grid, a modal, and a slideshow, and a skin has to lay all of them out. Start from Swiss, the default, which does, and change it.</p>
+<p>From a copy of Fotobogen's source:</p>
+<pre tabindex="0"><code>mkdir -p data/skins
+cp -R skins/swiss data/skins/harbour</code></pre>
+<p>Then open <code>data/skins/harbour/skin.json</code> and change <code>"name"</code> to <code>harbour</code>, and <code>"label"</code> to what people should see. <strong>The name must be the folder's name exactly</strong>: lowercase letters, digits, and hyphens, starting with a letter.</p>
+<p>Restart Fotobogen and open <strong>Admin, Skins</strong>. Your skin is in the list. Choose it. It looks like Swiss; now make it yours.</p>
+<p>Papier, Plakat, and Rangefinder Dreams were each made this way. Each one's stylesheet ends with a section headed "What makes this … rather than Swiss", which is a good thing to read: <a href="https://github.com/cschweda/fotobogen/tree/main/skins">the <code>skins</code> folder</a>.</p>
+
+<h2 id="json">Step 2: <code>skin.json</code></h2>
+<p>A complete example. Every part is explained below it.</p>
+<pre tabindex="0"><code>{
+  "name": "harbour",
+  "version": "1.0.0",
+  "label": "Harbour",
+  "description": "Sea blue, with wide margins.",
+  "mode": "light",
+  "modes": {
+    "light": { "ground": "#f3f6f8", "text": "#10202b", "muted": "#4a5b66", "line": "#cbd5db", "accent": "#0b6aa2" },
+    "dark":  { "ground": "#0c161d", "text": "#e8eef2", "muted": "#9fb0bb", "line": "#263742", "accent": "#5fb8ee" }
+  },
+  "contrast": [["text", "ground"], ["muted", "ground"]],
+  "options": {
+    "accent": { "type": "color", "label": "Accent colour", "default": { "light": "#0b6aa2", "dark": "#5fb8ee" } },
+    "gutter": {
+      "type": "select", "label": "Space between photos",
+      "options": ["none", "hairline", "wide"], "default": "wide",
+      "values": { "none": "0px", "hairline": "3px", "wide": "1.25rem" }
+    },
+    "columns": { "type": "range", "label": "Columns on a wide screen", "min": 2, "max": 6, "step": 1, "default": 3 }
+  }
+}</code></pre>
+<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
+  <thead><tr><th>Field</th><th>Required</th><th>What it is</th></tr></thead>
+  <tbody>
+    <tr><td><code>name</code></td><td>Yes</td><td>The folder's name, exactly.</td></tr>
+    <tr><td><code>version</code></td><td>Yes</td><td>Any text that is not empty. Shown in the admin.</td></tr>
+    <tr><td><code>label</code></td><td>Yes</td><td>The name people see.</td></tr>
+    <tr><td><code>description</code></td><td>No</td><td>A sentence shown under the label on the Skins page.</td></tr>
+    <tr><td><code>mode</code></td><td>No</td><td><code>"light"</code> or <code>"dark"</code>: which a visitor sees first, unless the site's owner chooses otherwise. Light if you leave it out.</td></tr>
+    <tr><td><code>modes</code></td><td>Yes</td><td>Your colours, once for light and once for dark.</td></tr>
+    <tr><td><code>contrast</code></td><td>No, but do</td><td>Which colours are text on which backgrounds, so they can be checked.</td></tr>
+    <tr><td><code>options</code></td><td>No</td><td>Settings the site's owner can change.</td></tr>
+    <tr><td><code>look</code></td><td>No</td><td>A look for every photo, set when the skin is chosen.</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="colours">Step 3: colours, for light and for dark</h2>
+<p>Under <code>modes</code>, name your colours twice. Each name becomes a CSS custom property, <code>--fb-&lt;name&gt;</code>, that your stylesheet uses.</p>
+<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
+  <thead><tr><th>Name</th><th>In CSS</th><th>What the bundled skins use it for</th></tr></thead>
+  <tbody>
+    <tr><td><code>ground</code></td><td><code>var(--fb-ground)</code></td><td>The page</td></tr>
+    <tr><td><code>text</code></td><td><code>var(--fb-text)</code></td><td>Words, headings, links, focus rings</td></tr>
+    <tr><td><code>muted</code></td><td><code>var(--fb-muted)</code></td><td>Quieter words: the tagline, dates, the footer</td></tr>
+    <tr><td><code>line</code></td><td><code>var(--fb-line)</code></td><td>Rules, and the space behind a photo while it loads</td></tr>
+    <tr><td><code>accent</code></td><td><code>var(--fb-accent)</code></td><td>The one highlight: a hovered link's underline, a bar</td></tr>
+  </tbody>
+</table></div>
+<ul>
+  <li>Colours are six-digit hex, like <code>#0b6aa2</code>. Not three digits, not a name, not <code>rgb()</code>.</li>
+  <li><strong>Both modes must name the same colours.</strong></li>
+  <li>If you copied Swiss, keep these five names: its rules use them. You may add your own (<code>"panel": "#…"</code> arrives as <code>--fb-panel</code>).</li>
+</ul>
+<p>Fotobogen writes your colours into the page after your stylesheet, like this:</p>
+<pre tabindex="0"><code>:root.fb-public { --fb-ground: #f3f6f8; --fb-text: #10202b; /* … */ color-scheme: light; }
+:root.fb-public[data-fb-mode="dark"] { --fb-ground: #0c161d; --fb-text: #e8eef2; /* … */ color-scheme: dark; }
+@media (prefers-color-scheme: dark) { :root.fb-public[data-fb-mode="auto"] { /* the dark colours again */ } }</code></pre>
+<div class="note">
+  <p><strong>The one rule that makes both modes work: never write a colour for the page into <code>skin.css</code>.</strong> Write <code>var(--fb-text)</code>, not <code>#10202b</code>. A fixed colour is right in one mode and unreadable in the other. The only exception is the slideshow, which is a black stage in both modes.</p>
+</div>
+
+<h3>The contrast check</h3>
+<p><code>contrast</code> lists pairs: a text colour, then the background it sits on. Fotobogen measures each pair in both modes, when the skin loads and whenever an owner changes a colour, and warns on the Skins page about any below 4.5 to 1, the minimum for readable text (WCAG level AA):</p>
+<pre tabindex="0"><code>In light mode, "muted" on "ground" has a contrast of 2.2:1. Text needs at least 4.5:1 to be readable.</code></pre>
+<p>List every pair you use for text. An option of type <code>color</code> with the same name as a colour replaces it in the check, so an owner who picks a faint colour is told.</p>
+
+<h2 id="options">Step 4: options</h2>
+<p>An option is a setting the site's owner can change under Admin, Skins. Each becomes <code>--fb-&lt;name&gt;</code>, written after your stylesheet, so it overrides the value you set there. Option names are lowercase letters, digits, and hyphens.</p>
+
+<h3><code>color</code>: two colour pickers, one for each mode</h3>
+<pre tabindex="0"><code>"accent": { "type": "color", "label": "Accent colour", "default": { "light": "#0b6aa2", "dark": "#5fb8ee" } }</code></pre>
+<p>The default may also be a single colour, used for both modes. Name it after one of your colours and it replaces that colour.</p>
+
+<h3><code>select</code>: a menu</h3>
+<pre tabindex="0"><code>"gutter": {
+  "type": "select", "label": "Space between photos",
+  "options": ["none", "hairline", "wide"], "default": "wide",
+  "values": { "none": "0px", "hairline": "3px", "wide": "1.25rem" }
+}</code></pre>
+<p>The owner sees the names in <code>options</code>. <code>values</code> maps each name to what is written into the stylesheet; without it, the name itself is written. A value may contain letters, digits, and <code># % . , ( ) -</code> and spaces, up to 60 characters, which covers lengths, numbers, and simple functions.</p>
+
+<h3><code>range</code>: a slider</h3>
+<pre tabindex="0"><code>"columns": { "type": "range", "label": "Columns on a wide screen", "min": 2, "max": 6, "step": 1, "default": 3 }</code></pre>
+<p>Written as a bare number: <code>--fb-columns: 3</code>. To use it as a length, multiply in CSS: <code>calc(var(--fb-size) * 1rem)</code>.</p>
+
+<p>Set the same starting value in <code>skin.css</code> as each option's default, so the stylesheet makes sense by itself:</p>
+<pre tabindex="0"><code>:root.fb-public {
+  --fb-gutter: 1.25rem;
+  --fb-columns: 3;
+}</code></pre>
+
+<h2 id="css">Step 5: <code>skin.css</code></h2>
+<p>An ordinary stylesheet. Three things to hold to.</p>
+
+<h3>Start every rule from <code>.fb-public</code></h3>
+<p>Public pages carry the class <code>fb-public</code> on the <code>&lt;html&gt;</code> element. The admin's own stylesheet is loaded on the same pages, so a bare <code>a { … }</code> or <code>body { … }</code> would fight with it. Start from the class:</p>
+<pre tabindex="0"><code>:root.fb-public { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; line-height: 1.5; }
+.fb-public body { margin: 0; background: var(--fb-ground); color: var(--fb-text); }
+.fb-public a { color: inherit; }</code></pre>
+<p>Class names that begin <code>fb-</code> (such as <code>.fb-site-header</code>) are only ever on public pages, so they need no prefix.</p>
+
+<h3>Set the text colour on the body</h3>
+<p>Keep the line <code>.fb-public body { color: var(--fb-text); }</code>. The admin's stylesheet gives the body a pale colour of its own, and without this line the headings and links of a light skin are nearly invisible.</p>
+
+<h3>Change the values first, then add rules at the end</h3>
+<p>Most of a new look is its colours (in <code>skin.json</code>), its measures (the first block of <code>skin.css</code>), and a handful of rules added at the end. Papier's are about fifteen lines:</p>
+<pre tabindex="0"><code>/* A heavy rule under the header, and a larger name. */
+.fb-site-header { margin: 0 var(--fb-margin) 2rem; padding: 2rem 0 1rem; border-bottom: 4px solid var(--fb-text); }
+.fb-site-title { font-size: 1.5rem; letter-spacing: -0.03em; }
+.fb-site-footer { margin: 0 var(--fb-margin); padding: 1.25rem 0 2.5rem; border-top: 4px solid var(--fb-text); }</code></pre>
+<p>Plakat turns the site's name into a poster headline with two:</p>
+<pre tabindex="0"><code>.fb-site-title { font-size: clamp(2.75rem, 11vw, 8.5rem); line-height: 0.88; letter-spacing: -0.055em; overflow-wrap: anywhere; }
+.fb-site-title::after { content: ""; display: block; width: 7rem; height: 0.7rem; background: var(--fb-accent); }</code></pre>
+
+<h2 id="markup">The HTML you are styling</h2>
+<p>These class names are stable; a skin may rely on them.</p>
+<pre tabindex="0"><code>&lt;html class="fb-public" data-fb-mode="light"&gt;        &lt;!-- or "dark", or "auto" --&gt;
+  &lt;a class="fb-skip"&gt;Skip to content&lt;/a&gt;
+  &lt;header class="fb-site-header"&gt;
+    &lt;p class="fb-site-title"&gt;&lt;a&gt;Site title&lt;/a&gt;&lt;/p&gt;
+    &lt;p class="fb-site-tagline"&gt;Tagline&lt;/p&gt;
+    &lt;nav class="fb-nav"&gt;
+      &lt;a&gt;Photos&lt;/a&gt;&lt;a&gt;Albums&lt;/a&gt;&lt;a&gt;Slideshow&lt;/a&gt;
+      &lt;button class="fb-mode"&gt;Dark mode&lt;/button&gt;      &lt;!-- the light and dark switch --&gt;
+    &lt;/nav&gt;
+  &lt;/header&gt;
+  &lt;main class="fb-main"&gt;
+
+    &lt;!-- The grid --&gt;
+    &lt;div class="fb-grid-wrap"&gt;
+      &lt;ul class="fb-grid fb-grid--masonry"&gt;           &lt;!-- or fb-grid--square --&gt;
+        &lt;li class="fb-tile" style="--fb-span: 13; background-image: url(...)"&gt;
+          &lt;a class="fb-tile__link"&gt;&lt;img class="fb-tile__image"&gt;&lt;/a&gt;
+        &lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/div&gt;
+    &lt;nav class="fb-pager"&gt;&lt;a class="fb-pager__more"&gt;More photos&lt;/a&gt;&lt;/nav&gt;
+    &lt;p class="fb-empty"&gt;No photographs have been published yet.&lt;/p&gt;
+
+    &lt;!-- A photo, on its own page or inside the modal --&gt;
+    &lt;p class="fb-photo__back"&gt;&lt;a&gt;All photos&lt;/a&gt;&lt;/p&gt;
+    &lt;article class="fb-photo"&gt;
+      &lt;figure class="fb-photo__figure"&gt;               &lt;!-- gains fb-photo__figure--expanded in full screen --&gt;
+        &lt;img class="fb-photo__image"&gt;
+        &lt;button class="fb-photo__expand"&gt;Full screen&lt;/button&gt;
+      &lt;/figure&gt;
+      &lt;div class="fb-photo__text"&gt;
+        &lt;h1 class="fb-photo__title"&gt;Title&lt;/h1&gt;
+        &lt;p class="fb-photo__description"&gt;Description&lt;/p&gt;
+        &lt;dl class="fb-photo__facts"&gt;
+          &lt;div class="fb-photo__fact"&gt;&lt;dt&gt;Camera&lt;/dt&gt;&lt;dd&gt;…&lt;/dd&gt;&lt;/div&gt;
+        &lt;/dl&gt;
+        &lt;p class="fb-photo__albums"&gt;In &lt;a&gt;Album name&lt;/a&gt;&lt;/p&gt;
+        &lt;ul class="fb-tags"&gt;&lt;li&gt;&lt;a class="fb-tag"&gt;tag&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;
+        &lt;p class="fb-photo__licence"&gt;All rights reserved&lt;/p&gt;
+        &lt;p class="fb-photo__download"&gt;&lt;a&gt;Download&lt;/a&gt;&lt;/p&gt;
+        &lt;nav class="fb-photo__nav"&gt;&lt;a class="fb-photo__prev"&gt;Previous&lt;/a&gt;&lt;a class="fb-photo__next"&gt;Next&lt;/a&gt;&lt;/nav&gt;
+      &lt;/div&gt;
+    &lt;/article&gt;
+
+    &lt;!-- An album or tag page: a heading, then the same grid --&gt;
+    &lt;h1 class="fb-page-title"&gt;Album name&lt;/h1&gt;
+    &lt;p class="fb-page-description"&gt;Description&lt;/p&gt;
+    &lt;p class="fb-page-actions"&gt;&lt;a&gt;Play as a slideshow&lt;/a&gt;&lt;/p&gt;
+
+    &lt;!-- The list of albums --&gt;
+    &lt;ul class="fb-albums"&gt;
+      &lt;li class="fb-album"&gt;
+        &lt;a class="fb-album__link"&gt;
+          &lt;span class="fb-album__cover"&gt;&lt;img&gt;&lt;/span&gt;
+          &lt;span class="fb-album__title"&gt;Album name&lt;/span&gt;
+          &lt;span class="fb-album__count"&gt;12 photos&lt;/span&gt;
+        &lt;/a&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+
+    &lt;!-- A photo opened over the grid --&gt;
+    &lt;dialog class="fb-modal"&gt;
+      &lt;button class="fb-modal__close"&gt;Close&lt;/button&gt;
+      &lt;article class="fb-photo"&gt;…&lt;/article&gt;
+    &lt;/dialog&gt;
+
+  &lt;/main&gt;
+  &lt;footer class="fb-site-footer"&gt;
+    &lt;p class="fb-site-footer__note"&gt;The owner's own line, if they wrote one&lt;/p&gt;
+    &lt;a&gt;RSS feed&lt;/a&gt;
+  &lt;/footer&gt;
+&lt;/html&gt;</code></pre>
+<p>The words shown here are the defaults; an owner can change any of them, so never rely on a piece of text or its length. A site title may be three letters or forty.</p>
+
+<h3>The owner's logo</h3>
+<p>If the owner uploads a logo, the title holds pictures in place of text:</p>
+<pre tabindex="0"><code>&lt;p class="fb-site-title"&gt;&lt;a&gt;
+  &lt;img class="fb-site-logo fb-site-logo--light" width="120" height="40" alt="The site's name"&gt;
+  &lt;img class="fb-site-logo fb-site-logo--dark" width="120" height="40" alt="The site's name"&gt;
+&lt;/a&gt;&lt;/p&gt;</code></pre>
+<p>You do nothing for this: Fotobogen's own rules show the one for the mode in use. If your skin gives the title a very large size or decoration, check it still looks right with a picture in it.</p>
+
+<h3>The slideshow</h3>
+<p><code>/slideshow</code> is a page of its own, without the header and footer:</p>
+<pre tabindex="0"><code>&lt;main class="fb-slideshow"&gt;
+  &lt;button class="fb-slideshow__photo"&gt;
+    &lt;img class="fb-slideshow__image fb-slideshow__image--front"&gt;
+    &lt;img class="fb-slideshow__image"&gt;
+  &lt;/button&gt;
+  &lt;div class="fb-slideshow__details"&gt;
+    &lt;h2 class="fb-slideshow__title"&gt;Title&lt;/h2&gt;
+    &lt;p class="fb-slideshow__description"&gt;Description&lt;/p&gt;
+    &lt;p class="fb-slideshow__facts"&gt;Date and camera&lt;/p&gt;
+  &lt;/div&gt;
+  &lt;nav class="fb-slideshow__controls"&gt;
+    &lt;button class="fb-slideshow__control"&gt;Previous&lt;/button&gt;
+    &lt;span class="fb-slideshow__count"&gt;3 / 25&lt;/span&gt;
+    &lt;a class="fb-slideshow__control"&gt;Close&lt;/a&gt;
+  &lt;/nav&gt;
+&lt;/main&gt;</code></pre>
+<p>Two images are stacked; the one with <code>--front</code> is showing, and the skin makes the change between them. Swiss fades <code>opacity</code> over a second, and not at all when the visitor's device asks for reduced motion. Unless you want a different slideshow, leave Swiss's rules for it as they are.</p>
+
+<h2 id="grid">The grid</h2>
+<p>Both layouts are CSS grid with no JavaScript, so photos are read in the order they appear. If you copied Swiss you already have both; this is what its rules do, in case you change them.</p>
+<ul>
+  <li><strong>Square</strong> (<code>.fb-grid--square</code>): each <code>.fb-tile</code> has <code>aspect-ratio: 1</code>.</li>
+  <li><strong>Masonry</strong> (<code>.fb-grid--masonry</code>): each tile carries <code>--fb-span</code>, the number of rows its shape needs <strong>when one row is a twentieth of a column's width</strong>. The skin must make rows that size:
+<pre tabindex="0"><code>.fb-grid-wrap { container-type: inline-size; }
+.fb-grid--masonry {
+  grid-auto-rows: calc((100cqw - (var(--fb-cols) - 1) * var(--fb-gutter)) / var(--fb-cols) / 20);
+}
+.fb-grid--masonry .fb-tile { grid-row: span var(--fb-span); }</code></pre>
+  Put the space between rows inside the tile, as a border or padding, never in <code>row-gap</code>, or the arithmetic drifts and photos are cut off.</li>
+  <li>Each tile's inline <code>background-image</code> is a tiny blurred version of the photo, shown until the real one loads. Keep <code>background-size: cover</code> on <code>.fb-tile</code>.</li>
+  <li>Swiss sets the number of columns in steps as the screen narrows, down to one on a phone. Keep that, or write your own steps.</li>
+</ul>
+
+<h2 id="look">A look for every photo</h2>
+<p>A skin can bring a look with it: transforms from the <a href="/docs/modules/">modules</a>, applied to every photo. Add <code>look</code> to <code>skin.json</code>:</p>
+<pre tabindex="0"><code>"look": [
+  { "module": "filmlooks", "transform": "film-look", "params": { "look": "Colour slide (Kodachrome style)" } }
+]</code></pre>
+<p>Each step names a module, one of its transforms, and the settings to use; settings you leave out take the module's defaults. Up to four steps, run in order:</p>
+<pre tabindex="0"><code>"look": [
+  { "module": "filmlooks", "transform": "film-look", "params": { "look": "B&amp;W 400 (Tri-X style)", "sharpen": 60 } },
+  { "module": "filmframe", "transform": "negative-edge", "params": { "thickness": 5 } }
+]</code></pre>
+<p>When an owner chooses your skin, the Skins page says what its look is and offers a ticked box to take the skin with or without it. With it, the look becomes the site's look and the modules it needs are switched on. A step naming a module the site does not have is left out. The names to use are on the <a href="/docs/modules/">modules page</a> and in each module's code; a <a href="/docs/writing-a-module/">module of your own</a> works too.</p>
+
+<h2 id="accessibility">Make it work for everyone</h2>
+<p>The skins that come with Fotobogen are tested, in both modes, at 320 and 1280 pixels wide, against WCAG 2.1 level AA. Hold yours to the same; it is mostly a matter of not undoing what Swiss already does.</p>
+<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
+  <thead><tr><th>What</th><th>How</th></tr></thead>
+  <tbody>
+    <tr><td>Readable text</td><td>4.5 to 1 between text and its background, in both modes. List the pairs under <code>contrast</code>. Do not use the accent as a text colour unless it passes; the bundled skins use it for underlines and bars.</td></tr>
+    <tr><td>Nothing scrolls sideways on a phone</td><td>Size large type with <code>clamp()</code> and a viewport unit; add <code>overflow-wrap: anywhere</code> to anything that could be one long word, such as the site title.</td></tr>
+    <tr><td>A visible focus ring</td><td><code>.fb-public :focus-visible { outline: 2px solid var(--fb-text); outline-offset: 3px; }</code> The text colour contrasts with the page in both modes.</td></tr>
+    <tr><td>Reduced motion</td><td>Keep the <code>@media (prefers-reduced-motion: reduce)</code> block at the end of Swiss.</td></tr>
+    <tr><td>Things to press are big enough</td><td>Buttons and links in the bundled skins are at least 2.25rem tall.</td></tr>
+    <tr><td>The skip link</td><td>Keep <code>.fb-skip</code> off screen until it has focus, then on screen.</td></tr>
+    <tr><td>Do not hide things</td><td>Never <code>display: none</code> a part of the page to tidy it. The switch, the footer, and the photo's details are there for a reason.</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="test">Step 6: look at all of it</h2>
+<p>Restart after each change to the files, then reload. A skin is read once, when Fotobogen starts.</p>
+<p>Download the sample photos (Admin, Overview) so there is something to see, make an album and a tag, and go through this list <strong>in light and in dark, on a wide window and a narrow one</strong>:</p>
+<ul>
+  <li>The grid, with the layout set to masonry, then to square (Admin, Settings).</li>
+  <li>A photo, opened over the grid, and on a page of its own (Admin, Settings).</li>
+  <li>An upright photo and a wide one.</li>
+  <li>The Full screen button over a photo.</li>
+  <li>The albums page, an album, and a tag.</li>
+  <li>The slideshow.</li>
+  <li>An address that does not exist, such as <code>/nothing-here</code>.</li>
+  <li>A long site title, and a logo (Admin, Icon and logo).</li>
+  <li>Every option of yours, at each end.</li>
+  <li>The whole site with the Tab key alone: can you see where you are?</li>
+</ul>
+<p>Then look at Admin, Skins: any contrast warning for your skin is shown there.</p>
+<p>Your browser's developer tools will switch between light and dark for you (in Chrome: Rendering, "Emulate CSS media feature prefers-color-scheme"), or use the switch on the site.</p>
+
+<h2 id="install">Step 7: install it on a site</h2>
+<ol>
+  <li>Copy the folder into <code>data/skins/</code> on the server, so that you have <code>data/skins/&lt;name&gt;/skin.json</code> and <code>skin.css</code>.</li>
+  <li>Restart Fotobogen.</li>
+  <li>Choose it under <strong>Admin, Skins</strong>.</li>
+</ol>
+<p>A skin in <code>data/skins</code> cannot replace one that comes with Fotobogen: give yours its own name. Skins are part of every backup.</p>
+
+<h2 id="errors">When something goes wrong</h2>
+<p>A skin that cannot be loaded is listed on the Skins page with one of these, and cannot be chosen.</p>
+<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
+  <thead><tr><th>Message</th><th>What to fix</th></tr></thead>
+  <tbody>
+    <tr><td>The folder is called "x" but skin.json names the skin "y". They must match.</td><td>Rename the folder, or change <code>name</code>.</td></tr>
+    <tr><td>skin.json needs a "name" of lowercase letters, digits, and hyphens.</td><td>No capitals, spaces, or underscores; start with a letter.</td></tr>
+    <tr><td>skin.json needs a "version". / a "label".</td><td>Add the missing field.</td></tr>
+    <tr><td>skin.css is missing or empty.</td><td>The stylesheet must be in the same folder, with that name.</td></tr>
+    <tr><td>skin.json needs "modes" with a "light" and a "dark" set of colours. Every skin can be viewed in both.</td><td>Add <code>modes</code> with both. (A skin written before modes existed used <code>tokens</code>; move those colours under <code>modes</code>.)</td></tr>
+    <tr><td>The light and dark modes must name the same colours.</td><td>A name is in one and not the other.</td></tr>
+    <tr><td>Colour "x" (light) must be written like "#0a0a0b".</td><td>Six-digit hex only.</td></tr>
+    <tr><td>Colour names are lowercase letters, digits, and hyphens.</td><td>Rename the colour.</td></tr>
+    <tr><td>Option names are lowercase letters, digits, and hyphens.</td><td>Rename the option.</td></tr>
+    <tr><td>Colour option "x" needs a default like "#e30613", or one for each mode: { "light": …, "dark": … }.</td><td>Give a hex colour, or one for each mode.</td></tr>
+    <tr><td>Select option "x" needs a list of text options and a default that is one of them.</td><td>The default must appear in <code>options</code>.</td></tr>
+    <tr><td>Select option "x": "…" cannot be used as a CSS value.</td><td>A value in <code>values</code> has a character that is not allowed, such as <code>;</code> or <code>{</code>.</td></tr>
+    <tr><td>Range option "x" needs numeric min, max, and default, with min below max.</td><td>All three as numbers, not text.</td></tr>
+    <tr><td>Option "x" has an unknown type. Use "color", "select", or "range".</td><td>One of those three. Note the spelling <code>color</code>.</td></tr>
+    <tr><td>"look" must be a list of up to four steps, each with a "module", a "transform", and "params".</td><td>Square brackets round the steps, and four at most.</td></tr>
+    <tr><td>Each step of "look" needs a "module" and a "transform".</td><td>Both are required in every step.</td></tr>
+  </tbody>
+</table></div>
+<p>If the file is not valid JSON at all (a missing comma, a trailing comma, a comment), the message is your computer's own description of where it stopped reading. JSON allows no comments and no comma after the last item.</p>
+<p><strong>If the skin loads but the page looks wrong:</strong> open the address <code>/skin.css</code> on the site. It is exactly what the browser receives: your stylesheet, then your colours for each mode, then the options as chosen.</p>
+
+<h2 id="checklist">Before you share it</h2>
+<ul>
+  <li>It has its own <code>name</code>, a <code>label</code>, and a <code>description</code> that says what it looks like.</li>
+  <li>No colour for the page is written in <code>skin.css</code>; all are <code>var(--fb-…)</code>.</li>
+  <li>Both modes look intended, not like one mode inverted by accident.</li>
+  <li>The Skins page shows no contrast warning.</li>
+  <li>Everything in <a href="#test">the list above</a> has been looked at, wide and narrow.</li>
+  <li>Every rule starts from <code>.fb-public</code> or an <code>fb-</code> class.</li>
+  <li>It loads nothing from another website.</li>
+</ul>
+<p>The reference kept with the source code is <a href="https://github.com/cschweda/fotobogen/blob/main/docs/SKINS.md">docs/SKINS.md</a>.</p>
+    <p class="next">
+      <a href="/docs/skins/">Back: Skins</a>
+      <a href="/docs/modules/">Next: Modules</a>
+    </p>
+  </main>
+</div>
+<footer>
+  <div class="wrap">
+    <span>Fotobogen is free and open source, under the MIT licence.</span>
+    <span>It comes with no warranty. Keep backups of your photographs.</span>
+    <span>&copy; 2026 <a href="https://github.com/cschweda" data-goal="Author click">Christopher Schweda</a></span>
+  </div>
+</footer>
+</body>
+</html>

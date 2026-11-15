@@ -49,7 +49,7 @@ describe('the public API', () => {
   it('gives every field the documentation promises for a photo', async () => {
     const photo = await (await get(server, '/api/photos/harbour')).json() as Record<string, unknown>
     expect(Object.keys(photo).sort()).toEqual([
-      'albums', 'alt', 'description', 'download', 'exif', 'images', 'licence', 'location', 'next', 'placeholder', 'previous', 'slug', 'tags', 'takenAt', 'title',
+      'albums', 'alt', 'description', 'download', 'exif', 'images', 'licence', 'location', 'next', 'placeholder', 'previous', 'size', 'slug', 'tags', 'takenAt', 'title',
     ])
     const list = await (await get(server, '/api/photos')).json() as { tiles: Record<string, unknown>[] }
     expect(Object.keys(list).sort()).toEqual(['page', 'pages', 'tiles', 'total'])

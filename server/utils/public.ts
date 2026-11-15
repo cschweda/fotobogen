@@ -145,6 +145,7 @@ export interface PublicPhoto {
   exif: { camera: string | null, lens: string | null, focalLength: string | null, aperture: string | null, shutter: string | null, iso: number | null } | null
   /** Where it was taken, only when the site shows locations. */
   location: { lat: number, lng: number } | null
+  size: { width: number, height: number } | null
   images: { url: string, width: number, height: number }[]
   tags: { slug: string, name: string }[]
   /** Public albums this photo is in. */
@@ -161,13 +162,13 @@ export function publicPhoto(slug: string): PublicPhoto | null {
   const photo = sqlite.prepare(`
     select p.id, p.slug, p.title, p.description, p.alt, p.thumbhash, p.taken_at as takenAt, p.sort_order as sortOrder,
       p.camera, p.lens, p.focal_length as focalLength, p.aperture, p.shutter, p.iso, p.lat, p.lng,
-      p.license, p.allow_download as allowDownload
+      p.license, p.allow_download as allowDownload, p.width, p.height
     from photos p where p.slug = ? and ${visible()}
   `).get(slug) as (Record<string, never> & {
     id: string, slug: string, title: string | null, description: string | null, alt: string | null, thumbhash: string | null
     takenAt: number | null, sortOrder: number, camera: string | null, lens: string | null, focalLength: string | null
     aperture: string | null, shutter: string | null, iso: number | null, lat: number | null, lng: number | null
-    license: string | null, allowDownload: number | null
+    license: string | null, allowDownload: number | null, width: number, height: number
   }) | undefined
   if (!photo) return null
 
@@ -188,6 +189,8 @@ export function publicPhoto(slug: string): PublicPhoto | null {
     exif: getSetting('privacy.show_exif', true)
       ? { camera: photo.camera, lens: photo.lens, focalLength: photo.focalLength, aperture: photo.aperture, shutter: photo.shutter, iso: photo.iso }
       : null,
+    // The size of the photograph as uploaded, in pixels. Part of the camera details: shown when they are.
+    size: getSetting('privacy.show_exif', true) ? { width: photo.width, height: photo.height } : null,
     location: getSetting('privacy.show_location', false) && photo.lat !== null && photo.lng !== null ? { lat: photo.lat, lng: photo.lng } : null,
     images: images.map(image => ({ url: storage.publicUrl(image.path), width: image.width, height: image.height })),
     tags: sqlite.prepare(`select t.slug, t.name from tags t join photo_tags pt on pt.tag_id = t.id where pt.photo_id = ? order by t.name collate nocase`).all(photo.id) as { slug: string, name: string }[],

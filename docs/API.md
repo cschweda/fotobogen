@@ -89,6 +89,7 @@ A page past the end returns an empty `tiles`.
   "placeholder": "data:image/png;base64,…",
   "takenAt": 1714694400000,
   "exif": { "camera": "Leica M11", "lens": "Summilux-M 35", "focalLength": "35 mm", "aperture": "f/2.8", "shutter": "1/250 s", "iso": 400 },
+  "size": { "width": 6000, "height": 4000 },
   "location": null,
   "images": [
     { "url": "/media/bxIjUHae-4Jn-medium-60fd4c19.webp", "width": 1280, "height": 854 },
@@ -104,7 +105,7 @@ A page past the end returns an empty `tiles`.
 ```
 
 - `takenAt` is milliseconds since 1970, or `null`.
-- `exif` is `null` when the site does not show camera details. `location` is `null` unless the site shows locations.
+- `exif` is `null` when the site does not show camera details, and so is `size`, the photograph's size in pixels as uploaded. `location` is `null` unless the site shows locations.
 - `images` runs from smallest to largest; small originals have fewer.
 - `download` is `null` unless visitors may download the photo. `original` says whether the download is the file as uploaded or a copy with camera data removed.
 - `previous` and `next` are slugs, or `null` at either end.
