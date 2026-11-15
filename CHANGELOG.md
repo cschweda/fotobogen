@@ -26,3 +26,4 @@ uses [Semantic Versioning](https://semver.org/).
 - `pnpm typecheck`, run in CI.
 - Screenshots of the setup wizard, login, and admin placeholder in the README.
 - The social card (`site/og.png`) now says what the name means: German for "photo sheet", as in a contact sheet. Its source is `docs/og/og.html`.
+- fotobogen.com is now a visual guide: real screens from the installer, a diagram of where the software runs, and what is built so far.

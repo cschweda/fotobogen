@@ -444,7 +444,7 @@ For running without Docker, and for development servers.
 - **Sample photos:** fetched from Lorem Picsum by fixed id, as in openMantel; not committed (section 12).
 - **Install paths:** Docker quick start, Docker on Forge, and bare-metal pm2 (section 14).
 - **Repository and image:** `github.com/cschweda/fotobogen` (public); image at `ghcr.io/cschweda/fotobogen`.
-- **Placeholder site:** the single page at fotobogen.com lives in `site/` and is deployed to Netlify by hand. `netlify.toml` publishes only that folder and skips builds when nothing in it changed, in case the repository is ever linked. The Netlify site is not linked today, so pushes here never trigger a Netlify build. Fotobogen itself never runs on Netlify (section 1).
+- **Placeholder site:** the single page at fotobogen.com lives in `site/` and doubles as a visual guide to the software (screens from the current build, where it runs, what is built). The Netlify site has been linked to this repository's `main` branch since 2026-11-14. `netlify.toml` publishes only that folder and skips the build when nothing in it changed, so only changes to the page cost a production deploy. Fotobogen itself never runs on Netlify (section 1).
 
 **Revised 2026-11-14, after checking the stack against current releases and before any code:**
 
