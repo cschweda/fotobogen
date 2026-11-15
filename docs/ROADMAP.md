@@ -7,8 +7,8 @@ The feature list agreed on 2026-11-15, in the order it is being built. Each item
 | # | Feature | Status |
 |---|---|---|
 | 1 | Public gallery and photo page | Done |
-| 2 | Full library: edit title, caption, and alt text; reorder, hide, delete; bulk actions | Next |
-| 3 | Albums and tags | Planned |
+| 2 | Full library: edit title, caption, and alt text; reorder, hide, delete; bulk actions | Done |
+| 3 | Albums and tags | Next |
 | 4 | Backup and restore from the admin; export everything as a zip | Planned |
 | 5 | Scheduled publishing and drafts | Planned |
 | 6 | Slideshow (following openMantel) | Planned |

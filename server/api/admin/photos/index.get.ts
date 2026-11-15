@@ -7,7 +7,7 @@ import { requireAdmin } from '../../../utils/session.ts'
 
 interface Row {
   id: string, slug: string, title: string | null, filename: string, status: 'processing' | 'ready' | 'failed'
-  width: number, height: number, isSample: number, createdAt: number
+  width: number, height: number, isSample: number, createdAt: number, visibility: 'public' | 'hidden', alt: string | null
   thumb: string | null, thumbWidth: number | null, thumbHeight: number | null, error: string | null
 }
 
@@ -18,10 +18,14 @@ export default defineEventHandler(async (event) => {
   await requireAdmin(event)
   const { sqlite, storage } = getPipeline()
   const wanted = String(getQuery(event).ids ?? '').split(',').filter(id => /^[A-Za-z0-9_-]{1,32}$/.test(id)).slice(0, MAX_IDS)
-  const filter = wanted.length > 0 ? `where p.id in (${wanted.map(() => '?').join(', ')})` : ''
+  // ?show=hidden | missing-alt | failed narrows the list.
+  const FILTERS: Record<string, string> = { 'hidden': `p.visibility = 'hidden'`, 'missing-alt': `(p.alt is null or p.alt = '')`, 'failed': `p.status = 'failed'` }
+  const narrowed = FILTERS[String(getQuery(event).show ?? '')]
+  const conditions = [wanted.length > 0 ? `p.id in (${wanted.map(() => '?').join(', ')})` : '', narrowed ?? ''].filter(Boolean)
+  const filter = conditions.length > 0 ? `where ${conditions.join(' and ')}` : ''
   const rows = sqlite.prepare(`
     select p.id, p.slug, p.title, p.original_filename as filename, p.status, p.width, p.height,
-      p.is_sample as isSample, p.created_at as createdAt,
+      p.is_sample as isSample, p.created_at as createdAt, p.visibility, p.alt,
       d.path as thumb, d.width as thumbWidth, d.height as thumbHeight,
       (select error from jobs where photo_id = p.id and status = 'failed' order by created_at desc, rowid desc limit 1) as error
     from photos p
@@ -32,9 +36,10 @@ export default defineEventHandler(async (event) => {
   `).all(...wanted, LIMIT) as Row[]
   const counts = sqlite.prepare(`
     select count(*) as total, coalesce(sum(is_sample), 0) as samples,
-      coalesce(sum(status = 'processing'), 0) as processing, coalesce(sum(status = 'failed'), 0) as failed
+      coalesce(sum(status = 'processing'), 0) as processing, coalesce(sum(status = 'failed'), 0) as failed,
+      coalesce(sum(visibility = 'hidden'), 0) as hidden, coalesce(sum(alt is null or alt = ''), 0) as missingAlt
     from photos
-  `).get() as { total: number, samples: number, processing: number, failed: number }
+  `).get() as { total: number, samples: number, processing: number, failed: number, hidden: number, missingAlt: number }
 
   return {
     counts,
@@ -47,6 +52,8 @@ export default defineEventHandler(async (event) => {
       width: row.width,
       height: row.height,
       isSample: row.isSample === 1,
+      hidden: row.visibility === 'hidden',
+      missingAlt: !row.alt,
       createdAt: row.createdAt,
       thumb: row.thumb ? { url: storage.publicUrl(row.thumb), width: row.thumbWidth!, height: row.thumbHeight! } : null,
       error: row.status === 'failed' ? row.error : null,

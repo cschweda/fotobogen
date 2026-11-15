@@ -8,10 +8,10 @@ import { requireAdmin } from '../../../../utils/session.ts'
 
 export default defineEventHandler(async (event) => {
   await requireAdmin(event)
-  const body = await readBody<{ recipe?: unknown }>(event).catch(() => null)
+  const body = await readBody<{ recipe?: unknown, edge?: unknown }>(event).catch(() => null)
   let image: Buffer | null
   try {
-    image = await renderPreview(getPipeline(), getRouterParam(event, 'id') ?? '', body?.recipe ?? [])
+    image = await renderPreview(getPipeline(), getRouterParam(event, 'id') ?? '', body?.recipe ?? [], typeof body?.edge === 'number' ? body.edge : undefined)
   }
   catch (error) {
     return fail(event, 422, `The preview could not be made: ${error instanceof Error ? error.message : 'unknown error'}`)

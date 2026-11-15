@@ -48,6 +48,10 @@ uses [Semantic Versioning](https://semver.org/).
 - Skins: the bundled Swiss skin, a loader for skins in `data/skins/`, options that become CSS custom properties, a contrast check, and an admin page. `docs/SKINS.md` is the guide.
 - Social-card tags on every photo page, an RSS feed (`/feed.xml`), a sitemap, and `robots.txt`.
 - `docs/ROADMAP.md`: the agreed feature list and its status.
+- The photo library: reorder by dragging or with keyboard buttons; hide, show, or delete several photos at once; filters for hidden photos, missing alt text, and failures.
+- Editing a photo: title, description, alt text, web address, date taken, and visibility, with what the file recorded shown beside it.
+- A strip of look previews under each photo, built from the switched-on modules.
+- A settings page: site title and tagline, grid layout, photo view, and the privacy switches.
 - Windows: CI installs, builds, and tests on Windows, including a PowerShell smoke test (`scripts/smoke-test.ps1`).
 
 ### Changed

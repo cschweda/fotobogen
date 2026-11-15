@@ -9,12 +9,17 @@ export default defineEventHandler(async (event) => {
   await requireAdmin(event)
   const { sqlite, storage, modules } = getPipeline()
   const photo = sqlite.prepare(`
-    select p.id, p.slug, p.title, p.original_filename as filename, p.status, p.width, p.height, p.recipe_json as recipe,
+    select p.id, p.slug, p.title, p.description, p.alt, p.visibility, p.taken_at as takenAt, p.bytes, p.mime,
+      p.camera, p.lens, p.focal_length as focalLength, p.aperture, p.shutter, p.iso, p.lat, p.lng,
+      p.original_filename as filename, p.status, p.width, p.height, p.recipe_json as recipe,
       d.path, d.width as mediumWidth, d.height as mediumHeight
     from photos p left join derivatives d on d.photo_id = p.id and d.kind = 'medium'
     where p.id = ?
   `).get(getRouterParam(event, 'id') ?? '') as {
     id: string, slug: string, title: string | null, filename: string, status: string, width: number, height: number
+    description: string | null, alt: string | null, visibility: 'public' | 'hidden', takenAt: number | null, bytes: number, mime: string
+    camera: string | null, lens: string | null, focalLength: string | null, aperture: string | null, shutter: string | null, iso: number | null
+    lat: number | null, lng: number | null
     recipe: string | null, path: string | null, mediumWidth: number | null, mediumHeight: number | null
   } | undefined
   if (!photo) return fail(event, 404, 'There is no such photo.')
@@ -26,6 +31,17 @@ export default defineEventHandler(async (event) => {
     id: photo.id,
     slug: photo.slug,
     title: photo.title,
+    description: photo.description,
+    alt: photo.alt,
+    visibility: photo.visibility,
+    takenAt: photo.takenAt,
+    // Read from the file when it was uploaded. Shown to the admin only; the
+    // public site follows the privacy settings.
+    details: {
+      camera: photo.camera, lens: photo.lens, focalLength: photo.focalLength, aperture: photo.aperture, shutter: photo.shutter, iso: photo.iso,
+      location: photo.lat !== null && photo.lng !== null ? { lat: photo.lat, lng: photo.lng } : null,
+      bytes: photo.bytes, mime: photo.mime,
+    },
     filename: photo.filename,
     status: photo.status,
     width: photo.width,
