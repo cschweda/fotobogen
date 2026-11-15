@@ -1,0 +1,127 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+/*
+  Fotobogen's own look: dark, Swiss, and plain. One grotesque face in a few
+  sizes, off-white on near-black, a single red used only to mark "this one"
+  (the current frame, the chosen option), square corners, no shadows.
+
+  Contrast on --fb-ground (#0a0a0b), checked for WCAG 2.2 AA:
+    --fb-text 18.4:1, --fb-muted 8.3:1, --fb-error 7.1:1,
+    --fb-edge 4.6:1 (control borders need 3:1),
+    --fb-red 4.0:1 (never used for text; marks and frames need 3:1).
+*/
+:root {
+  --fb-ground: #0a0a0b;
+  --fb-panel: #131315;
+  --fb-frame: #222226;
+  --fb-frame-lit: #4a4a52;
+  --fb-line: #2c2c31;
+  --fb-edge: #7d7d84;
+  --fb-text: #f5f5f2;
+  --fb-muted: #a8a8a3;
+  --fb-red: #e30613;
+  --fb-error: #ff6b6f;
+  --fb-font: "Helvetica Neue", Helvetica, "Nimbus Sans", Arial, sans-serif;
+  --ui-radius: 0rem;
+}
+
+html {
+  background: var(--fb-ground);
+  color: var(--fb-text);
+  font-family: var(--fb-font);
+  font-size: 100%;
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--fb-ground);
+  font-feature-settings: "tnum" 1;
+}
+
+:focus-visible {
+  outline: 2px solid var(--fb-text);
+  outline-offset: 3px;
+}
+h1:focus { outline: none; } /* focused by script on step change, not by the user */
+
+.fb-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.fb-h1 {
+  margin: 0;
+  color: var(--fb-text);
+  font-size: clamp(2rem, 1.2rem + 2.6vw, 3.25rem);
+  font-weight: 700;
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+}
+.fb-lead {
+  margin: 1rem 0 0;
+  max-width: 34rem;
+  color: var(--fb-muted);
+  font-size: 1.0625rem;
+}
+.fb-small { font-size: 0.875rem; color: var(--fb-muted); }
+
+.fb-link {
+  color: var(--fb-text);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+.fb-link:hover { text-decoration-thickness: 2px; }
+
+.fb-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0 1.5rem;
+  border: 1px solid var(--fb-text);
+  background: var(--fb-text);
+  color: var(--fb-ground);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+.fb-button:hover { background: #ffffff; border-color: #ffffff; }
+.fb-button[aria-disabled="true"] { opacity: 0.6; cursor: progress; }
+.fb-button--quiet {
+  background: transparent;
+  color: var(--fb-text);
+  border-color: var(--fb-edge);
+  font-weight: 400;
+}
+.fb-button--quiet:hover { background: transparent; border-color: var(--fb-text); }
+
+.fb-alert:empty { display: none; }
+.fb-alert {
+  margin: 0 0 1.5rem;
+  padding: 0.75rem 1rem;
+  border-left: 4px solid var(--fb-error);
+  background: var(--fb-panel);
+  color: var(--fb-text);
+}
+.fb-alert ul { margin: 0; padding: 0; list-style: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

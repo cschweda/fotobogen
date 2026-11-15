@@ -1,0 +1,17 @@
+# Netlify serves only the fotobogen.com placeholder page in site/.
+# Fotobogen itself needs a persistent disk and never runs on Netlify.
+
+[build]
+  publish = "site"
+  command = ""
+  # If this repository is ever linked to the Netlify site, skip the build
+  # (exit 0) unless the placeholder page or this file changed.
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- site netlify.toml"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"

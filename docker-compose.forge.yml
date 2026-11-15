@@ -1,0 +1,22 @@
+# Laravel Forge: the app only, behind the nginx that Forge already runs.
+# Forge's nginx owns ports 80 and 443 and manages the certificate; see
+# deploy/forge-nginx.conf for the server block and the README for the steps.
+#
+# Run from the Forge site directory, as the forge user:
+#   mkdir -p data
+#   PUID=$(id -u) PGID=$(id -g) docker compose -f docker-compose.forge.yml up -d
+
+services:
+  app:
+    image: ghcr.io/cschweda/fotobogen:latest
+    # build: .                    # uncomment to build the image locally instead
+    restart: unless-stopped
+    # Run as the forge user so host nginx can read data/derivatives directly.
+    user: "${PUID:-1000}:${PGID:-1000}"
+    environment:
+      TRUST_PROXY: "1"
+    volumes:
+      - ./data:/data
+    ports:
+      # Local interface only; never published to the internet.
+      - "127.0.0.1:${PORT:-3000}:3000"

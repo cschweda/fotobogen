@@ -1,15 +1,68 @@
 {
-    "name": "fotobogen",
-    "version": "0.0.1",
-    "description": "A self-hosted publishing platform for photographs. In development.",
-    "homepage": "https://fotobogen.com",
-    "author": "Christopher Schweda",
-    "license": "MIT",
-    "keywords": [
-        "photos",
-        "photography",
-        "gallery",
-        "self-hosted",
-        "cms"
+  "name": "fotobogen",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A self-hosted publishing platform for photographs. In development.",
+  "homepage": "https://fotobogen.com",
+  "repository": "github:cschweda/fotobogen",
+  "author": "Christopher Schweda",
+  "license": "MIT",
+  "keywords": [
+    "photos",
+    "photography",
+    "gallery",
+    "self-hosted",
+    "cms"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "packageManager": "pnpm@10.33.4",
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "start": "node .output/server/index.mjs",
+    "postinstall": "nuxt prepare",
+    "test": "vitest run",
+    "test:unit": "vitest run tests/unit",
+    "test:e2e": "playwright test",
+    "typecheck": "nuxt typecheck",
+    "db:generate": "drizzle-kit generate",
+    "fotobogen": "node scripts/fotobogen.mjs"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "better-sqlite3",
+      "esbuild",
+      "@parcel/watcher",
+      "@tailwindcss/oxide",
+      "vue-demi",
+      "unrs-resolver"
     ]
+  },
+  "dependencies": {
+    "@iconify-json/lucide": "^1.2.155",
+    "@nuxt/ui": "^4.12.0",
+    "better-sqlite3": "^13.2.0",
+    "drizzle-orm": "^0.45.4",
+    "nanoid": "^6.0.2",
+    "nuxt": "^4.6.4",
+    "nuxt-security": "^2.7.0",
+    "tailwindcss": "^4.3.5",
+    "vue": "^3.5.45",
+    "vue-router": "^5.5.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "@golar/vue": "^0.1.11",
+    "@playwright/test": "^1.65.1",
+    "@types/better-sqlite3": "^9.6.0",
+    "@types/node": "^24.19.2",
+    "drizzle-kit": "^0.31.11",
+    "golar": "^0.1.11",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
+  }
 }
