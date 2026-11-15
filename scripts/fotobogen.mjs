@@ -22,6 +22,8 @@ Commands:
   preflight                         Check that this machine can run Fotobogen
   backup [file]                     Write a backup zip (default: fotobogen-backup-<date>.zip)
   restore <file>                    Replace this site's data with a backup. Stop Fotobogen first
+  update [version]                  Install the latest release (or the one named) over this
+                                    copy, for an install made with git. Restart afterwards.
   module new <name>                 Start a new module in data/modules/<name>
   module test <name or folder>      Try a module on a test picture (or --image <file>) and
                                     write the results to ./module-test (or --out <dir>)
@@ -246,6 +248,38 @@ async function preflight() {
   console.log('\nThis machine can run Fotobogen.')
 }
 
+/** Installs a released version over this copy. Fotobogen may be running; restart it afterwards. */
+async function update(args) {
+  const { updateSupport } = await import('../server/core/updater.ts')
+  const { parseVersion, isNewer } = await import('../server/core/version.ts')
+  const { readFileSync } = await import('node:fs')
+  const { spawnSync } = await import('node:child_process')
+  const { fileURLToPath } = await import('node:url')
+  const root = fileURLToPath(new URL('..', import.meta.url))
+  const support = await updateSupport(root, process.env)
+  if (support.method !== 'source') throw new CliError(support.reason ?? 'This copy cannot update itself.')
+  const current = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version
+  let version = args[0]?.replace(/^v/, '')
+  if (!version) {
+    // Asks GitHub which release is the latest. Nothing about this site is sent.
+    const response = await fetch(process.env.UPDATES_URL || 'https://api.github.com/repos/cschweda/fotobogen/releases/latest', { headers: { 'accept': 'application/vnd.github+json', 'user-agent': 'fotobogen-update-check' }, signal: AbortSignal.timeout(10_000) }).catch(() => null)
+    if (!response) throw new CliError('GitHub could not be reached from this server.')
+    if (response.status === 404) throw new CliError('No release of Fotobogen has been published yet.')
+    if (!response.ok) throw new CliError(`GitHub could not be asked just now (it answered ${response.status}).`)
+    version = parseVersion((await response.json()).tag_name)?.join('.')
+    if (!version) throw new CliError('The latest release has a version this copy does not recognise.')
+  }
+  if (!parseVersion(version)) throw new CliError(`"${version}" is not a version number. Use three numbers, such as 1.2.0.`)
+  if (!isNewer(version, current)) {
+    console.log(`This copy is version ${current}, and ${version === current ? 'that is the latest' : `version ${version} is not newer`}. Nothing to do.`)
+    return
+  }
+  console.log(`Updating from version ${current} to ${version}. This takes a few minutes.\n`)
+  const ran = spawnSync(process.execPath, [fileURLToPath(new URL('./update.mjs', import.meta.url)), version], { stdio: 'inherit' })
+  if (ran.status !== 0) throw new CliError('')
+  console.log('Restart Fotobogen to start using it: stop it and run "pnpm start", or "pm2 restart fotobogen".')
+}
+
 const [command, ...args] = process.argv.slice(2)
 try {
   if (command === 'reset-admin') {
@@ -259,6 +293,9 @@ try {
   }
   else if (command === 'module') {
     await moduleTools(args)
+  }
+  else if (command === 'update') {
+    await update(args)
   }
   else if (command === 'backup') {
     await backup(args)
