@@ -128,6 +128,7 @@ footer .wrap{border-top:1px solid var(--rule);padding-top:20px;padding-bottom:28
 .plan b{display:block;font-size:1rem;letter-spacing:-.01em}
 .plan span.s{display:block;font-size:.8125rem;color:var(--low);margin-top:2px}
 .plan p{font-size:.875rem;color:var(--mid);margin-top:6px;max-width:24ch}
+.credit{margin-top:24px;font-size:.8125rem;color:var(--low);max-width:60ch}
 .source{margin-top:clamp(40px,6vw,64px);font-size:clamp(1.0625rem,1.4vw,1.25rem)}
 
 @media (max-width:860px){
@@ -163,7 +164,7 @@ footer .wrap{border-top:1px solid var(--rule);padding-top:20px;padding-bottom:28
 <main id="main">
   <div class="wrap">
     <section class="hero" aria-labelledby="name">
-      <p class="state"><strong>In development</strong><span>Installing, signing in, and uploading work today. The public gallery is being built. This page shows what it looks like so far.</span></p>
+      <p class="state"><strong>In development</strong><span>It installs, takes your photographs, and publishes them. No release has been tagged yet; the source is on GitHub. This page shows what it looks like so far.</span></p>
       <h1 id="name">Fotobogen</h1>
       <p class="tag">Publish your photographs on a website of your own.</p>
     </section>
@@ -202,8 +203,8 @@ footer .wrap{border-top:1px solid var(--rule);padding-top:20px;padding-bottom:28
     </section>
     <section class="part" aria-labelledby="tour-h">
       <div class="part-head">
-        <h2 id="tour-h">The first ten minutes</h2>
-        <p>These are real screens from the current build. The installer is a web page: you open your new site in a browser and answer six short steps. The upload thumbnails shown are generated gradients, not photographs.</p>
+        <h2 id="tour-h">A look around</h2>
+        <p>These are real screens from the current build. The installer is a web page: you open your new site in a browser and answer six short steps. Then you upload, and your site is live.</p>
       </div>
       <ol class="tour">
         <li>
@@ -230,7 +231,24 @@ footer .wrap{border-top:1px solid var(--rule);padding-top:20px;padding-bottom:28
           <div class="cap"><span class="num" aria-hidden="true">06</span><h3>Upload</h3><p>Choose files or drop them on the page. Each photo is checked, stored untouched, and resized for every screen; anything that is not a photo, or is already in your library, is explained on its own row.</p><p class="where">Upload</p></div>
           <figure><img src="screens/upload.png" width="1072" height="1045" loading="lazy" decoding="async" alt="Upload page listing five files: three ready with small thumbnails, one marked already in your library, and one marked not accepted with the reason."></figure>
         </li>
+        <li>
+          <div class="cap"><span class="num" aria-hidden="true">07</span><h3>Your photographs, published</h3><p>Visitors see a grid that keeps each photo its own shape, or equal squares if you prefer. It is laid out without scripts, loads a blurred placeholder first, and never jumps as pictures arrive.</p><p class="where">The public site</p></div>
+          <figure><img src="screens/gallery.jpg" width="1072" height="760" loading="lazy" decoding="async" alt="A dark page titled Kodachrome Days with a masonry grid of photographs of different shapes: a game controller, a pine forest, a lighthouse, a whitewashed town, a coffee mug."></figure>
+        </li>
+        <li>
+          <div class="cap"><span class="num" aria-hidden="true">08</span><h3>One photo, with its words</h3><p>Each photo has its own page and address, with its title, description, date, and camera details, and links to the next and the previous. It can also open over the grid.</p><p class="where">A photo page</p></div>
+          <figure><img src="screens/photo.jpg" width="1072" height="760" loading="lazy" decoding="async" alt="A photo page: a man in a suit crossing an empty road, with the title Crossing and a description beside it, and Previous and Next links."></figure>
+        </li>
+        <li>
+          <div class="cap"><span class="num" aria-hidden="true">09</span><h3>Film looks and frames</h3><p>Modules change how a photo looks without touching the file you uploaded. Under each photo is a strip of previews: black-and-white, a colour slide, a contact-print frame with made-up film markings. Pick one, adjust it, save. Switching it off puts the photo back.</p><p class="where">Editing a photo</p></div>
+          <figure><img src="screens/looks.jpg" width="1072" height="1060" loading="lazy" decoding="async" alt="The edit page for a photo, previewing it inside a ragged black film border with sprocket holes, above a strip of seven small previews of different film looks."></figure>
+        </li>
+        <li>
+          <div class="cap"><span class="num" aria-hidden="true">10</span><h3>A library you can arrange</h3><p>Drag photos into order or use the keyboard. Hide, show, tag, or delete several at once. Group them into albums. Schedule one to appear later.</p><p class="where">The library</p></div>
+          <figure><img src="screens/library.jpg" width="1072" height="760" loading="lazy" decoding="async" alt="The photo library: a grid of photo cards with checkboxes, each with Up, Down, and To top buttons, under an Upload photos button and a filter."></figure>
+        </li>
       </ol>
+      <p class="credit">The photographs in these screens are the sample photos Fotobogen can download for you: Unsplash photographs, served by Lorem Picsum. The pictures in the upload screen are generated gradients.</p>
     </section>
 
     <section class="part" aria-labelledby="runs-h">
@@ -261,16 +279,16 @@ footer .wrap{border-top:1px solid var(--rule);padding-top:20px;padding-bottom:28
         <p>Fotobogen is being built in the open, one stage at a time. A red frame is finished; the outlined frame is next.</p>
       </div>
       <ol class="plan">
-        <li class="done"><span class="t"></span><b>Foundation</b><span class="s">Built</span><p>Runs from one folder, in Docker or on Node.</p></li>
-        <li class="done"><span class="t"></span><b>Installer and login</b><span class="s">Built</span><p>The six steps above, and a guarded dashboard.</p></li>
+        <li class="done"><span class="t"></span><b>Installer and login</b><span class="s">Built</span><p>Six steps in a browser, with a check that the server is up to it.</p></li>
         <li class="done"><span class="t"></span><b>Uploading</b><span class="s">Built</span><p>Photos resized for every screen, camera details read from the file.</p></li>
-        <li class="done"><span class="t"></span><b>Sample photos</b><span class="s">Built</span><p>Twenty-five placeholders to start with, removable in one click.</p></li>
-        <li class="now"><span class="t"></span><b>Public gallery</b><span class="s">Next</span><p>The grid, the photo view, and the Swiss skin.</p></li>
-        <li class="later"><span class="t"></span><b>Photo library</b><span class="s">Planned</span><p>Edit, reorder, hide, and delete from the dashboard.</p></li>
-        <li class="later"><span class="t"></span><b>Modules</b><span class="s">Planned</span><p>Black-and-white and tone looks that never alter the original.</p></li>
-        <li class="later"><span class="t"></span><b>First release</b><span class="s">Planned</span><p>An install guide a stranger can follow.</p></li>
+        <li class="done"><span class="t"></span><b>Public gallery</b><span class="s">Built</span><p>The grid, the photo page, a slideshow, albums, and tags.</p></li>
+        <li class="done"><span class="t"></span><b>Photo library</b><span class="s">Built</span><p>Edit, reorder, hide, schedule, and delete from the dashboard.</p></li>
+        <li class="done"><span class="t"></span><b>Skins and modules</b><span class="s">Built</span><p>Change the look; add film looks, frames, and a watermark.</p></li>
+        <li class="done"><span class="t"></span><b>Backup and restore</b><span class="s">Built</span><p>Everything in one file, from the dashboard or the command line.</p></li>
+        <li class="now"><span class="t"></span><b>For developers</b><span class="s">Next</span><p>A public API, webhooks, importers, and more kinds of module.</p></li>
+        <li class="later"><span class="t"></span><b>First release</b><span class="s">Planned</span><p>A tagged version and a ready-made Docker image.</p></li>
       </ol>
-      <p class="source">The source, the design document, and the change log are on <a href="https://github.com/cschweda/fotobogen">GitHub</a>.</p>
+      <p class="source">The source, the design document, and the change log are on <a href="https://github.com/cschweda/fotobogen" data-goal="GitHub click" data-where="roadmap">GitHub</a>.</p>
     </section>
   </div>
 </main>
@@ -279,7 +297,7 @@ footer .wrap{border-top:1px solid var(--rule);padding-top:20px;padding-bottom:28
   <div class="wrap">
     <span class="status">In development</span>
     <span>Free and open source &middot; MIT</span>
-    <span>&copy; 2026 <a href="https://github.com/cschweda">Christopher Schweda</a></span>
+    <span>&copy; 2026 <a href="https://github.com/cschweda" data-goal="Author click">Christopher Schweda</a></span>
   </div>
 </footer>
 
@@ -292,6 +310,30 @@ footer .wrap{border-top:1px solid var(--rule);padding-top:20px;padding-bottom:28
   label();
   btn.addEventListener('click',function(){var t=current()==='dark'?'light':'dark';root.setAttribute('data-theme',t);try{localStorage.setItem('fotobogen-theme',t)}catch(e){}label()});
   if(mq.addEventListener)mq.addEventListener('change',label);
+
+  // Named events for Plausible, so they can be set up as goals there:
+  //   "GitHub click" (where: roadmap), "Author click",
+  //   "Theme switch" (to: light | dark),
+  //   "Section viewed" (section: tour | runs | plan), once each per visit,
+  //   "Screenshot viewed" (screen: the file name), once each per visit.
+  function track(name,props){try{window.plausible(name,props?{props:props}:undefined)}catch(e){}}
+  document.addEventListener('click',function(event){
+    var link=event.target.closest&&event.target.closest('[data-goal]');
+    if(link)track(link.getAttribute('data-goal'),link.getAttribute('data-where')?{where:link.getAttribute('data-where')}:undefined);
+  });
+  btn.addEventListener('click',function(){track('Theme switch',{to:current()})});
+  if('IntersectionObserver' in window){
+    var seen=new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if(!entry.isIntersecting)return;
+        seen.unobserve(entry.target);
+        if(entry.target.tagName==='IMG')track('Screenshot viewed',{screen:entry.target.getAttribute('src').split('/').pop()});
+        else track('Section viewed',{section:entry.target.getAttribute('aria-labelledby').replace('-h','')});
+      });
+    },{threshold:0.4});
+    document.querySelectorAll('section.part').forEach(function(section){seen.observe(section)});
+    document.querySelectorAll('.tour img').forEach(function(image){seen.observe(image)});
+  }
 })();
 </script>
 </body>

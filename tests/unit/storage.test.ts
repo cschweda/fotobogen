@@ -26,6 +26,8 @@ describe('local storage', () => {
     expect(readFileSync(join(root, 'originals', 'abc123.jpg'), 'utf8')).toBe('picture bytes')
     expect(await read(storage.get('originals', 'abc123.jpg'))).toBe('picture bytes')
     expect(await storage.size('originals', 'abc123.jpg')).toBe(13)
+    expect((await storage.read('originals', 'abc123.jpg'))!.toString()).toBe('picture bytes')
+    expect(await storage.read('originals', 'missing.jpg')).toBeNull()
   })
   it('keeps the two areas apart', async () => {
     const { storage, source } = setup()
