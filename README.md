@@ -266,10 +266,21 @@ and `/robots.txt`. Setup, login, and the admin are marked not to be indexed.
 
 ## Skins
 
-A skin changes how the public site looks. **Swiss**, which comes with
-Fotobogen, is dark with one red accent; its accent colour, the space
-between photos, and the number of columns can be changed under **Admin,
-Skins**. Changes show at once and nothing is rebuilt.
+A skin changes how the public site looks. Three come with Fotobogen, all in
+the Swiss manner, and you can switch between them at any time under
+**Admin, Skins**:
+
+- **Swiss** (the default): dark, with a small site name and a red accent.
+- **Papier**: light. Warm white paper, black type, heavy rules, wide margins.
+- **Plakat**: dark, like a poster. The site's name set very large,
+  photographs edge to edge, a yellow accent.
+
+Each has an accent colour, a space between photos, and a number of columns
+you can change. Changes show at once and nothing is rebuilt.
+
+![The Papier skin: a light page with photographs set apart](docs/screenshots/skin-papier.jpg)
+
+![The Plakat skin: a black page with the site name set very large](docs/screenshots/skin-plakat.jpg)
 
 To add a skin, copy its folder into `data/skins/` and restart.
 [docs/SKINS.md](docs/SKINS.md) explains how to write one.

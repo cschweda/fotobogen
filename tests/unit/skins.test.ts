@@ -85,4 +85,28 @@ describe('reading skins', () => {
     expect(registry.get('swiss')!.source).toBe('bundled')
     expect(registry.get('swiss')!.css).toBe(swissFiles.css)
   })
+
+describe('the skins that come with Fotobogen', () => {
+  const bundled = ['swiss', 'papier', 'plakat'].map(name => parseSkin({ name, json: readFileSync(`skins/${name}/skin.json`, 'utf8'), css: readFileSync(`skins/${name}/skin.css`, 'utf8') }, 'bundled'))
+
+  it('all load, with readable text and the same three options', () => {
+    for (const skin of bundled) {
+      expect(skin.error, skin.name).toBeNull()
+      expect(contrastWarnings(skin, cleanValues(skin, {})), skin.name).toEqual([])
+      expect(Object.keys(skin.options), skin.name).toEqual(['accent', 'gutter', 'columns'])
+    }
+  })
+  it('offer a light one and two dark ones', () => {
+    const light = (skin: (typeof bundled)[number]) => contrastRatio(skin.tokens.ground!, '#000000') > 10
+    expect(bundled.map(skin => [skin.label, light(skin) ? 'light' : 'dark'])).toEqual([['Swiss', 'dark'], ['Papier', 'light'], ['Plakat', 'dark']])
+  })
+  it('each start every rule from the public pages, and style every part of them', () => {
+    const parts = ['.fb-site-header', '.fb-grid--masonry', '.fb-grid--square', '.fb-tile', '.fb-photo__title', '.fb-modal', '.fb-albums', '.fb-tag', '.fb-pager__more', '.fb-slideshow__controls', '.fb-photo__licence']
+    for (const skin of bundled) {
+      expect(skin.css, skin.name).toContain(':root.fb-public {')
+      for (const part of parts) expect(skin.css.includes(part), `${skin.name} styles ${part}`).toBe(true)
+      // Nothing may escape to the admin: no bare element rules.
+      expect(skin.css.match(/^(html|body|a|h1|h2|p|img)\b[^{]*\{/m), skin.name).toBeNull()
+    }
+  })
 })

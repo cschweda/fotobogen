@@ -66,6 +66,7 @@ uses [Semantic Versioning](https://semver.org/).
 - A one-time notice in the admin: backups are the owner's responsibility and the software comes with no warranty. The admin opens once "I understand" is pressed.
 - Update notice: the admin can check GitHub for a newer release, on request or (if switched on) once a day; the dashboard says when one exists.
 - fotobogen.com shows the gallery, a photo page, film looks, and the library, and sends named events to Plausible for use as goals.
+- Two more skins: Papier (light) and Plakat (dark, poster style), with a guide to making a skin from one of them.
 - Windows: CI installs, builds, and tests on Windows, including a PowerShell smoke test (`scripts/smoke-test.ps1`).
 
 ### Changed
@@ -76,4 +77,5 @@ uses [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Skins set the text colour on the page body, so a light skin no longer inherits the admin's light text.
 - Installing no longer compiles `better-sqlite3` from source. It failed on Windows without Visual Studio; the package's own prebuilt binaries are used on every platform.

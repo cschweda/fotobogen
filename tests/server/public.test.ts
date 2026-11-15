@@ -159,8 +159,8 @@ describe('the public site', () => {
     it('lists installed skins and warns about text that would be hard to read', async () => {
       const listed = await skins()
       expect(listed.active).toBe('swiss')
-      expect(listed.skins.map(skin => [skin.name, skin.source, skin.error])).toEqual([['swiss', 'bundled', null], ['paper', 'installed', null]])
-      expect(listed.skins[1]!.warnings[0]).toContain('"text" on "ground" has a contrast of 2.8:1')
+      expect(listed.skins.map(skin => [skin.name, skin.source, skin.error])).toEqual([['papier', 'bundled', null], ['plakat', 'bundled', null], ['swiss', 'bundled', null], ['paper', 'installed', null]])
+      expect(listed.skins.find(skin => skin.name === 'paper')!.warnings[0]).toContain('"text" on "ground" has a contrast of 2.8:1')
     })
 
     it('changes options and switches skin with no rebuild, giving the stylesheet a new address', async () => {
@@ -173,8 +173,19 @@ describe('the public site', () => {
       expect((await send('PUT', '/api/admin/skins', { active: 'paper', options: {} })).status).toBe(200)
       expect(await css()).toContain('background: white')
       // Each skin remembers its own options.
-      expect((await send('PUT', '/api/admin/skins', { active: 'swiss', options: (await skins() as never as { skins: { values: unknown }[] }).skins[0]!.values })).status).toBe(200)
+      expect((await send('PUT', '/api/admin/skins', { active: 'swiss', options: (await skins() as never as { skins: { name: string, values: unknown }[] }).skins.find(skin => skin.name === 'swiss')!.values })).status).toBe(200)
       expect(await css()).toContain('--fb-accent: #00aaff;')
+    })
+
+    it('switches to each skin that comes with Fotobogen, light and dark', async () => {
+      for (const [name, ground] of [['papier', '#f4f1ea'], ['plakat', '#000000'], ['swiss', '#0a0a0b']] as const) {
+        expect((await send('PUT', '/api/admin/skins', { active: name, options: {} })).status).toBe(200)
+        const stylesheet = await css()
+        expect(stylesheet).toContain(`--fb-ground: ${ground};`)
+        // Every skin lays out the masonry grid and the slideshow.
+        expect(stylesheet).toContain('.fb-grid--masonry')
+        expect(stylesheet).toContain('.fb-slideshow__image--front')
+      }
     })
 
     it('refuses an unknown skin, and needs a logged-in admin', async () => {

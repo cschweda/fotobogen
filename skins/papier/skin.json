@@ -1,0 +1,53 @@
+{
+  "name": "papier",
+  "version": "1.0.0",
+  "label": "Papier",
+  "description": "Light: warm white paper, black type, heavy rules, and a red accent. Photographs sit apart, like prints on a page.",
+  "tokens": {
+    "ground": "#f4f1ea",
+    "text": "#111111",
+    "muted": "#55554f",
+    "line": "#d6d2c8",
+    "accent": "#d4040f"
+  },
+  "contrast": [
+    [
+      "text",
+      "ground"
+    ],
+    [
+      "muted",
+      "ground"
+    ]
+  ],
+  "options": {
+    "accent": {
+      "type": "color",
+      "label": "Accent colour",
+      "default": "#d4040f"
+    },
+    "gutter": {
+      "type": "select",
+      "label": "Space between photos",
+      "options": [
+        "none",
+        "hairline",
+        "wide"
+      ],
+      "default": "wide",
+      "values": {
+        "none": "0px",
+        "hairline": "3px",
+        "wide": "1.25rem"
+      }
+    },
+    "columns": {
+      "type": "range",
+      "label": "Columns on a wide screen",
+      "min": 2,
+      "max": 6,
+      "step": 1,
+      "default": 3
+    }
+  }
+}

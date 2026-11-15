@@ -1,0 +1,53 @@
+{
+  "name": "plakat",
+  "version": "1.0.0",
+  "label": "Plakat",
+  "description": "Dark, like a poster: black, the site's name set very large, photographs edge to edge, and a yellow accent.",
+  "tokens": {
+    "ground": "#000000",
+    "text": "#ffffff",
+    "muted": "#b4b4b4",
+    "line": "#333333",
+    "accent": "#ffd400"
+  },
+  "contrast": [
+    [
+      "text",
+      "ground"
+    ],
+    [
+      "muted",
+      "ground"
+    ]
+  ],
+  "options": {
+    "accent": {
+      "type": "color",
+      "label": "Accent colour",
+      "default": "#ffd400"
+    },
+    "gutter": {
+      "type": "select",
+      "label": "Space between photos",
+      "options": [
+        "none",
+        "hairline",
+        "wide"
+      ],
+      "default": "none",
+      "values": {
+        "none": "0px",
+        "hairline": "3px",
+        "wide": "1.25rem"
+      }
+    },
+    "columns": {
+      "type": "range",
+      "label": "Columns on a wide screen",
+      "min": 2,
+      "max": 6,
+      "step": 1,
+      "default": 4
+    }
+  }
+}

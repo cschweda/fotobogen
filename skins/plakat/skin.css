@@ -1,0 +1,181 @@
+/*
+  Plakat ("poster"): a dark skin in the Swiss manner. Black ground, the
+  site's name set very large and tight like a poster headline, photographs
+  edge to edge with no space between, one yellow accent.
+
+  It is the Swiss skin's rules with different values and a few changes at
+  the end. docs/SKINS.md explains how to make one like it.
+*/
+:root.fb-public {
+  --fb-ground: #000000;
+  --fb-text: #ffffff;
+  --fb-muted: #b4b4b4;
+  --fb-line: #333333;
+  --fb-accent: #ffd400;
+  --fb-gutter: 0px;
+  --fb-columns: 4;
+  --fb-font: "Helvetica Neue", Helvetica, "Nimbus Sans", Arial, sans-serif;
+  --fb-margin: clamp(1rem, 3vw, 2.5rem);
+  background: var(--fb-ground);
+  color: var(--fb-text);
+  font-family: var(--fb-font);
+  line-height: 1.5;
+}
+/* Colour is set on the body as well as the root: the admin's stylesheet,
+   which is also loaded, gives the body a colour of its own. */
+.fb-public body { margin: 0; min-height: 100vh; background: var(--fb-ground); color: var(--fb-text); font-feature-settings: "tnum" 1; }
+.fb-public a { color: inherit; text-underline-offset: 0.2em; text-decoration-thickness: 1px; }
+/* The accent marks a hovered link by its underline. As a text colour, red on
+   near-black is 4.0:1, short of the 4.5:1 that text needs. */
+.fb-public a:hover { text-decoration-line: underline; text-decoration-color: var(--fb-accent); text-decoration-thickness: 2px; }
+.fb-public :focus-visible { outline: 2px solid var(--fb-text); outline-offset: 3px; }
+.fb-skip { position: absolute; left: -999rem; }
+.fb-skip:focus { left: var(--fb-margin); top: 0.75rem; z-index: 3; padding: 0.5rem 0.75rem; background: var(--fb-ground); }
+
+/* Header: the site's name top-left, small. */
+.fb-site-header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 1.5rem; padding: 1.5rem var(--fb-margin) 1rem; }
+.fb-site-title { margin: 0; font-size: 1rem; font-weight: 700; letter-spacing: -0.01em; }
+.fb-site-title a { text-decoration: none; }
+.fb-site-tagline { margin: 0; color: var(--fb-muted); font-size: 0.875rem; }
+.fb-main { padding: 0 var(--fb-margin) 4rem; }
+.fb-site-footer { padding: 1.25rem var(--fb-margin) 2rem; border-top: 1px solid var(--fb-line); color: var(--fb-muted); font-size: 0.8125rem; }
+.fb-empty { max-width: 34rem; margin: 3rem 0; padding: 1.25rem 0; border-top: 1px solid var(--fb-line); border-bottom: 1px solid var(--fb-line); color: var(--fb-muted); }
+
+/* Links between the parts of the site, and the heading of an album or tag page. */
+.fb-nav { display: flex; gap: 1.25rem; margin-left: auto; font-size: 0.875rem; }
+.fb-page-title { margin: 0.5rem 0 0.5rem; font-size: clamp(1.75rem, 1.2rem + 2vw, 2.75rem); font-weight: 700; line-height: 1.05; letter-spacing: -0.03em; }
+.fb-page-description { max-width: 38rem; margin: 0 0 2rem; color: var(--fb-muted); white-space: pre-line; }
+.fb-page-actions { margin: 0 0 1.5rem; font-size: 0.875rem; }
+.fb-page-title + .fb-grid-wrap, .fb-page-title + div > .fb-grid-wrap { margin-top: 2rem; }
+
+/* The list of albums: square covers in a strict grid. */
+.fb-albums { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: 2rem 1.25rem; margin: 2rem 0 0; padding: 0; list-style: none; }
+.fb-album__link { display: grid; gap: 0.15rem; text-decoration: none; }
+.fb-album__cover { display: block; aspect-ratio: 1; margin-bottom: 0.5rem; background: var(--fb-line); overflow: hidden; }
+.fb-album__cover img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.fb-album__title { font-weight: 700; }
+.fb-album__count { color: var(--fb-muted); font-size: 0.875rem; }
+
+/*
+  The grid. Columns step down on narrower screens. Both layouts are CSS
+  grid, so the order photos are read in is the order they appear in.
+*/
+.fb-grid-wrap { container-type: inline-size; --fb-cols: var(--fb-columns); }
+@container (max-width: 64rem) { .fb-grid { --fb-cols: min(var(--fb-columns), 3); } }
+@container (max-width: 40rem) { .fb-grid { --fb-cols: 2; } }
+.fb-grid {
+  --fb-cols: var(--fb-columns);
+  display: grid;
+  grid-template-columns: repeat(var(--fb-cols), minmax(0, 1fr));
+  column-gap: var(--fb-gutter);
+  margin: 0; padding: 0; list-style: none;
+}
+.fb-tile { position: relative; background-size: cover; background-position: center; background-color: var(--fb-line); }
+.fb-tile__link { display: block; width: 100%; height: 100%; }
+.fb-tile__image { display: block; width: 100%; height: 100%; object-fit: cover; }
+.fb-tile__link:focus-visible { outline-offset: -4px; }
+
+/* Square: equal cells. */
+.fb-grid--square { row-gap: var(--fb-gutter); }
+.fb-grid--square .fb-tile { aspect-ratio: 1; }
+
+/*
+  Masonry without JavaScript. One row is a twentieth of a column's width,
+  and each tile carries --fb-span: how many rows its shape needs (worked
+  out on the server from the photo's dimensions). Tall photos span more
+  rows; short ones fewer. The space between rows is the tile's own border,
+  so it does not disturb the arithmetic.
+*/
+.fb-grid--masonry {
+  grid-auto-rows: calc((100cqw - (var(--fb-cols) - 1) * var(--fb-gutter)) / var(--fb-cols) / 20);
+  grid-auto-flow: row dense;
+}
+.fb-grid--masonry .fb-tile { grid-row: span var(--fb-span, 14); border-bottom: var(--fb-gutter) solid var(--fb-ground); }
+
+.fb-pager { display: flex; gap: 1.5rem; margin-top: 2.5rem; font-size: 0.9375rem; }
+.fb-pager__more {
+  min-height: 2.75rem; padding: 0 1.5rem; border: 1px solid var(--fb-muted); background: none; color: var(--fb-text);
+  font: inherit; cursor: pointer; display: inline-flex; align-items: center; text-decoration: none;
+}
+.fb-pager__more:hover { border-color: var(--fb-text); color: var(--fb-text); }
+
+/* A photo on its own page: the picture, with its words in a column beside or under it, never over it. */
+.fb-photo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(14rem, 20rem); gap: clamp(1.5rem, 4vw, 3rem); align-items: start; }
+.fb-photo__figure { margin: 0; }
+.fb-photo__image { display: block; max-width: 100%; max-height: 86vh; width: auto; height: auto; background-size: cover; }
+.fb-photo__title { margin: 0 0 0.75rem; font-size: 1.5rem; font-weight: 700; line-height: 1.15; letter-spacing: -0.02em; }
+.fb-photo__description { margin: 0 0 1.25rem; color: var(--fb-muted); white-space: pre-line; }
+.fb-photo__facts { margin: 0; border-top: 1px solid var(--fb-line); font-size: 0.875rem; }
+.fb-photo__fact { display: grid; grid-template-columns: 6rem 1fr; gap: 1rem; padding: 0.45rem 0; border-bottom: 1px solid var(--fb-line); }
+.fb-photo__fact dt { color: var(--fb-muted); }
+.fb-photo__fact dd { margin: 0; }
+.fb-photo__albums { margin: 1.25rem 0 0; font-size: 0.875rem; color: var(--fb-muted); }
+.fb-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 1rem 0 0; padding: 0; list-style: none; }
+.fb-tag { display: inline-block; padding: 0.1rem 0.5rem; border: 1px solid var(--fb-line); font-size: 0.8125rem; text-decoration: none; }
+.fb-tag:hover { border-color: var(--fb-accent); }
+.fb-photo__licence, .fb-photo__download { margin: 1rem 0 0; font-size: 0.875rem; color: var(--fb-muted); }
+.fb-photo__nav { display: flex; gap: 1.5rem; margin-top: 1.5rem; font-size: 0.9375rem; }
+.fb-photo__back { margin: 0 0 1.5rem; font-size: 0.875rem; }
+@media (max-width: 52rem) { .fb-photo { grid-template-columns: 1fr; } }
+
+/* The same photo opened over the grid. */
+.fb-modal { width: min(96vw, 84rem); max-height: 94vh; padding: clamp(1rem, 3vw, 2rem); border: 1px solid var(--fb-line); background: var(--fb-ground); color: var(--fb-text); overflow: auto; }
+.fb-modal::backdrop { background: rgb(0 0 0 / 0.86); }
+.fb-modal__close { float: right; min-height: 2.75rem; margin: 0 0 1rem 1rem; padding: 0 1rem; border: 1px solid var(--fb-muted); background: none; color: var(--fb-text); font: inherit; cursor: pointer; }
+.fb-modal__close:hover { border-color: var(--fb-text); }
+.fb-modal .fb-photo { clear: both; }
+.fb-modal .fb-photo__image { max-height: 76vh; }
+
+/*
+  The slideshow fills the screen. Two images are stacked and cross-faded;
+  the one with --front is showing. Controls sit along the bottom on a band
+  that keeps them readable over any photo.
+*/
+.fb-slideshow { position: fixed; inset: 0; display: grid; background: var(--fb-ground); color: var(--fb-text); font-family: var(--fb-font); overflow: hidden; }
+.fb-slideshow__photo { position: absolute; inset: 0; margin: 0; padding: 0; border: 0; background: none; cursor: pointer; }
+.fb-slideshow__photo:focus-visible { outline-offset: -4px; }
+.fb-slideshow__image { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; opacity: 0; transition: opacity 1s ease; }
+.fb-slideshow__image--front { opacity: 1; }
+.fb-slideshow__controls {
+  position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;
+  padding: 0.75rem var(--fb-margin); background: rgb(0 0 0 / 0.72); font-size: 0.875rem;
+}
+.fb-slideshow__control {
+  min-height: 2.75rem; padding: 0 1rem; border: 1px solid var(--fb-muted); background: none; color: #f5f5f2;
+  font: inherit; display: inline-flex; align-items: center; text-decoration: none; cursor: pointer;
+}
+.fb-slideshow__control:hover { border-color: #f5f5f2; color: #f5f5f2; }
+.fb-slideshow__control[aria-pressed="true"] { background: #f5f5f2; color: #0a0a0b; }
+.fb-slideshow__count { margin: 0 auto 0 0.5rem; color: #d0d0cb; font-variant-numeric: tabular-nums; }
+.fb-slideshow__details {
+  position: absolute; left: 0; right: 0; bottom: 4.25rem; max-height: 50vh; overflow: auto;
+  padding: 1.25rem var(--fb-margin); background: rgb(0 0 0 / 0.82); color: #f5f5f2;
+}
+.fb-slideshow__details a { color: #f5f5f2; }
+.fb-slideshow__title { margin: 0 0 0.4rem; font-size: 1.25rem; font-weight: 700; letter-spacing: -0.015em; }
+.fb-slideshow__description { max-width: 46rem; margin: 0 0 0.5rem; white-space: pre-line; }
+.fb-slideshow__facts { margin: 0 0 0.5rem; color: #d0d0cb; font-size: 0.875rem; }
+.fb-slideshow__empty { align-self: center; justify-self: center; padding: var(--fb-margin); }
+
+@media (prefers-reduced-motion: reduce) {
+  .fb-public *, .fb-public *::before, .fb-public *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+  .fb-slideshow__image { transition: none; }
+}
+
+/* ── What makes this Plakat rather than Swiss ─────────────────────────── */
+
+/* The site's name as a poster headline, with a bar of the accent under it. */
+.fb-site-header { display: grid; gap: 0.5rem; padding: clamp(1.5rem, 5vw, 4rem) var(--fb-margin) 1.25rem; }
+.fb-site-title { font-size: clamp(2.75rem, 11vw, 8.5rem); line-height: 0.88; letter-spacing: -0.055em; margin-left: -0.04em; }
+.fb-site-title::after { content: ""; display: block; width: clamp(3rem, 10vw, 7rem); height: clamp(0.4rem, 1vw, 0.7rem); margin-top: clamp(0.9rem, 2vw, 1.6rem); background: var(--fb-accent); }
+.fb-site-tagline { font-size: 1rem; }
+.fb-nav { margin-left: 0; margin-top: 0.5rem; font-size: 1rem; font-weight: 700; }
+
+/* Photographs run to the edges of the screen. */
+.fb-main > div > .fb-grid-wrap, .fb-main > div > div > .fb-grid-wrap { margin-left: calc(var(--fb-margin) * -1); margin-right: calc(var(--fb-margin) * -1); }
+
+/* Headings are large and tight throughout. */
+.fb-page-title { font-size: clamp(2.5rem, 7vw, 5.5rem); line-height: 0.92; letter-spacing: -0.05em; }
+.fb-photo__title { font-size: clamp(1.75rem, 3vw, 2.75rem); line-height: 1; letter-spacing: -0.04em; }
+.fb-album__title { font-size: 1.25rem; letter-spacing: -0.02em; }
+.fb-tag:hover { border-color: var(--fb-accent); }

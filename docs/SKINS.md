@@ -4,6 +4,8 @@ A skin changes how the public site looks. It is a stylesheet and a short descrip
 
 ## Contents
 
+- [The skins that come with Fotobogen](#the-skins-that-come-with-fotobogen)
+- [Making your own from one of them](#making-your-own-from-one-of-them)
 - [Installing a skin](#installing-a-skin)
 - [What a skin is](#what-a-skin-is)
 - [Options](#options)
@@ -12,6 +14,66 @@ A skin changes how the public site looks. It is a stylesheet and a short descrip
 - [The slideshow](#the-slideshow)
 - [The grid](#the-grid)
 - [What a skin cannot do](#what-a-skin-cannot-do)
+
+## The skins that come with Fotobogen
+
+Three, all in the Swiss manner: one typeface, a strict grid, flat colour, no rounded corners or shadows. Switch between them at any time under **Admin, Skins**; nothing is rebuilt and no photo is touched.
+
+| Skin | | What makes it itself |
+|---|---|---|
+| **Swiss** | dark | Off-white on near-black, a small site name, hairline gaps between photos, a red accent. The default. |
+| **Papier** | light | Warm white paper, black type, heavy black rules above and below, wide margins and wide gaps, so photos sit like prints on a page. |
+| **Plakat** | dark | Pure black, the site's name set very large and tight like a poster headline with a bar of yellow under it, photographs edge to edge with no gaps. |
+
+![The Papier skin: a light page with a heavy black rule under the site name and photographs set apart](screenshots/skin-papier.jpg)
+
+![The Plakat skin: a black page with the site name set very large above photographs that run edge to edge](screenshots/skin-plakat.jpg)
+
+Each has the same three options: accent colour, space between photos, and columns on a wide screen.
+
+## Making your own from one of them
+
+Papier and Plakat are worked examples of the quickest way to make a skin: **take Swiss, change the values at the top, and add a few rules at the end.** Their stylesheets say so in their first lines, and each ends with a section headed "What makes this Papier rather than Swiss".
+
+1. Copy `skins/swiss/` to `data/skins/mine/` and change `"name"` in `skin.json` to `mine`.
+2. In `skin.css`, change the values in the first block. This alone gives you a new palette:
+
+   ```css
+   :root.fb-public {
+     --fb-ground: #f4f1ea;   /* the page */
+     --fb-text: #111111;     /* words */
+     --fb-muted: #55554f;    /* quieter words */
+     --fb-line: #d6d2c8;     /* rules, and the space behind a loading photo */
+     --fb-accent: #d4040f;   /* marks a hovered link, a focused tag */
+     --fb-gutter: 1.25rem;   /* space between photos */
+     --fb-columns: 3;        /* columns on a wide screen */
+     --fb-margin: clamp(1.25rem, 6vw, 5rem);   /* space at the sides */
+     color-scheme: light;    /* for a light skin: light scroll bars and form controls */
+   }
+   ```
+
+3. Put the same colours in `skin.json` under `tokens`, so the contrast check knows them, and set each option's `default` to match.
+4. Add your own rules at the end. Papier's are about fifteen lines:
+
+   ```css
+   .fb-site-header { margin: 0 var(--fb-margin) 2rem; padding: 2rem 0 1rem; border-bottom: 4px solid var(--fb-text); }
+   .fb-site-title { font-size: 1.5rem; letter-spacing: -0.03em; }
+   ```
+
+   Plakat's make the site's name a headline:
+
+   ```css
+   .fb-site-title { font-size: clamp(2.75rem, 11vw, 8.5rem); line-height: 0.88; letter-spacing: -0.055em; }
+   .fb-site-title::after { content: ""; display: block; width: 7rem; height: 0.7rem; background: var(--fb-accent); }
+   ```
+
+5. Restart, choose it under **Admin, Skins**, and look at the grid, a photo page, an album, and the slideshow.
+
+Three things to get right:
+
+- **Start every rule from `.fb-public`** (or `:root.fb-public`). The admin's stylesheet is loaded on the same pages; a bare `a { … }` or `body { … }` would fight with it or leak into it.
+- **Set the text colour on the body too** (`.fb-public body { color: var(--fb-text) }`), as the bundled skins do, or a light skin inherits the admin's light-on-dark text.
+- **Keep text readable.** Text needs a contrast of at least 4.5:1 with what is behind it. The Skins page warns you when a `contrast` pair in `skin.json` falls short. Do not use the accent as a text colour unless it passes; the bundled skins use it for underlines and bars.
 
 ## Installing a skin
 

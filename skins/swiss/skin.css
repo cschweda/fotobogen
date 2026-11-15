@@ -25,7 +25,9 @@
   font-family: var(--fb-font);
   line-height: 1.5;
 }
-.fb-public body { margin: 0; min-height: 100vh; background: var(--fb-ground); font-feature-settings: "tnum" 1; }
+/* Colour is set on the body as well as the root: the admin's stylesheet,
+   which is also loaded, gives the body a colour of its own. */
+.fb-public body { margin: 0; min-height: 100vh; background: var(--fb-ground); color: var(--fb-text); font-feature-settings: "tnum" 1; }
 .fb-public a { color: inherit; text-underline-offset: 0.2em; text-decoration-thickness: 1px; }
 /* The accent marks a hovered link by its underline. As a text colour, red on
    near-black is 4.0:1, short of the 4.5:1 that text needs. */
