@@ -26,14 +26,81 @@ export const PAGES = [
   { slug: 'modules', file: 'modules', nav: 'Modules' },
   { slug: 'writing-a-module', file: 'writing-a-module', nav: 'Writing a module' },
   { slug: 'faq', file: 'faq', nav: 'Questions' },
+  // Not written by hand: built from CHANGELOG.md, so the site and the repository always say the same.
+  { slug: 'changelog', file: null, nav: 'Releases' },
 ]
 const address = page => page.slug ? `/docs/${page.slug}/` : '/docs/'
 // Windows checks text out with its own line endings; what is built is the same everywhere.
 const text = path => readFileSync(path, 'utf8').replace(/\r\n/g, '\n')
 const escape = text => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+
+/** One line of the changelog's Markdown as HTML: `code`, **bold**, and [links](address). */
+function inline(markdown) {
+  return escape(markdown)
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    // An address inside the repository becomes its page on GitHub.
+    .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_, words, address) => `<a href="${/^https?:/.test(address) ? address : `https://github.com/cschweda/fotobogen/blob/main/${address}`}">${words}</a>`)
+}
+
+/**
+ * The Releases page, from CHANGELOG.md. It understands what that file uses:
+ * "## [1.2.3] - 2026-11-15" for a release, "###" for a part of one,
+ * paragraphs, and one level of "- " lists.
+ */
+export function releasesPage() {
+  const lines = text(join(root, 'CHANGELOG.md')).split('\n')
+  const out = []
+  let paragraph = []
+  let list = []
+  let section = null
+  const sections = []
+  const flush = () => {
+    if (paragraph.length) (section ?? out).push(`<p${section ? '' : ' class="lead"'}>${inline(paragraph.join(' '))}</p>`)
+    if (list.length) (section ?? out).push(`<ul>\n${list.map(item => `  <li>${inline(item)}</li>`).join('\n')}\n</ul>`)
+    paragraph = []
+    list = []
+  }
+  let leadDone = false
+  for (const line of lines) {
+    const release = line.match(/^## \[([^\]]+)\](?: - (\d{4})-(\d{2})-(\d{2}))?/)
+    if (release) {
+      flush()
+      const [, version, year, month, day] = release
+      section = []
+      sections.push({ version, body: section, date: year ? `${Number(day)} ${MONTHS[Number(month) - 1]} ${year}` : null })
+    }
+    else if (line.startsWith('# ') || /^\[[^\]]+\]: /.test(line)) continue // the file's own title, and its link definitions
+    else if (line.startsWith('### ')) { flush(); section?.push(`<h3>${inline(line.slice(4))}</h3>`) }
+    else if (line.startsWith('- ')) { if (paragraph.length) flush(); list.push(line.slice(2)) }
+    else if (line.trim() === '') flush()
+    else if (list.length) list[list.length - 1] += ` ${line.trim()}`
+    // Only the first paragraph before the first release is used as the page's opening.
+    else if (section || !leadDone) paragraph.push(line.trim())
+    if (!section && paragraph.length === 0 && out.length > 0) leadDone = true
+  }
+  flush()
+  const releases = sections.filter(({ version, body }) => !(version === 'Unreleased' && body.join('').replace(/<[^>]+>/g, '').trim() === 'Nothing yet.'))
+  const body = [
+    '<h1>Releases</h1>',
+    '<p class="lead">What is in each version of Fotobogen, newest first. This page is made from <a href="https://github.com/cschweda/fotobogen/blob/main/CHANGELOG.md">CHANGELOG.md</a> in the source, so the two always agree.</p>',
+    '<p>Version numbers follow <a href="https://semver.org">semantic versioning</a>: a change in the first number means something you rely on changed, the second adds features, and the third only fixes. <a href="https://github.com/cschweda/fotobogen/blob/main/docs/UPGRADING.md">What a version number promises, and how to upgrade.</a></p>',
+    ...releases.flatMap(({ version, date, body }) => [
+      version === 'Unreleased'
+        ? '<h2 id="unreleased">Not yet released</h2>'
+        : `<h2 id="v${version.replace(/[^0-9a-z]+/gi, '-')}">Version ${escape(version)}${date ? `, ${date}` : ''}</h2>`,
+      ...body,
+    ]),
+  ].join('\n')
+  const latest = releases.find(({ version }) => version !== 'Unreleased')
+  return { title: 'Releases', description: `What is in each version of Fotobogen. The current version is ${latest?.version ?? 'not yet released'}.`, body, latest: latest ? { version: latest.version, date: latest.date } : null }
+}
+
 /** A page's source: a first-line comment holding { title, description }, then its HTML. */
 function read(page) {
+  if (page.slug === 'changelog') return releasesPage()
   const source = text(join(here, 'pages', `${page.file}.html`))
   const meta = source.match(/^<!--\s*(\{.*?\})\s*-->\n/s)
   if (!meta) throw new Error(`${page.file}.html must begin with <!-- {"title": "...", "description": "..."} -->`)

@@ -48,6 +48,7 @@
       <li><a href="/docs/modules/">Modules</a></li>
       <li><a href="/docs/writing-a-module/">Writing a module</a></li>
       <li><a href="/docs/faq/">Questions</a></li>
+      <li><a href="/docs/changelog/">Releases</a></li>
     </ul>
     <div class="pages__here">
       <h2>On this page</h2>
@@ -72,6 +73,7 @@
   <li><a href="/docs/modules/">Modules</a><p>Film looks, a film frame, a watermark, and sharpening. How to write a module.</p></li>
   <li><a href="/docs/writing-a-module/">Writing a module</a><p>Step by step: the two files, the four kinds of setting, five worked examples, testing from the command line, and every error message.</p></li>
   <li><a href="/docs/faq/">Questions</a><p>Backups, restoring, starting over, a forgotten password, and what Fotobogen does and does not do.</p></li>
+  <li><a href="/docs/changelog/">Releases</a><p>What is in each version, newest first.</p></li>
 </ul>
 
 <h2 id="how-it-runs">How it runs</h2>
@@ -84,10 +86,11 @@
 </ul>
 
 <h2 id="state">Where it stands</h2>
-<p>Fotobogen is in development and has not had a numbered release. It is tested on every change on Linux (Ubuntu) and on Windows, and is developed on macOS. Two things follow from having no release yet:</p>
+<p>The current version is <strong>1.0.0</strong>, the first release, of 15 November 2026. <a href="/docs/changelog/">What is in it.</a></p>
+<p>Every change is installed, built, and tested on Linux (Ubuntu) and on Windows, and it is developed on macOS. Two things to know about this release:</p>
 <ul>
-  <li>No Docker image has been published, so a Docker install builds the image on your machine. The <a href="/docs/installation/">installation page</a> says how.</li>
-  <li>Upgrading between unreleased versions is supported (the database updates itself), but take a backup first.</li>
+  <li>No Docker image has been published yet, so a Docker install builds the image on your own machine. The <a href="/docs/installation/">installation page</a> says how.</li>
+  <li>It has not yet been tried on a Laravel Forge server or on a real 1 GB server. A 1 GB memory limit was tested in Docker.</li>
 </ul>
 <div class="note">
   <p><strong>Your photographs are your responsibility.</strong> Fotobogen is free software provided as it is, with no warranty. If the server is lost and you have no backup, the photographs on it are gone. <a href="/docs/faq/#backups">How to back up.</a></p>

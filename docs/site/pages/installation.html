@@ -111,7 +111,7 @@ cp .env.sample .env</code></pre>
   <li><strong>Edit <code>.env</code></strong> (<code>nano .env</code>) and set your domain by removing the <code>#</code> from this line and changing the name:
 <pre><code>DOMAIN=photos.example.com</code></pre>
   If <code>id -u</code> prints something other than <code>1000</code>, also set <code>PUID</code> and <code>PGID</code> to what <code>id -u</code> and <code>id -g</code> print.</li>
-  <li><strong>Build and start.</strong> No image has been published yet, so the image is built on your server. Open <code>docker-compose.yml</code>, find the line <code># build: .</code> under <code>app:</code>, and remove the <code>#</code> and the space after it. Then:
+  <li><strong>Build and start.</strong> No Docker image has been published yet for version 1.0.0, so the image is built on your server. Open <code>docker-compose.yml</code>, find the line <code># build: .</code> under <code>app:</code>, and remove the <code>#</code> and the space after it. Then:
 <pre><code>docker compose up -d --build</code></pre>
   The first build takes several minutes.</li>
   <li><strong>Read the setup token:</strong>

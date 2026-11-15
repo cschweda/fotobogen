@@ -24,7 +24,7 @@ describe('the documentation pages', () => {
   })
 
   it('cover installation, usage, skins, modules, and questions', () => {
-    expect(PAGES.map((page: { slug: string }) => page.slug)).toEqual(['', 'installation', 'configuration', 'usage', 'customization', 'skins', 'writing-a-skin', 'modules', 'writing-a-module', 'faq'])
+    expect(PAGES.map((page: { slug: string }) => page.slug)).toEqual(['', 'installation', 'configuration', 'usage', 'customization', 'skins', 'writing-a-skin', 'modules', 'writing-a-module', 'faq', 'changelog'])
     const text = (slug: string) => files.get(`docs/${slug}/index.html`)!
     // Installation: each system, both Docker routes, and server sizes.
     for (const id of ['requirements', 'macos', 'windows', 'linux', 'docker-vps', 'docker-forge', 'docker-local', 'first-run']) {
@@ -63,6 +63,34 @@ describe('the documentation pages', () => {
     const env = [...readFileSync('.env.sample', 'utf8').matchAll(/^# ([A-Z_]+)=/gm)].map(match => match[1]!)
     expect(env.length).toBeGreaterThan(6)
     for (const name of env) expect(page.includes(`<code>${name}`), `${name} from .env.sample is not on the configuration page`).toBe(true)
+  })
+
+  it('publish the changelog as the Releases page, and agree with package.json about the version', async () => {
+    const { releasesPage } = await import('../../docs/site/build.mjs') as { releasesPage: () => { latest: { version: string, date: string } | null, body: string } }
+    const releases = releasesPage()
+    const changelog = readFileSync('CHANGELOG.md', 'utf8')
+    const pkg = JSON.parse(readFileSync('package.json', 'utf8')) as { version: string }
+
+    // The newest release in the changelog is the version the software says it is.
+    expect(releases.latest?.version).toBe(pkg.version)
+    expect(changelog).toContain(`## [${pkg.version}] - `)
+    // Every release in the changelog is a heading on the page, with its date written out.
+    const versions = [...changelog.matchAll(/^## \[(\d[^\]]*)\] - (\d{4})-(\d{2})-(\d{2})/gm)]
+    expect(versions.length).toBeGreaterThan(0)
+    for (const [, version, year] of versions) {
+      expect(releases.body).toMatch(new RegExp(`<h2 id="v${version!.replace(/\./g, '-')}">Version ${version!.replace(/\./g, '\\.')}, \\d+ \\w+ ${year}</h2>`))
+    }
+    // Every bullet of the changelog is on the page.
+    const bullets = changelog.split('\n').filter(line => line.startsWith('- ')).length
+    expect((releases.body.match(/<li>/g) ?? []).length).toBe(bullets)
+    // Nothing of the Markdown is left showing.
+    expect(releases.body).not.toMatch(/\*\*|`|\]\(/)
+    // An empty "Unreleased" section is not shown.
+    expect(releases.body).not.toContain('Nothing yet.')
+
+    // The front page and the README name the same version.
+    expect(readFileSync('site/index.html', 'utf8')).toContain(`Version ${pkg.version}`)
+    expect(readFileSync('README.md', 'utf8')).toContain(`**Version ${pkg.version}**`)
   })
 
   it('link only to pages, sections, and images that exist', () => {

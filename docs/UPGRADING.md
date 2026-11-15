@@ -35,7 +35,7 @@ Fotobogen uses [semantic versioning](https://semver.org): `MAJOR.MINOR.PATCH`.
 - **MINOR** (1.4 to 1.5): new features. Everything you have keeps working.
 - **MAJOR** (1 to 2): something from the list below changed. The release notes say what and what to do about it.
 
-Before 1.0.0 the same rules are applied one place down: a `0.x` release may break things, a `0.x.y` release may not. Breaking changes are still listed in the changelog.
+These promises apply from version 1.0.0, the first release. Every release is described in [CHANGELOG.md](../CHANGELOG.md) and at [fotobogen.com/docs/changelog](https://fotobogen.com/docs/changelog/); a breaking change is always listed there with what to do about it.
 
 ## What counts as a breaking change
 
@@ -73,6 +73,7 @@ A backup made by a newer version is refused by an older one, with a message sayi
 ## For contributors
 
 - Never edit a migration that has been released; add a new one (`pnpm db:generate --name what_it_does`).
-- A change to anything in the list above needs a line in `CHANGELOG.md` under **Changed** or **Removed**, and, if it needs action from someone, a major version (or a minor one before 1.0.0).
+- A change to anything in the list above needs a line in `CHANGELOG.md` under **Changed** or **Removed**, and, if it needs action from someone, a major version.
 - New API fields, skin classes, module parameter types, and settings are additions: note them under **Added**.
 - Releases are tagged on `main` (`v1.2.3`); the tag publishes the Docker image.
+- To make a release: move what is under **Unreleased** in `CHANGELOG.md` to a new heading `## [1.2.3] - YYYY-MM-DD`, set the same number in `package.json`, and run `node docs/site/build.mjs`, which rebuilds the Releases page of the website from the changelog. A test fails if the three disagree.
