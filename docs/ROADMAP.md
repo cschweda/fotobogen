@@ -14,7 +14,7 @@ The feature list agreed on 2026-11-15, in the order it is being built. Each item
 | 6 | Slideshow (following openMantel) | Done |
 | 7 | Download and licence settings per photo; a watermark module | Done |
 | 8 | RSS, sitemap, and social cards per photo | Done |
-| 9 | A notice in the admin when a new version exists | Next |
+| 9 | A notice in the admin when a new version exists | Done |
 
 Visit counting is left to Plausible, which already tracks fotobogen.com; the placeholder site gets named goals instead.
 

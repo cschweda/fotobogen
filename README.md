@@ -41,6 +41,7 @@ plan is in [docs/DESIGN.md](docs/DESIGN.md); changes are recorded in
 - [Laravel Forge](#laravel-forge)
 - [Without Docker (pm2)](#without-docker-pm2)
 - [Backup and restore](#backup-and-restore)
+- [Updates](#updates)
 - [Resetting the admin password](#resetting-the-admin-password)
 - [The data directory](#the-data-directory)
 - [Settings](#settings)
@@ -512,6 +513,19 @@ login. What was there is **not deleted**: it is moved into a folder named
 copies are made again in the background, and photos reappear on the site as
 each finishes. A backup made by a newer version of Fotobogen is refused
 until you update.
+
+## Updates
+
+**Admin, System, Check for updates** asks GitHub whether a newer version of
+Fotobogen has been released, and the dashboard then says so until you have
+updated. Fotobogen does not check by itself unless you tick **Check once a
+day**. The check is a plain request for the latest release; nothing about
+your site is sent.
+
+To update a Docker install: `docker compose pull && docker compose up -d`.
+To update a source install: `scripts/rebuild.sh`, or `git pull`, `pnpm
+install`, `pnpm build`, and restart. Download a backup first. Database
+changes are applied automatically when the new version starts.
 
 ## Resetting the admin password
 
