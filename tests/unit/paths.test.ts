@@ -1,20 +1,23 @@
 import { mkdtempSync, existsSync, chmodSync, mkdirSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { dataPaths, ensureDataDirs, resolveDataDir } from '../../server/core/paths.ts'
 
 describe('resolveDataDir', () => {
   it('defaults to ./data under the working directory', () => {
-    expect(resolveDataDir({}, '/x')).toBe('/x/data')
+    expect(resolveDataDir({}, '/x')).toBe(join('/x', 'data'))
   })
   it('uses an absolute DATA_DIR as given', () => {
     expect(resolveDataDir({ DATA_DIR: '/srv/d' }, '/x')).toBe('/srv/d')
   })
   it('resolves a relative DATA_DIR against the working directory', () => {
-    expect(resolveDataDir({ DATA_DIR: 'store' }, '/x')).toBe('/x/store')
+    expect(resolveDataDir({ DATA_DIR: 'store' }, '/x')).toBe(resolve('/x', 'store'))
   })
 })
+
+// chmod cannot make a directory read-only for root, or for anyone on Windows.
+const cannotRestrict = process.platform === 'win32' || process.getuid?.() === 0
 
 describe('ensureDataDirs', () => {
   it('creates the data directory and its subdirectories', () => {
@@ -29,7 +32,7 @@ describe('ensureDataDirs', () => {
     expect(paths.setupToken).toBe(join(root, 'setup-token'))
   })
 
-  it.skipIf(process.getuid?.() === 0)('names the directory when it cannot be written', () => {
+  it.skipIf(cannotRestrict)('names the directory when it cannot be written', () => {
     const parent = mkdtempSync(join(tmpdir(), 'fb-'))
     const root = join(parent, 'data')
     mkdirSync(root)
@@ -39,7 +42,7 @@ describe('ensureDataDirs', () => {
     chmodSync(root, 0o700)
   })
 
-  it.skipIf(process.getuid?.() === 0)('names a subdirectory it cannot write to', () => {
+  it.skipIf(cannotRestrict)('names a subdirectory it cannot write to', () => {
     const root = join(mkdtempSync(join(tmpdir(), 'fb-')), 'data')
     const paths = dataPaths(root)
     ensureDataDirs(paths)

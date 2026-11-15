@@ -46,7 +46,7 @@ describe('first boot', () => {
 })
 
 describe('boot failures', () => {
-  it.skipIf(process.getuid?.() === 0)('exits with one clear line when the data directory is not writable', async () => {
+  it.skipIf(process.platform === 'win32' || process.getuid?.() === 0)('exits with one clear line when the data directory is not writable', async () => {
     const dataDir = join(mkdtempSync(join(tmpdir(), 'fotobogen-test-')), 'data')
     mkdirSync(dataDir)
     chmodSync(dataDir, 0o500)

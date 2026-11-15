@@ -1,11 +1,12 @@
 import { spawnSync } from 'node:child_process'
+import { join } from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { get, post, startServer, type TestServer } from '../helpers/server.ts'
+import { baseEnv, get, post, startServer, type TestServer } from '../helpers/server.ts'
 import { ADMIN, completeSetup, query } from '../helpers/setup.ts'
 
 function cli(dataDir: string, args: string[], input = '') {
   const result = spawnSync(process.execPath, ['scripts/fotobogen.mjs', ...args], {
-    env: { PATH: process.env.PATH, DATA_DIR: dataDir },
+    env: { ...baseEnv(), DATA_DIR: dataDir },
     input,
     encoding: 'utf8',
   })
@@ -81,6 +82,6 @@ describe('fotobogen CLI', () => {
   it('explains a missing database instead of creating one', () => {
     const result = cli('/nonexistent-fotobogen-data', ['reset-admin'], 'a brand new password\n')
     expect(result.code).toBe(1)
-    expect(result.out).toContain('No Fotobogen database found at /nonexistent-fotobogen-data/fotobogen.db')
+    expect(result.out).toContain('No Fotobogen database found at ' + join('/nonexistent-fotobogen-data', 'fotobogen.db') + '')
   })
 })
