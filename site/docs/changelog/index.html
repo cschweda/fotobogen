@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Releases | Fotobogen documentation</title>
+<meta name="description" content="What is in each version of Fotobogen. The current version is 1.0.0.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f5f5f2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0a0a0b" media="(prefers-color-scheme: dark)">
+<link rel="canonical" href="https://fotobogen.com/docs/changelog/">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://fotobogen.com/docs/changelog/">
+<meta property="og:title" content="Releases | Fotobogen documentation">
+<meta property="og:description" content="What is in each version of Fotobogen. The current version is 1.0.0.">
+<meta property="og:image" content="https://fotobogen.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Fotobogen wordmark beside a contact sheet of sixteen numbered frames, one of them red. Above the wordmark: German for photo sheet, as in a contact sheet.">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230a0a0b'/%3E%3Crect x='6' y='9' width='20' height='14' fill='%23e30613'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/docs/docs.css">
+<script src="/docs/docs.js" defer></script>
+<!-- Privacy-friendly analytics by Plausible -->
+<script async src="https://plausible.io/js/pa-UXO2Zaq02zXvfaEecXWvD.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header>
+  <div class="wrap bar">
+    <a class="bar__name" href="/">Fotobogen<span>Documentation</span></a>
+    <div class="bar__links">
+      <a href="https://github.com/cschweda/fotobogen" data-goal="GitHub click" data-where="docs">Source on GitHub</a>
+      <button class="toggle" type="button" id="theme">Dark</button>
+    </div>
+  </div>
+</header>
+<div class="wrap layout">
+  <nav class="pages" aria-label="Documentation">
+    <ul class="pages__all">
+      <li><a href="/docs/">Overview</a></li>
+      <li><a href="/docs/installation/">Installation</a></li>
+      <li><a href="/docs/configuration/">Configuration</a></li>
+      <li><a href="/docs/usage/">Using Fotobogen</a></li>
+      <li><a href="/docs/customization/">Customization</a></li>
+      <li><a href="/docs/skins/">Skins</a></li>
+      <li><a href="/docs/writing-a-skin/">Writing a skin</a></li>
+      <li><a href="/docs/modules/">Modules</a></li>
+      <li><a href="/docs/writing-a-module/">Writing a module</a></li>
+      <li><a href="/docs/faq/">Questions</a></li>
+      <li><a href="/docs/changelog/" aria-current="page">Releases</a></li>
+    </ul>
+  </nav>
+  <main id="main" class="doc">
+<h1>Releases</h1>
+<p class="lead">What is in each version of Fotobogen, newest first. This page is made from <a href="https://github.com/cschweda/fotobogen/blob/main/CHANGELOG.md">CHANGELOG.md</a> in the source, so the two always agree.</p>
+<p>Version numbers follow <a href="https://semver.org">semantic versioning</a>: a change in the first number means something you rely on changed, the second adds features, and the third only fixes. <a href="https://github.com/cschweda/fotobogen/blob/main/docs/UPGRADING.md">What a version number promises, and how to upgrade.</a></p>
+<h2 id="v1-0-0">Version 1.0.0, 15 November 2026</h2>
+<p>The first release. Fotobogen is a self-hosted publishing platform for photographs: install it on a computer of your own, answer a few questions in a browser, and get a public photo site with an admin behind a login.</p>
+<p>Being the first release, this entry describes everything in it, by area. Later entries list only what changed.</p>
+<h3>Installing and running</h3>
+<ul>
+  <li>Runs on <strong>Node.js 24</strong>, or in <strong>Docker</strong>, on Linux (Ubuntu and Debian), macOS, and Windows. Nothing is compiled during installation.</li>
+  <li><code>pnpm install</code>, <code>pnpm build</code>, <code>pnpm start</code>. A Node.js or pnpm that is too old stops the first command, before anything is fetched, and says what to do.</li>
+  <li>A <strong>preflight check</strong> before every start: Node.js version, operating system, processor, memory, disk space, the data folder, and the image and database libraries. A failure stops the start and says what to fix. Also <code>pnpm preflight</code>.</li>
+  <li>Default port <strong>5150</strong>. If it is busy, the next free port above it is used; a port you set yourself is used exactly. Two copies on one machine are detected, and never share a data folder.</li>
+  <li>Everything a site owns is in one folder, <code>data</code>: the SQLite database, the photographs as uploaded, and the resized copies.</li>
+  <li><strong>Settings</strong> in one commented file, <code>fotobogen.config.js</code>, in an &quot;okay to change&quot; part and a &quot;do not touch&quot; part. <code>.env</code> and the environment override it, and a change to <code>.env</code> needs only a restart.</li>
+  <li>A <strong>Docker</strong> image definition, a quick-start compose file with Caddy (HTTPS by itself), a compose file and nginx configuration for Laravel Forge, a pm2 process file, and an update script.</li>
+  <li><code>/api/health</code> for uptime monitors: version, database status, queue depth, and uptime.</li>
+</ul>
+<h3>Setting up</h3>
+<ul>
+  <li>A one-time <strong>setup token</strong>, printed at every start until setup is done.</li>
+  <li>A six-step <strong>setup wizard</strong> in the browser: token, site name, admin account, grid layout and photo view, and whether to start empty or with sample photos.</li>
+  <li><strong>Sample photos</strong>: 25 photographs from Lorem Picsum (Unsplash), downloaded only if asked for, with a progress counter; they can be removed in one step.</li>
+  <li>A one-time notice that backups are the owner's responsibility and the software comes with no warranty.</li>
+</ul>
+<h3>Photographs</h3>
+<ul>
+  <li><strong>Upload</strong> JPEG, PNG, WebP, TIFF, and AVIF, judged by content, not by name. 50 MB and 100 megapixels each by default; duplicates are refused.</li>
+  <li><strong>Processing</strong> in the background, one photo at a time, to stay within a small server's memory: camera details read from the file, rotation, sRGB, and WebP copies at four sizes. Interrupted work resumes after a restart. The uploaded file is never changed.</li>
+  <li><strong>The library</strong>: reorder by dragging or from the keyboard; hide, show, or delete several at once; find hidden photos, photos with no alt text, and failures.</li>
+  <li><strong>Each photo</strong>: title, description, alt text, web address, date taken, albums, tags, licence, and whether it can be downloaded.</li>
+  <li><strong>Scheduling and drafts</strong>: public now, public from a date and time, or hidden. New uploads can start as drafts.</li>
+  <li><strong>Albums and tags</strong>, each with its own public page.</li>
+  <li><strong>Links</strong> to copy for each photo: the address of its page and of each size of the picture, and HTML to embed it.</li>
+  <li><strong>Picture quality</strong>: Smaller files, Standard, or High for the copies shown on the site.</li>
+</ul>
+<h3>The public site</h3>
+<ul>
+  <li>A <strong>photo grid</strong>, masonry or square, laid out by CSS with no JavaScript needed, with blurred placeholders and no layout shift.</li>
+  <li>A <strong>page for each photo</strong>, which can also open over the grid: title, description, camera details, size, licence, tags, albums, previous and next, and a full-screen view.</li>
+  <li>A <strong>slideshow</strong> for the whole site, an album, or a tag, with keyboard control.</li>
+  <li><strong>Light and dark</strong> modes on every skin, with a switch for visitors.</li>
+  <li>An <strong>RSS feed</strong>, a <strong>sitemap</strong>, <code>robots.txt</code>, and sharing cards for every page.</li>
+  <li>Where a photo was taken is never shown unless the owner switches that on; the copies visitors see carry no camera data.</li>
+  <li>Built and tested to <strong>WCAG 2.1 level AA</strong>.</li>
+</ul>
+<h3>Making the site your own</h3>
+<ul>
+  <li><strong>Site text</strong>: the site's name, tagline, language, and every fixed piece of text on the public pages can be put in the owner's own words. No public page says &quot;Fotobogen&quot;.</li>
+  <li><strong>Icon and logo</strong>: a site icon, and a logo in place of the site's name, with a separate one for dark mode.</li>
+  <li><strong>Search and sharing</strong>: page titles, the site's description, the picture shown when the site is shared, whether search engines may list it, the site's proper address, and verification codes for Google and Bing.</li>
+  <li><strong>Licence</strong> for the site and for each photo: all rights reserved, or Creative Commons.</li>
+</ul>
+<h3>Skins</h3>
+<ul>
+  <li>Four skins, each with a light and a dark mode: <strong>Swiss</strong>, <strong>Papier</strong>, <strong>Plakat</strong>, and <strong>Rangefinder Dreams</strong>.</li>
+  <li>Options for each: accent colour, space between photos, and number of columns.</li>
+  <li>A skin can set a <strong>look for every photo</strong>. Rangefinder Dreams shows every photo in black and white.</li>
+  <li>A contrast check that warns when a colour would make text hard to read.</li>
+  <li>Skins of your own go in <code>data/skins/</code>: a stylesheet and a settings file, with no build step.</li>
+</ul>
+<h3>Modules</h3>
+<ul>
+  <li>Three modules, all switched off until switched on: <strong>Film looks</strong> (tone and grain of several kinds of film), <strong>Film frame</strong> (a contact-print border), and <strong>Watermark</strong>. Each has a sharpening control.</li>
+  <li>A look can be set for all photos or for one, with a live preview.</li>
+  <li>Modules of your own go in <code>data/modules/</code>: plain JavaScript, with no build step and no admin code. <code>pnpm fotobogen module new</code> starts one and <code>pnpm fotobogen module test</code> checks it.</li>
+</ul>
+<h3>Keeping it safe</h3>
+<ul>
+  <li>One admin account. Passwords of at least 12 characters, hashed with scrypt. Five wrong attempts in 15 minutes lock an address out.</li>
+  <li><strong>Backup and restore</strong>: one zip of everything that cannot be made again, from the admin or the command line. What a restore replaces is kept, not deleted.</li>
+  <li><strong>API tokens</strong> for scripts and other programs: shown once, stored as a hash, and limited to uploading or to managing photos. No token can change settings or reach a backup.</li>
+  <li><strong>Demo mode</strong> (<code>DEMO_MODE=1</code>): a <code>demo</code> / <code>demo</code> login that can open every admin page and change nothing.</li>
+  <li><strong>Update notice</strong>: the admin can check GitHub for a newer release, on request or once a day.</li>
+  <li>No outside requests unless asked for: sample photos, the update check, and webhooks.</li>
+</ul>
+<h3>For developers</h3>
+<ul>
+  <li>A read-only <strong>public JSON API</strong>, readable from other sites.</li>
+  <li><strong>Webhooks</strong>: signed messages when a photo is uploaded, goes live, or is deleted.</li>
+  <li>Guides to <strong>writing a skin</strong> and <strong>writing a module</strong>, each with worked examples that are tested.</li>
+  <li>A documented upgrade policy: what a version number promises, and how to go back.</li>
+</ul>
+<h3>Documentation</h3>
+<ul>
+  <li><a href="https://fotobogen.com/docs/">fotobogen.com/docs</a>: installation on each system, configuration (every setting), using it, customization, skins, modules, the two developer guides, and questions.</li>
+</ul>
+<h3>Known limits of this release</h3>
+<ul>
+  <li><strong>No Docker image has been published yet.</strong> The Docker instructions build the image on your own machine.</li>
+  <li><strong>Not yet tried:</strong> a Laravel Forge server, a real 1 GB server (a 1 GB memory limit was tested in Docker), Docker on Windows, and the Docker quick start with Caddy from end to end.</li>
+  <li>One admin account only. No comments, no shop, no storage outside the server's own disk.</li>
+</ul>
+    <p class="next">
+      <a href="/docs/faq/">Back: Questions</a>
+      <a href="/">Fotobogen home</a>
+    </p>
+  </main>
+</div>
+<footer>
+  <div class="wrap">
+    <span>Fotobogen is free and open source, under the MIT licence.</span>
+    <span>It comes with no warranty. Keep backups of your photographs.</span>
+    <span>&copy; 2026 <a href="https://github.com/cschweda" data-goal="Author click">Christopher Schweda</a></span>
+  </div>
+</footer>
+</body>
+</html>
