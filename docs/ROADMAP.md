@@ -16,7 +16,21 @@ The feature list agreed on 2026-11-15, in the order it is being built. Each item
 | 8 | RSS, sitemap, and social cards per photo | Done |
 | 9 | A notice in the admin when a new version exists | Done |
 
-Visit counting is left to Plausible, which already tracks fotobogen.com. The page sends named events (`GitHub click`, `Author click`, `Theme switch`, `Section viewed`, `Screenshot viewed`) that can be added as goals there.
+Visit counting is left to Plausible, which already tracks fotobogen.com. The page sends named events (`GitHub click`, `Author click`, `Docs click`, `Theme switch`, `Section viewed`, `Screenshot viewed`) that can be added as goals there.
+
+## Added since, at the owner's request
+
+| Feature | Status |
+|---|---|
+| Three more skins (Papier, Plakat, Rangefinder Dreams), and a light and a dark mode for every skin | Done |
+| A skin can set a look for every photo | Done |
+| A sharpening control on every bundled module | Done |
+| Site text: every word on the public site can be changed in the admin | Done |
+| Search and sharing: descriptions, titles, the sharing picture, and search-engine settings | Done |
+| Links to a photo and to each size of its picture, to copy from the admin | Done |
+| Documentation at [fotobogen.com/docs](https://fotobogen.com/docs/) | Done |
+| Cropping a photo in the admin | Later |
+| A site icon (favicon) chosen in the admin | Later |
 
 ## For developers
 
