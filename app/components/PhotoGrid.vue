@@ -130,7 +130,7 @@ onBeforeUnmount(() => window.removeEventListener('popstate', onPopState))
 
     <p class="fb-visually-hidden" role="status">{{ announcement }}</p>
     <nav v-if="page < pages || firstPage > 1" class="fb-pager" aria-label="More photos">
-      <a v-if="firstPage > 1" class="fb-pager__more" :href="firstPage === 2 ? base : `${base}?page=${firstPage - 1}`">Earlier photos</a>
+      <a v-if="firstPage > 1" class="fb-pager__more" :href="firstPage === 2 ? base : `${base}?page=${firstPage - 1}`">Previous page</a>
       <a v-if="page < pages" class="fb-pager__more" :href="`${base}?page=${page + 1}`" @click="more">More photos</a>
     </nav>
 

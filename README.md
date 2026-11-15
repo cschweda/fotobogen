@@ -220,6 +220,8 @@ Visitors see two kinds of page:
   the left and right arrow keys. If the site is set to open photos over the
   grid, the same content appears in a modal; the address still changes, and
   Back, Escape, or Close returns to the grid where you were.
+- **Albums and tags**: `/albums`, `/album/<name>`, and `/tag/<name>` (see
+  [Albums and tags](#albums-and-tags)).
 
 Only photos that are processed and public are ever shown. Location is never
 shown unless you switch that on.

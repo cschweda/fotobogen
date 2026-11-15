@@ -116,7 +116,7 @@ describe('the public site', () => {
     expect((await tiles(2)).tiles).toHaveLength(4)
     expect((await tiles(99)).tiles).toEqual([])
     expect(await (await get(server, '/')).text()).toContain('href="/?page=2"')
-    expect(await (await get(server, '/?page=2')).text()).toContain('Newer photos')
+    expect(await (await get(server, '/?page=2')).text()).toContain('Previous page')
     sql(`delete from photos where id like 'x%'`)
   })
 
