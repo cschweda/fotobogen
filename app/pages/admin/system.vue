@@ -60,6 +60,8 @@ async function cancel() {
       <div v-if="system.freeBytes !== null" class="facts__row"><dt>Free space</dt><dd>{{ size(system.freeBytes) }}</dd></div>
     </dl>
 
+    <UpdateNotice full />
+
     <section class="block" aria-labelledby="backup-heading">
       <h2 id="backup-heading" class="heading">Back up</h2>
       <p class="about">

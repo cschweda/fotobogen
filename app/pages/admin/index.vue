@@ -40,6 +40,7 @@ async function logOut() {
       <a class="fb-button fb-button--quiet" href="/">View your site</a>
       <button type="button" class="fb-button fb-button--quiet" @click="logOut">Log out</button>
     </div>
+    <UpdateNotice />
     <SampleDownload variant="admin" @changed="refresh()" />
   </FbShell>
 </template>
