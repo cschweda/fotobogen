@@ -30,8 +30,16 @@ export interface Skin {
   /** Pairs of token names that are text on a background. */
   contrast: [string, string][]
   options: Record<string, SkinOption>
+  /**
+   * A look for every photo, which choosing the skin can set: recipe steps
+   * as the Modules page would save them. Checked against the installed
+   * modules when it is applied, not here.
+   */
+  look: SkinLookStep[]
   error: string | null
 }
+
+export interface SkinLookStep { module: string, transform: string, params: Record<string, string | number | boolean> }
 
 export type SkinValues = Record<string, string | number | ModeColours>
 export interface SkinFiles { name: string, json: string, css: string }
@@ -80,7 +88,7 @@ function parseOption(key: string, raw: unknown): SkinOption {
 
 /** Reads one skin. A skin with a mistake in it is returned with `error` set, never thrown. */
 export function parseSkin(files: SkinFiles, source: Skin['source']): Skin {
-  const blank: Skin = { name: NAME.test(files.name) ? files.name : 'invalid', version: '?', label: files.name, description: null, source, css: '', mode: 'light', modes: { light: {}, dark: {} }, contrast: [], options: {}, error: null }
+  const blank: Skin = { name: NAME.test(files.name) ? files.name : 'invalid', version: '?', label: files.name, description: null, source, css: '', mode: 'light', modes: { light: {}, dark: {} }, contrast: [], options: {}, look: [], error: null }
   try {
     const json = JSON.parse(files.json) as unknown
     if (!isRecord(json)) throw new Error('skin.json must be a JSON object.')
@@ -113,7 +121,19 @@ export function parseSkin(files: SkinFiles, source: Skin['source']): Skin {
       if (!/^[a-z][a-z0-9-]{0,39}$/.test(key)) throw new Error('Option names are lowercase letters, digits, and hyphens.')
       options[key] = parseOption(key, raw)
     }
-    return { ...blank, name: json.name, version: json.version, label: json.label, description: typeof json.description === 'string' ? json.description : null, css: files.css, mode: json.mode === 'dark' ? 'dark' : 'light', modes, contrast, options }
+    const look: SkinLookStep[] = []
+    if (json.look !== undefined) {
+      if (!Array.isArray(json.look) || json.look.length > 4) throw new Error('"look" must be a list of up to four steps, each with a "module", a "transform", and "params".')
+      for (const step of json.look as unknown[]) {
+        if (!isRecord(step) || typeof step.module !== 'string' || typeof step.transform !== 'string') throw new Error('Each step of "look" needs a "module" and a "transform".')
+        const params: SkinLookStep['params'] = {}
+        for (const [key, value] of Object.entries(isRecord(step.params) ? step.params : {})) {
+          if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') params[key] = value
+        }
+        look.push({ module: step.module, transform: step.transform, params })
+      }
+    }
+    return { ...blank, look, name: json.name, version: json.version, label: json.label, description: typeof json.description === 'string' ? json.description : null, css: files.css, mode: json.mode === 'dark' ? 'dark' : 'light', modes, contrast, options }
   }
   catch (error) {
     return { ...blank, error: error instanceof Error ? error.message : String(error) }

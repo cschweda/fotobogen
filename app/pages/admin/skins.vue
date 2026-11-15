@@ -9,16 +9,18 @@ type Option
     | { type: 'range', label?: string, min: number, max: number, step?: number, default: number }
 type Values = Record<string, string | number | { light: string, dark: string }>
 interface Skin {
-  name: string, label: string, version: string, description: string | null, source: 'bundled' | 'installed', mode: 'light' | 'dark'
+  name: string, label: string, version: string, description: string | null, source: 'bundled' | 'installed', mode: 'light' | 'dark', look: string[]
   error: string | null, options: Record<string, Option>, values: Values, warnings: string[]
 }
 
-const { data, refresh } = await useFetch<{ active: string, mode: string, skins: Skin[] }>('/api/admin/skins')
+const { data, refresh } = await useFetch<{ active: string, mode: string, lookFrom: string | null, skins: Skin[] }>('/api/admin/skins')
 const skins = computed(() => data.value?.skins ?? [])
 const chosen = ref(data.value?.active ?? 'swiss')
 const mode = ref(data.value?.mode ?? 'skin')
 const values = ref<Record<string, Values>>(Object.fromEntries(skins.value.map(skin => [skin.name, structuredClone(toRaw(skin.values))])))
 const current = computed(() => skins.value.find(skin => skin.name === chosen.value))
+// Whether to take each skin's look with it. On, except for the skin in use if its look was turned off or changed.
+const useLook = ref<Record<string, boolean>>(Object.fromEntries(skins.value.map(skin => [skin.name, skin.name === data.value?.active ? data.value?.lookFrom === skin.name : true])))
 const message = ref('')
 const problem = ref('')
 const warnings = ref<string[]>(current.value?.warnings ?? [])
@@ -29,9 +31,12 @@ async function save() {
   busy.value = true
   problem.value = ''
   try {
-    const result = await $fetch<{ warnings: string[] }>('/api/admin/skins', { method: 'PUT', body: { active: chosen.value, mode: mode.value, options: values.value[chosen.value] } })
+    const result = await $fetch<{ warnings: string[], look: { applied: boolean, queued: number } }>('/api/admin/skins', {
+      method: 'PUT',
+      body: { active: chosen.value, mode: mode.value, options: values.value[chosen.value], useLook: useLook.value[chosen.value] !== false },
+    })
     warnings.value = result.warnings
-    message.value = `Saved. Your site now uses ${current.value?.label}.`
+    message.value = `Saved. Your site now uses ${current.value?.label}.${result.look.queued > 0 ? ` ${result.look.queued} ${result.look.queued === 1 ? 'photo is' : 'photos are'} being made again with the new look; this takes a moment.` : ''}`
     await refresh()
   }
   catch (error) {
@@ -64,6 +69,16 @@ async function save() {
           </span>
         </label>
       </fieldset>
+
+      <div v-if="current?.look.length" class="skins__options">
+        <h2 class="skins__heading">{{ current.label }} comes with a look</h2>
+        <p class="skins__note">This skin sets a look for every photo: <strong>{{ current.look.join(', then ') }}</strong>. Your uploaded files are never changed; the copies visitors see are made again, which takes a moment for a large library.</p>
+        <label class="look">
+          <input v-model="useLook[current.name]" type="checkbox">
+          <span>Use this look for all photos</span>
+        </label>
+        <p class="skins__note">You can change the look or switch it off for all photos under <NuxtLink class="fb-link" to="/admin/modules">Modules</NuxtLink>, and give any one photo a different look, or none, on its own page. Unticking this box uses the skin without its look.</p>
+      </div>
 
       <div class="skins__options">
         <h2 class="skins__heading">Light or dark</h2>
@@ -138,6 +153,8 @@ async function save() {
 .option { display: grid; grid-template-columns: 1fr auto; gap: 0.25rem 0.75rem; align-items: center; padding: 0.75rem 0; border-top: 1px solid var(--fb-line); }
 .option__label { grid-column: 1 / -1; font-size: 0.875rem; color: var(--fb-muted); }
 .skins__note { max-width: 40rem; margin: 0 0 0.75rem; color: var(--fb-muted); }
+.look { display: flex; align-items: center; gap: 0.6rem; margin: 0 0 0.75rem; font-weight: 700; }
+.look input { width: 1.25rem; height: 1.25rem; margin: 0; accent-color: var(--fb-red); }
 .option__pair { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 0.75rem 2rem; }
 .option__shade { display: flex; align-items: center; gap: 0.6rem; }
 .option__color { width: 4rem; height: 2.5rem; padding: 0; border: 1px solid var(--fb-edge); background: none; }

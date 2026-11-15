@@ -1,0 +1,77 @@
+{
+  "name": "rangefinder",
+  "version": "1.0.0",
+  "label": "Rangefinder Dreams",
+  "description": "Black and white throughout: every photograph is given the tone and grain of fast black-and-white film, crisply sharpened, and shown in a thin frame like a mounted print. Grey type on black, or black on pale grey. No colour anywhere.",
+  "mode": "dark",
+  "modes": {
+    "light": {
+      "ground": "#f1f1ef",
+      "text": "#0c0c0c",
+      "muted": "#565654",
+      "line": "#c9c9c6",
+      "accent": "#0c0c0c"
+    },
+    "dark": {
+      "ground": "#0c0c0c",
+      "text": "#ededeb",
+      "muted": "#a3a3a0",
+      "line": "#3a3a39",
+      "accent": "#ededeb"
+    }
+  },
+  "contrast": [
+    [
+      "text",
+      "ground"
+    ],
+    [
+      "muted",
+      "ground"
+    ]
+  ],
+  "look": [
+    {
+      "module": "filmlooks",
+      "transform": "film-look",
+      "params": {
+        "look": "B&W 400 (Tri-X style)",
+        "grain": 100,
+        "sharpen": 60
+      }
+    }
+  ],
+  "options": {
+    "accent": {
+      "type": "color",
+      "label": "Accent colour",
+      "default": {
+        "light": "#0c0c0c",
+        "dark": "#ededeb"
+      }
+    },
+    "gutter": {
+      "type": "select",
+      "label": "Space between photos",
+      "options": [
+        "none",
+        "hairline",
+        "wide"
+      ],
+      "default": "wide",
+      "values": {
+        "none": "0px",
+        "hairline": "3px",
+        "wide": "1.25rem"
+      }
+    },
+    "columns": {
+      "type": "range",
+      "label": "Columns on a wide screen",
+      "min": 2,
+      "max": 6,
+      "step": 1,
+      "default": 3
+    }
+  }
+}

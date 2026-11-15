@@ -44,7 +44,7 @@ describe('modules and recipes', () => {
     expect(byName.filmframe).toMatchObject({ source: 'bundled', enabled: false, error: null })
     expect(byName.filmlooks).toMatchObject({ source: 'bundled', enabled: false, error: null })
     expect(Object.entries(byName.filmframe!.transforms[0]!.params).map(([key, spec]) => [key, spec.type])).toEqual([
-      ['thickness', 'range'], ['raggedness', 'range'], ['markings', 'boolean'], ['sprockets', 'boolean'], ['stock', 'select'],
+      ['thickness', 'range'], ['raggedness', 'range'], ['markings', 'boolean'], ['sprockets', 'boolean'], ['stock', 'select'], ['sharpen', 'range'],
     ])
     expect(byName.invert).toMatchObject({ source: 'installed', enabled: false, error: null })
     expect(byName.broken!.error).toBeTruthy()

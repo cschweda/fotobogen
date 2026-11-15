@@ -124,6 +124,18 @@ function outline(left, top, right, bottom, amount, step, random) {
   return 'M' + points.map(([x, y]) => `${round(x)} ${round(y)}`).join('L') + 'Z'
 }
 
+/**
+ * Sharpening, from 0 (none) to 100 (crisp, with visible edge contrast).
+ * Around 25 is what a print or a scan is normally given.
+ */
+function sharpened(image, amount) {
+  const strength = Math.max(0, Math.min(100, Number(amount) || 0)) / 100
+  if (strength === 0) return image
+  // sigma: how wide an edge is treated. m1 and m2: how much flat and
+  // detailed areas are sharpened; flat areas get less, so skies stay smooth.
+  return image.sharpen({ sigma: 0.6 + strength * 0.9, m1: strength * 1.5, m2: 1 + strength * 3 })
+}
+
 export default {
   transforms: [
     {
@@ -136,9 +148,11 @@ export default {
         markings: { type: 'boolean', label: 'Film edge markings', default: true },
         sprockets: { type: 'boolean', label: 'Sprocket holes (35 mm)', default: true },
         stock: { type: 'select', label: 'Film stock (made up)', options: STOCKS, default: STOCKS[0] },
+        sharpen: { type: 'range', label: 'Sharpening of the photo (0 is none, 25 is normal)', min: 0, max: 100, step: 5, default: 0 },
       },
 
       async apply(image, params, { width, height, sharp }) {
+        image = sharpened(image, params.sharpen)
         // The border is a share of the photo's shorter side, so it looks the
         // same on a thumbnail and on a large copy.
         const border = Math.max(2, Math.round(Math.min(width, height) * params.thickness / 100))
