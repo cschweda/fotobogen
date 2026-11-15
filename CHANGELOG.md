@@ -76,6 +76,7 @@ uses [Semantic Versioning](https://semver.org/).
 - A documented public API (`docs/API.md`): read-only JSON for photos, albums, tags, and the slideshow, readable from other sites, with a version header.
 - `docs/UPGRADING.md`: how to upgrade, what a version number promises, and how to go back.
 - Webhooks: signed JSON messages when a photo is uploaded, goes live (including on a schedule), or is deleted; managed under **Admin, Webhooks**, with retries and a test button. Private-network addresses are refused unless `WEBHOOKS_ALLOW_PRIVATE=1`.
+- Documentation pages at fotobogen.com/docs: installation (macOS, Windows, Linux, Docker on a fresh VPS, Docker on a Laravel Forge server, with minimum and recommended server sizes), using Fotobogen, skins, modules, and questions (backups, restoring, and ways to start over). Their source is `docs/site/`.
 - Windows: CI installs, builds, and tests on Windows, including a PowerShell smoke test (`scripts/smoke-test.ps1`).
 
 ### Changed

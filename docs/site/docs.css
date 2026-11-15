@@ -1,0 +1,119 @@
+/*
+  Styles for the documentation pages at fotobogen.com/docs.
+
+  Same manner as the front page: one sans-serif, a strict grid, flat colour,
+  one red accent, no rounded corners or shadows. Light and dark, following
+  the visitor's device unless they press the switch.
+
+  docs/site/build.mjs copies this file to site/docs/docs.css and puts the
+  front page's two @font-face rules in front of it.
+*/
+:root {
+  --bg: #f5f5f2; --fg: #0a0a0b; --mid: #4f4f55; --low: #696970; --rule: #cfcfca;
+  --red: #e30613; --red-text: #c8040f; --panel: #ebebe7;
+  --font: "Fotobogen Sans", Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0a0a0b; --fg: #f4f4f2; --mid: #b9b9be; --low: #8d8d93; --rule: #2a2a2e; --red-text: #ff5a52; --panel: #17171a;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0a0a0b; --fg: #f4f4f2; --mid: #b9b9be; --low: #8d8d93; --rule: #2a2a2e; --red-text: #ff5a52; --panel: #17171a;
+  color-scheme: dark;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 100%; -webkit-text-size-adjust: 100%; scroll-padding-top: 1.5rem; }
+body { min-height: 100vh; min-height: 100dvh; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+a { color: inherit; text-underline-offset: 0.2em; text-decoration-thickness: 1px; }
+a:hover { color: var(--red-text); }
+:focus-visible { outline: 2px solid var(--red-text); outline-offset: 3px; }
+.skip { position: absolute; left: -9999px; }
+.skip:focus { left: 16px; top: 16px; background: var(--bg); padding: 8px 12px; z-index: 2; }
+.wrap { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 clamp(20px, 6vw, 72px); }
+
+/* The bar across the top: the name, and the colour switch. */
+.bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px 24px; padding-top: 28px; padding-bottom: 28px; border-bottom: 1px solid var(--rule); }
+.bar__name { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.03em; text-decoration: none; }
+.bar__name span { color: var(--low); font-weight: 400; letter-spacing: 0; margin-left: 0.6em; }
+.bar__links { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; font-size: 0.9375rem; }
+.toggle { font: inherit; font-size: 0.9375rem; color: var(--fg); background: none; border: 1px solid var(--low); padding: 7px 14px; cursor: pointer; border-radius: 0; }
+.toggle:hover { border-color: var(--fg); }
+
+/* Two columns on a wide screen: the list of pages, then the page. */
+.layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0 clamp(32px, 5vw, 72px); padding-top: clamp(28px, 5vw, 56px); padding-bottom: clamp(56px, 9vw, 112px); }
+@media (min-width: 900px) { .layout { grid-template-columns: 13.5rem minmax(0, 1fr); } }
+
+.pages { font-size: 0.9375rem; }
+.pages ul { list-style: none; }
+.pages__all { display: flex; flex-wrap: wrap; gap: 4px 20px; padding-bottom: 20px; margin-bottom: 28px; border-bottom: 1px solid var(--rule); }
+.pages__all a { display: block; padding: 6px 0; text-decoration: none; }
+.pages__all a:hover { text-decoration: underline; }
+.pages__all a[aria-current="page"] { font-weight: 700; box-shadow: inset 0 -3px 0 var(--red); }
+.pages__here { display: none; }
+@media (min-width: 900px) {
+  /* The padding leaves room for the bar that marks the current page. */
+  .pages { position: sticky; top: 1.5rem; align-self: start; max-height: calc(100vh - 3rem); overflow-y: auto; padding-left: 15px; margin-left: -15px; }
+  .pages__all { display: block; border-bottom: 0; padding-bottom: 0; }
+  .pages__all a[aria-current="page"] { box-shadow: none; padding-left: 12px; margin-left: -15px; border-left: 3px solid var(--red); }
+  .pages__here { display: block; margin-top: 4px; padding-top: 20px; border-top: 1px solid var(--rule); }
+  .pages__here h2 { font-size: 0.9375rem; font-weight: 700; margin-bottom: 6px; }
+  .pages__here a { display: block; padding: 4px 0; color: var(--mid); text-decoration: none; }
+  .pages__here a:hover { color: var(--red-text); text-decoration: underline; }
+}
+
+/* The page itself. Lines are kept short enough to read. */
+.doc { min-width: 0; max-width: 46rem; }
+.doc h1 { font-size: clamp(2.5rem, 7vw, 4.5rem); font-weight: 700; letter-spacing: -0.04em; line-height: 0.95; margin-left: -0.04em; overflow-wrap: anywhere; }
+.doc .lead { margin-top: 1.25rem; font-size: clamp(1.125rem, 2vw, 1.375rem); line-height: 1.4; color: var(--mid); max-width: 34rem; }
+.doc h2 { margin-top: 3.5rem; padding-top: 1.25rem; border-top: 1px solid var(--rule); font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 700; letter-spacing: -0.025em; line-height: 1.15; }
+.doc h3 { margin-top: 2rem; font-size: 1.1875rem; font-weight: 700; letter-spacing: -0.01em; line-height: 1.25; }
+.doc p, .doc ul, .doc ol, .doc pre, .doc table, .doc figure, .doc .note, .doc dl { margin-top: 1rem; }
+.doc ul, .doc ol { padding-left: 1.4rem; }
+.doc li + li { margin-top: 0.4rem; }
+.doc li > ul, .doc li > ol { margin-top: 0.4rem; }
+.doc strong { font-weight: 700; }
+.doc code { font-family: var(--mono); font-size: 0.875em; background: var(--panel); padding: 0.1em 0.35em; overflow-wrap: anywhere; }
+.doc pre { background: var(--panel); border-left: 3px solid var(--fg); padding: 1rem 1.1rem; overflow-x: auto; line-height: 1.5; }
+.doc pre code { background: none; padding: 0; font-size: 0.875rem; overflow-wrap: normal; white-space: pre; }
+.doc kbd { font-family: var(--mono); font-size: 0.8125em; border: 1px solid var(--low); padding: 0.05em 0.4em; }
+
+/* Tables scroll inside themselves on a narrow screen; the page never does. */
+.table { overflow-x: auto; margin-top: 1rem; }
+.table table { margin-top: 0; }
+.doc table { width: 100%; border-collapse: collapse; font-size: 0.9375rem; }
+.doc th, .doc td { text-align: left; vertical-align: top; padding: 0.6rem 1rem 0.6rem 0; border-bottom: 1px solid var(--rule); }
+.doc th { font-weight: 700; border-bottom-color: var(--fg); }
+.doc caption { text-align: left; color: var(--mid); padding-bottom: 0.5rem; }
+
+/* A note: something to know before going on. The red bar is its only decoration. */
+.note { border-left: 3px solid var(--red); background: var(--panel); padding: 0.9rem 1.1rem; }
+.note > :first-child { margin-top: 0; }
+.note strong:first-child { display: block; }
+
+.doc figure img { display: block; width: 100%; height: auto; border: 1px solid var(--rule); }
+.doc figcaption { margin-top: 0.5rem; font-size: 0.875rem; color: var(--mid); }
+.pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 1rem; margin-top: 1rem; }
+.pair figure { margin-top: 0; }
+
+/* The cards on the first page: one for each part of the documentation. */
+.cards { list-style: none; padding-left: 0 !important; display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 0 2rem; margin-top: 2.5rem; }
+.cards li { margin-top: 0 !important; border-top: 1px solid var(--fg); padding: 1rem 0 1.75rem; }
+.cards a { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.02em; }
+.cards p { margin-top: 0.4rem; color: var(--mid); }
+
+.next { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 1rem; margin-top: 4rem; padding-top: 1.25rem; border-top: 1px solid var(--fg); font-weight: 700; }
+
+footer { border-top: 1px solid var(--rule); color: var(--mid); font-size: 0.875rem; }
+footer .wrap { display: flex; flex-wrap: wrap; gap: 8px 32px; padding-top: 24px; padding-bottom: 40px; }
+
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+@media print {
+  .bar__links, .pages, .skip, .next { display: none; }
+  .layout { display: block; }
+  .doc pre { white-space: pre-wrap; }
+}
