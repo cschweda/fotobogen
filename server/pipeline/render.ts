@@ -96,6 +96,8 @@ export async function processPhoto(ctx: PipelineContext, photoId: string, option
       .filter(path => !keep.has(path))
 
     sqlite.transaction(() => {
+      // The photo may have been deleted while it was being processed.
+      if (!sqlite.prepare(`select 1 from photos where id = ?`).get(photo.id)) throw new Error('The photo was deleted while it was being processed.')
       sqlite.prepare(`delete from derivatives where photo_id = ?`).run(photo.id)
       const insert = sqlite.prepare(`insert into derivatives (id, photo_id, kind, format, width, height, path, bytes) values (?, ?, ?, 'webp', ?, ?, ?, ?)`)
       for (const file of written) {

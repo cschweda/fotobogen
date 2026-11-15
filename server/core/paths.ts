@@ -12,6 +12,8 @@ export interface DataPaths {
   derivatives: string
   skins: string
   modules: string
+  /** Scratch space for uploads in progress; emptied at boot. */
+  tmp: string
 }
 
 export function resolveDataDir(env: Record<string, string | undefined>, cwd: string): string {
@@ -30,13 +32,14 @@ export function dataPaths(root: string): DataPaths {
     derivatives: join(root, 'derivatives'),
     skins: join(root, 'skins'),
     modules: join(root, 'modules'),
+    tmp: join(root, 'tmp'),
   }
 }
 
 export function ensureDataDirs(paths: DataPaths): void {
   // Every directory is checked, not just the root: Docker can create a
   // bind-mounted subdirectory as root before the app first runs.
-  for (const dir of [paths.root, paths.originals, paths.derivatives, paths.skins, paths.modules]) {
+  for (const dir of [paths.root, paths.originals, paths.derivatives, paths.skins, paths.modules, paths.tmp]) {
     try {
       mkdirSync(dir, { recursive: true })
       accessSync(dir, constants.W_OK)

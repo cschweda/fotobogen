@@ -1,12 +1,18 @@
 // The running app's shared state: where its data lives, the session secret,
 // and the open database. Filled in once by the boot plugin.
 import Database from 'better-sqlite3'
+import { mkdirSync, rmSync } from 'node:fs'
 import { drizzle, type BetterSQLite3Database } from 'drizzle-orm/better-sqlite3'
 import { applyMigrations, type Migration } from '../core/migrate.ts'
 import { dataPaths, ensureDataDirs, resolveDataDir, type DataPaths } from '../core/paths.ts'
 import { loadOrCreateSecret } from '../core/secret.ts'
 import { loadOrCreateSetupToken } from '../core/setup-token.ts'
 import * as schema from '../db/schema.ts'
+import type { PipelineContext } from '../pipeline/context.ts'
+import { readLimits } from '../pipeline/limits.ts'
+import { createQueue, type Queue } from '../pipeline/queue.ts'
+import { configureImageLibrary } from '../pipeline/render.ts'
+import { createLocalStorage } from '../storage/local.ts'
 
 export type Db = BetterSQLite3Database<typeof schema>
 
@@ -15,6 +21,9 @@ interface AppState {
   secret: string
   sqlite: Database.Database
   db: Db
+  /** What the upload and processing code works with. */
+  pipeline: PipelineContext
+  queue: Queue
   /** Cached because every request checks it; it only ever flips to true. */
   setupComplete: boolean
 }
@@ -40,7 +49,23 @@ async function boot(loadMigrations: () => Promise<Migration[]>): Promise<void> {
   const db = drizzle(sqlite, { schema })
   const row = sqlite.prepare(`select value from settings where key = 'site.setup_complete'`).get() as { value: string } | undefined
   const setupComplete = row ? JSON.parse(row.value) === true : false
-  state = { paths, secret, sqlite, db, setupComplete }
+
+  // Uploads that were in flight when the server last stopped are gone.
+  rmSync(paths.tmp, { recursive: true, force: true })
+  mkdirSync(paths.tmp, { recursive: true })
+  configureImageLibrary()
+  const pipeline: PipelineContext = {
+    sqlite,
+    storage: createLocalStorage({ originals: paths.originals, derivatives: paths.derivatives }),
+    limits: readLimits(process.env),
+    tmpDir: paths.tmp,
+  }
+  const queue = createQueue(pipeline, {
+    onError: (job, error) => console.error(`Photo ${job.photoId} could not be processed (attempt ${job.attempts}): ${error instanceof Error ? error.message : error}`),
+  })
+  queue.recover()
+  state = { paths, secret, sqlite, db, setupComplete, pipeline, queue }
+  queue.kick()
 
   const { users } = sqlite.prepare(`select count(*) as users from users`).get() as { users: number }
   if (users === 0) {
@@ -73,6 +98,8 @@ export const getPaths = (): DataPaths => current().paths
 export const getSecret = (): string => current().secret
 export const getSqlite = (): Database.Database => current().sqlite
 export const getDb = (): Db => current().db
+export const getPipeline = (): PipelineContext => current().pipeline
+export const getQueue = (): Queue => current().queue
 export const isSetupComplete = (): boolean => current().setupComplete
 export function markSetupComplete(): void {
   current().setupComplete = true
