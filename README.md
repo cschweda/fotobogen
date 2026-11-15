@@ -25,6 +25,8 @@ plan is in [docs/DESIGN.md](docs/DESIGN.md); changes are recorded in
 - [How it runs](#how-it-runs)
 - [Local development](#local-development)
 - [Running the built server](#running-the-built-server)
+- [The preflight check](#the-preflight-check)
+- [Health check](#health-check)
 - [Uploading photos](#uploading-photos)
 - [Sample photos](#sample-photos)
 - [Modules](#modules)
@@ -101,7 +103,7 @@ Requirements: [Node 24](https://nodejs.org) and [pnpm](https://pnpm.io) 10.
 ```bash
 nvm use            # reads .nvmrc (Node 24)
 pnpm install
-pnpm dev           # http://localhost:3000
+pnpm dev           # http://localhost:5150
 ```
 
 On first start the terminal prints a setup token:
@@ -111,7 +113,7 @@ Fotobogen setup token: 3b213e46bd70894ad18f1357791b1f18
 Open the site in a browser and enter this token to finish setup.
 ```
 
-Open http://localhost:3000, enter the token, and complete the six steps. You
+Open http://localhost:5150, enter the token, and complete the six steps. You
 end up logged in at `/admin`. Everything the site stores goes in `./data`;
 delete that directory to start over with a fresh install.
 
@@ -123,12 +125,81 @@ starts.
 
 ```bash
 pnpm build
-node .output/server/index.mjs
+pnpm start
 ```
 
-No environment variables are required. The server listens on port 3000
-(`PORT` changes it) and keeps its data in `./data` (`DATA_DIR` changes it).
-Restarting keeps you logged in and does not change the setup token.
+`pnpm start` checks the machine (see below), then starts the server and
+prints its address:
+
+```
+Fotobogen is running at http://localhost:5150
+```
+
+Nothing has to be configured. The port is **5150**; if that is taken,
+Fotobogen uses the next free port above it and says so. Data goes in
+`./data`. Restarting keeps you logged in and does not change the setup token.
+
+To change a setting on one machine, copy `.env.sample` to `.env` and edit
+the copy (see [Settings](#settings)). A port you set yourself is used
+exactly: if it is taken, Fotobogen stops and tells you, rather than moving.
+
+**More than one copy on a machine.** If Fotobogen is already running when
+you start it in a terminal, it asks what you want: run both (the new one
+gets its own port), stop the running copy and start this one, or cancel.
+Started without a terminal (pm2, a service), a second site simply runs on
+the next port. Two copies are never allowed to share one data directory.
+
+## The preflight check
+
+Before it starts, Fotobogen checks that the machine can run it properly, so
+an install never half-works. The first time, it prints the whole report:
+
+```
+Fotobogen preflight check
+  ok   Node.js: version 24.22.3
+  ok   Operating system: Ubuntu 26.04 LTS
+  ok   Processor: x64
+  ok   Memory: 1.9 GB available
+  ok   Data directory: /home/you/fotobogen/data
+  ok   Disk space: 21.4 GB free
+  ok   Image library: reads JPEG, PNG, WebP, TIFF, and AVIF
+  ok   Database library: loads
+```
+
+Anything marked `FAIL` stops the start, with a line saying what to fix.
+A `WARN` lets it run and says what to improve. After the first run only
+warnings and failures are shown. Run it on its own at any time with
+`pnpm preflight`.
+
+| Check | Stops the start when | Warns when |
+|---|---|---|
+| Node.js | older than 24 | |
+| Operating system | | not Linux, macOS, or Windows; or a Linux that is not Ubuntu, Debian, or based on them |
+| Processor | not x64 or arm64 | |
+| Memory | under 900 MB (the container's limit counts, not the host's) | under 2 GB with no swap |
+| Data directory | it cannot be created or written | |
+| Disk space | under 500 MB free | under 2 GB free |
+| Image and database libraries | they do not load, or a photo format is missing | |
+
+Fotobogen is tested on Ubuntu, macOS, and Windows. Other Linux
+distributions may well work, but are reported as untested.
+
+## Health check
+
+`/api/health` needs no login and answers `GET` and `HEAD`:
+
+```json
+{ "status": "ok", "version": "0.1.0", "database": "ok", "queue": { "depth": 0 }, "uptime": 86400 }
+```
+
+It returns `200` when the app and its database are working and `503` when
+the database cannot be read. `queue.depth` is the number of photos waiting
+to be processed; `uptime` is seconds since the server started.
+
+With [UptimeRobot](https://uptimerobot.com) or a similar monitor: add an
+HTTP(S) monitor for `https://your-site.example/api/health`. Watching the
+status code is enough. For a stricter check, use a keyword monitor that
+expects the text `"status":"ok"`.
 
 ## Uploading photos
 
@@ -218,7 +289,7 @@ git clone https://github.com/cschweda/fotobogen.git
 cd fotobogen
 pnpm install
 pnpm build
-node .output/server/index.mjs     # prints the setup token; open http://localhost:3000
+pnpm start                        # checks the machine, prints the address and the setup token
 ```
 
 CI repeats this on a Windows machine for every change: install, build, the
@@ -273,7 +344,7 @@ Forge manages the certificate.
 5. Issue the certificate through Forge.
 6. Use [deploy/forge-deploy.sh](deploy/forge-deploy.sh) as the deploy script.
 
-The app listens on `127.0.0.1:3000` only (`PORT` in `.env` changes the port).
+The app listens on `127.0.0.1:5150` only (`PORT` in `.env` changes the port).
 
 ## Without Docker (pm2)
 
@@ -323,15 +394,30 @@ means copying it.
 
 ## Settings
 
-All optional.
+Every app-wide value is written down in one file,
+[`fotobogen.config.js`](fotobogen.config.js), with a comment on each. It has
+two parts: **okay to change** (port, data directory, upload limits) and
+**do not touch** (sizes, limits, and timings the rest of the app is built
+around).
+
+What is actually used is decided in this order:
+
+1. Environment variables set when the app is started
+2. The `.env` file in the app's folder
+3. `fotobogen.config.js`
+
+So to change something on one server, copy `.env.sample` to `.env` and set
+it there. `.env` is never committed; `.env.sample` is. The same `.env` is
+read by `docker compose`.
 
 | Variable | Default | Meaning |
 |---|---|---|
 | `DATA_DIR` | `./data` | Where the site keeps its data |
-| `PORT` | `3000` | Port the server listens on |
+| `PORT` | `5150` | Port the server listens on. Unset, a busy 5150 moves up to the next free port; set, it is used exactly |
 | `HOST` | all interfaces | Address the server listens on |
 | `MAX_UPLOAD_MB` | `50` | Largest upload, in megabytes. If you raise it, raise the proxy's limit too (`max_size` in `deploy/Caddyfile`, `client_max_body_size` in nginx) |
 | `MAX_MEGAPIXELS` | `100` | Largest image, in megapixels (width times height) |
+| `FOTOBOGEN_SKIP_PREFLIGHT` | off | Set to `1` to start even when the preflight check fails. At your own risk |
 | `TRUST_PROXY` | off | Set to `1` only when the app is reachable solely through your own reverse proxy. It makes the login limit use the visitor's address from `X-Forwarded-For`. The shipped Docker and pm2 files set it |
 
 Login cookies are marked `Secure`, so logging in works over HTTPS, and over

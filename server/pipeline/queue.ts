@@ -1,6 +1,7 @@
 // The job queue (DESIGN.md section 7). Jobs live in the database, so they
 // survive a restart. One job runs at a time, in this process.
 import type { PipelineContext } from './context.ts'
+import { config } from '../core/config.ts'
 import { newId } from '../core/ids.ts'
 import { processPhoto } from './render.ts'
 
@@ -41,7 +42,7 @@ function runJob(ctx: PipelineContext, job: Job): Promise<void> {
 
 export function createQueue(ctx: PipelineContext, options: QueueOptions = {}): Queue {
   const { sqlite } = ctx
-  const maxAttempts = options.maxAttempts ?? 3
+  const maxAttempts = options.maxAttempts ?? config.internals.queue.maxAttempts
   const run = options.run ?? runJob
   let working: Promise<void> | undefined
 

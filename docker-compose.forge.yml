@@ -22,4 +22,4 @@ services:
       - ./data:/data
     ports:
       # Local interface only; never published to the internet.
-      - "127.0.0.1:${PORT:-3000}:3000"
+      - "127.0.0.1:${PORT:-5150}:5150"

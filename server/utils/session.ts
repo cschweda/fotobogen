@@ -3,6 +3,7 @@
 // explicitly, so no environment variable is needed (DESIGN.md section 6).
 import { eq } from 'drizzle-orm'
 import { createError, getRequestHeader, useSession, type RequestEvent } from 'nuxt/server'
+import { config } from '../core/config.ts'
 import { isLoopbackHost } from '../core/request.ts'
 import { users } from '../db/schema.ts'
 import { getDb, getSecret } from './app.ts'
@@ -18,7 +19,7 @@ export interface AdminUser {
   username: string
 }
 
-const THIRTY_DAYS = 60 * 60 * 24 * 30
+const THIRTY_DAYS = 60 * 60 * 24 * config.internals.auth.sessionDays
 
 function adminSession(event: RequestEvent) {
   return useSession<SessionData>(event, {

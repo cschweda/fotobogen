@@ -9,6 +9,7 @@ import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import type { Database } from 'better-sqlite3'
 import type { Sharp } from 'sharp'
+import { config } from '../core/config.ts'
 import sharp from '../pipeline/image.ts'
 import {
   checkDefinition, checkManifest, coerceParams,
@@ -49,7 +50,7 @@ export interface Registry {
 
 const MAX_STEPS = 8
 /** A transform may grow the picture (a border), but not without limit. */
-const MAX_OUTPUT_PIXELS = 40_000_000
+const MAX_OUTPUT_PIXELS = config.internals.moduleOutputMegapixels * 1_000_000
 
 function failed(manifest: ModuleManifest, source: LoadedModule['source'], error: unknown): LoadedModule {
   return { manifest, source, transforms: [], enabled: false, error: error instanceof Error ? error.message : String(error) }

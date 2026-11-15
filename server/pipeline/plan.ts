@@ -3,6 +3,7 @@
 // Nothing is ever upscaled. A size the original cannot fill is made at the
 // original's own size instead, so every photo has a thumb, a square, and a
 // medium; large is skipped when it would be identical to medium.
+import { config } from '../core/config.ts'
 
 export type DerivativeKind = 'thumb' | 'square' | 'medium' | 'large'
 
@@ -12,10 +13,11 @@ export interface PlannedDerivative {
   height: number
 }
 
-export const THUMB_WIDTH = 480
-export const SQUARE_SIZE = 480
-export const MEDIUM_EDGE = 1280
-export const LARGE_EDGE = 2560
+const sizes = config.internals.derivatives
+export const THUMB_WIDTH = sizes.thumbWidth
+export const SQUARE_SIZE = sizes.squareSize
+export const MEDIUM_EDGE = sizes.mediumEdge
+export const LARGE_EDGE = sizes.largeEdge
 /** The original is decoded once to this long edge; every derivative comes from that. */
 export const WORKING_EDGE = LARGE_EDGE
 

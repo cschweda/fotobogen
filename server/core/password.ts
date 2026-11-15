@@ -1,6 +1,7 @@
 // Password hashing with scrypt from node:crypto. The stored value records
 // its own parameters, so they can be raised later without breaking old hashes:
 //   scrypt$<N>$<r>$<p>$<salt, base64>$<hash, base64>
+import { config } from './config.ts'
 import { randomBytes, scrypt, timingSafeEqual } from 'node:crypto'
 
 const N = 32768
@@ -9,7 +10,7 @@ const P = 1
 const KEY_LENGTH = 64
 const SALT_LENGTH = 16
 
-export const PASSWORD_MIN_LENGTH = 12
+export const PASSWORD_MIN_LENGTH = config.internals.auth.passwordMinLength
 export const PASSWORD_MAX_LENGTH = 256
 
 function derive(plain: string, salt: Buffer, n: number, r: number, p: number, length: number): Promise<Buffer> {

@@ -21,7 +21,7 @@ services:
     volumes:
       - ./data:/data
     expose:
-      - "3000"
+      - "5150"
 
   caddy:
     image: caddy:2

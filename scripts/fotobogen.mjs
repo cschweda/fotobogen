@@ -19,6 +19,7 @@ const USAGE = `Usage: fotobogen <command>
 
 Commands:
   reset-admin [--username <name>]   Set a new admin password and sign out all sessions
+  preflight                         Check that this machine can run Fotobogen
   seed-fetch                        Download the 25 sample photos into the library
                                     (needs a source checkout; in a running site,
                                     use Admin > Download sample photos instead)
@@ -144,6 +145,17 @@ async function seedFetch() {
   }
 }
 
+/** The same check the server runs before it starts, with every line shown. */
+async function preflight() {
+  const { existsSync: exists } = await import('node:fs')
+  if (exists('.env')) process.loadEnvFile('.env')
+  const { evaluate, formatReport, gatherFacts, passed } = await import('../server/core/preflight.ts')
+  const checks = evaluate(await gatherFacts(resolveDataDir(process.env, process.cwd())))
+  console.log(`Fotobogen preflight check\n${formatReport(checks, true)}`)
+  if (!passed(checks)) throw new CliError('\nThis machine is not ready to run Fotobogen. Fix what is marked FAIL above.')
+  console.log('\nThis machine can run Fotobogen.')
+}
+
 const [command, ...args] = process.argv.slice(2)
 try {
   if (command === 'reset-admin') {
@@ -151,6 +163,9 @@ try {
   }
   else if (command === 'seed-fetch') {
     await seedFetch()
+  }
+  else if (command === 'preflight') {
+    await preflight()
   }
   else if (command === '--help' || command === '-h' || command === 'help') {
     console.log(USAGE)

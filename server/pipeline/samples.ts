@@ -7,6 +7,7 @@ import { join } from 'node:path'
 import { Readable, Transform } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import { fileURLToPath } from 'node:url'
+import { config } from '../core/config.ts'
 import { newId } from '../core/ids.ts'
 import { acceptUpload } from './accept.ts'
 import type { PipelineContext } from './context.ts'
@@ -42,11 +43,11 @@ export interface SampleOptions {
   signal?: AbortSignal
 }
 
-export const PICSUM = 'https://picsum.photos'
-const REQUEST_TIMEOUT_MS = 20_000
+export const PICSUM = config.internals.samples.source
+const REQUEST_TIMEOUT_MS = config.internals.samples.timeoutSeconds * 1000
 // If the first few samples all fail, the service is unreachable: stop
 // rather than wait out every remaining timeout.
-const GIVE_UP_AFTER = 3
+const GIVE_UP_AFTER = config.internals.samples.giveUpAfter
 
 /** For the command-line tool. The server bundles the manifest instead. */
 export function readManifest(): SampleEntry[] {

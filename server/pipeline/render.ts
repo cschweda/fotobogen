@@ -12,6 +12,7 @@ import { readFile, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import exifr from 'exifr'
 import { rgbaToThumbHash } from 'thumbhash'
+import { config } from '../core/config.ts'
 import { newId } from '../core/ids.ts'
 import type { RecipeStep } from '../modules/contract.ts'
 import type { Raster } from '../modules/registry.ts'
@@ -20,7 +21,7 @@ import { exifColumns, exifForStorage } from './exif.ts'
 import sharp from './image.ts'
 import { planDerivatives, WORKING_EDGE, type PlannedDerivative } from './plan.ts'
 
-const WEBP_QUALITY: Record<PlannedDerivative['kind'], number> = { thumb: 78, square: 78, medium: 82, large: 82 }
+const WEBP_QUALITY: Record<PlannedDerivative['kind'], number> = config.internals.derivatives.webpQuality
 const THUMBHASH_EDGE = 100
 
 interface PhotoRow { id: string, original_path: string, width: number, height: number, recipe_json: string | null }
@@ -91,7 +92,7 @@ export function rerenderForModule(ctx: PipelineContext, name: string): number {
     usedBySite ? `(recipe_json is null or recipe_json like ?)` : `recipe_json like ?`, `%"module":"${name}"%`))()
 }
 
-const PREVIEW_EDGE = 1024
+const PREVIEW_EDGE = config.internals.derivatives.previewEdge
 
 /**
  * What a photo would look like with a recipe, as a WebP, without saving

@@ -38,7 +38,19 @@ uses [Semantic Versioning](https://semver.org/).
 - Film looks module: tone and grain in the manner of classic and pushed black-and-white film, a colour slide, and a soft colour negative.
 - Transforms can be set for all photos or for one photo, with a live preview; the uploaded file is never changed.
 - `docs/MODULES.md`: how to write and install a module.
+- `fotobogen.config.js`: every app-wide setting in one commented file, in an "okay to change" part and a "do not touch" part. The environment and `.env` override it.
+- `pnpm start`: a launcher that reads `.env`, runs a preflight check, and starts the server.
+- Preflight check before every start (also `pnpm preflight`): Node version, operating system, processor, memory, disk space, data directory, and the image and database libraries. A failure stops the start and says what to fix.
+- Default port 5150. If it is busy, the next free port above it is used; a port set in `.env` is used exactly.
+- Running copies are detected: in a terminal Fotobogen asks whether to run both, replace the running one, or cancel; two copies can never share a data directory.
+- `/api/health` now reports `status` and `uptime`, and answers `HEAD` for uptime monitors.
 - Windows: CI installs, builds, and tests on Windows, including a PowerShell smoke test (`scripts/smoke-test.ps1`).
+
+### Changed
+
+- The default port is 5150 (was 3000) in the app, the Docker image, both compose files, the Caddy and nginx configurations, and the pm2 file.
+- `.env.example` is now `.env.sample`.
+- The Docker image and the pm2 file start the app through the launcher.
 
 ### Fixed
 

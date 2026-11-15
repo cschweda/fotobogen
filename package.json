@@ -22,7 +22,8 @@
   "scripts": {
     "dev": "nuxt dev",
     "build": "nuxt build",
-    "start": "node .output/server/index.mjs",
+    "start": "node scripts/start.mjs",
+    "preflight": "node scripts/fotobogen.mjs preflight",
     "postinstall": "nuxt prepare",
     "test": "vitest run",
     "test:unit": "vitest run tests/unit",
