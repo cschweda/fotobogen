@@ -13,6 +13,7 @@ A skin changes how the public site looks. It is a stylesheet and a short descrip
 - [Options](#options)
 - [The contrast check](#the-contrast-check)
 - [The markup you are styling](#the-markup-you-are-styling)
+- [The owner's logo](#the-owners-logo)
 - [The slideshow](#the-slideshow)
 - [The grid](#the-grid)
 - [What a skin cannot do](#what-a-skin-cannot-do)
@@ -295,6 +296,19 @@ These class names are stable. A skin may rely on them.
 ```
 
 Each tile's inline `background-image` is a tiny blurred version of the photo, shown until the real image loads. Keep `background-size: cover` on `.fb-tile` so it fills the tile.
+
+## The owner's logo
+
+If the owner uploads a logo (Admin, Icon and logo), the site title holds pictures instead of text:
+
+```html
+<p class="fb-site-title"><a href="/">
+  <img class="fb-site-logo fb-site-logo--light" src="…" width="120" height="40" alt="The site's name">
+  <img class="fb-site-logo fb-site-logo--dark" src="…" width="120" height="40" alt="The site's name">
+</a></p>
+```
+
+You do not need to do anything: Fotobogen's own rules, added after your stylesheet, show the one for the mode in use and keep it within the page's width, and the `width` and `height` are the size the owner chose. If your skin gives the title a very large `font-size` or decoration (as Plakat does), check that it still looks right with a picture in it.
 
 ## The slideshow
 

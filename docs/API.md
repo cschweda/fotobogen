@@ -35,6 +35,7 @@ The admin's own endpoints under `/api/admin/` are not part of this; they need a 
   "photoView": "modal",
   "skinVersion": "126418a685",
   "mode": "dark",
+  "brand": { "icon": null, "logo": null },
   "language": "en",
   "text": { "navPhotos": "Fotografias" },
   "seo": { "homeTitle": "", "titlePattern": "{page} | {site}", "description": "", "indexing": true, "siteUrl": "", "author": "", "twitter": "", "googleVerification": "", "bingVerification": "", "card": null },
@@ -42,7 +43,7 @@ The admin's own endpoints under `/api/admin/` are not part of this; they need a 
 }
 ```
 
-`language` is the language code of the site's text. `text` holds the owner's replacements for the fixed text on the pages, keyed as in [`shared/site-text.ts`](../shared/site-text.ts); a key that is absent uses the default there. `seo` is what the owner set under Search and sharing; `card` is the picture used when the site is shared (`url`, `width`, `height`, `alt`), or `null`.
+`brand` holds the owner's icon (`small`, `touch`, `large` addresses) and logo (`light` and `dark`, each with `url`, `width`, `height`), or `null` for each that is not set. `language` is the language code of the site's text. `text` holds the owner's replacements for the fixed text on the pages, keyed as in [`shared/site-text.ts`](../shared/site-text.ts); a key that is absent uses the default there. `seo` is what the owner set under Search and sharing; `card` is the picture used when the site is shared (`url`, `width`, `height`, `alt`), or `null`.
 
 ## Photos
 
@@ -174,3 +175,33 @@ A photo, album, or tag that does not exist, or that a visitor may not see, is a 
 ```json
 { "status": 404, "message": "There is no such photo." }
 ```
+
+## The admin API, with a token
+
+Everything above is public and read-only. The admin's own API, under `/api/admin/`, needs a login, or an **API token** made under **Admin, API tokens**. A token is sent in a header:
+
+```
+Authorization: Bearer fb_…
+```
+
+A request with a token needs no cookie and no `Origin` header, and is judged by the token alone. There are two kinds:
+
+| Kind | Allowed |
+|---|---|
+| `upload` | `POST /api/admin/photos` (upload), `GET /api/admin/photos` (list), `GET /api/admin/photos/<id>`, `POST /api/admin/photos/<id>/retry` |
+| `manage` | Everything under `/api/admin/photos` and `/api/admin/albums`, and `GET /api/admin/overview` |
+
+Anything else answers `403`. No token can reach settings, skins, site text, backups, restore, or the tokens themselves. A wrong or revoked token answers `401`.
+
+Uploading:
+
+```bash
+curl -H "Authorization: Bearer fb_YOUR_TOKEN" -F "file=@photo.jpg" https://photos.example.com/api/admin/photos
+```
+
+```json
+{ "result": "accepted", "photo": { "id": "V1StGXR8_Z5j", "slug": "photo" } }
+```
+
+The photo is processed in the background; `GET /api/admin/photos/<id>` shows `"status": "ready"` when it is done, or `"failed"` with the reason. A duplicate or a file that is not an accepted photo answers `409` or `422` with a `message` saying why. Unlike the public API, the admin API is not covered by the version promise in [UPGRADING.md](UPGRADING.md) until 1.0.
+

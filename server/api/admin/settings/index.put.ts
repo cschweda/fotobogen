@@ -5,7 +5,10 @@ import { DEFAULT_LICENCE, isLicence } from '../../../../shared/licences.ts'
 import { fieldErrors, siteTitleSchema, taglineSchema } from '../../../../shared/schemas.ts'
 import { fail } from '../../../utils/respond.ts'
 import { requireAdmin } from '../../../utils/session.ts'
-import { setSettings } from '../../../utils/settings.ts'
+import { getSetting, setSettings } from '../../../utils/settings.ts'
+import { rerenderAll } from '../../../pipeline/render.ts'
+import { getPipeline, getQueue } from '../../../utils/app.ts'
+import { DEFAULT_QUALITY } from '../../../../shared/media.ts'
 
 const schema = z.object({
   siteTitle: siteTitleSchema,
@@ -19,6 +22,7 @@ const schema = z.object({
   allowDownload: z.boolean().default(false),
   slideshowSeconds: z.number('Give a number of seconds.').int('Use whole seconds.').min(3, 'At least 3 seconds, so each photo can be taken in.').max(120, 'At most 120 seconds.').default(8),
   slideshowOrder: z.enum(['sequence', 'random']).default('sequence'),
+  photoQuality: z.enum(['smaller', 'standard', 'high'], 'Choose one of the three qualities.').optional(),
 })
 
 export default defineEventHandler(async (event) => {
@@ -39,5 +43,12 @@ export default defineEventHandler(async (event) => {
     'slideshow.seconds': settings.slideshowSeconds,
     'slideshow.order': settings.slideshowOrder,
   })
-  return { ok: true }
+  // A new quality applies to every photo, so every photo's copies are made again, in the background.
+  let queued = 0
+  if (settings.photoQuality && settings.photoQuality !== getSetting('media.quality', DEFAULT_QUALITY)) {
+    setSettings({ 'media.quality': settings.photoQuality })
+    queued = rerenderAll(getPipeline())
+    getQueue().kick()
+  }
+  return { ok: true, queued }
 })

@@ -30,7 +30,10 @@ Visit counting is left to Plausible, which already tracks fotobogen.com. The pag
 | Links to a photo and to each size of its picture, to copy from the admin | Done |
 | Documentation at [fotobogen.com/docs](https://fotobogen.com/docs/) | Done |
 | Cropping a photo in the admin | Later |
-| A site icon (favicon) chosen in the admin | Later |
+| An admin menu down the side, and an Overview page | Done |
+| A site icon and a logo, uploaded in the admin | Done |
+| API tokens for uploading from a script or another program | Done |
+| A picture-quality setting for the web copies | Done |
 
 ## For developers
 

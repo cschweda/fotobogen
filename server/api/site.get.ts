@@ -1,4 +1,5 @@
 // The public facts about the site, for the public pages.
+import { publicBrand } from '../utils/brand.ts'
 import { resolveSettings } from '../core/config.ts'
 import { defineEventHandler } from 'nuxt/server'
 import { publicAlbums } from '../utils/public.ts'
@@ -20,6 +21,8 @@ export default defineEventHandler(() => {
   mode: activeSkin().mode,
   // Whether to offer visitors a link to the albums.
   hasAlbums: publicAlbums().length > 0,
+  // The owner's icon and logo, if they uploaded any.
+  brand: publicBrand(),
   // The language the site's words are in, for the page's lang attribute.
   language: cleanLanguage(getSetting('site.language', 'en')),
   // The owner's replacements for the fixed text on the pages. Empty means all defaults.

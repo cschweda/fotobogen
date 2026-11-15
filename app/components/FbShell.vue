@@ -5,7 +5,11 @@
 defineProps<{ context?: string, wordmarkHref?: string, nav?: boolean }>()
 
 // Setup, login, and the admin are not for search engines.
-useHead({ meta: [{ name: 'robots', content: 'noindex' }] })
+useHead({
+  meta: [{ name: 'robots', content: 'noindex' }],
+  // Fotobogen's own mark, in the admin only. The public site shows the owner's icon, or none.
+  link: [{ key: 'icon', rel: 'icon', href: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230a0a0b'/%3E%3Crect x='6' y='9' width='20' height='14' fill='%23e30613'/%3E%3C/svg%3E" }],
+})
 </script>
 
 <template>

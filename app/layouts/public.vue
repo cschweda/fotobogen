@@ -17,8 +17,16 @@ useHead({
     { name: 'msvalidate.01', content: () => site.value?.seo?.bingVerification || undefined },
   ],
   link: [
-    { rel: 'stylesheet', href: () => `/skin.css?v=${site.value?.skinVersion ?? ''}` },
-    { rel: 'alternate', type: 'application/rss+xml', title: () => siteName.value, href: '/feed.xml' },
+    // The owner's icon, if they uploaded one: for the browser tab, an iPhone's home screen, and Android's.
+    ...(site.value?.brand?.icon
+      ? [
+          { key: 'icon', rel: 'icon' as const, type: 'image/png', sizes: '32x32', href: site.value.brand.icon.small },
+          { key: 'icon-large', rel: 'icon' as const, type: 'image/png', sizes: '192x192', href: site.value.brand.icon.large },
+          { key: 'icon-touch', rel: 'apple-touch-icon' as const, href: site.value.brand.icon.touch },
+        ]
+      : []),
+    { rel: 'stylesheet' as const, href: () => `/skin.css?v=${site.value?.skinVersion ?? ''}` },
+    { rel: 'alternate' as const, type: 'application/rss+xml', title: () => siteName.value, href: '/feed.xml' },
   ],
 })
 </script>
@@ -27,7 +35,12 @@ useHead({
   <div class="fb-site">
     <a class="fb-skip" href="#main">{{ t('skip') }}</a>
     <header class="fb-site-header">
-      <p class="fb-site-title"><a href="/">{{ siteName }}</a></p>
+      <p class="fb-site-title"><!-- The owner's logo in place of the name; its alt text is the name. The stylesheet shows the one for the mode in use. -->
+        <a v-if="site?.brand?.logo" href="/">
+          <img class="fb-site-logo fb-site-logo--light" :src="site.brand.logo.light.url" :width="site.brand.logo.light.width" :height="site.brand.logo.light.height" :alt="siteName">
+          <img class="fb-site-logo fb-site-logo--dark" :src="site.brand.logo.dark.url" :width="site.brand.logo.dark.width" :height="site.brand.logo.dark.height" :alt="siteName">
+        </a>
+        <a v-else href="/">{{ siteName }}</a></p>
       <p v-if="site?.tagline" class="fb-site-tagline">{{ site.tagline }}</p>
       <nav class="fb-nav" :aria-label="t('navLabel')">
         <a href="/">{{ t('navPhotos') }}</a>

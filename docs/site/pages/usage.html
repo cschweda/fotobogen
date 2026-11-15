@@ -13,9 +13,11 @@
     <tr><td><strong>Skins</strong></td><td>How the public site looks, and light or dark</td></tr>
     <tr><td><strong>Modules</strong></td><td>Looks applied to photos: film, frames, watermark</td></tr>
     <tr><td><strong>Site text</strong></td><td>The site's name and every word on it</td></tr>
+    <tr><td><strong>Icon and logo</strong></td><td>The picture in the browser tab, and a logo in place of the name</td></tr>
     <tr><td><strong>Search and sharing</strong></td><td>What search engines and shared links show</td></tr>
     <tr><td><strong>Settings</strong></td><td>Title, layout, privacy, licence, slideshow</td></tr>
     <tr><td><strong>System</strong></td><td>Backup, restore, version, updates</td></tr>
+    <tr><td><strong>API tokens</strong></td><td>Letting a script or another program upload</td></tr>
   </tbody>
 </table></div>
 <p>A login lasts 30 days from when you last used it. Five wrong passwords in 15 minutes from one address locks that address out for the rest of the 15 minutes.</p>
@@ -97,6 +99,7 @@
   <li>the <strong>licence</strong> your photos are published under: all rights reserved, or one of the Creative Commons licences. It is shown on every photo page, and a photo can have its own;</li>
   <li><strong>downloads</strong>: whether visitors may download photos (off to begin with). A download is a large copy with all camera data removed. The file exactly as you uploaded it is handed out only by a site that also shows where photos were taken, because that file carries everything the camera recorded;</li>
   <li><strong>new uploads start as drafts</strong>;</li>
+  <li><strong>picture quality</strong>: Smaller files, Standard, or High. This is how much the copies shown on your site are compressed. Changing it makes every photo's copies again in the background;</li>
   <li>the <strong>slideshow's</strong> timing and order.</li>
 </ul>
 
@@ -133,6 +136,24 @@
 
 <h2 id="system">Backups and updates</h2>
 <p><strong>Admin, System</strong> shows the version, what is stored, and the free space, and has <strong>Download a backup</strong>, restore, and <strong>Check for updates</strong>. Take a backup regularly and keep it somewhere other than the server. <a href="/docs/faq/#backups">Backing up and restoring</a> are covered with the questions.</p>
+
+<h2 id="tokens">Uploading from a script or another program</h2>
+<p>Under <strong>API tokens</strong>, make a token of the <strong>Upload only</strong> kind and copy it. A program then sends it with each request, in place of logging in. From a terminal:</p>
+<pre><code>curl -H "Authorization: Bearer fb_YOUR_TOKEN" \
+     -F "file=@photo.jpg" \
+     https://photos.example.com/api/admin/photos</code></pre>
+<p>The answer says whether the photo was accepted, and its id. To upload a whole folder:</p>
+<pre><code>for photo in *.jpg; do
+  curl -sS -H "Authorization: Bearer fb_YOUR_TOKEN" -F "file=@$photo" \
+       https://photos.example.com/api/admin/photos
+  echo
+done</code></pre>
+<ul>
+  <li>The same limits apply as in the browser: format, size, and no duplicates.</li>
+  <li>Use HTTPS. Over plain HTTP the token can be read on the way.</li>
+  <li>Treat a token like a password, give each program its own, and revoke one that is no longer needed. The page shows when each was last used.</li>
+  <li>A token is for the API only. It does not open the admin's pages, and it cannot change settings or reach your backups.</li>
+</ul>
 
 <h2 id="keyboard">Keyboard and accessibility</h2>
 <p>The admin and the public site are built to WCAG 2.1 level AA and are tested for it on every change: everything can be reached and worked from the keyboard, text has a contrast of at least 4.5 to 1 in light and dark, and nothing scrolls sideways on a phone. Motion is reduced when your device asks for that. If you find something that does not meet this, it is a bug: please <a href="https://github.com/cschweda/fotobogen/issues" data-goal="GitHub click" data-where="docs-issue">report it</a>.</p>

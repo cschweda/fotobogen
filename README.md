@@ -33,6 +33,7 @@ plan is in [docs/DESIGN.md](docs/DESIGN.md); changes are recorded in
 - [Uploading photos](#uploading-photos)
 - [Managing photos](#managing-photos)
 - [Making the site your own](#making-the-site-your-own)
+- [API tokens](#api-tokens)
 - [Albums and tags](#albums-and-tags)
 - [Sample photos](#sample-photos)
 - [Modules](#modules)
@@ -359,6 +360,11 @@ Only a site that also shows where photos were taken hands out the file
 exactly as you uploaded it, because that file carries everything the camera
 recorded, the place included.
 
+**Picture quality.** Settings also has how much the copies shown on your
+site are compressed: Smaller files, Standard, or High. Changing it makes
+every photo's copies again in the background; your uploaded files are never
+changed.
+
 **Admin, Settings** holds the site title and tagline, the grid layout,
 whether photos open over the grid or on their own page, and the two privacy
 switches: camera details (on by default) and location (off by default).
@@ -397,6 +403,17 @@ A link to one photo always shows that photo, with its own title,
 description, and alt text. Asking search engines not to list the site is a
 request the well-known ones honour; it does not make the site private.
 
+**Admin, Icon and logo.** Two optional pictures. The **icon** appears in the
+browser tab, in bookmarks, and on a phone's home screen; upload a square
+picture (512 by 512 is a good size) and the sizes needed are made from it.
+The **logo** is shown at the top of every page in place of the site's name,
+which stays as its description for screen readers. A logo can be given for
+light mode, dark mode, or both, and its height set from 20 to 120 pixels.
+PNG, JPEG, and WebP are accepted, up to 5 MB; SVG is not, because an SVG
+file can carry scripts. Each picture is redrawn before it is kept, and both
+are stored in the database, so they are in every backup. Fotobogen's own
+mark appears only in the admin.
+
 **Admin, Skins** changes how it looks ([Skins](#skins)).
 
 **Links to a photo.** The resized copies of every public photo are served
@@ -408,6 +425,24 @@ page is the photo's entry in the library. The links begin with your site's
 address; set it under **Search and sharing** or as `SITE_URL` (see
 [Settings](#settings)), or on your own machine they begin with
 `http://localhost:5150` and work only there.
+
+## API tokens
+
+**Admin, API tokens** makes tokens that let a script or another program
+upload to your site without your password. A token is shown once, when it
+is made, and only a hash of it is stored. There are two kinds: **Upload
+only** (upload, list, and check photos) and **Manage photos** (also edit,
+reorder, hide, and delete photos and manage albums). No token can change
+settings, skins, or site text, reach a backup, restore one, or make or
+revoke tokens. Revoking a token stops it at once, and the page shows when
+each was last used.
+
+```bash
+curl -H "Authorization: Bearer fb_YOUR_TOKEN" -F "file=@photo.jpg" https://photos.example.com/api/admin/photos
+```
+
+See [docs/API.md](docs/API.md#the-admin-api-with-a-token). Use HTTPS, and
+treat a token like a password.
 
 ## Albums and tags
 
