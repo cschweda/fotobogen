@@ -24,3 +24,4 @@ uses [Semantic Versioning](https://semver.org/).
 - GitHub Actions: tests on every pull request, and image publishing to GHCR on version tags.
 - Sessions renew for another 30 days each time they are used.
 - `pnpm typecheck`, run in CI.
+- Screenshots of the setup wizard, login, and admin placeholder in the README.
