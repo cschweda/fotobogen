@@ -107,10 +107,14 @@ describe('sample photos', () => {
     picsum.slow = 150
     expect((await send(server, cookie, 'POST')).status).toBe(202)
     expect((await send(server, cookie, 'POST')).status).toBe(409)
-    await new Promise(wait => setTimeout(wait, 500))
-    const during = await samples(server, cookie)
+    // Wait until the first few have arrived, with most still to come.
+    let during = await samples(server, cookie)
+    for (let tries = 0; during.done < 2 && tries < 200; tries++) {
+      await new Promise(wait => setTimeout(wait, 50))
+      during = await samples(server, cookie)
+    }
     expect(during.state).toBe('running')
-    expect(during.done).toBeGreaterThan(0)
+    expect(during.done).toBeGreaterThanOrEqual(2)
     expect(during.done).toBeLessThan(25)
     const cancelled = await send(server, cookie, 'DELETE')
     expect(cancelled.status).toBe(200)

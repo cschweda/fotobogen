@@ -4,9 +4,9 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { baseEnv, get, post, startServer, type TestServer } from '../helpers/server.ts'
 import { ADMIN, completeSetup, query } from '../helpers/setup.ts'
 
-function cli(dataDir: string, args: string[], input = '') {
+function cli(dataDir: string, args: string[], input = '', env: Record<string, string> = {}) {
   const result = spawnSync(process.execPath, ['scripts/fotobogen.mjs', ...args], {
-    env: { ...baseEnv(), DATA_DIR: dataDir },
+    env: { ...baseEnv(), DATA_DIR: dataDir, SAMPLES_BASE_URL: 'http://127.0.0.1:9', ...env },
     input,
     encoding: 'utf8',
   })

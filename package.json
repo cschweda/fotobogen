@@ -29,7 +29,8 @@
     "test:e2e": "playwright test",
     "typecheck": "nuxt typecheck",
     "db:generate": "drizzle-kit generate",
-    "fotobogen": "node scripts/fotobogen.mjs"
+    "fotobogen": "node scripts/fotobogen.mjs",
+    "seed:fetch": "node scripts/fotobogen.mjs seed-fetch"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
