@@ -25,7 +25,7 @@ const { data: show, error } = await useFetch<Show>('/api/slideshow', { query: sc
 if (error.value || !show.value) throw createError({ status: 404, statusText: 'Nothing to show', fatal: true })
 
 useHead({
-  htmlAttrs: { lang: 'en', class: 'fb-public' },
+  htmlAttrs: { 'lang': 'en', 'class': 'fb-public', 'data-fb-mode': useSkinMode(() => site.value?.mode).mode },
   title: () => `Slideshow${show.value?.title ? `: ${show.value.title}` : ''} | ${site.value?.title || 'Fotobogen'}`,
   link: [{ rel: 'stylesheet', href: () => `/skin.css?v=${site.value?.skinVersion ?? ''}` }],
   meta: [{ name: 'robots', content: 'noindex' }],

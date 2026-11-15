@@ -8,6 +8,8 @@ export interface Storage {
   /** Move a local file into storage under `key`. */
   put(area: StorageArea, key: string, fromPath: string): Promise<void>
   get(area: StorageArea, key: string): NodeJS.ReadableStream
+  /** The whole file in memory. For small files (resized copies); use `get` for large ones. Null when missing. */
+  read(area: StorageArea, key: string): Promise<Buffer | null>
   /** Size in bytes, or null when there is no such file. */
   size(area: StorageArea, key: string): Promise<number | null>
   /** Deleting a file that is not there is not an error. */

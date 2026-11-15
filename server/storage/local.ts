@@ -1,7 +1,7 @@
 // Photo files on the local disk: originals in data/originals, resized
 // copies in data/derivatives. Keys are flat file names.
 import { createReadStream } from 'node:fs'
-import { copyFile, mkdir, rename, rm, stat } from 'node:fs/promises'
+import { copyFile, mkdir, readFile, rename, rm, stat } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { Storage, StorageArea } from './types.ts'
 
@@ -57,6 +57,16 @@ export function createLocalStorage(dirs: Record<StorageArea, string>): Storage {
     },
 
     get: (area, key) => createReadStream(localPath(area, key)),
+
+    async read(area, key) {
+      try {
+        return await readFile(localPath(area, key))
+      }
+      catch (error) {
+        if (['ENOENT', 'EISDIR', 'ENOTDIR'].includes((error as NodeJS.ErrnoException).code ?? '')) return null
+        throw error
+      }
+    },
 
     async size(area, key) {
       try {
