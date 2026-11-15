@@ -180,27 +180,50 @@ async function extractBackup(file: string, target: string): Promise<void> {
  */
 export async function applyRestore(paths: DataPaths, file: string): Promise<{ photos: number, keptIn: string }> {
   const staging = join(paths.root, `restore-${newId()}`)
-  await extractBackup(file, staging)
-  if (!existsSync(join(staging, 'fotobogen.db'))) {
-    rmSync(staging, { recursive: true, force: true })
-    throw new Error('The backup has no database in it.')
-  }
+  let photos: number
+  // Everything that can fail happens here, in a staging folder, before any
+  // of the site's own data is moved. A backup that turns out to be unusable
+  // leaves the site exactly as it was.
+  try {
+    await extractBackup(file, staging)
+    if (!existsSync(join(staging, 'fotobogen.db'))) throw new Error('The backup has no database in it.')
 
-  // Resized copies in the backup's database point at files that are not in
-  // the backup. Drop those records and queue every photo to be rendered again.
-  const db = new Database(join(staging, 'fotobogen.db'))
-  const now = Date.now()
-  const { photos } = db.transaction(() => {
-    db.prepare(`delete from derivatives`).run()
-    db.prepare(`delete from jobs`).run()
-    const ids = (db.prepare(`select id from photos`).all() as { id: string }[]).map(row => row.id)
-    for (const id of ids) {
-      db.prepare(`update photos set status = 'processing' where id = ?`).run(id)
-      db.prepare(`insert into jobs (id, type, photo_id, status, attempts, created_at) values (?, 'rerender', ?, 'queued', 0, ?)`).run(newId(), id, now)
+    let db: Database.Database
+    try {
+      db = new Database(join(staging, 'fotobogen.db'), { fileMustExist: true })
+      const tables = new Set((db.prepare(`select name from sqlite_master where type = 'table'`).all() as { name: string }[]).map(row => row.name))
+      for (const table of ['photos', 'derivatives', 'jobs', 'users', 'settings', '__migrations']) {
+        if (!tables.has(table)) throw new Error(`table "${table}" is missing`)
+      }
+      if ((db.pragma('quick_check', { simple: true }) as string) !== 'ok') throw new Error('it is damaged')
     }
-    return { photos: ids.length }
-  })()
-  db.close()
+    catch (error) {
+      throw new Error(`The database in this backup cannot be used: ${error instanceof Error ? error.message : error}.`)
+    }
+
+    // Resized copies in the backup's database point at files that are not in
+    // the backup. Drop those records and queue every photo to be rendered again.
+    try {
+      const now = Date.now()
+      photos = db.transaction(() => {
+        db.prepare(`delete from derivatives`).run()
+        db.prepare(`delete from jobs`).run()
+        const ids = (db.prepare(`select id from photos`).all() as { id: string }[]).map(row => row.id)
+        for (const id of ids) {
+          db.prepare(`update photos set status = 'processing' where id = ?`).run(id)
+          db.prepare(`insert into jobs (id, type, photo_id, status, attempts, created_at) values (?, 'rerender', ?, 'queued', 0, ?)`).run(newId(), id, now)
+        }
+        return ids.length
+      })()
+    }
+    finally {
+      db.close()
+    }
+  }
+  catch (error) {
+    rmSync(staging, { recursive: true, force: true })
+    throw error
+  }
 
   const keptIn = join(paths.root, `before-restore-${new Date().toISOString().replace(/[:.]/g, '-')}`)
   mkdirSync(keptIn, { recursive: true })

@@ -119,4 +119,37 @@ describe('backup and restore', () => {
     expect(existsSync(join(data, 'fotobogen.db'))).toBe(false)
     expect(cli(data, ['backup'])).toMatchObject({ code: 1, out: expect.stringContaining('No Fotobogen database') })
   })
+
+  it('still starts, with its own data, when a staged restore turns out to be unusable', async () => {
+    const yazl = (await import('yazl')).default
+    const { createWriteStream } = await import('node:fs')
+    const server = await startServer()
+    try {
+      const own = await completeSetup(server, { siteTitle: 'Still Here' })
+      await server.stop()
+      // A file that passes for a backup at upload time but holds no real database.
+      const manifest = { format: 1, app: 'fotobogen', appVersion: '0.1.0', createdAt: 'x', migrations: ['0000_initial'], photos: 0, originalsBytes: 0 }
+      const zip = new yazl.ZipFile()
+      zip.addBuffer(Buffer.from(JSON.stringify(manifest)), 'manifest.json')
+      zip.addBuffer(Buffer.from('not a database'), 'fotobogen.db')
+      zip.end()
+      await new Promise(done => zip.outputStream.pipe(createWriteStream(join(server.dataDir, 'restore-pending.zip'))).on('close', done))
+
+      await server.restart()
+      expect(server.output()).toContain('The backup could not be restored')
+      expect(server.output()).toContain('Nothing was changed.')
+      expect(await (await get(server, '/api/site')).json()).toMatchObject({ title: 'Still Here' })
+      expect((await get(server, '/api/admin/overview', { cookie: own })).status).toBe(200)
+      const left = readdirSync(server.dataDir)
+      expect(left).not.toContain('restore-pending.zip')
+      expect(left.some(name => name.startsWith('restore-failed-'))).toBe(true)
+      expect(left.some(name => name.startsWith('before-restore-'))).toBe(false)
+      // And it keeps starting.
+      await server.restart()
+      expect((await get(server, '/api/health')).status).toBe(200)
+    }
+    finally {
+      await server.stop()
+    }
+  })
 })

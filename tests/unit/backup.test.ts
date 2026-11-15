@@ -131,4 +131,26 @@ describe('a backup', () => {
     await expect(applyRestore(target, crafted)).rejects.toThrow('no database')
     expect(readdirSync(target.root)).toEqual([]) // nothing left behind
   })
+
+  it('leaves the site untouched when the database in a backup is not usable', async () => {
+    const manifest = { format: 1, app: 'fotobogen', appVersion: '0.1.0', createdAt: 'x', migrations: KNOWN, photos: 0, originalsBytes: 0 }
+    const { ctx, paths } = await site()
+    ctx.sqlite.close()
+    const before = readdirSync(paths.root).sort()
+    const garbage = await zipOf({ 'manifest.json': JSON.stringify(manifest), 'fotobogen.db': 'this is not a database' })
+    await expect(applyRestore(paths, garbage)).rejects.toThrow('The database in this backup cannot be used')
+    // A real database, but not Fotobogen's.
+    const other = join(mkdtempSync(join(tmpdir(), 'fb-other-')), 'other.db')
+    const foreign = new Database(other)
+    foreign.exec('create table notes (id integer primary key)')
+    foreign.close()
+    const wrong = join(mkdtempSync(join(tmpdir(), 'fb-zip-')), 'wrong.zip')
+    const zip = new yazl.ZipFile()
+    zip.addBuffer(Buffer.from(JSON.stringify(manifest)), 'manifest.json')
+    zip.addFile(other, 'fotobogen.db')
+    zip.end()
+    await new Promise(done => zip.outputStream.pipe(createWriteStream(wrong)).on('close', done))
+    await expect(applyRestore(paths, wrong)).rejects.toThrow('table "photos" is missing')
+    expect(readdirSync(paths.root).sort()).toEqual(before) // no staging folder, nothing moved
+  })
 })
