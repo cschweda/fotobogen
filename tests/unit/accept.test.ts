@@ -1,5 +1,6 @@
 import { existsSync, readdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+import sharp from 'sharp'
 import { describe, expect, it } from 'vitest'
 import { acceptUpload, sniffFormat } from '../../server/pipeline/accept.ts'
 import { imageBuffer, imageFile } from '../helpers/images.ts'
@@ -137,13 +138,15 @@ describe('acceptUpload', () => {
 describe('formats that are costly to open', () => {
   it('holds AVIF to 16 megapixels and says what to do instead', async () => {
     const ctx = testContext()
-    const tmpPath = await imageFile(join(ctx.tmpDir, 'big-avif'), { format: 'avif', width: 4100, height: 4000 })
+    // A flat colour at the lowest effort: encoding 16 megapixels of AVIF is slow otherwise.
+    const tmpPath = join(ctx.tmpDir, 'big-avif')
+    await sharp({ create: { width: 4100, height: 4000, channels: 3, background: '#445566' } }).avif({ effort: 0 }).toFile(tmpPath)
     const outcome = await acceptUpload(ctx, { tmpPath, filename: 'big.avif' })
     expect(outcome).toMatchObject({ result: 'rejected', reason: 'too-many-pixels' })
     expect((outcome as { message: string }).message).toBe(
       'This photo is 16.4 megapixels; the limit for AVIF files is 16 megapixels, because they take much more memory to open. Save it as a JPEG and upload that.',
     )
-  })
+  }, 60_000)
   it('accepts an AVIF within its limit, and a JPEG of the same size as the refused AVIF', async () => {
     const ctx = testContext()
     const small = await imageFile(join(ctx.tmpDir, 'ok-avif'), { format: 'avif', width: 1200, height: 800 })
