@@ -7,7 +7,7 @@ import { fail } from '../../../../utils/respond.ts'
 import { requireAdmin } from '../../../../utils/session.ts'
 
 export default defineEventHandler(async (event) => {
-  await requireAdmin(event)
+  const admin = await requireAdmin(event)
   const { sqlite, storage, modules } = getPipeline()
   const photo = sqlite.prepare(`
     select p.id, p.slug, p.title, p.description, p.alt, p.visibility, p.publish_at as publishAt, p.taken_at as takenAt, p.bytes, p.mime, p.license, p.allow_download as allowDownload,
@@ -45,7 +45,8 @@ export default defineEventHandler(async (event) => {
     // public site follows the privacy settings.
     details: {
       camera: photo.camera, lens: photo.lens, focalLength: photo.focalLength, aperture: photo.aperture, shutter: photo.shutter, iso: photo.iso,
-      location: photo.lat !== null && photo.lng !== null ? { lat: photo.lat, lng: photo.lng } : null,
+      // Where a photo was taken is the owner's to know: a demo visitor is not shown it.
+      location: !admin.demo && photo.lat !== null && photo.lng !== null ? { lat: photo.lat, lng: photo.lng } : null,
       bytes: photo.bytes, mime: photo.mime,
     },
     tags: (sqlite.prepare(`select t.name from tags t join photo_tags pt on pt.tag_id = t.id where pt.photo_id = ? order by t.name collate nocase`).all(photo.id) as { name: string }[]).map(tag => tag.name),

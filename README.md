@@ -50,6 +50,7 @@ plan is in [docs/DESIGN.md](docs/DESIGN.md); changes are recorded in
 - [Resetting the admin password](#resetting-the-admin-password)
 - [The data directory](#the-data-directory)
 - [Settings](#settings)
+- [Demo mode](#demo-mode)
 - [Branches](#branches)
 - [The fotobogen.com placeholder page](#the-fotobogencom-placeholder-page)
 - [Licence](#licence)
@@ -900,14 +901,53 @@ read by `docker compose`.
 | `PORT` | `5150` | Port the server listens on. Unset, a busy 5150 moves up to the next free port; set, it is used exactly |
 | `HOST` | all interfaces | Address the server listens on |
 | `SITE_URL` | none | The site's proper address, such as `https://photos.example.com`. Used wherever a full address is written out: a photo's links in the admin, the feed, the sitemap, and what search engines are told. Without it, the address each visitor used is given, which on your own machine is `http://localhost:5150`. It can also be set under **Admin, Search and sharing**; a value here wins |
+| `DEMO_MODE` | off | Set to `1` on a site meant to show Fotobogen off. Anyone can then log in as `demo` / `demo` and look round the admin, read-only (see [Demo mode](#demo-mode)) |
 | `MAX_UPLOAD_MB` | `50` | Largest upload, in megabytes. If you raise it, raise the proxy's limit too (`max_size` in `deploy/Caddyfile`, `client_max_body_size` in nginx) |
 | `MAX_MEGAPIXELS` | `100` | Largest image, in megapixels (width times height) |
 | `FOTOBOGEN_SKIP_PREFLIGHT` | off | Set to `1` to start even when the preflight check fails. At your own risk |
 | `WEBHOOKS_ALLOW_PRIVATE` | off | Set to `1` to let webhooks call this machine or a private network |
 | `TRUST_PROXY` | off | Set to `1` only when the app is reachable solely through your own reverse proxy. It makes the login limit use the visitor's address from `X-Forwarded-For`. The shipped Docker and pm2 files set it |
 
+**After changing `.env`, restart; never rebuild.** `.env` is read each time
+the app starts: run `pnpm start` again, `pm2 restart fotobogen`, or
+`docker compose up -d`. Under pm2, `ecosystem.config.cjs` sets `PORT`,
+`HOST`, and `DATA_DIR` itself, and those win over `.env`; change them in
+that file and run `pm2 restart fotobogen --update-env`. A rebuild
+(`pnpm build`) is needed only after updating the software or editing
+`fotobogen.config.js`.
+
 Login cookies are marked `Secure`, so logging in works over HTTPS, and over
 plain HTTP only on `localhost`.
+
+## Demo mode
+
+For a site whose purpose is to show Fotobogen off. Put `DEMO_MODE=1` in
+`.env` and restart. The login page then says the site is a demonstration
+and offers a way in: the username `demo` and the password `demo`.
+
+- **A demo visitor can look at everything and change nothing.** Every admin
+  page opens. Any request that would save, upload, or delete is refused by
+  the server with "This is a demo: you can look at everything, but nothing
+  can be changed." Nothing is written, so there is nothing to reset.
+- **Your own login is unaffected** and keeps full control; use it to change
+  the site.
+- **Kept from a demo visitor altogether:** downloading a backup (it holds
+  your login and every original file), restoring, API tokens, webhooks, and
+  where photos were taken.
+- **What a demo visitor does see:** everything else the admin shows,
+  including hidden and scheduled photos and your settings. Do not switch it
+  on for a site with anything in the admin you would not show a stranger.
+
+A demo login never touches the limit on wrong passwords: it is not counted
+as a failure, and it does not clear the count, so it cannot be used to get
+more guesses at your password. If your own account is called `demo`, there
+is no demo login; the name is yours.
+
+It is set on the server only; there is no switch for it in the admin, so a
+site cannot become a demo by accident. What a demo visitor may read is a
+short list of named addresses (`server/utils/demo.ts`); anything not on the
+list is refused, so a new admin feature is closed to demo visitors until it
+is added there. Switching demo mode off ends every demo session at once.
 
 ## Branches
 

@@ -43,7 +43,7 @@ describe('the admin area', () => {
   })
 
   it('reports who is logged in at /api/auth/me', async () => {
-    expect(await (await get(server, '/api/auth/me', { cookie })).json()).toEqual({ user: { username: ADMIN.username }, acknowledged: true })
+    expect(await (await get(server, '/api/auth/me', { cookie })).json()).toEqual({ user: { username: ADMIN.username }, demo: false, acknowledged: true })
     expect(await (await get(server, '/api/auth/me')).json()).toEqual({ user: null })
   })
 

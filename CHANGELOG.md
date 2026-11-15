@@ -81,6 +81,7 @@ uses [Semantic Versioning](https://semver.org/).
 - A Links panel on each photo's page in the library: the full address of the photo's page and of each size of the picture, and HTML to embed it, each with a Copy button.
 - `SITE_URL`: the site's proper address can be set on the server as well as in the admin, and is used for every full address the site writes out. The admin says when links still point at localhost and how to fix it.
 - Pages that cannot be shown (not found, or a failure) use the site's own frame, name, and words.
+- Demo mode (`DEMO_MODE=1`): for a site that shows Fotobogen off. Anyone can log in as `demo` / `demo` and open every admin page, but every change is refused by the server, and backups, restore, API tokens, webhooks, and photo locations are kept from them. The owner's login keeps full control.
 - README and docs: a complete nginx site file for an install without Docker, with each line explained and a table of what goes wrong; pm2 start-on-boot; and step-by-step Laravel Forge with pm2 (no Docker), including the deploy script.
 - API tokens: made in the admin, shown once, stored as a hash, and limited to a kind (Upload only, or Manage photos). A script or another program sends one in an `Authorization: Bearer` header in place of logging in. No token can change the site's settings, reach a backup, or manage tokens. Adds the `api_tokens` table (migration 0004, applied by itself).
 - Picture quality: Settings has a choice of Smaller files, Standard, or High for the copies shown on the site; changing it makes every photo's copies again.
@@ -99,6 +100,7 @@ uses [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Docker: `SITE_URL` and `WEBHOOKS_ALLOW_PRIVATE` set in `.env` were not passed through to the app. The compose files now pass them, and `DEMO_MODE`.
 - Changing a look while photos were still being made left those photos with the old look. They now get another pass.
 - Skins set the text colour on the page body, so a light skin no longer inherits the admin's light text.
 - Installing no longer compiles `better-sqlite3` from source. It failed on Windows without Visual Studio; the package's own prebuilt binaries are used on every platform.

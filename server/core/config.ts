@@ -19,6 +19,8 @@ export interface Settings {
   host: string
   dataDir: string
   trustProxy: boolean
+  /** Whether anyone may log in as demo / demo and look round the admin, read-only. */
+  demoMode: boolean
   /** The site's proper address (an origin such as https://photos.example.com), or '' when none is set here. */
   siteUrl: string
   maxUploadMb: number
@@ -47,6 +49,7 @@ export function resolveSettings(env: Env): Settings {
     host: env.HOST?.trim() || config.server.host,
     dataDir: env.DATA_DIR?.trim() || config.dataDir,
     trustProxy: env.TRUST_PROXY !== undefined ? env.TRUST_PROXY === '1' : config.server.trustProxy,
+    demoMode: env.DEMO_MODE !== undefined ? env.DEMO_MODE === '1' : config.server.demoMode === true,
     siteUrl: siteAddress(env.SITE_URL?.trim() || config.server.siteUrl || ''),
     maxUploadMb: positive(env.MAX_UPLOAD_MB) ?? config.uploads.maxUploadMb,
     maxMegapixels: positive(env.MAX_MEGAPIXELS) ?? config.uploads.maxMegapixels,
