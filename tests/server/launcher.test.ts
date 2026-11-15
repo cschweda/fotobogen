@@ -3,7 +3,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs'
 import { createServer, type Server } from 'node:net'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { baseEnv } from '../helpers/server.ts'
 
 interface Launched { child: ChildProcess, output: () => string, exited: Promise<number | null> }
@@ -49,7 +49,8 @@ describe('pnpm start', () => {
     // First run: the whole preflight report is shown.
     expect(first.output()).toContain('Fotobogen preflight check')
     expect(first.output()).toMatch(/ok {3}Node\.js: version \d+/)
-    expect(first.output()).toContain('Fotobogen setup token:')
+    // The token is printed as the server finishes starting, a moment after its address.
+    await vi.waitFor(() => expect(first.output()).toContain('Fotobogen setup token:'), { timeout: 10_000 })
     const health = await (await fetch(`http://127.0.0.1:${port}/api/health`)).json() as { status: string }
     expect(health.status).toBe('ok')
   })
