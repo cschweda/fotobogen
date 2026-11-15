@@ -3,6 +3,8 @@
 // exists there; the client-side route guard is only a convenience.
 import { defineEventHandler, getRequestURL, sendRedirect } from 'nuxt/server'
 import { isSetupComplete } from '../utils/app.ts'
+import { DEMO_HIDDEN, DEMO_REFUSAL, demoAllows } from '../utils/demo.ts'
+import { fail } from '../utils/respond.ts'
 import { currentAdmin, requireAdmin } from '../utils/session.ts'
 
 export default defineEventHandler(async (event) => {
@@ -11,7 +13,12 @@ export default defineEventHandler(async (event) => {
   const path = getRequestURL(event).pathname.toLowerCase()
 
   if (path.startsWith('/api/admin/')) {
-    await requireAdmin(event)
+    const admin = await requireAdmin(event)
+    // A demo visitor may read what is listed for them, and change nothing.
+    if (admin.demo) {
+      const allowed = demoAllows(event.req.method, getRequestURL(event).pathname)
+      if (allowed !== 'yes') return fail(event, 403, allowed === 'changes' ? DEMO_REFUSAL : DEMO_HIDDEN)
+    }
     return
   }
   if (path === '/admin' || path.startsWith('/admin/')) {

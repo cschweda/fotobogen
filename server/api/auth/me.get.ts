@@ -8,8 +8,11 @@ export default defineEventHandler(async (event) => {
   if (!admin) return { user: null }
   return {
     user: { username: admin.username },
+    // A demo visitor: the pages say so, and expect changes to be refused.
+    demo: admin.demo === true,
     // Whether the owner has read and accepted the notice about backups.
     // Until then the admin shows only that notice.
-    acknowledged: getSetting<number | null>('admin.backup_notice_ack', null) !== null,
+    // (A demo visitor is never held at it: the notice is for the owner.)
+    acknowledged: admin.demo === true || getSetting<number | null>('admin.backup_notice_ack', null) !== null,
   }
 })

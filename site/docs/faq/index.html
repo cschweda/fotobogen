@@ -165,6 +165,12 @@ docker compose exec app node scripts/fotobogen.mjs reset-admin    # with Docker<
 <h3>An upload is refused as too large</h3>
 <p>The limit is 50 MB and 100 megapixels. Raise <code>MAX_UPLOAD_MB</code> or <code>MAX_MEGAPIXELS</code> in <code>.env</code>, and raise the limit of the web server in front of Fotobogen to match (<code>max_size</code> in <code>deploy/Caddyfile</code>, <code>client_max_body_size</code> in nginx). Larger photos need more memory.</p>
 
+<h3>I changed <code>.env</code>. Do I rebuild?</h3>
+<p>No. Restart Fotobogen and the new values are used: <code>pnpm start</code> again, <code>pm2 restart fotobogen</code>, or <code>docker compose up -d</code>. A rebuild (<code>pnpm build</code>) is needed only after updating the software or editing <code>fotobogen.config.js</code>. <a href="/docs/configuration/#how">More about settings.</a></p>
+
+<h3>Can I let people look round the admin without letting them change anything?</h3>
+<p>Yes: demo mode. Put <code>DEMO_MODE=1</code> in <code>.env</code> and restart. The login page then offers the username <code>demo</code> and the password <code>demo</code>. A demo visitor can open every admin page, but every attempt to save, upload, or delete is refused, and they cannot reach backups, API tokens, or webhooks. Your own login still has full control. <a href="/docs/configuration/#demo-mode">What a demo visitor can and cannot see.</a></p>
+
 <h3>How do I move to another server?</h3>
 <p>Install Fotobogen on the new server, stop it, copy your <code>data</code> folder over its empty one, and start. Or download a backup from the old site and restore it on the new one; you will log in with the old site's account. Then point your domain at the new server.</p>
 
