@@ -9,6 +9,7 @@ import { users } from '../../db/schema.ts'
 import { getDb, getPaths, markSetupComplete } from '../../utils/app.ts'
 import { failureLimiter, limiterKey, tooManyAttempts } from '../../utils/limiter.ts'
 import { fail } from '../../utils/respond.ts'
+import { startSampleFetch } from '../../utils/samples.ts'
 import { signIn } from '../../utils/session.ts'
 import { setSettings } from '../../utils/settings.ts'
 
@@ -52,7 +53,6 @@ export default defineEventHandler(async (event) => {
       'site.tagline': answers.tagline,
       'layout.grid': answers.grid,
       'layout.photo_view': answers.photoView,
-      // Recorded now; the download itself arrives in a later phase.
       'samples.requested': answers.samples,
       'skin.active': 'swiss',
       'privacy.show_exif': true,
@@ -67,5 +67,7 @@ export default defineEventHandler(async (event) => {
   markSetupComplete()
   deleteSetupToken(getPaths().setupToken)
   await signIn(event, user)
+  // Runs in the background; setup is finished whether or not it succeeds.
+  if (answers.samples) startSampleFetch()
   return { ok: true }
 })
