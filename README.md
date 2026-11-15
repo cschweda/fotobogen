@@ -142,6 +142,13 @@ pnpm install
 pnpm dev           # http://localhost:5150
 ```
 
+If your Node.js or pnpm is too old, `pnpm install` stops before fetching
+anything and says what to do. The usual cause is a terminal that is still on
+an older Node.js: with nvm, `nvm use 24` switches the terminal you are in
+(`nvm alias default 24` only affects terminals opened afterwards), and pnpm
+has to be installed again for that version (`npm install -g pnpm@10`),
+because nvm keeps such tools separately for each version of Node.js.
+
 On first start the terminal prints a setup token:
 
 ```
@@ -168,8 +175,18 @@ pnpm start
 prints its address:
 
 ```
-Fotobogen is running at http://localhost:5150
+Fotobogen is running. Open it in a browser on this computer:
+
+    http://localhost:5150
+
+Logging in works at that address, or over https.
 ```
+
+Use that address. The web server prints a line of its own underneath
+(`Listening on http://0.0.0.0:5150`), which says where it is listening, not
+where to browse. Logging in is kept by your browser only on this computer's
+own addresses (`localhost`, `127.0.0.1`, `0.0.0.0`) or over https; anywhere
+else over plain http, the login page says so instead of letting you in.
 
 Nothing has to be configured. The port is **5150**; if that is taken,
 Fotobogen uses the next free port above it and says so. Data goes in

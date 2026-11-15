@@ -1,5 +1,6 @@
 import { eq } from 'drizzle-orm'
-import { defineEventHandler, readBody } from 'nuxt/server'
+import { defineEventHandler, getRequestHeader, getRequestURL, readBody } from 'nuxt/server'
+import { loginCanStick } from '../../core/request.ts'
 import { loginSchema } from '../../../shared/schemas.ts'
 import { hashPassword, verifyPassword } from '../../core/password.ts'
 import { users } from '../../db/schema.ts'
@@ -14,6 +15,13 @@ import { signIn, signInDemo } from '../../utils/session.ts'
 let decoyHash: Promise<string> | undefined
 
 export default defineEventHandler(async (event) => {
+  // Over plain http at an address that is not this computer, the browser would
+  // throw the login away and the page would come back as if nothing happened.
+  // Say so instead, before a password is even looked at.
+  const host = getRequestHeader(event, 'host')
+  if (!loginCanStick(host, getRequestURL(event).protocol, getRequestHeader(event, 'x-forwarded-proto'))) {
+    return fail(event, 400, `Logging in works over https, or at http://localhost on the computer Fotobogen runs on. You are using http://${host ?? 'this address'}, where your browser would not keep the login. On that computer, open http://localhost:${host?.match(/:(\d+)$/)?.[1] ?? '5150'} instead.`)
+  }
   const key = limiterKey(event)
   const parsed = loginSchema.safeParse(await readBody(event).catch(() => null))
 

@@ -31,7 +31,7 @@ function launch(options: { home: string, cwd?: string, dataDir: string, env?: Re
 
 async function runningPort(launched: Launched): Promise<number> {
   for (let tries = 0; tries < 300; tries++) {
-    const match = launched.output().match(/Fotobogen is running at http:\/\/localhost:(\d+)/)
+    const match = launched.output().match(/Fotobogen is running\. Open it in a browser on this computer:\s+http:\/\/localhost:(\d+)/)
     if (match) return Number(match[1])
     if (launched.child.exitCode !== null) break
     await new Promise(wait => setTimeout(wait, 100))

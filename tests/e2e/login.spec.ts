@@ -46,3 +46,15 @@ test('logging in and out works with the keyboard alone', async ({ page }) => {
   await page.goto(server.url + '/admin')
   await expect(page).toHaveURL(server.url + '/login')
 })
+
+test('logging in works at the 0.0.0.0 address the server prints', async ({ page }) => {
+  // Windows browsers cannot open 0.0.0.0 at all; there is nothing to test there.
+  test.skip(process.platform === 'win32', '0.0.0.0 is not an address a browser can open on Windows')
+  const address = `http://0.0.0.0:${new URL(server.url).port}`
+  await page.goto(`${address}/login`)
+  await page.getByLabel('Username').fill(ADMIN.username)
+  await page.getByLabel('Password', { exact: true }).fill(ADMIN.password)
+  await page.getByRole('button', { name: 'Log in' }).click()
+  await expect(heading(page, 'Overview')).toBeVisible()
+  await expect(page).toHaveURL(`${address}/admin`)
+})
