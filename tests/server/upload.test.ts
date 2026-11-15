@@ -136,7 +136,8 @@ describe('uploading photos', () => {
     await server.restart()
     const { photos } = await whenProcessed(server, cookie)
     expect(photos.find(photo => photo.id === id)!.status).toBe('ready')
-    expect(query(server, `select status, attempts from jobs where photo_id = '${id}'`)).toEqual([{ status: 'done', attempts: 2 }])
+    // The photo is marked ready a moment before its job is recorded as done, so wait for that.
+    await expect.poll(() => query(server, `select status, attempts from jobs where photo_id = '${id}'`), { timeout: 10_000 }).toEqual([{ status: 'done', attempts: 2 }])
     expect(existsSync(join(server.dataDir, 'tmp', 'upload-abandoned'))).toBe(false)
   })
 })
