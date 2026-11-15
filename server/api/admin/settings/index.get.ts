@@ -14,5 +14,8 @@ export default defineEventHandler(async (event) => {
     showLocation: getSetting('privacy.show_location', false),
     // Whether a new upload is public at once or starts hidden, as a draft.
     newUploads: getSetting<'public' | 'hidden'>('uploads.default_visibility', 'public'),
+    // The slideshow: seconds each photo is shown, and whether the order is yours or shuffled.
+    slideshowSeconds: getSetting('slideshow.seconds', 8),
+    slideshowOrder: getSetting<'sequence' | 'random'>('slideshow.order', 'sequence'),
   }
 })

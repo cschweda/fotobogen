@@ -14,6 +14,8 @@ const schema = z.object({
   showExif: z.boolean(),
   showLocation: z.boolean(),
   newUploads: z.enum(['public', 'hidden']).default('public'),
+  slideshowSeconds: z.number('Give a number of seconds.').int('Use whole seconds.').min(3, 'At least 3 seconds, so each photo can be taken in.').max(120, 'At most 120 seconds.').default(8),
+  slideshowOrder: z.enum(['sequence', 'random']).default('sequence'),
 })
 
 export default defineEventHandler(async (event) => {
@@ -29,6 +31,8 @@ export default defineEventHandler(async (event) => {
     'privacy.show_exif': settings.showExif,
     'privacy.show_location': settings.showLocation,
     'uploads.default_visibility': settings.newUploads,
+    'slideshow.seconds': settings.slideshowSeconds,
+    'slideshow.order': settings.slideshowOrder,
   })
   return { ok: true }
 })

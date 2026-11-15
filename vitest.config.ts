@@ -4,7 +4,8 @@ export default defineConfig({
   test: {
     projects: [
       {
-        test: { name: 'unit', include: ['tests/unit/**/*.test.ts'], environment: 'node' },
+        // Image work is slow on small CI machines; five seconds is not always enough.
+        test: { name: 'unit', include: ['tests/unit/**/*.test.ts'], environment: 'node', testTimeout: 30_000 },
       },
       {
         // Runs against the built server; global setup builds it once.

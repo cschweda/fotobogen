@@ -224,6 +224,15 @@ Visitors see two kinds of page:
 - **Albums and tags**: `/albums`, `/album/<name>`, and `/tag/<name>` (see
   [Albums and tags](#albums-and-tags)).
 
+- **Slideshow** at `/slideshow`: full screen, one photo after another, for
+  the whole site or for one album or tag ("Play as a slideshow"). It loads
+  each photo before showing it and cross-fades; it goes round for ever, in
+  your order or shuffled afresh each time round. Press a photo to see its
+  title and details and hold it there. Pause, step with the buttons or the
+  arrow keys, Space to pause, F for full screen, Escape to leave. With
+  "reduce motion" on, photos change without the fade. The seconds per photo
+  and the order are in Settings. It never shows where a photo was taken.
+
 Only photos that are processed and public are ever shown. Location is never
 shown unless you switch that on.
 

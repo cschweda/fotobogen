@@ -3,9 +3,9 @@
 definePageMeta({ middleware: 'admin' })
 useHead({ title: 'Settings | Fotobogen' })
 
-interface Settings { siteTitle: string, tagline: string, grid: 'masonry' | 'square', photoView: 'modal' | 'page', showExif: boolean, showLocation: boolean, newUploads: 'public' | 'hidden' }
+interface Settings { siteTitle: string, tagline: string, grid: 'masonry' | 'square', photoView: 'modal' | 'page', showExif: boolean, showLocation: boolean, newUploads: 'public' | 'hidden', slideshowSeconds: number, slideshowOrder: 'sequence' | 'random' }
 const { data } = await useFetch<Settings>('/api/admin/settings')
-const form = reactive<Settings>({ siteTitle: '', tagline: '', grid: 'masonry', photoView: 'modal', showExif: true, showLocation: false, newUploads: 'public', ...data.value })
+const form = reactive<Settings>({ siteTitle: '', tagline: '', grid: 'masonry', photoView: 'modal', showExif: true, showLocation: false, newUploads: 'public', slideshowSeconds: 8, slideshowOrder: 'sequence', ...data.value })
 const errors = ref<Record<string, string>>({})
 const message = ref('')
 const problem = ref('')
@@ -67,6 +67,21 @@ async function save() {
         <label class="check uploads__second"><input v-model="form.newUploads" type="radio" name="newUploads" value="hidden"><span>Stay hidden as drafts until you publish them</span></label>
       </fieldset>
 
+      <h2 class="settings__heading">Slideshow</h2>
+      <div class="seconds" :class="{ 'seconds--invalid': errors.slideshowSeconds }">
+        <label class="seconds__label" for="slideshowSeconds">Seconds each photo is shown</label>
+        <input
+          id="slideshowSeconds" v-model.number="form.slideshowSeconds" class="seconds__input" type="number" min="3" max="120" step="1" inputmode="numeric"
+          :aria-invalid="errors.slideshowSeconds ? 'true' : undefined" :aria-describedby="errors.slideshowSeconds ? 'slideshowSeconds-error' : undefined"
+        >
+        <p v-if="errors.slideshowSeconds" id="slideshowSeconds-error" class="seconds__error">{{ errors.slideshowSeconds }}</p>
+      </div>
+      <fieldset class="uploads">
+        <legend class="seconds__label">Order</legend>
+        <label class="check uploads__second"><input v-model="form.slideshowOrder" type="radio" name="slideshowOrder" value="sequence"><span>The order of your library, or of the album</span></label>
+        <label class="check uploads__second"><input v-model="form.slideshowOrder" type="radio" name="slideshowOrder" value="random"><span>Shuffled, and reshuffled each time round</span></label>
+      </fieldset>
+
       <h2 class="settings__heading">Privacy</h2>
       <label class="check">
         <input v-model="form.showExif" type="checkbox" aria-describedby="exif-note">
@@ -96,6 +111,11 @@ async function save() {
 .check input { width: 1.25rem; height: 1.25rem; margin: 0; accent-color: var(--fb-red); }
 .uploads { margin: 0; padding: 0; border: 0; }
 .uploads__second { margin-top: 0.6rem; }
+.seconds { margin-bottom: 1.5rem; }
+.seconds__label { display: block; padding: 0; font-weight: 700; }
+.seconds__input { width: 7rem; height: 2.75rem; margin-top: 0.5rem; padding: 0 0.75rem; border: 1px solid var(--fb-edge); background: var(--fb-panel); color: var(--fb-text); font: inherit; border-radius: 0; }
+.seconds--invalid .seconds__input { border-color: var(--fb-error); border-width: 2px; }
+.seconds__error { margin: 0.5rem 0 0; color: var(--fb-error); }
 .check__note { margin: 0.25rem 0 1.25rem 1.85rem; max-width: 34rem; color: var(--fb-muted); font-size: 0.875rem; }
 .actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 2.5rem; }
 .saved { margin-top: 0.75rem; }

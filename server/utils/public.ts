@@ -190,6 +190,51 @@ export function publicPhoto(slug: string): PublicPhoto | null {
   }
 }
 
+export interface Slide {
+  slug: string
+  title: string | null
+  description: string | null
+  alt: string
+  takenAt: number | null
+  /** Camera and exposure on one line, when the site shows camera details. */
+  camera: string | null
+  /** The largest copy first; the browser picks by screen size. */
+  images: { url: string, width: number, height: number }[]
+}
+
+const SLIDE_LIMIT = 500
+
+/** The photos a slideshow plays: everything a visitor may see, or one album's or tag's. Never a location. */
+export function publicSlides(scope?: Scope): Slide[] {
+  const { sqlite, storage } = getPipeline()
+  const from = scope && 'album' in scope
+    ? `from photos p join album_photos ap on ap.photo_id = p.id and ap.album_id = ?`
+    : scope && 'tag' in scope ? `from photos p join photo_tags pt on pt.photo_id = p.id and pt.tag_id = ?` : `from photos p`
+  const order = scope && 'album' in scope ? `ap.position` : `p.sort_order desc`
+  const key = scope ? ['album' in scope ? scope.album : scope.tag] : []
+  const rows = sqlite.prepare(`
+    select p.id, p.slug, p.title, p.description, p.alt, p.taken_at as takenAt,
+      p.camera, p.lens, p.focal_length as focalLength, p.aperture, p.shutter, p.iso
+    ${from} where ${visible()} order by ${order} limit ?
+  `).all(...key, SLIDE_LIMIT) as {
+    id: string, slug: string, title: string | null, description: string | null, alt: string | null, takenAt: number | null
+    camera: string | null, lens: string | null, focalLength: string | null, aperture: string | null, shutter: string | null, iso: number | null
+  }[]
+  const showExif = getSetting('privacy.show_exif', true)
+  const copies = sqlite.prepare(`select path, width, height from derivatives where photo_id = ? and kind in ('medium', 'large') order by width`)
+  return rows.map(row => ({
+    slug: row.slug,
+    title: row.title,
+    description: row.description,
+    alt: row.alt ?? row.title ?? '',
+    takenAt: row.takenAt,
+    camera: showExif
+      ? [row.camera, row.lens, row.focalLength, row.aperture, row.shutter, row.iso ? `ISO ${row.iso}` : null].filter(Boolean).join(', ') || null
+      : null,
+    images: (copies.all(row.id) as { path: string, width: number, height: number }[]).map(copy => ({ url: storage.publicUrl(copy.path), width: copy.width, height: copy.height })),
+  })).filter(slide => slide.images.length > 0)
+}
+
 /** The site's own address as visitors see it, for links in feeds and social cards. */
 export function siteOrigin(event: RequestEvent): string {
   const url = getRequestURL(event)

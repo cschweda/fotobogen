@@ -58,6 +58,7 @@ uses [Semantic Versioning](https://semver.org/).
 - A System page: version, what is stored, and free space.
 - Scheduled publishing: a photo can be set to go public at a date and time, and appears by itself when it comes.
 - Drafts: a setting makes new uploads start hidden until published.
+- Slideshow: a full-screen player for the whole site, an album, or a tag, with preloading, cross-fade, pause, keyboard control, and details on demand; timing and order are settings.
 - Windows: CI installs, builds, and tests on Windows, including a PowerShell smoke test (`scripts/smoke-test.ps1`).
 
 ### Changed

@@ -9,6 +9,7 @@ A skin changes how the public site looks. It is a stylesheet and a short descrip
 - [Options](#options)
 - [The contrast check](#the-contrast-check)
 - [The markup you are styling](#the-markup-you-are-styling)
+- [The slideshow](#the-slideshow)
 - [The grid](#the-grid)
 - [What a skin cannot do](#what-a-skin-cannot-do)
 
@@ -81,7 +82,7 @@ These class names are stable. A skin may rely on them.
   <header class="fb-site-header">
     <p class="fb-site-title"><a>Site title</a></p>
     <p class="fb-site-tagline">Tagline</p>
-    <nav class="fb-nav"><a>Photos</a><a>Albums</a></nav>   <!-- only when there are albums -->
+    <nav class="fb-nav"><a>Photos</a><a>Albums</a><a>Slideshow</a></nav>
   </header>
   <main class="fb-main">
 
@@ -140,6 +141,31 @@ These class names are stable. A skin may rely on them.
 ```
 
 Each tile's inline `background-image` is a tiny blurred version of the photo, shown until the real image loads. Keep `background-size: cover` on `.fb-tile` so it fills the tile.
+
+## The slideshow
+
+`/slideshow` has its own page, without the site's header and footer:
+
+```html
+<main class="fb-slideshow">
+  <button class="fb-slideshow__photo">
+    <img class="fb-slideshow__image fb-slideshow__image--front">
+    <img class="fb-slideshow__image">
+  </button>
+  <div class="fb-slideshow__details">
+    <h2 class="fb-slideshow__title">Title</h2>
+    <p class="fb-slideshow__description">Description</p>
+    <p class="fb-slideshow__facts">Date · camera</p>
+  </div>
+  <nav class="fb-slideshow__controls">
+    <button class="fb-slideshow__control">Previous</button>
+    <span class="fb-slideshow__count">3 / 25</span>
+    <a class="fb-slideshow__control">Close</a>
+  </nav>
+</main>
+```
+
+Two images are stacked; the one with `--front` is showing, and the skin makes the change between them (Swiss fades `opacity` over a second, and not at all under `prefers-reduced-motion`). Stack them with `position: absolute` and show only the front one, or both will be visible.
 
 ## The grid
 

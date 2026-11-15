@@ -22,6 +22,7 @@ useSeoMeta({
     <p class="fb-photo__back"><a href="/albums">All albums</a></p>
     <h1 class="fb-page-title">{{ data.album.title }}</h1>
     <p v-if="data.album.description" class="fb-page-description">{{ data.album.description }}</p>
+    <p class="fb-page-actions"><a :href="`/slideshow?album=${slug}`">Play as a slideshow</a></p>
     <PhotoGrid :source="source" :base="`/album/${slug}`" />
   </div>
 </template>
