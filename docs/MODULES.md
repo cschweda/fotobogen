@@ -73,8 +73,10 @@ export default {
         fade: { type: 'boolean', label: 'Faded blacks', default: false },
       },
       apply(image, params) {
+        // tint() keeps each pixel's brightness and replaces its colour.
+        // Blend from neutral grey to brown as warmth goes up.
         const amount = params.warmth / 100
-        let toned = image.removeAlpha().greyscale().tint({ r: 255, g: 255 - 40 * amount, b: 255 - 110 * amount })
+        let toned = image.removeAlpha().tint({ r: 128 + 40 * amount, g: 128 - 6 * amount, b: 128 - 60 * amount })
         if (params.fade) toned = toned.linear(0.9, 20)
         return toned
       },
