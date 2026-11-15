@@ -137,7 +137,7 @@ test('the wizard is gone once setup is complete', async ({ page }) => {
   await expectNoAxeViolations(page)
 })
 
-test('the public placeholder shows the site title and tagline', async ({ page }) => {
+test('the public site shows the site title and tagline', async ({ page }) => {
   await page.goto(server.url + '/')
   await expect(heading(page, 'Kodachrome Days')).toBeVisible()
   await expect(page.getByText('Slides from the shoebox')).toBeVisible()

@@ -1,0 +1,111 @@
+/*
+  Swiss: the skin that comes with Fotobogen.
+
+  A skin is this stylesheet plus skin.json. It styles the public pages only;
+  their markup is fixed and documented in docs/SKINS.md. Every colour and
+  measure a visitor might want to change is a custom property, and the
+  options declared in skin.json arrive as overrides of those properties
+  (--fb-accent, --fb-gutter, --fb-columns), appended after this file.
+
+  Public pages carry the class "fb-public" on the <html> element. Start
+  every rule from it, as below, so the skin and the admin never interfere.
+*/
+:root.fb-public {
+  --fb-ground: #0a0a0b;
+  --fb-text: #f5f5f2;
+  --fb-muted: #a8a8a3;
+  --fb-line: #2c2c31;
+  --fb-accent: #e30613;
+  --fb-gutter: 3px;
+  --fb-columns: 4;
+  --fb-font: "Helvetica Neue", Helvetica, "Nimbus Sans", Arial, sans-serif;
+  --fb-margin: clamp(1.25rem, 4vw, 3rem);
+  background: var(--fb-ground);
+  color: var(--fb-text);
+  font-family: var(--fb-font);
+  line-height: 1.5;
+}
+.fb-public body { margin: 0; min-height: 100vh; background: var(--fb-ground); font-feature-settings: "tnum" 1; }
+.fb-public a { color: inherit; text-underline-offset: 0.2em; text-decoration-thickness: 1px; }
+.fb-public a:hover { color: var(--fb-accent); }
+.fb-public :focus-visible { outline: 2px solid var(--fb-text); outline-offset: 3px; }
+.fb-skip { position: absolute; left: -999rem; }
+.fb-skip:focus { left: var(--fb-margin); top: 0.75rem; z-index: 3; padding: 0.5rem 0.75rem; background: var(--fb-ground); }
+
+/* Header: the site's name top-left, small. */
+.fb-site-header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 1.5rem; padding: 1.5rem var(--fb-margin) 1rem; }
+.fb-site-title { margin: 0; font-size: 1rem; font-weight: 700; letter-spacing: -0.01em; }
+.fb-site-title a { text-decoration: none; }
+.fb-site-tagline { margin: 0; color: var(--fb-muted); font-size: 0.875rem; }
+.fb-main { padding: 0 var(--fb-margin) 4rem; }
+.fb-site-footer { padding: 1.25rem var(--fb-margin) 2rem; border-top: 1px solid var(--fb-line); color: var(--fb-muted); font-size: 0.8125rem; }
+.fb-empty { max-width: 34rem; margin: 3rem 0; padding: 1.25rem 0; border-top: 1px solid var(--fb-line); border-bottom: 1px solid var(--fb-line); color: var(--fb-muted); }
+
+/*
+  The grid. Columns step down on narrower screens. Both layouts are CSS
+  grid, so the order photos are read in is the order they appear in.
+*/
+.fb-grid-wrap { container-type: inline-size; --fb-cols: var(--fb-columns); }
+@container (max-width: 64rem) { .fb-grid { --fb-cols: min(var(--fb-columns), 3); } }
+@container (max-width: 40rem) { .fb-grid { --fb-cols: 2; } }
+.fb-grid {
+  --fb-cols: var(--fb-columns);
+  display: grid;
+  grid-template-columns: repeat(var(--fb-cols), minmax(0, 1fr));
+  column-gap: var(--fb-gutter);
+  margin: 0; padding: 0; list-style: none;
+}
+.fb-tile { position: relative; background-size: cover; background-position: center; background-color: var(--fb-line); }
+.fb-tile__link { display: block; width: 100%; height: 100%; }
+.fb-tile__image { display: block; width: 100%; height: 100%; object-fit: cover; }
+.fb-tile__link:focus-visible { outline-offset: -4px; }
+
+/* Square: equal cells. */
+.fb-grid--square { row-gap: var(--fb-gutter); }
+.fb-grid--square .fb-tile { aspect-ratio: 1; }
+
+/*
+  Masonry without JavaScript. One row is a twentieth of a column's width,
+  and each tile carries --fb-span: how many rows its shape needs (worked
+  out on the server from the photo's dimensions). Tall photos span more
+  rows; short ones fewer. The space between rows is the tile's own border,
+  so it does not disturb the arithmetic.
+*/
+.fb-grid--masonry {
+  grid-auto-rows: calc((100cqw - (var(--fb-cols) - 1) * var(--fb-gutter)) / var(--fb-cols) / 20);
+  grid-auto-flow: row dense;
+}
+.fb-grid--masonry .fb-tile { grid-row: span var(--fb-span, 14); border-bottom: var(--fb-gutter) solid var(--fb-ground); }
+
+.fb-pager { display: flex; gap: 1.5rem; margin-top: 2.5rem; font-size: 0.9375rem; }
+.fb-pager__more {
+  min-height: 2.75rem; padding: 0 1.5rem; border: 1px solid var(--fb-muted); background: none; color: var(--fb-text);
+  font: inherit; cursor: pointer; display: inline-flex; align-items: center; text-decoration: none;
+}
+.fb-pager__more:hover { border-color: var(--fb-text); color: var(--fb-text); }
+
+/* A photo on its own page: the picture, with its words in a column beside or under it, never over it. */
+.fb-photo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(14rem, 20rem); gap: clamp(1.5rem, 4vw, 3rem); align-items: start; }
+.fb-photo__figure { margin: 0; }
+.fb-photo__image { display: block; max-width: 100%; max-height: 86vh; width: auto; height: auto; background-size: cover; }
+.fb-photo__title { margin: 0 0 0.75rem; font-size: 1.5rem; font-weight: 700; line-height: 1.15; letter-spacing: -0.02em; }
+.fb-photo__description { margin: 0 0 1.25rem; color: var(--fb-muted); white-space: pre-line; }
+.fb-photo__facts { margin: 0; border-top: 1px solid var(--fb-line); font-size: 0.875rem; }
+.fb-photo__fact { display: grid; grid-template-columns: 6rem 1fr; gap: 1rem; padding: 0.45rem 0; border-bottom: 1px solid var(--fb-line); }
+.fb-photo__fact dt { color: var(--fb-muted); }
+.fb-photo__fact dd { margin: 0; }
+.fb-photo__nav { display: flex; gap: 1.5rem; margin-top: 1.5rem; font-size: 0.9375rem; }
+.fb-photo__back { margin: 0 0 1.5rem; font-size: 0.875rem; }
+@media (max-width: 52rem) { .fb-photo { grid-template-columns: 1fr; } }
+
+/* The same photo opened over the grid. */
+.fb-modal { width: min(96vw, 84rem); max-height: 94vh; padding: clamp(1rem, 3vw, 2rem); border: 1px solid var(--fb-line); background: var(--fb-ground); color: var(--fb-text); overflow: auto; }
+.fb-modal::backdrop { background: rgb(0 0 0 / 0.86); }
+.fb-modal__close { float: right; min-height: 2.75rem; margin: 0 0 1rem 1rem; padding: 0 1rem; border: 1px solid var(--fb-muted); background: none; color: var(--fb-text); font: inherit; cursor: pointer; }
+.fb-modal__close:hover { border-color: var(--fb-text); }
+.fb-modal .fb-photo { clear: both; }
+.fb-modal .fb-photo__image { max-height: 76vh; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fb-public *, .fb-public *::before, .fb-public *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}

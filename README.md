@@ -14,8 +14,9 @@ data directory, can be claimed once through a token-protected setup wizard,
 and guards an admin area behind a login. From the admin you can upload
 photographs, which are checked, stored, and resized for every screen, and
 download or remove 25 sample photos, and apply modules (a film frame and
-film looks). The public photo grid, the full photo library, and skins are
-not built yet. The full
+film looks). Visitors get a photo grid and a page for each photo, styled by
+a skin. Editing titles and captions, albums, and more are on the
+[roadmap](docs/ROADMAP.md). The full
 plan is in [docs/DESIGN.md](docs/DESIGN.md); changes are recorded in
 [CHANGELOG.md](CHANGELOG.md).
 
@@ -27,6 +28,8 @@ plan is in [docs/DESIGN.md](docs/DESIGN.md); changes are recorded in
 - [Running the built server](#running-the-built-server)
 - [The preflight check](#the-preflight-check)
 - [Health check](#health-check)
+- [The public site](#the-public-site)
+- [Skins](#skins)
 - [Uploading photos](#uploading-photos)
 - [Sample photos](#sample-photos)
 - [Modules](#modules)
@@ -201,6 +204,38 @@ HTTP(S) monitor for `https://your-site.example/api/health`. Watching the
 status code is enough. For a stricter check, use a keyword monitor that
 expects the text `"status":"ok"`.
 
+## The public site
+
+Visitors see two kinds of page:
+
+- **The grid** at `/`: your photos newest first, in a masonry layout (each
+  photo keeps its shape) or equal squares. It is laid out by CSS alone, so
+  it works with JavaScript off and photos are read in the order they
+  appear. Each tile shows a blurred placeholder until its image loads, and
+  nothing shifts as they arrive. Thirty photos a page, with "More photos".
+- **A photo** at `/photo/<name>`: the picture, its title, description, date,
+  and camera details (if you show them), with previous and next links and
+  the left and right arrow keys. If the site is set to open photos over the
+  grid, the same content appears in a modal; the address still changes, and
+  Back, Escape, or Close returns to the grid where you were.
+
+Only photos that are processed and public are ever shown. Location is never
+shown unless you switch that on.
+
+For search engines and sharing: every photo page has social-card tags using
+its 1280 px copy, and the site publishes `/feed.xml` (RSS), `/sitemap.xml`,
+and `/robots.txt`. Setup, login, and the admin are marked not to be indexed.
+
+## Skins
+
+A skin changes how the public site looks. **Swiss**, which comes with
+Fotobogen, is dark with one red accent; its accent colour, the space
+between photos, and the number of columns can be changed under **Admin,
+Skins**. Changes show at once and nothing is rebuilt.
+
+To add a skin, copy its folder into `data/skins/` and restart.
+[docs/SKINS.md](docs/SKINS.md) explains how to write one.
+
 ## Uploading photos
 
 Log in, then choose **Upload photos** on the dashboard. Pick files or drop
@@ -221,8 +256,7 @@ them on the page; each one shows its progress and result.
   stays within its memory. A photo that cannot be processed after three
   tries is marked failed, with the reason and a **Try again** button.
 
-The public gallery that shows these photos is the next stage; for now the
-upload page shows each thumbnail once it is ready.
+Once processed, a photo appears on the public site.
 
 ## Sample photos
 
@@ -390,7 +424,7 @@ means copying it.
 | `derivatives/` | Resized copies. They can always be made again from the originals |
 | `tmp/` | Uploads in progress. Emptied every time the server starts |
 | `modules/` | Modules you install, one folder each (see [docs/MODULES.md](docs/MODULES.md)) |
-| `skins/` | Skins you install (later versions) |
+| `skins/` | Skins you install, one folder each (see [docs/SKINS.md](docs/SKINS.md)) |
 
 ## Settings
 

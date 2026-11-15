@@ -1,18 +1,152 @@
-<!-- Placeholder public page. The photo grid arrives in a later phase. -->
+<!-- The public grid. It works with JavaScript off: tiles are plain links
+     and "More photos" is a link to the next page. With JavaScript on, more
+     photos are added in place, and (if the site is set that way) a photo
+     opens over the grid instead of on its own page. -->
 <script setup lang="ts">
-const { data: site } = await useFetch('/api/site')
-useHead({ title: () => site.value?.title || 'Fotobogen' })
+import type { PublicPhoto } from '~/components/PhotoView.vue'
+
+definePageMeta({ layout: 'public' })
+
+interface Tile {
+  slug: string, title: string | null, alt: string, placeholder: string | null, span: number
+  thumb: { url: string, width: number, height: number }
+  square: { url: string, width: number, height: number }
+}
+interface Page { page: number, pages: number, total: number, tiles: Tile[] }
+
+const route = useRoute()
+const firstPage = Math.max(1, Math.floor(Number(route.query.page)) || 1)
+const { data: site } = await useFetch('/api/site', { key: 'site' })
+const { data: first } = await useFetch<Page>('/api/photos', { query: { page: firstPage } })
+
+const tiles = ref<Tile[]>(first.value?.tiles ?? [])
+const page = ref(first.value?.page ?? 1)
+const pages = computed(() => first.value?.pages ?? 1)
+const square = computed(() => site.value?.grid === 'square')
+const loading = ref(false)
+const announcement = ref('')
+
+useSeoMeta({
+  title: () => site.value?.title || 'Fotobogen',
+  description: () => site.value?.tagline || undefined,
+  ogTitle: () => site.value?.title || 'Fotobogen',
+  ogType: 'website',
+})
+
+/** Adds the next page to the grid. Without JavaScript the same control is a link to it. */
+async function more(event: MouseEvent) {
+  if (event.metaKey || event.ctrlKey || event.shiftKey) return
+  event.preventDefault()
+  if (loading.value) return
+  loading.value = true
+  try {
+    const next = await $fetch<Page>('/api/photos', { query: { page: page.value + 1 } })
+    const before = tiles.value.length
+    tiles.value = [...tiles.value, ...next.tiles]
+    page.value = next.page
+    announcement.value = `${next.tiles.length} more photos added.`
+    await nextTick()
+    // Carry on from the first new photo, not from a button that may have gone.
+    document.querySelectorAll<HTMLElement>('.fb-tile__link')[before]?.focus()
+  }
+  finally {
+    loading.value = false
+  }
+}
+
+// A photo opened over the grid.
+const dialog = ref<HTMLDialogElement>()
+const open = ref<PublicPhoto | null>(null)
+let pushed = false
+
+async function load(slug: string): Promise<boolean> {
+  try {
+    open.value = await $fetch<PublicPhoto>(`/api/photos/${encodeURIComponent(slug)}`)
+    return true
+  }
+  catch {
+    return false
+  }
+}
+
+async function openPhoto(tile: Tile, event: MouseEvent) {
+  // Leave new-tab clicks alone, and plain links when the site opens photos on their own page.
+  if (site.value?.photoView !== 'modal' || event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return
+  event.preventDefault()
+  if (!(await load(tile.slug))) {
+    window.location.href = `/photo/${tile.slug}`
+    return
+  }
+  history.pushState({ fotobogenPhoto: tile.slug }, '', `/photo/${tile.slug}`)
+  pushed = true
+  dialog.value?.showModal()
+}
+
+async function go(slug: string, event: MouseEvent) {
+  if (event.metaKey || event.ctrlKey || event.shiftKey) return
+  event.preventDefault()
+  if (await load(slug)) history.replaceState({ fotobogenPhoto: slug }, '', `/photo/${slug}`)
+}
+
+/** The dialog closed (Escape, the button, or Back): put the address back to the grid. */
+function closed() {
+  open.value = null
+  if (pushed) {
+    pushed = false
+    history.back()
+  }
+}
+
+function onPopState() {
+  // Back was pressed while the photo was open.
+  if (dialog.value?.open) {
+    pushed = false
+    dialog.value.close()
+  }
+}
+
+function onKey(event: KeyboardEvent) {
+  if (!open.value || event.metaKey || event.ctrlKey || event.altKey) return
+  const target = event.key === 'ArrowLeft' ? open.value.previous : event.key === 'ArrowRight' ? open.value.next : null
+  if (target) void load(target).then(ok => ok && history.replaceState({ fotobogenPhoto: target }, '', `/photo/${target}`))
+}
+
+onMounted(() => window.addEventListener('popstate', onPopState))
+onBeforeUnmount(() => window.removeEventListener('popstate', onPopState))
 </script>
 
 <template>
-  <FbShell>
-    <h1 class="fb-h1">{{ site?.title || 'Fotobogen' }}</h1>
-    <p v-if="site?.tagline" class="fb-lead">{{ site.tagline }}</p>
-    <p class="empty">No photographs have been published yet.</p>
-    <p class="fb-small"><a class="fb-link" href="/login">Log in</a></p>
-  </FbShell>
-</template>
+  <div>
+    <h1 class="fb-visually-hidden">{{ site?.title || 'Photographs' }}</h1>
+    <p v-if="tiles.length === 0" class="fb-empty">No photographs have been published yet.</p>
+    <div v-else class="fb-grid-wrap">
+      <ul class="fb-grid" :class="square ? 'fb-grid--square' : 'fb-grid--masonry'">
+        <li
+          v-for="(tile, index) in tiles" :key="tile.slug" class="fb-tile"
+          :style="{ '--fb-span': tile.span, 'backgroundImage': tile.placeholder ? `url(${tile.placeholder})` : undefined }"
+        >
+          <a class="fb-tile__link" :href="`/photo/${tile.slug}`" :aria-label="tile.alt ? undefined : (tile.title ?? 'Untitled photo')" @click="openPhoto(tile, $event)">
+            <img
+              class="fb-tile__image"
+              :src="square ? tile.square.url : tile.thumb.url"
+              :width="square ? tile.square.width : tile.thumb.width"
+              :height="square ? tile.square.height : tile.thumb.height"
+              :alt="tile.alt" decoding="async" :loading="index < 8 ? 'eager' : 'lazy'"
+            >
+          </a>
+        </li>
+      </ul>
+    </div>
 
-<style scoped>
-.empty { margin: 3rem 0 2rem; padding: 1.25rem 0; max-width: 34rem; border-top: 1px solid var(--fb-line); border-bottom: 1px solid var(--fb-line); color: var(--fb-muted); }
-</style>
+    <p class="fb-visually-hidden" role="status">{{ announcement }}</p>
+    <nav v-if="page < pages || firstPage > 1" class="fb-pager" aria-label="More photos">
+      <a v-if="firstPage > 1" class="fb-pager__more" :href="firstPage === 2 ? '/' : `/?page=${firstPage - 1}`">Newer photos</a>
+      <a v-if="page < pages" class="fb-pager__more" :href="`/?page=${page + 1}`" @click="more">More photos</a>
+    </nav>
+
+    <dialog ref="dialog" class="fb-modal" aria-label="Photo" @close="closed" @keydown="onKey">
+      <button type="button" class="fb-modal__close" @click="dialog?.close()">Close</button>
+      <PhotoView v-if="open" :photo="open" heading-level="h2" @go="go" />
+    </dialog>
+  </div>
+</template>

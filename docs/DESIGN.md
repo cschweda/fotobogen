@@ -480,3 +480,6 @@ For running without Docker, and for development servers.
 - **Launcher and preflight.** `scripts/start.mjs` (run by `pnpm start`, the Docker image, and pm2) reads `.env`, runs the preflight check, deals with copies already running, picks the port, and loads the server. A failed check stops the start. Tested platforms: Ubuntu and Debian, macOS, Windows.
 - **Running copies** are recorded in `~/.fotobogen/instances/`. Two copies may not share a data directory.
 - **`/api/health`** answers `GET` and `HEAD` with `status`, `version`, `database`, `queue.depth`, and `uptime`.
+- **Public site built (Phase 3).** Skin rules start from the class `fb-public` on `<html>`, so a skin and the admin stylesheet cannot interfere. The masonry grid uses container-query units: one row is a twentieth of a column's width and each tile spans the rows its shape needs. The Swiss skin uses the system sans-serif rather than shipping font files.
+- **Only setup, login, and the admin are `noindex`.** Public pages are indexable and listed in the sitemap.
+- **Feature roadmap** agreed 2026-11-15: `docs/ROADMAP.md`.

@@ -44,6 +44,10 @@ uses [Semantic Versioning](https://semver.org/).
 - Default port 5150. If it is busy, the next free port above it is used; a port set in `.env` is used exactly.
 - Running copies are detected: in a terminal Fotobogen asks whether to run both, replace the running one, or cancel; two copies can never share a data directory.
 - `/api/health` now reports `status` and `uptime`, and answers `HEAD` for uptime monitors.
+- The public site: a photo grid (masonry or square, laid out by CSS with no JavaScript needed, with blurred placeholders and no layout shift) and a page for each photo, which can also open in a modal over the grid.
+- Skins: the bundled Swiss skin, a loader for skins in `data/skins/`, options that become CSS custom properties, a contrast check, and an admin page. `docs/SKINS.md` is the guide.
+- Social-card tags on every photo page, an RSS feed (`/feed.xml`), a sitemap, and `robots.txt`.
+- `docs/ROADMAP.md`: the agreed feature list and its status.
 - Windows: CI installs, builds, and tests on Windows, including a PowerShell smoke test (`scripts/smoke-test.ps1`).
 
 ### Changed

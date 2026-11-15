@@ -13,6 +13,7 @@ import { readLimits } from '../pipeline/limits.ts'
 import { createQueue, type Queue } from '../pipeline/queue.ts'
 import { bundledModules } from '../modules/bundled.ts'
 import { createRegistry } from '../modules/registry.ts'
+import { createSkinRegistry, readSkinFolders, type SkinFiles, type SkinRegistry } from '../skins/registry.ts'
 import { createLocalStorage } from '../storage/local.ts'
 
 export type Db = BetterSQLite3Database<typeof schema>
@@ -25,6 +26,7 @@ interface AppState {
   /** What the upload and processing code works with. */
   pipeline: PipelineContext
   queue: Queue
+  skins: SkinRegistry
   /** Cached because every request checks it; it only ever flips to true. */
   setupComplete: boolean
 }
@@ -36,7 +38,7 @@ let ready: Promise<void> | undefined
  * Boot order matters: data directory, secret, database, migrations, and only
  * then the setup token, because whether one is needed depends on the database.
  */
-async function boot(loadMigrations: () => Promise<Migration[]>): Promise<void> {
+async function boot(loadMigrations: () => Promise<Migration[]>, loadSkins: () => Promise<SkinFiles[]>): Promise<void> {
   const paths = dataPaths(resolveDataDir(process.env, process.cwd()))
   ensureDataDirs(paths)
   const secret = loadOrCreateSecret(paths.secret)
@@ -69,7 +71,11 @@ async function boot(loadMigrations: () => Promise<Migration[]>): Promise<void> {
     onError: (job, error) => console.error(`Photo ${job.photoId} could not be processed (attempt ${job.attempts}): ${error instanceof Error ? error.message : error}`),
   })
   queue.recover()
-  state = { paths, secret, sqlite, db, setupComplete, pipeline, queue }
+  const skins = createSkinRegistry(await loadSkins(), readSkinFolders(paths.skins))
+  for (const skin of skins.list()) {
+    if (skin.error) console.warn(`Skin "${skin.name}" could not be loaded: ${skin.error}`)
+  }
+  state = { paths, secret, sqlite, db, setupComplete, pipeline, queue, skins }
   queue.kick()
 
   const { users } = sqlite.prepare(`select count(*) as users from users`).get() as { users: number }
@@ -81,8 +87,8 @@ async function boot(loadMigrations: () => Promise<Migration[]>): Promise<void> {
 }
 
 /** Called once by the boot plugin. A failed boot stops the process. */
-export function startBoot(loadMigrations: () => Promise<Migration[]>): void {
-  ready = boot(loadMigrations).catch((error) => {
+export function startBoot(loadMigrations: () => Promise<Migration[]>, loadSkins: () => Promise<SkinFiles[]> = async () => []): void {
+  ready = boot(loadMigrations, loadSkins).catch((error) => {
     const message = error instanceof Error ? error.message : String(error)
     console.error(`Fotobogen could not start: ${message}`)
     process.exit(1)
@@ -105,6 +111,7 @@ export const getSqlite = (): Database.Database => current().sqlite
 export const getDb = (): Db => current().db
 export const getPipeline = (): PipelineContext => current().pipeline
 export const getQueue = (): Queue => current().queue
+export const getSkins = (): SkinRegistry => current().skins
 export const isSetupComplete = (): boolean => current().setupComplete
 export function markSetupComplete(): void {
   current().setupComplete = true
