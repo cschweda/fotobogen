@@ -5,5 +5,6 @@ import { existsSync } from 'node:fs'
 
 export default function setup() {
   if (process.env.FB_SKIP_BUILD === '1' && existsSync('.output/server/index.mjs')) return
-  execFileSync('pnpm', ['build'], { stdio: 'inherit' })
+  // pnpm is a .cmd shim on Windows, which needs a shell to run.
+  execFileSync('pnpm', ['build'], { stdio: 'inherit', shell: process.platform === 'win32' })
 }

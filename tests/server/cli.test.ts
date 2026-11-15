@@ -1,11 +1,11 @@
 import { spawnSync } from 'node:child_process'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { get, post, startServer, type TestServer } from '../helpers/server.ts'
+import { baseEnv, get, post, startServer, type TestServer } from '../helpers/server.ts'
 import { ADMIN, completeSetup, query } from '../helpers/setup.ts'
 
 function cli(dataDir: string, args: string[], input = '') {
   const result = spawnSync(process.execPath, ['scripts/fotobogen.mjs', ...args], {
-    env: { PATH: process.env.PATH, DATA_DIR: dataDir },
+    env: { ...baseEnv(), DATA_DIR: dataDir },
     input,
     encoding: 'utf8',
   })
