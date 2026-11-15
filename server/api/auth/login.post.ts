@@ -6,7 +6,8 @@ import { users } from '../../db/schema.ts'
 import { getDb } from '../../utils/app.ts'
 import { failureLimiter, limiterKey, tooManyAttempts } from '../../utils/limiter.ts'
 import { fail } from '../../utils/respond.ts'
-import { signIn } from '../../utils/session.ts'
+import { DEMO_PASSWORD, DEMO_USERNAME, demoModeOn } from '../../utils/demo.ts'
+import { signIn, signInDemo } from '../../utils/session.ts'
 
 // Checked when the username is unknown, so that case takes as long as a
 // wrong password and the response does not reveal which names exist.
@@ -29,7 +30,16 @@ export default defineEventHandler(async (event) => {
   decoyHash ??= hashPassword('decoy password, never valid')
   const passwordOk = await verifyPassword(user?.passwordHash ?? await decoyHash, parsed.success ? parsed.data.password : '')
 
-  if (!user || !passwordOk) return fail(event, 401, 'Wrong username or password.')
+  if (!user || !passwordOk) {
+    // On a demo site, demo / demo lets anyone in to look, with no power to change anything.
+    // (The owner's own account is checked first, so an owner who is called "demo" is unaffected.)
+    if (demoModeOn() && parsed.success && parsed.data.username.trim() === DEMO_USERNAME && parsed.data.password === DEMO_PASSWORD) {
+      failureLimiter.clear(key)
+      await signInDemo(event)
+      return { ok: true, demo: true }
+    }
+    return fail(event, 401, 'Wrong username or password.')
+  }
 
   failureLimiter.clear(key)
   getDb().update(users).set({ lastLoginAt: Date.now() }).where(eq(users.id, user.id)).run()

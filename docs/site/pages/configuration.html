@@ -13,13 +13,21 @@
 
 <h3>Changing a setting: use <code>.env</code></h3>
 <pre><code>cp .env.sample .env     # once; then edit .env</code></pre>
-<p>Write one setting to a line, such as <code>PORT=8080</code>, and restart Fotobogen. Three reasons to do it this way and not edit the config file:</p>
+<p>Write one setting to a line, such as <code>PORT=8080</code>, and <strong>restart</strong> Fotobogen. A restart is all a change to <code>.env</code> ever needs; nothing is rebuilt. Three reasons to do it this way and not edit the config file:</p>
 <ul>
   <li><strong>It survives updates.</strong> <code>.env</code> is yours and is never touched by <code>git pull</code>. An edited <code>fotobogen.config.js</code> will conflict with the next update.</li>
   <li><strong>It needs no rebuild.</strong> <code>.env</code> is read each time Fotobogen starts. A change to <code>fotobogen.config.js</code> takes effect only after <code>pnpm build</code>.</li>
   <li><strong>It is never committed.</strong> <code>.env</code> is in <code>.gitignore</code>; <code>.env.sample</code>, the template, is not.</li>
 </ul>
-<p>Docker reads the same <code>.env</code> file.</p>
+<div class="table"><table>
+  <thead><tr><th>Running with</th><th>To restart after editing <code>.env</code></th></tr></thead>
+  <tbody>
+    <tr><td><code>pnpm start</code></td><td>Stop it with Control + C, and run <code>pnpm start</code> again</td></tr>
+    <tr><td>pm2</td><td><code>pm2 restart fotobogen</code></td></tr>
+    <tr><td>Docker</td><td><code>docker compose up -d</code>, which starts the container again with the new values</td></tr>
+  </tbody>
+</table></div>
+<p>Two things to know. Under pm2, <code>ecosystem.config.cjs</code> sets the port, the address to listen on, and the data folder itself, and those win over <code>.env</code>; to change one of them, edit that file, then <code>pm2 restart fotobogen --update-env</code>. Under Docker, the same <code>.env</code> file is read, and the compose files pass these settings through to the app: the upload limits, <code>SITE_URL</code>, <code>DEMO_MODE</code>, and <code>WEBHOOKS_ALLOW_PRIVATE</code>.</p>
 
 <h3>The two parts of the file</h3>
 <div class="table"><table>
@@ -89,6 +97,22 @@
   <li>Only the address itself is kept: <code>https://photos.example.com/some/page</code> becomes <code>https://photos.example.com</code>.</li>
   <li>Anything that is not a web address is ignored.</li>
   <li>A value here or in <code>.env</code> wins over the one in the admin, and the admin says so.</li>
+</ul>
+
+<h3 id="demo-mode"><code>server.demoMode</code></h3>
+<div class="table"><table>
+  <tbody>
+    <tr><th scope="row">Default</th><td><code>false</code></td></tr>
+    <tr><th scope="row">In <code>.env</code></th><td><code>DEMO_MODE=1</code></td></tr>
+  </tbody>
+</table></div>
+<p>For a site meant to show Fotobogen off. When it is on, the login page says the site is a demonstration, and anyone can log in with the username <code>demo</code> and the password <code>demo</code>.</p>
+<ul>
+  <li><strong>A demo visitor can look at everything and change nothing.</strong> They can open every admin page. Any request that would save, upload, or delete is refused by the server, so nothing a visitor does needs undoing.</li>
+  <li><strong>Your own login is unaffected</strong> and keeps full control. Use it to change the site.</li>
+  <li><strong>Kept from a demo visitor altogether:</strong> downloading a backup (it holds your login and every original file), restoring, API tokens, webhooks, and where photos were taken.</li>
+  <li><strong>What a demo visitor does see:</strong> everything else in the admin, including hidden and scheduled photos, their file names, and your settings. Do not switch this on for a site with anything in the admin you would not show a stranger.</li>
+  <li>It is set on the server only. There is no switch for it in the admin, so a site cannot become a demo by accident. Switching it off ends every demo visitor's session at once.</li>
 </ul>
 
 <h2 id="data">Okay to change: where data is kept</h2>
@@ -242,6 +266,7 @@
     <tr><td><code>server.host</code></td><td>0.0.0.0</td><td><code>HOST</code></td><td>Yes</td></tr>
     <tr><td><code>server.trustProxy</code></td><td>false</td><td><code>TRUST_PROXY</code></td><td>Only behind your own proxy</td></tr>
     <tr><td><code>server.siteUrl</code></td><td>none</td><td><code>SITE_URL</code></td><td>Yes, on a public site</td></tr>
+    <tr><td><code>server.demoMode</code></td><td>false</td><td><code>DEMO_MODE</code></td><td>Only on a demonstration site</td></tr>
     <tr><td><code>dataDir</code></td><td>./data</td><td><code>DATA_DIR</code></td><td>Yes</td></tr>
     <tr><td><code>uploads.maxUploadMb</code></td><td>50</td><td><code>MAX_UPLOAD_MB</code></td><td>Yes, with the proxy's limit</td></tr>
     <tr><td><code>uploads.maxMegapixels</code></td><td>100</td><td><code>MAX_MEGAPIXELS</code></td><td>Yes, with memory to match</td></tr>

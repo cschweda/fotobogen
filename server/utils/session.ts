@@ -7,17 +7,22 @@ import { config } from '../core/config.ts'
 import { isLoopbackHost } from '../core/request.ts'
 import { users } from '../db/schema.ts'
 import { getDb, getSecret } from './app.ts'
+import { demoModeOn } from './demo.ts'
 import { bearerToken, findToken, tokenAllows } from './tokens.ts'
 
 interface SessionData extends Record<string, unknown> {
   uid?: string
   /** The user's session_version at login. A mismatch means signed out. */
   sv?: number
+  /** A demo visitor: no account, and read-only. Only honoured while demo mode is on. */
+  demo?: boolean
 }
 
 export interface AdminUser {
   id: string
   username: string
+  /** A demo visitor, who may look but not change anything. */
+  demo?: boolean
   /** Set when the request came with an API token instead of a login. */
   token?: { id: string, name: string, scope: string }
 }
@@ -42,6 +47,13 @@ function adminSession(event: RequestEvent) {
 export async function signIn(event: RequestEvent, user: { id: string, sessionVersion: number }): Promise<void> {
   const session = await adminSession(event)
   await session.update({ uid: user.id, sv: user.sessionVersion })
+  event.context.admin = undefined
+}
+
+/** Signs in a demo visitor: a session with no account behind it. */
+export async function signInDemo(event: RequestEvent): Promise<void> {
+  const session = await adminSession(event)
+  await session.update({ uid: undefined, sv: undefined, demo: true })
   event.context.admin = undefined
 }
 
@@ -83,7 +95,9 @@ async function lookUpAdmin(event: RequestEvent): Promise<AdminUser | null> {
   if (token) return lookUpToken(event, token)
   if (!getRequestHeader(event, 'cookie')?.includes('fotobogen=')) return null
   const session = await adminSession(event)
-  const { uid, sv } = session.data
+  const { uid, sv, demo } = session.data
+  // A demo session lasts only while the server has demo mode switched on.
+  if (demo && !uid) return demoModeOn() ? { id: 'demo', username: 'demo', demo: true } : null
   if (!uid) return null
   const user = getDb().select().from(users).where(eq(users.id, uid)).get()
   if (!user || user.sessionVersion !== sv) return null

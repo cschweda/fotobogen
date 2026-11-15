@@ -10,6 +10,8 @@ const GROUPS: { name: string, links: { to: string, label: string }[] }[] = [
 ]
 
 const route = useRoute()
+// A demo visitor is told, on every page, that nothing they do is saved.
+const { data: me } = await useFetch<{ demo?: boolean }>('/api/auth/me', { key: 'admin-me' })
 /** A page is current for its own address and for anything under it (a photo under the library). */
 const current = (to: string) => route.path === to || route.path.startsWith(`${to}/`) ? 'page' : undefined
 const open = ref(false)
@@ -23,6 +25,7 @@ async function logOut() {
 
 <template>
   <nav class="nav" aria-label="Admin">
+    <p v-if="me?.demo" class="nav__demo"><strong>Demo.</strong> Look at anything. Nothing can be changed, and nothing you try is saved.</p>
     <button type="button" class="nav__toggle" :aria-expanded="open" aria-controls="admin-menu" @click="open = !open">Menu</button>
     <div id="admin-menu" class="nav__body" :class="{ 'nav__body--open': open }">
       <ul class="nav__list">
@@ -47,6 +50,7 @@ async function logOut() {
 <style scoped>
 .nav { font-size: 0.9375rem; }
 .nav__toggle { display: none; min-height: 2.75rem; padding: 0 1rem; border: 1px solid var(--fb-edge); border-radius: 0; background: none; color: var(--fb-text); font: inherit; cursor: pointer; }
+.nav__demo { margin: 0 0 1.25rem; padding: 0.7rem 0.8rem; border: 1px solid var(--fb-text); background: var(--fb-panel); font-size: 0.875rem; }
 .nav__list { margin: 0; padding: 0; list-style: none; }
 .nav__group { margin-top: 1.5rem; }
 .nav__name { margin: 0 0 0.35rem; color: var(--fb-muted); font-size: 0.8125rem; font-weight: 400; }

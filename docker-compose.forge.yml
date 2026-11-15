@@ -18,6 +18,13 @@ services:
       # Upload limits. If you raise MAX_UPLOAD_MB, raise the proxy's body limit to match.
       MAX_UPLOAD_MB: "${MAX_UPLOAD_MB:-50}"
       MAX_MEGAPIXELS: "${MAX_MEGAPIXELS:-100}"
+      # Passed through from .env when set there; empty means "not set".
+      # The site's proper address, used wherever a full address is written out.
+      SITE_URL: "${SITE_URL:-}"
+      # 1 lets anyone log in as demo / demo to look round the admin, read-only.
+      DEMO_MODE: "${DEMO_MODE:-}"
+      # 1 lets webhooks call addresses on your own network.
+      WEBHOOKS_ALLOW_PRIVATE: "${WEBHOOKS_ALLOW_PRIVATE:-}"
     volumes:
       - ./data:/data
     ports:

@@ -49,6 +49,18 @@ export default {
     // under Search and sharing; a value here or in .env wins over that one.
     //                                    .env: SITE_URL=https://photos.example.com
     siteUrl: '',
+
+    // Demo mode, for a site meant to show Fotobogen off. When on, anyone
+    // can log in with the username "demo" and the password "demo" and look
+    // round the whole admin, but cannot change anything: every request
+    // that would save, upload, or delete is refused. They also cannot
+    // download a backup or see API tokens or webhooks. Your own login keeps
+    // working and keeps full control.
+    //
+    // A demo visitor does see everything else the admin shows, including
+    // hidden and scheduled photos. Leave this off on a site that is not a
+    // demo.                                                .env: DEMO_MODE=1
+    demoMode: false,
   },
 
   // Where the site keeps everything it owns: database, photos, modules.

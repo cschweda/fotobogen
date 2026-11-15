@@ -5,6 +5,14 @@ const username = ref('')
 const password = ref('')
 const message = ref('')
 const busy = ref(false)
+// On a demo site, anyone may log in to look round. The page says so and offers the way in.
+const { data: demo } = await useFetch<{ enabled: boolean, username?: string, password?: string }>('/api/auth/demo')
+
+async function enterDemo() {
+  username.value = demo.value?.username ?? ''
+  password.value = demo.value?.password ?? ''
+  await submit()
+}
 
 async function submit() {
   if (busy.value) return
@@ -31,6 +39,11 @@ async function submit() {
   <FbShell context="Admin" wordmark-href="/">
     <div class="login">
       <h1 class="fb-h1">Log in</h1>
+      <section v-if="demo?.enabled" class="demo" aria-labelledby="demo-heading">
+        <h2 id="demo-heading" class="demo__heading">This is a demonstration site</h2>
+        <p class="demo__text">You are welcome to look round its admin. Log in with the username <strong>{{ demo.username }}</strong> and the password <strong>{{ demo.password }}</strong>. You can open every page, but nothing can be changed, uploaded, or deleted.</p>
+        <button type="button" class="fb-button" :aria-disabled="busy" @click="enterDemo">Look round the admin</button>
+      </section>
       <form class="login__form" novalidate @submit.prevent="submit">
         <div class="fb-alert" role="alert">{{ message }}</div>
         <FbField id="username" v-model="username" label="Username" autocomplete="username" />
@@ -50,4 +63,8 @@ async function submit() {
 .login__form { margin-top: 2.5rem; }
 .login__help { margin-top: 2.5rem; }
 .login__help code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: var(--fb-text); }
+.demo { margin: 1.5rem 0 2rem; padding: 1.1rem 1.25rem 1.35rem; border: 1px solid var(--fb-text); background: var(--fb-panel); }
+.demo__heading { margin: 0 0 0.5rem; font-size: 1.125rem; font-weight: 700; }
+.demo__text { margin: 0 0 1rem; color: var(--fb-muted); }
+.demo__text strong { color: var(--fb-text); }
 </style>

@@ -34,6 +34,7 @@ Visit counting is left to Plausible, which already tracks fotobogen.com. The pag
 | A site icon and a logo, uploaded in the admin | Done |
 | API tokens for uploading from a script or another program | Done |
 | A picture-quality setting for the web copies | Done |
+| Demo mode: a read-only login for a site that shows Fotobogen off | Done |
 
 ## For developers
 
