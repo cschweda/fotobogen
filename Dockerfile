@@ -24,6 +24,7 @@ WORKDIR /app
 COPY --from=build /app/.output ./.output
 COPY --from=build /app/scripts ./scripts
 COPY --from=build /app/server/core ./server/core
+COPY --from=build /app/server/db/migrations ./server/db/migrations
 COPY --from=build /app/shared ./shared
 COPY --from=build /app/package.json ./package.json
 COPY --from=build /app/fotobogen.config.js ./fotobogen.config.js

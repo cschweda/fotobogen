@@ -20,6 +20,8 @@ const USAGE = `Usage: fotobogen <command>
 Commands:
   reset-admin [--username <name>]   Set a new admin password and sign out all sessions
   preflight                         Check that this machine can run Fotobogen
+  backup [file]                     Write a backup zip (default: fotobogen-backup-<date>.zip)
+  restore <file>                    Replace this site's data with a backup. Stop Fotobogen first
   seed-fetch                        Download the 25 sample photos into the library
                                     (needs a source checkout; in a running site,
                                     use Admin > Download sample photos instead)
@@ -145,6 +147,52 @@ async function seedFetch() {
   }
 }
 
+const KNOWN_MIGRATIONS = async () => {
+  const { readMigrationsFromDir } = await import('../server/core/migrate.ts')
+  const { fileURLToPath } = await import('node:url')
+  return readMigrationsFromDir(fileURLToPath(new URL('../server/db/migrations', import.meta.url))).map(migration => migration.name)
+}
+
+/** Writes a backup zip of the site. The app may be running. */
+async function backup(args) {
+  const { createWriteStream, readFileSync } = await import('node:fs')
+  const { writeBackup } = await import('../server/core/backup.ts')
+  const paths = dataPaths(resolveDataDir(process.env, process.cwd()))
+  if (!existsSync(paths.db)) throw new CliError(`No Fotobogen database found at ${paths.db}. Check DATA_DIR.`)
+  const file = args[0] ?? `fotobogen-backup-${new Date().toISOString().slice(0, 10)}.zip`
+  const version = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version
+  const db = new Database(paths.db, { fileMustExist: true })
+  db.pragma('busy_timeout = 5000')
+  try {
+    const manifest = await writeBackup(db, paths, version, createWriteStream(file))
+    console.log(`Backup written to ${file}: ${manifest.photos} photos, ${(manifest.originalsBytes / 1024 / 1024).toFixed(1)} MB of uploaded files.`)
+  }
+  finally {
+    db.close()
+  }
+}
+
+/** Replaces the site's data with a backup. The app must be stopped. */
+async function restore(args) {
+  const file = args[0]
+  if (!file) throw new CliError('Say which backup to restore: fotobogen restore backup.zip')
+  if (!existsSync(file)) throw new CliError(`There is no file at ${file}.`)
+  const { applyRestore, inspectBackup } = await import('../server/core/backup.ts')
+  const { runningInstances } = await import('../server/core/instances.ts')
+  const { resolve } = await import('node:path')
+  const { mkdirSync } = await import('node:fs')
+  const paths = dataPaths(resolveDataDir(process.env, process.cwd()))
+  const running = runningInstances().find(instance => resolve(instance.dataDir) === resolve(paths.root))
+  if (running) throw new CliError(`Fotobogen is running with this data directory (port ${running.port}). Stop it, then restore.`)
+  const inspected = await inspectBackup(file, await KNOWN_MIGRATIONS())
+  if (!inspected.ok) throw new CliError(inspected.message)
+  mkdirSync(paths.root, { recursive: true })
+  const result = await applyRestore(paths, file)
+  console.log(`Restored ${result.photos} photos from a backup made ${inspected.manifest.createdAt.slice(0, 10)}.`)
+  console.log(`What was here before is kept in ${result.keptIn}.`)
+  console.log('Start Fotobogen; it will make the resized copies again.')
+}
+
 /** The same check the server runs before it starts, with every line shown. */
 async function preflight() {
   const { existsSync: exists } = await import('node:fs')
@@ -166,6 +214,12 @@ try {
   }
   else if (command === 'preflight') {
     await preflight()
+  }
+  else if (command === 'backup') {
+    await backup(args)
+  }
+  else if (command === 'restore') {
+    await restore(args)
   }
   else if (command === '--help' || command === '-h' || command === 'help') {
     console.log(USAGE)

@@ -1,8 +1,10 @@
 // The running app's shared state: where its data lives, the session secret,
 // and the open database. Filled in once by the boot plugin.
 import Database from 'better-sqlite3'
-import { mkdirSync, rmSync } from 'node:fs'
+import { existsSync, mkdirSync, renameSync, rmSync } from 'node:fs'
+import { join } from 'node:path'
 import { drizzle, type BetterSQLite3Database } from 'drizzle-orm/better-sqlite3'
+import { applyRestore, PENDING_RESTORE } from '../core/backup.ts'
 import { applyMigrations, type Migration } from '../core/migrate.ts'
 import { dataPaths, ensureDataDirs, resolveDataDir, type DataPaths } from '../core/paths.ts'
 import { loadOrCreateSecret } from '../core/secret.ts'
@@ -42,6 +44,30 @@ async function boot(loadMigrations: () => Promise<Migration[]>, loadSkins: () =>
   const paths = dataPaths(resolveDataDir(process.env, process.cwd()))
   ensureDataDirs(paths)
   const secret = loadOrCreateSecret(paths.secret)
+
+  // A restore the admin asked for is done now, before the database is opened.
+  const pending = join(paths.root, PENDING_RESTORE)
+  if (existsSync(pending)) {
+    try {
+      const restored = await applyRestore(paths, pending)
+      rmSync(pending, { force: true })
+      console.log(`\nRestored a backup with ${restored.photos} photos. What was here before is kept in ${restored.keptIn}.`)
+      console.log('Resized copies are being made again; photos appear on the site as each one finishes.\n')
+    }
+    catch (error) {
+      // A backup that cannot be restored must not stop the site from
+      // starting, now or on the next restart: set it aside and carry on.
+      const aside = join(paths.root, `restore-failed-${Date.now()}.zip`)
+      try {
+        renameSync(pending, aside)
+      }
+      catch {
+        rmSync(pending, { force: true })
+      }
+      console.error(`\nThe backup could not be restored: ${error instanceof Error ? error.message : error}`)
+      console.error(`Nothing was changed. The file was set aside as ${aside}.\n`)
+    }
+  }
 
   const sqlite = new Database(paths.db)
   sqlite.pragma('journal_mode = WAL')
