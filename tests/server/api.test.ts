@@ -54,6 +54,6 @@ describe('the public API', () => {
     const list = await (await get(server, '/api/photos')).json() as { tiles: Record<string, unknown>[] }
     expect(Object.keys(list).sort()).toEqual(['page', 'pages', 'tiles', 'total'])
     expect(Object.keys(list.tiles[0]!).sort()).toEqual(['alt', 'placeholder', 'slug', 'span', 'square', 'thumb', 'title'])
-    expect(Object.keys(await (await get(server, '/api/site')).json() as object).sort()).toEqual(['grid', 'hasAlbums', 'photoView', 'skinVersion', 'tagline', 'title'])
+    expect(Object.keys(await (await get(server, '/api/site')).json() as object).sort()).toEqual(['grid', 'hasAlbums', 'mode', 'photoView', 'skinVersion', 'tagline', 'title'])
   })
 })

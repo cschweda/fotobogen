@@ -8,6 +8,7 @@ A module changes how photos look: a film look, a border, a tint. Three come with
 
 ## Contents
 
+- [Starting and testing a module from the command line](#starting-and-testing-a-module-from-the-command-line)
 - [Installing a module](#installing-a-module)
 - [Do I have to rebuild anything?](#do-i-have-to-rebuild-anything)
 - [What a module is](#what-a-module-is)
@@ -17,6 +18,19 @@ A module changes how photos look: a film look, a border, a tint. Three come with
 - [What modules can and cannot do](#what-modules-can-and-cannot-do)
 - [How the admin uses a module](#how-the-admin-uses-a-module)
 - [When something goes wrong](#when-something-goes-wrong)
+
+## Starting and testing a module from the command line
+
+Two commands, run from a checkout of Fotobogen, save writing the first file by hand and tell you whether a module works before you install it anywhere.
+
+```bash
+pnpm fotobogen module new my-module     # writes data/modules/my-module/ with a working example
+pnpm fotobogen module test my-module    # runs it on a test picture and reports
+```
+
+`module new` writes a `module.json` and an `index.mjs` holding one small transform with one slider, ready to edit.
+
+`module test` loads the module the way the server does and runs each transform with its default settings, at a large size (2560 pixels) and a small one (240), twice each. It writes each result as a WebP into `./module-test` so you can look at it, prints a line for each check, and marks anything wrong with FAIL: a mistake in `module.json`, a transform that throws or returns an empty picture, or one that gives a different result the second time (randomness must be seeded from the photo's size, or the picture would change on every render). Use `--image photo.jpg` to try it on a photo of your own and `--out <folder>` to write somewhere else. A name means the module in `data/modules`; anything else is read as a folder, so a module kept elsewhere can be tested too.
 
 ## Installing a module
 

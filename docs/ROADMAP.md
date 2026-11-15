@@ -24,7 +24,7 @@ Visit counting is left to Plausible, which already tracks fotobogen.com. The pag
 |---|---|---|
 | 1 | Skins, with a guide ([SKINS.md](SKINS.md)) | Done |
 | 2 | More module hook types: metadata extractors, export targets, page blocks | Planned |
-| 3 | A module scaffold and a way to test a module from the command line | Planned |
+| 3 | A module scaffold and a way to test a module from the command line ([MODULES.md](MODULES.md#starting-and-testing-a-module-from-the-command-line)) | Done |
 | 4 | A read-only JSON API for public photos ([API.md](API.md)) | Done |
 | 5 | Webhooks on upload and publish ([WEBHOOKS.md](WEBHOOKS.md)) | Done |
 | 6 | An S3-compatible storage adapter | Planned |

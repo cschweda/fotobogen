@@ -34,6 +34,7 @@ The admin's own endpoints under `/api/admin/` are not part of this; they need a 
   "grid": "masonry",
   "photoView": "modal",
   "skinVersion": "126418a685",
+  "mode": "dark",
   "hasAlbums": true
 }
 ```

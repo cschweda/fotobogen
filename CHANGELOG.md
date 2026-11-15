@@ -69,6 +69,7 @@ uses [Semantic Versioning](https://semver.org/).
 - Two more skins, Papier and Plakat (a poster), with a guide to making a skin from one of them.
 - Every skin has a light and a dark mode. The owner chooses which visitors see first, or lets it follow each visitor's device; a button in the header lets a visitor switch. A skin's colours now live in `skin.json` under `modes`, and a colour option holds one colour for each mode.
 - The bundled skins are tested in both modes at phone and desktop widths against WCAG 2.1 AA, including a measured contrast check on every heading and link.
+- `pnpm fotobogen module new <name>` starts a module from a working example, and `pnpm fotobogen module test <name>` runs it on a test picture and reports what is wrong.
 - A documented public API (`docs/API.md`): read-only JSON for photos, albums, tags, and the slideshow, readable from other sites, with a version header.
 - `docs/UPGRADING.md`: how to upgrade, what a version number promises, and how to go back.
 - Webhooks: signed JSON messages when a photo is uploaded, goes live (including on a schedule), or is deleted; managed under **Admin, Webhooks**, with retries and a test button. Private-network addresses are refused unless `WEBHOOKS_ALLOW_PRIVATE=1`.
