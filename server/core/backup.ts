@@ -188,7 +188,7 @@ export async function applyRestore(paths: DataPaths, file: string): Promise<{ ph
     await extractBackup(file, staging)
     if (!existsSync(join(staging, 'fotobogen.db'))) throw new Error('The backup has no database in it.')
 
-    let db: Database.Database
+    let db: Database.Database | undefined
     try {
       db = new Database(join(staging, 'fotobogen.db'), { fileMustExist: true })
       const tables = new Set((db.prepare(`select name from sqlite_master where type = 'table'`).all() as { name: string }[]).map(row => row.name))
@@ -198,6 +198,8 @@ export async function applyRestore(paths: DataPaths, file: string): Promise<{ ph
       if ((db.pragma('quick_check', { simple: true }) as string) !== 'ok') throw new Error('it is damaged')
     }
     catch (error) {
+      // Let go of the file before it is cleaned up; Windows will not delete an open file.
+      db?.close()
       throw new Error(`The database in this backup cannot be used: ${error instanceof Error ? error.message : error}.`)
     }
 
@@ -221,7 +223,7 @@ export async function applyRestore(paths: DataPaths, file: string): Promise<{ ph
     }
   }
   catch (error) {
-    rmSync(staging, { recursive: true, force: true })
+    rmSync(staging, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 })
     throw error
   }
 
