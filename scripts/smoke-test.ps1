@@ -20,8 +20,13 @@ function Check($condition, $text) {
 }
 # Invoke-WebRequest throws on 4xx and 5xx; return the status code instead.
 function Status($uri, $session) {
-  try { return (Invoke-WebRequest -Uri $uri -WebSession $session -MaximumRedirection 0 -SkipHttpErrorCheck).StatusCode }
-  catch { return $_.Exception.Response.StatusCode.value__ }
+  $request = @{ Uri = $uri; MaximumRedirection = 0; SkipHttpErrorCheck = $true; ErrorAction = 'SilentlyContinue' }
+  if ($session) { $request.WebSession = $session }
+  try { return [int](Invoke-WebRequest @request).StatusCode }
+  catch {
+    if ($_.Exception.Response) { return [int]$_.Exception.Response.StatusCode }
+    throw
+  }
 }
 
 $env:DATA_DIR = $dataDir
