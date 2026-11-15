@@ -109,7 +109,7 @@ IDs are random URL-safe strings (nanoid, 12 chars), not autoincrement integers, 
 
 `session_version` is copied into the session at login and compared on every guarded request. Changing the password increments it, which signs out every existing session. Sealed cookies cannot otherwise be revoked.
 
-**settings** — `key` (PK), `value` (JSON). Keys include `site.title`, `site.tagline`, `site.setup_complete`, `samples.requested` (the wizard's step 5 answer), `layout.grid` (`masonry` | `square`), `layout.photo_view` (`modal` | `page`), `skin.active`, `skin.options`, `privacy.show_exif`, `privacy.show_location` (default false), `privacy.allow_original_download` (default false).
+**settings** — `key` (PK), `value` (JSON). Keys include `site.title`, `site.tagline`, `site.setup_complete`, `samples.requested` (the wizard's step 5 answer), `layout.grid` (`masonry` | `square`), `layout.photo_view` (`modal` | `page`), `site.language` (a language code), `site.text` (the owner's replacements for the public pages' fixed text; see `shared/site-text.ts`), `seo.settings` (see `shared/seo.ts`), `skin.active`, `skin.options`, `skin.mode` (`skin` | `light` | `dark` | `auto`: the mode visitors see first), `privacy.show_exif`, `privacy.show_location` (default false), `privacy.allow_original_download` (default false).
 
 **photos**
 
@@ -157,8 +157,8 @@ The token is compared in constant time. Wrong-token attempts share the login lim
 2. Site title and tagline.
 3. Admin username and password (minimum 12 characters; show strength, do not impose composition rules).
 4. Display defaults: grid layout (masonry or square), photo view (modal or page).
-5. Sample photos: download the 25 samples (section 12) or start empty.
-6. Done: links to the site and to `/admin`.
+5. Sample photos: start empty (the default) or download the 25 samples (section 12).
+6. Done: links to the site and to `/admin`. If samples were chosen, a counter shows the download, which runs in the background and never holds up setup; if it fails, the page offers another try or skipping, and leads with skipping after two failures.
 
 **How the wizard submits.** Step 1 checks the token against `POST /api/setup/verify`. Steps 2 to 5 are held in the browser and nothing is written until the final submit, `POST /api/setup/complete`, which carries the token again along with all answers. The server validates everything and returns field-level errors. Abandoning the wizard part-way leaves the install untouched.
 
@@ -196,7 +196,7 @@ The password strength indicator is a small built-in estimate (length and charact
 
 **Upload (synchronous part)**
 
-1. Stream the multipart body to a temp file.
+1. Stream the multipart body (one file per request, field `file`) to a temp file in `data/tmp/`, which is on the same disk as the originals and is emptied at boot. The file's first bytes must match one of the accepted formats before it is handed to the image library.
 2. Compute SHA-256. If a photo with that checksum exists, reject with a "duplicate" result naming the existing photo.
 3. Read dimensions with `sharp`; reject if undecodable or over the pixel limit.
 4. Move to `data/originals/<id>.<ext>`, insert the `photos` row with `status = processing`, enqueue an `ingest` job, return immediately.
@@ -215,7 +215,9 @@ The password strength indicator is a small built-in estimate (length and charact
 | `medium` | 1280 px long edge | Photo view on small screens |
 | `large` | 2560 px long edge | Photo view on large screens |
 
-Never upscale: skip a size the original cannot fill.
+Never upscale. A size the original cannot fill is made at the original's own size instead, so every photo has a thumb, a square, and a medium; `large` is skipped when it would be identical to `medium`.
+
+The original is decoded once, straight down to a working raster of at most 2560 px on the long edge, and every derivative is made from that. JPEG, ordinary PNG, and TIFF are shrunk as they are read, so even a 100-megapixel original peaks at a few hundred MB (a 40 MP JPEG, PNG, and TIFF peaked at 250 MB in a 1 GB container with no swap). AVIF, WebP, and interlaced PNG are held whole while decoding (measured: AVIF about 27 MB per megapixel), so they have lower pixel limits: 16, 60, and 40 megapixels.
 
 5. Compute thumbhash, set `status = ready`.
 
@@ -344,7 +346,7 @@ Same approach as openMantel: fetched from Lorem Picsum by fixed id, never commit
 - One fetch routine, used two ways: `pnpm seed:fetch` on the command line for development, and wizard step 5 during setup. It downloads into a temp directory, skips files already present, retries once per photo, then pushes each file through the normal ingest pipeline flagged `is_sample`.
 - **Credits.** Picsum serves Unsplash photographs and exposes each one's author and Unsplash URL through its info endpoint. The fetch routine reads that and writes "Photo by … on Unsplash" into the sample's description, so credit shows on the photo page.
 - **Licensing.** No photographs live in the repository or the Docker image, so the MIT `LICENSE` covers everything that ships. `seed/README.md` notes that the downloaded samples are Unsplash photos under the Unsplash License and are meant as placeholders.
-- **Failure.** If the server is offline or Picsum is unreachable, setup completes with an empty library and says so. Admin → System offers "Fetch sample photos" while the library has no samples.
+- **Failure.** If the server is offline or Picsum is unreachable, setup completes with an empty library and says so. The download gives up after the first three photos fail rather than waiting out every timeout. The admin can try again, cancel a running download, or skip; nobody is left retrying a service that is down. The admin dashboard always offers "Download sample photos" while any are missing.
 - This is the app's only outbound request, and it happens only when the admin asks for it.
 - "Remove sample photos" in admin deletes all flagged rows and their files in one action.
 
@@ -396,7 +398,7 @@ For a fresh server with nothing installed but Docker.
 For a Forge-provisioned server where nginx already owns ports 80 and 443 and Forge manages certificates.
 
 - One service: `app`. No proxy container.
-- Publishes the app on `127.0.0.1:${PORT:-3000}` only, never on a public interface. Sets `TRUST_PROXY=1`.
+- Publishes the app on `127.0.0.1:${PORT:-5150}` only, never on a public interface. Sets `TRUST_PROXY=1`.
 - `data/` is bind-mounted from the Forge site directory, and the container runs as the `forge` user's UID and GID so host nginx can read derivatives directly.
 - `deploy/forge-nginx.conf` is a ready-made server-block snippet: proxy to the local port passing `Host`, `X-Forwarded-For`, and `X-Forwarded-Proto`, serve `/media/` from the site's `data/derivatives/` with immutable caching, set `client_max_body_size` to match the upload limit.
 - `deploy/forge-deploy.sh` is the Forge deploy script: `git pull`, `docker compose -f docker-compose.forge.yml pull`, `up -d`.
@@ -427,11 +429,11 @@ For running without Docker, and for development servers.
 |---|---|---|
 | 0 | Scaffold, data directory, database, migrations, health endpoint, Dockerfile, both compose files, Forge nginx snippet, pm2 config, MIT `LICENSE` | App boots on a clean machine and creates `data/`, both natively and with `docker compose up` |
 | 1 | Setup token, wizard, login, session guard, `reset-admin` CLI | Fresh install can be claimed only with the token; `/setup` is dead afterward |
-| 2 | Upload, ingest queue, derivatives, EXIF, thumbhash, storage adapter, sample manifest and `pnpm seed:fetch` | A 40 MP JPEG processes on a 1 GB droplet without the process being killed |
+| 2 | Upload (API and a minimal upload page), ingest queue, derivatives, EXIF, thumbhash, storage adapter, `/media/`, sample manifest and `pnpm seed:fetch`, sample download in the wizard and dashboard | A 40 MP JPEG processes on a 1 GB droplet without the process being killed |
 | 3 | Public grid (both layouts), photo page and modal, Swiss skin, skin loader | Site is presentable with sample photos; no layout shift; works without JavaScript |
 | 4 | Admin: library, edit, bulk actions, reorder, settings, skins, system | Every v1 setting is changeable from admin |
 | 5 | Module loader, recipe model, preview, `mono` and `tone` | A transform can be applied, previewed, and fully reverted |
-| 6 | Sample fetch wired into the setup wizard and admin, accessibility audit, README install guide, backup CLI | A stranger can install from the README |
+| 6 | Accessibility audit, README install guide, backup CLI | A stranger can install from the README |
 
 **v2 candidates:** a slideshow (if added, follow how openMantel, `cschweda/openmantel`, runs its slideshow), albums and tags, search, multiple users, object storage adapter, AVIF output, HEIC input, layer-based skins, more hook types, install skins and modules from admin.
 
@@ -444,7 +446,7 @@ For running without Docker, and for development servers.
 - **Sample photos:** fetched from Lorem Picsum by fixed id, as in openMantel; not committed (section 12).
 - **Install paths:** Docker quick start, Docker on Forge, and bare-metal pm2 (section 14).
 - **Repository and image:** `github.com/cschweda/fotobogen` (public); image at `ghcr.io/cschweda/fotobogen`.
-- **Placeholder site:** the single page at fotobogen.com lives in `site/` and is deployed to Netlify by hand. `netlify.toml` publishes only that folder and skips builds when nothing in it changed, in case the repository is ever linked. The Netlify site is not linked today, so pushes here never trigger a Netlify build. Fotobogen itself never runs on Netlify (section 1).
+- **Placeholder site:** the single page at fotobogen.com lives in `site/` and doubles as a visual guide to the software (screens from the current build, where it runs, what is built). The Netlify site has been linked to this repository's `main` branch since 2026-11-14. `netlify.toml` publishes only that folder and skips the build when nothing in it changed, so only changes to the page cost a production deploy. Fotobogen itself never runs on Netlify (section 1).
 
 **Revised 2026-11-14, after checking the stack against current releases and before any code:**
 
@@ -459,3 +461,35 @@ For running without Docker, and for development servers.
 - **`TRUST_PROXY=1`** set by every shipped deployment file; off by default (section 6).
 - **`users.session_version`** added so a password reset signs out old sessions (section 4).
 - **Setup-token attempts are rate limited** like logins (section 5).
+
+**Revised 2026-11-15, while building Phase 2:**
+
+- **Small originals** get derivatives at their own size rather than none (section 7).
+- **A minimal upload page and the `/media/` route ship in Phase 2,** so uploads can be tried by hand before the admin library exists.
+- **Sample download moved from Phase 6 to Phase 2,** wired into the wizard and the dashboard, with progress, cancel, retry, and skip. Starting empty is the wizard's default (sections 5 and 12). Requested 2026-11-15.
+- **`pnpm seed:fetch` is a development command.** It needs a source checkout and is not in the Docker image; a running site uses the dashboard.
+- **Upload limits** are `MAX_UPLOAD_MB` and `MAX_MEGAPIXELS`.
+- **Windows is a tested platform** for the Node install path: CI installs, builds, and tests there. `better-sqlite3` is no longer compiled at install time on any platform.
+- **Modules brought forward from Phase 5.** The loader, the recipe model, preview, and the admin pages for them ship now, with two bundled modules: `filmframe` and `filmlooks` (in place of `mono` and `tone`). Requested 2026-11-15.
+- **Module contract.** `apply(image, params, context)` may be asynchronous and may change the picture's size; `context` carries the picture's dimensions and the `sharp` function, so an installed module needs no dependencies. A transform's output is capped at 40 megapixels.
+- **All modules start switched off.** A site-wide recipe (`modules.site_recipe`) applies to every photo without its own; a photo's own recipe, even an empty one, wins.
+- **The top-level `modules/` folder** is Fotobogen's, so Nuxt's own build-module folder is renamed (`dir.modules`).
+- **Admin is not rebuilt for a module.** Controls come from each module's declared parameters; `docs/MODULES.md` is the author's guide.
+- **One configuration file.** `fotobogen.config.js` holds every app-wide value, split into "okay to change" and "do not touch". Precedence: environment, then `.env`, then the file. `.env` is not committed; `.env.sample` is. Requested 2026-11-15.
+- **Port 5150** by default, everywhere. An unset port moves up when busy; a set port is exact.
+- **Launcher and preflight.** `scripts/start.mjs` (run by `pnpm start`, the Docker image, and pm2) reads `.env`, runs the preflight check, deals with copies already running, picks the port, and loads the server. A failed check stops the start. Tested platforms: Ubuntu and Debian, macOS, Windows.
+- **Running copies** are recorded in `~/.fotobogen/instances/`. Two copies may not share a data directory.
+- **`/api/health`** answers `GET` and `HEAD` with `status`, `version`, `database`, `queue.depth`, and `uptime`.
+- **Public site built (Phase 3).** Skin rules start from the class `fb-public` on `<html>`, so a skin and the admin stylesheet cannot interfere. The masonry grid uses container-query units: one row is a twentieth of a column's width and each tile spans the rows its shape needs. The Swiss skin uses the system sans-serif rather than shipping font files.
+- **Only setup, login, and the admin are `noindex`.** Public pages are indexable and listed in the sitemap.
+- **Feature roadmap** agreed 2026-11-15: `docs/ROADMAP.md`.
+- **Albums and tags (migration 0001).** Tables `albums`, `album_photos` (with a position per album), `tags`, and `photo_tags`. An album has its own order and visibility; a tag is dropped when no photo carries it. Public pages: `/albums`, `/album/<slug>`, `/tag/<slug>`. Only photos a visitor may see count toward an album or tag.
+- **Backup and restore.** A backup is a zip of a `VACUUM INTO` snapshot, `originals/`, and installed skins and modules, with a manifest naming the migrations it needs; it never contains the session secret or derivatives. A restore uploaded in the admin is staged as `data/restore-pending.zip` and applied at the next boot, before the database is opened; the CLI applies it directly with the app stopped. Either way the previous data is moved to `before-restore-<time>/`, and every photo is queued to be rendered again.
+- **Scheduled publishing (migration 0002).** `photos.publish_at`: a public photo with a time in the future is treated as not public by every public query, which compare it with the clock at the moment they run, so nothing has to wake up to publish it. The setting `uploads.default_visibility` makes new uploads start hidden (drafts).
+- **Slideshow** moved from the v2 candidates into v1 (requested 2026-11-15), following openMantel's player: preload then cross-fade between two stacked images, endless laps with random order reshuffled each lap, details on a press that also holds the photo, screen wake lock, no location. Timing (`slideshow.seconds`, default 8) and order (`slideshow.order`) are settings. It can always be paused and stepped by hand (WCAG 2.2.2).
+- **Licences and downloads (migration 0003).** `photos.license` and `photos.allow_download`, each null to follow the site (`site.license`, `privacy.allow_original_download`). `/api/photos/<slug>/download` serves the largest derivative, which has no metadata. It serves the original only when `privacy.show_location` is on. The rule does not depend on what was parsed from the file, so location data the parser missed cannot leak.
+- **Module parameter type `text`**, one line, length-capped, control characters removed. Used by the bundled `watermark` module.
+- **Backup notice.** Until the owner presses "I understand" on `/admin/welcome` (recorded with its time in `admin.backup_notice_ack`), every admin page leads there. Requested 2026-11-15.
+- **Update check.** A second kind of outbound request, alongside the sample fetch: a GET to GitHub's latest-release API, made only when the admin presses "Check for updates" or, if switched on (`updates.automatic`, off by default), at most once a day. Nothing about the site is sent. The link shown is always under the project's own GitHub address.
+- **Public API** documented in `docs/API.md`; public GET routes send `Access-Control-Allow-Origin: *` and `X-Fotobogen-API: 1`.
+- **Webhooks.** Events `photo.uploaded`, `photo.published`, `photo.deleted`; body signed with HMAC-SHA256 of a per-webhook secret shown once; 10 s timeout, retries after 5 s and 30 s held in memory, redirects not followed, response body never read. A third kind of outbound request, made only to addresses the admin entered. Addresses that resolve to loopback, private, or link-local ranges are refused at creation and at every delivery unless `WEBHOOKS_ALLOW_PRIVATE=1`. Scheduled photos are announced by a once-a-minute check.

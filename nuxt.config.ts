@@ -9,13 +9,16 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
   devtools: { enabled: false },
 
+  // The top-level modules/ folder holds Fotobogen's photo modules (DESIGN.md
+  // section 10), not Nuxt build modules, so Nuxt is told to look elsewhere.
+  dir: { modules: 'nuxt-modules' },
+
   app: {
     head: {
       htmlAttrs: { lang: 'en', class: 'dark' },
       meta: [
         { name: 'color-scheme', content: 'dark' },
         { name: 'theme-color', content: '#0a0a0b' },
-        { name: 'robots', content: 'noindex' },
       ],
       link: [{ rel: 'icon', href: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230a0a0b'/%3E%3Crect x='6' y='9' width='20' height='14' fill='%23e30613'/%3E%3C/svg%3E" }],
     },
@@ -31,6 +34,8 @@ export default defineNuxtConfig({
     // needs nothing on disk except its data directory.
     serverAssets: [
       { baseName: 'migrations', dir: fileURLToPath(new URL('./server/db/migrations', import.meta.url)) },
+      // The skins that ship with Fotobogen.
+      { baseName: 'skins', dir: fileURLToPath(new URL('./skins', import.meta.url)) },
     ],
   },
 

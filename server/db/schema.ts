@@ -3,7 +3,7 @@
 //
 // Conventions: ids are 12-character random strings; timestamps are integer
 // milliseconds since the epoch; booleans are 0 or 1.
-import { index, integer, real, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
+import { index, integer, primaryKey, real, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
 
 export const users = sqliteTable('users', {
   id: text('id').primaryKey(),
@@ -49,6 +49,13 @@ export const photos = sqliteTable('photos', {
   recipeJson: text('recipe_json', { mode: 'json' }),
   status: text('status', { enum: ['processing', 'ready', 'failed'] }).notNull().default('processing'),
   visibility: text('visibility', { enum: ['public', 'hidden'] }).notNull().default('public'),
+  // When a public photo goes live. Null means at once; a time in the future
+  // keeps it off the site until then.
+  publishAt: integer('publish_at'),
+  // The licence visitors are told the photo is under; null follows the site's.
+  license: text('license'),
+  // Whether visitors may download it; null follows the site's setting.
+  allowDownload: integer('allow_download', { mode: 'boolean' }),
   isSample: integer('is_sample', { mode: 'boolean' }).notNull().default(false),
   sortOrder: integer('sort_order').notNull().default(0),
   createdAt: integer('created_at').notNull(),
@@ -83,6 +90,45 @@ export const jobs = sqliteTable('jobs', {
   finishedAt: integer('finished_at'),
 }, table => [
   index('jobs_status_idx').on(table.status, table.createdAt),
+])
+
+// Albums: named sets of photos, in an order of their own. A photo can be in
+// several albums, or none.
+export const albums = sqliteTable('albums', {
+  id: text('id').primaryKey(),
+  slug: text('slug').notNull().unique(),
+  title: text('title').notNull(),
+  description: text('description'),
+  // The photo shown for the album in lists; the first photo when not set.
+  coverPhotoId: text('cover_photo_id').references(() => photos.id, { onDelete: 'set null' }),
+  visibility: text('visibility', { enum: ['public', 'hidden'] }).notNull().default('public'),
+  sortOrder: integer('sort_order').notNull().default(0),
+  createdAt: integer('created_at').notNull(),
+  updatedAt: integer('updated_at').notNull(),
+})
+
+export const albumPhotos = sqliteTable('album_photos', {
+  albumId: text('album_id').notNull().references(() => albums.id, { onDelete: 'cascade' }),
+  photoId: text('photo_id').notNull().references(() => photos.id, { onDelete: 'cascade' }),
+  position: integer('position').notNull().default(0),
+}, table => [
+  primaryKey({ columns: [table.albumId, table.photoId] }),
+  index('album_photos_photo_idx').on(table.photoId),
+])
+
+// Tags: short labels on photos. A tag exists only while a photo has it.
+export const tags = sqliteTable('tags', {
+  id: text('id').primaryKey(),
+  slug: text('slug').notNull().unique(),
+  name: text('name').notNull(),
+})
+
+export const photoTags = sqliteTable('photo_tags', {
+  photoId: text('photo_id').notNull().references(() => photos.id, { onDelete: 'cascade' }),
+  tagId: text('tag_id').notNull().references(() => tags.id, { onDelete: 'cascade' }),
+}, table => [
+  primaryKey({ columns: [table.photoId, table.tagId] }),
+  index('photo_tags_tag_idx').on(table.tagId),
 ])
 
 export const modules = sqliteTable('modules', {

@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modules | Fotobogen documentation</title>
+<meta name="description" content="Modules change how photographs look without touching the files you uploaded: film looks, a contact-print frame, a watermark, and sharpening. How to switch them on, and how to write one.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f5f5f2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0a0a0b" media="(prefers-color-scheme: dark)">
+<link rel="canonical" href="https://fotobogen.com/docs/modules/">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://fotobogen.com/docs/modules/">
+<meta property="og:title" content="Modules | Fotobogen documentation">
+<meta property="og:description" content="Modules change how photographs look without touching the files you uploaded: film looks, a contact-print frame, a watermark, and sharpening. How to switch them on, and how to write one.">
+<meta property="og:image" content="https://fotobogen.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Fotobogen wordmark beside a contact sheet of sixteen numbered frames, one of them red. Above the wordmark: German for photo sheet, as in a contact sheet.">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230a0a0b'/%3E%3Crect x='6' y='9' width='20' height='14' fill='%23e30613'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/docs/docs.css">
+<script src="/docs/docs.js" defer></script>
+<!-- Privacy-friendly analytics by Plausible -->
+<script async src="https://plausible.io/js/pa-UXO2Zaq02zXvfaEecXWvD.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header>
+  <div class="wrap bar">
+    <a class="bar__name" href="/">Fotobogen<span>Documentation</span></a>
+    <div class="bar__links">
+      <a href="https://github.com/cschweda/fotobogen" data-goal="GitHub click" data-where="docs">Source on GitHub</a>
+      <button class="toggle" type="button" id="theme">Dark</button>
+    </div>
+  </div>
+</header>
+<div class="wrap layout">
+  <nav class="pages" aria-label="Documentation">
+    <ul class="pages__all">
+      <li><a href="/docs/">Overview</a></li>
+      <li><a href="/docs/installation/">Installation</a></li>
+      <li><a href="/docs/usage/">Using Fotobogen</a></li>
+      <li><a href="/docs/skins/">Skins</a></li>
+      <li><a href="/docs/modules/" aria-current="page">Modules</a></li>
+      <li><a href="/docs/faq/">Questions</a></li>
+    </ul>
+    <div class="pages__here">
+      <h2>On this page</h2>
+      <ul>
+        <li><a href="#using">Switching a module on</a></li>
+        <li><a href="#filmlooks">Film looks</a></li>
+        <li><a href="#filmframe">Film frame</a></li>
+        <li><a href="#watermark">Watermark</a></li>
+        <li><a href="#sharpening">Sharpening</a></li>
+        <li><a href="#order">Using several together</a></li>
+        <li><a href="#installing">Adding a module</a></li>
+        <li><a href="#writing">Writing a module</a></li>
+        <li><a href="#limits">What a module cannot do</a></li>
+      </ul>
+    </div>
+  </nav>
+  <main id="main" class="doc">
+<h1>Modules</h1>
+<p class="lead">A module changes how photographs look: black and white, a film border, your name in the corner. The files you uploaded are never changed, so switching a module off always gets the photo back exactly.</p>
+
+<h2 id="using">Switching a module on</h2>
+<p>Three modules come with Fotobogen. <strong>All of them start switched off.</strong> Open <strong>Admin, Modules</strong> and switch on the ones you want. Then use them in either of two ways:</p>
+<ul>
+  <li><strong>For all photos.</strong> On the Modules page, set the look and save. Every photo that has no look of its own follows it, including photos you upload later.</li>
+  <li><strong>For one photo.</strong> Open the photo from the library. Under it is a strip of small previews, one for each look. Choose one, adjust it with a larger preview, and save. A photo can also be set to have no look at all, whatever the rest of the site does.</li>
+</ul>
+<p>When a look changes, the copies visitors see are made again in the background, one photo at a time. A photo shows as "processing" in the library until its turn is done.</p>
+<figure><img src="/screens/looks.jpg" alt="The edit page previewing a photo inside a film border with sprocket holes, above a strip of small previews of different film looks" width="1072" height="1060" loading="lazy"><figcaption>Choosing a look for one photo.</figcaption></figure>
+<p>A <a href="/docs/skins/#looks">skin can set a look</a> for all photos when you choose it. The Rangefinder Dreams skin does this, with black and white.</p>
+
+<h2 id="filmlooks">Film looks</h2>
+<p>The tone and grain of a kind of film.</p>
+<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
+  <thead><tr><th>Look</th><th>What you get</th></tr></thead>
+  <tbody>
+    <tr><td>B&amp;W 400 (Tri-X style)</td><td>Classic black and white: firm contrast, visible grain</td></tr>
+    <tr><td>B&amp;W 400 pushed, heavy grain (Tri-X style)</td><td>Hard contrast and coarse grain, as from film pushed in development</td></tr>
+    <tr><td>B&amp;W 100, fine grain</td><td>Smooth, gentle black and white</td></tr>
+    <tr><td>Colour slide (Kodachrome style)</td><td>Saturated colour with deep blacks</td></tr>
+    <tr><td>Colour negative, soft</td><td>Muted colour, lower contrast</td></tr>
+  </tbody>
+</table></div>
+<ul>
+  <li><strong>Grain</strong>, from none to twice the look's own.</li>
+  <li><strong>Sharpening</strong>, from 0 to 100. See <a href="#sharpening">below</a>.</li>
+</ul>
+<p>These are impressions built from ordinary adjustments, not measured copies of any product. The film names say only which familiar look each one is after; Fotobogen is not connected with their makers.</p>
+
+<h2 id="filmframe">Film frame</h2>
+<p>Makes a photo look contact printed: the negative's black border around it, on white paper, with the film's edge showing.</p>
+<ul>
+  <li><strong>Frame thickness.</strong></li>
+  <li><strong>Ragged edge</strong>, from a straight cut to a rough one, like the edge of a filed-out negative carrier.</li>
+  <li><strong>Film edge markings</strong>, on or off: the stock name and frame numbers printed along the border. The names are made up (FOTOBOGEN 400, NACHTPAN 100, SILBERKORN 5063, BOGEN-X 320).</li>
+  <li><strong>Sprocket holes</strong>, on or off, as on 35 mm film.</li>
+  <li><strong>Sharpening</strong> of the photo inside the frame.</li>
+</ul>
+<p>The frame makes the picture larger, so the photo itself is not covered.</p>
+
+<h2 id="watermark">Watermark</h2>
+<p>Prints a line of text, such as your name, on each photo: in a corner or the centre, at a size and opacity you choose, light or dark. It marks the copies visitors see and download. It is a deterrent, not protection: a mark in a corner can be cropped off.</p>
+
+<h2 id="sharpening">Sharpening</h2>
+<p>Each module has a sharpening slider, from 0 to 100.</p>
+<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
+  <thead><tr><th>Setting</th><th>Result</th></tr></thead>
+  <tbody>
+    <tr><td>0</td><td>None</td></tr>
+    <tr><td>25</td><td>Normal: what a print or a scan is usually given. Film looks starts here.</td></tr>
+    <tr><td>60 and up</td><td>Crisp, with visible bite at edges: the look of a sharp lens on black-and-white film. The Rangefinder Dreams skin uses 60.</td></tr>
+  </tbody>
+</table></div>
+<p>The photo is sharpened and the grain is laid on afterwards, so turning sharpening up does not make the grain harsher. The film frame and the watermark start at 0 and leave the photo alone unless you ask.</p>
+
+<h2 id="order">Using several together</h2>
+<p>A look can have more than one step. They run in the order the modules are listed: film looks first, then the frame, then the watermark, so grain is not printed on the border and the mark sits on top of everything.</p>
+
+<h2 id="installing">Adding a module</h2>
+<ol>
+  <li>Copy the module's folder into <code>data/modules/</code> on the server.</li>
+  <li>Restart Fotobogen.</li>
+  <li>Switch it on under <strong>Admin, Modules</strong>.</li>
+</ol>
+<p><strong>Nothing is rebuilt.</strong> Some systems compile their admin, so adding a plugin means building the whole admin again. Fotobogen's admin has no code for any particular module: a module says what settings it has ("a number from 2 to 14 called thickness"), and the admin draws a slider, a menu, a checkbox, or a text field for each.</p>
+<div class="note">
+  <p><strong>A module is trusted code.</strong> It runs inside the server with the server's permissions, like a WordPress plugin. Install only modules you have read or trust. For that reason there is no way to install one through the admin: it has to be put on the server's disk by someone who can log in to the server.</p>
+</div>
+
+<h2 id="writing">Writing a module</h2>
+<p>A module is a folder with two files: <code>module.json</code>, which names it, and a JavaScript file that says what settings it has and what it does to a picture. This is a whole module:</p>
+<pre tabindex="0"><code>// data/modules/sepia/index.mjs
+export default {
+  transforms: [
+    {
+      id: 'tone',
+      label: 'Sepia tone',
+      description: 'Black and white, tinted warm.',
+      params: {
+        warmth: { type: 'range', label: 'Warmth', min: 0, max: 100, step: 5, default: 60 },
+        fade: { type: 'boolean', label: 'Faded blacks', default: false },
+      },
+      apply(image, params) {
+        const amount = params.warmth / 100
+        let toned = image.removeAlpha().tint({ r: 128 + 40 * amount, g: 128 - 6 * amount, b: 128 - 60 * amount })
+        if (params.fade) toned = toned.linear(0.9, 20)
+        return toned
+      },
+    },
+  ],
+}</code></pre>
+<p>There is nothing to install or import. <code>image</code> is a <a href="https://sharp.pixelplumbing.com">sharp</a> pipeline, and anything sharp can do to a picture is available on it.</p>
+<p>Two commands, run from a copy of the source, start a module and tell you whether it works before you put it on a site:</p>
+<pre tabindex="0"><code>pnpm fotobogen module new my-module     # writes a working example to data/modules/my-module/
+pnpm fotobogen module test my-module    # runs it on a test picture and reports</code></pre>
+<p>The three bundled modules are written to be read as examples, and the full guide is <a href="https://github.com/cschweda/fotobogen/blob/main/docs/MODULES.md">docs/MODULES.md</a> in the source.</p>
+
+<h2 id="limits">What a module cannot do</h2>
+<p>A module changes the picture, and can change its size up to 40 megapixels. It cannot add screens to the admin, change a photo's title or other details, or alter the uploaded file.</p>
+    <p class="next">
+      <a href="/docs/skins/">Back: Skins</a>
+      <a href="/docs/faq/">Next: Questions</a>
+    </p>
+  </main>
+</div>
+<footer>
+  <div class="wrap">
+    <span>Fotobogen is free and open source, under the MIT licence.</span>
+    <span>It comes with no warranty. Keep backups of your photographs.</span>
+    <span>&copy; 2026 <a href="https://github.com/cschweda" data-goal="Author click">Christopher Schweda</a></span>
+  </div>
+</footer>
+</body>
+</html>

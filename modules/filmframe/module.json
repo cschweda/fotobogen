@@ -1,0 +1,7 @@
+{
+  "name": "filmframe",
+  "version": "1.0.0",
+  "label": "Film frame",
+  "description": "Makes a photo look contact printed, with the negative's border showing: film edge, sprocket holes, and made-up stock markings.",
+  "entry": "index.mjs"
+}

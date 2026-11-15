@@ -1,0 +1,66 @@
+{
+  "name": "swiss",
+  "version": "1.0.0",
+  "label": "Swiss",
+  "description": "A strict grid, one sans-serif, and a single red accent. Off-white on near-black, or black on white. The photographs supply the colour.",
+  "mode": "dark",
+  "modes": {
+    "light": {
+      "ground": "#ffffff",
+      "text": "#0a0a0b",
+      "muted": "#5c5c58",
+      "line": "#d9d9d6",
+      "accent": "#e30613"
+    },
+    "dark": {
+      "ground": "#0a0a0b",
+      "text": "#f5f5f2",
+      "muted": "#a8a8a3",
+      "line": "#2c2c31",
+      "accent": "#e30613"
+    }
+  },
+  "contrast": [
+    [
+      "text",
+      "ground"
+    ],
+    [
+      "muted",
+      "ground"
+    ]
+  ],
+  "options": {
+    "accent": {
+      "type": "color",
+      "label": "Accent colour",
+      "default": {
+        "light": "#e30613",
+        "dark": "#e30613"
+      }
+    },
+    "gutter": {
+      "type": "select",
+      "label": "Space between photos",
+      "options": [
+        "none",
+        "hairline",
+        "wide"
+      ],
+      "default": "hairline",
+      "values": {
+        "none": "0px",
+        "hairline": "3px",
+        "wide": "1.25rem"
+      }
+    },
+    "columns": {
+      "type": "range",
+      "label": "Columns on a wide screen",
+      "min": 2,
+      "max": 6,
+      "step": 1,
+      "default": 4
+    }
+  }
+}

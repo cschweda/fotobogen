@@ -1,18 +1,15 @@
-<!-- Placeholder public page. The photo grid arrives in a later phase. -->
+<!-- The home page: every public photo, newest first. -->
 <script setup lang="ts">
-const { data: site } = await useFetch('/api/site')
-useHead({ title: () => site.value?.title || 'Fotobogen' })
+definePageMeta({ layout: 'public' })
+await useFetch('/api/site', { key: 'site' })
+
+const { siteName } = useSiteText()
+usePageSeo({ path: () => '/' })
 </script>
 
 <template>
-  <FbShell>
-    <h1 class="fb-h1">{{ site?.title || 'Fotobogen' }}</h1>
-    <p v-if="site?.tagline" class="fb-lead">{{ site.tagline }}</p>
-    <p class="empty">No photographs have been published yet.</p>
-    <p class="fb-small"><a class="fb-link" href="/login">Log in</a></p>
-  </FbShell>
+  <div>
+    <h1 class="fb-visually-hidden">{{ siteName }}</h1>
+    <PhotoGrid source="/api/photos" base="/" />
+  </div>
 </template>
-
-<style scoped>
-.empty { margin: 3rem 0 2rem; padding: 1.25rem 0; max-width: 34rem; border-top: 1px solid var(--fb-line); border-bottom: 1px solid var(--fb-line); color: var(--fb-muted); }
-</style>

@@ -21,6 +21,16 @@ export interface TestServer {
   exited: Promise<number | null>
 }
 
+/**
+ * A minimal environment for child processes, so tests do not inherit
+ * settings such as DATA_DIR or TRUST_PROXY. Windows needs a few system
+ * variables for Node to start at all.
+ */
+export function baseEnv(): Record<string, string | undefined> {
+  const keep = ['PATH', 'HOME', 'SystemRoot', 'windir', 'TEMP', 'TMP', 'USERPROFILE', 'APPDATA', 'LOCALAPPDATA', 'PATHEXT', 'ComSpec']
+  return Object.fromEntries(keep.filter(name => process.env[name] !== undefined).map(name => [name, process.env[name]]))
+}
+
 function freePort(): Promise<number> {
   return new Promise((resolvePort, reject) => {
     const probe = createServer()
@@ -43,7 +53,8 @@ export async function startServer(options: { env?: Record<string, string>, dataD
   async function launch() {
     printed = ''
     child = spawn(process.execPath, [resolve('.output/server/index.mjs')], {
-      env: { PATH: process.env.PATH, HOME: process.env.HOME, DATA_DIR: dataDir, PORT: String(port), HOST: '127.0.0.1', ...options.env },
+      // SAMPLES_BASE_URL points nowhere by default, so no test reaches the real Lorem Picsum.
+      env: { ...baseEnv(), DATA_DIR: dataDir, PORT: String(port), HOST: '127.0.0.1', SAMPLES_BASE_URL: 'http://127.0.0.1:9', UPDATES_URL: 'http://127.0.0.1:9', ...options.env },
       stdio: ['ignore', 'pipe', 'pipe'],
     })
     child.stdout!.on('data', chunk => { printed += chunk })

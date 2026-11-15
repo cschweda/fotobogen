@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Using Fotobogen | Fotobogen documentation</title>
+<meta name="description" content="Uploading photographs, arranging the library, albums and tags, scheduling, the slideshow, licences and downloads, settings, and keeping the site backed up.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f5f5f2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0a0a0b" media="(prefers-color-scheme: dark)">
+<link rel="canonical" href="https://fotobogen.com/docs/usage/">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://fotobogen.com/docs/usage/">
+<meta property="og:title" content="Using Fotobogen | Fotobogen documentation">
+<meta property="og:description" content="Uploading photographs, arranging the library, albums and tags, scheduling, the slideshow, licences and downloads, settings, and keeping the site backed up.">
+<meta property="og:image" content="https://fotobogen.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Fotobogen wordmark beside a contact sheet of sixteen numbered frames, one of them red. Above the wordmark: German for photo sheet, as in a contact sheet.">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230a0a0b'/%3E%3Crect x='6' y='9' width='20' height='14' fill='%23e30613'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/docs/docs.css">
+<script src="/docs/docs.js" defer></script>
+<!-- Privacy-friendly analytics by Plausible -->
+<script async src="https://plausible.io/js/pa-UXO2Zaq02zXvfaEecXWvD.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header>
+  <div class="wrap bar">
+    <a class="bar__name" href="/">Fotobogen<span>Documentation</span></a>
+    <div class="bar__links">
+      <a href="https://github.com/cschweda/fotobogen" data-goal="GitHub click" data-where="docs">Source on GitHub</a>
+      <button class="toggle" type="button" id="theme">Dark</button>
+    </div>
+  </div>
+</header>
+<div class="wrap layout">
+  <nav class="pages" aria-label="Documentation">
+    <ul class="pages__all">
+      <li><a href="/docs/">Overview</a></li>
+      <li><a href="/docs/installation/">Installation</a></li>
+      <li><a href="/docs/usage/" aria-current="page">Using Fotobogen</a></li>
+      <li><a href="/docs/skins/">Skins</a></li>
+      <li><a href="/docs/modules/">Modules</a></li>
+      <li><a href="/docs/faq/">Questions</a></li>
+    </ul>
+    <div class="pages__here">
+      <h2>On this page</h2>
+      <ul>
+        <li><a href="#admin">The admin</a></li>
+        <li><a href="#uploading">Uploading</a></li>
+        <li><a href="#library">The library</a></li>
+        <li><a href="#editing">Editing a photo</a></li>
+        <li><a href="#publishing">Publishing, scheduling, and drafts</a></li>
+        <li><a href="#albums">Albums and tags</a></li>
+        <li><a href="#public">What visitors see</a></li>
+        <li><a href="#settings">Settings</a></li>
+        <li><a href="#own">Making the site your own</a></li>
+        <li><a href="#samples">Sample photos</a></li>
+        <li><a href="#system">Backups and updates</a></li>
+        <li><a href="#keyboard">Keyboard and accessibility</a></li>
+      </ul>
+    </div>
+  </nav>
+  <main id="main" class="doc">
+<h1>Using Fotobogen</h1>
+<p class="lead">Everything is done in a web browser. Your site is at its address; the admin is at the same address followed by <code>/admin</code>.</p>
+
+<h2 id="admin">The admin</h2>
+<p>Log in at <code>/admin</code> with the account you made during setup. The dashboard leads to everything else:</p>
+<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
+  <thead><tr><th>Page</th><th>What it is for</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Upload photos</strong></td><td>Adding photographs</td></tr>
+    <tr><td><strong>Photos</strong></td><td>The library: order, hide, delete, edit, copy links</td></tr>
+    <tr><td><strong>Albums</strong></td><td>Named sets of photos</td></tr>
+    <tr><td><strong>Skins</strong></td><td>How the public site looks, and light or dark</td></tr>
+    <tr><td><strong>Modules</strong></td><td>Looks applied to photos: film, frames, watermark</td></tr>
+    <tr><td><strong>Site text</strong></td><td>The site's name and every word on it</td></tr>
+    <tr><td><strong>Search and sharing</strong></td><td>What search engines and shared links show</td></tr>
+    <tr><td><strong>Settings</strong></td><td>Title, layout, privacy, licence, slideshow</td></tr>
+    <tr><td><strong>System</strong></td><td>Backup, restore, version, updates</td></tr>
+  </tbody>
+</table></div>
+<p>A login lasts 30 days from when you last used it. Five wrong passwords in 15 minutes from one address locks that address out for the rest of the 15 minutes.</p>
+
+<h2 id="uploading">Uploading</h2>
+<p>Choose <strong>Upload photos</strong>, then pick files or drop them on the page. Each file shows its progress and what became of it.</p>
+<figure><img src="/screens/upload.png" alt="The upload page listing five files: three ready with thumbnails, one duplicate, one not accepted" width="1072" height="1045" loading="lazy"><figcaption>Each file gets its own row and its own result.</figcaption></figure>
+<ul>
+  <li><strong>Formats:</strong> JPEG, PNG, WebP, TIFF, and AVIF. A file is judged by what is inside it, not by its name.</li>
+  <li><strong>Size:</strong> up to 50 MB and 100 megapixels each. AVIF is held to 16 megapixels, WebP to 60, and interlaced PNG to 40, because those need far more memory to open. A larger one is refused with a note to upload a JPEG instead.</li>
+  <li><strong>Duplicates:</strong> the same file is not stored twice. The page names the photo that already has it.</li>
+  <li><strong>Your file is kept untouched.</strong> Fotobogen makes resized copies for the web (up to 2560 pixels on the long side) and never enlarges anything.</li>
+  <li><strong>Processing</strong> happens one photo at a time in the background, so you can keep uploading. A photo that cannot be processed after three tries is marked failed, with the reason and a <strong>Try again</strong> button.</li>
+</ul>
+<p>Once processed, a photo is on your site, unless you have set new uploads to start as drafts.</p>
+
+<h2 id="library">The library</h2>
+<p><strong>Admin, Photos</strong> shows every photograph. The first one there is the first on your site.</p>
+<figure><img src="/screens/library.jpg" alt="The photo library: a grid of photo cards with checkboxes and Up, Down, and To top buttons" width="1072" height="760" loading="lazy"><figcaption>The library, with the buttons that reorder from the keyboard.</figcaption></figure>
+<ul>
+  <li><strong>Order:</strong> drag a photo onto another to put it in front, or use its Up, Down, and To top buttons.</li>
+  <li><strong>Several at once:</strong> tick photos, then Hide, Show, Delete, add to an album, or add a tag. Deleting asks first and removes the uploaded file and every copy of it.</li>
+  <li><strong>Find:</strong> show only hidden photos, photos with no alt text, or photos that failed.</li>
+</ul>
+
+<h2 id="editing">Editing a photo</h2>
+<p>Open a photo from the library to change:</p>
+<ul>
+  <li>its <strong>title</strong> and <strong>description</strong>;</li>
+  <li>its <strong>alt text</strong>, which describes the picture to people who cannot see it. Screen readers read it aloud, and it is worth writing for every photo;</li>
+  <li>its <strong>web address</strong> (the last part of <code>/photo/…</code>) and the <strong>date taken</strong>;</li>
+  <li>its <strong>albums</strong> and <strong>tags</strong>;</li>
+  <li>when it is <strong>published</strong>, its <strong>licence</strong>, and whether it can be <strong>downloaded</strong>;</li>
+  <li>its <strong>look</strong>: a strip of small previews under the photo shows what each switched-on module would do. Choosing one shows a larger preview, and nothing changes until you save.</li>
+</ul>
+<figure><img src="/screens/looks.jpg" alt="The edit page previewing a photo inside a film border with sprocket holes, above a strip of small previews of different film looks" width="1072" height="1060" loading="lazy"><figcaption>The strip of looks under a photo, with a film frame chosen.</figcaption></figure>
+<p>Beside the form is what the camera recorded in the file: camera, lens, exposure, and place.</p>
+
+<h3>Links to a photo</h3>
+<p>Further down the same page is a <strong>Links</strong> panel: the full address of the photo's page, the address of each size of the picture, and a line of HTML that shows the photo linked to its page. Each has a <strong>Copy</strong> button. Use them in an email, a post, or another website.</p>
+<p>The pictures are public files: anyone with a picture's address can open it, with no login. The links begin with your site's address. On your own machine they begin with <code>http://localhost:5150</code>, which works only there, until you set the address under <strong>Admin, Search and sharing</strong> or as <code>SITE_URL</code> on the server.</p>
+
+<h2 id="publishing">Publishing, scheduling, and drafts</h2>
+<p>On a photo's page, <strong>Publish</strong> has three choices:</p>
+<ul>
+  <li><strong>Public now.</strong></li>
+  <li><strong>Public from a date and time</strong> you pick, in your own time zone. Until then the photo is in your library but not on the site, the feed, or the sitemap. It appears by itself when the time comes.</li>
+  <li><strong>Hidden</strong>, as a draft.</li>
+</ul>
+<p>In Settings you can make every new upload start as a draft, so nothing is public until you say so.</p>
+
+<h2 id="albums">Albums and tags</h2>
+<ul>
+  <li><strong>Albums</strong> are named sets you arrange yourself. Create them under <strong>Admin, Albums</strong>; add photos from the library (tick photos, choose an album, <strong>Add to album</strong>) or from a photo's page. A photo can be in several. Each public album has a page at <code>/album/…</code>, and they are listed at <code>/albums</code>. An album can be hidden. Deleting an album never deletes its photos.</li>
+  <li><strong>Tags</strong> are short labels typed on a photo's page, separated by commas, or added to several photos at once from the library. Each has a page at <code>/tag/…</code>. A tag exists only while a photo carries it.</li>
+</ul>
+
+<h2 id="public">What visitors see</h2>
+<div class="pair">
+  <figure><img src="/screens/gallery.jpg" alt="The public site: a dark page with a masonry grid of photographs of different shapes" width="1072" height="760" loading="lazy"><figcaption>The grid.</figcaption></figure>
+  <figure><img src="/screens/photo.jpg" alt="A photo page: the photograph with its title and description beside it, and Previous and Next links" width="1072" height="760" loading="lazy"><figcaption>A photo.</figcaption></figure>
+</div>
+<ul>
+  <li><strong>The grid</strong>, at your address: photos newest first, thirty to a page, each keeping its shape or all cut square. It works with JavaScript switched off, and nothing jumps as images arrive.</li>
+  <li><strong>A photo</strong>: the picture, its title, description, date, and camera details, with previous and next. It opens over the grid or on a page of its own, as you chose.</li>
+  <li><strong>Albums and tags</strong>, each with its own page.</li>
+  <li><strong>The slideshow</strong>, at <code>/slideshow</code>: full screen, one photo after another, for the whole site or one album or tag. Pressing a photo shows its details. <kbd>Space</kbd> pauses, the arrow keys step, <kbd>F</kbd> is full screen, <kbd>Escape</kbd> leaves. Seconds per photo and the order are in Settings.</li>
+  <li><strong>A light and dark switch</strong> at the top. <a href="/docs/skins/#light-dark">More about that.</a></li>
+  <li><strong>An RSS feed</strong> at <code>/feed.xml</code>, a sitemap for search engines, and a preview card when a photo's address is shared.</li>
+</ul>
+<p>Only photos that are processed and public are ever shown. Where a photo was taken is never shown unless you switch that on.</p>
+
+<h2 id="settings">Settings</h2>
+<p><strong>Admin, Settings</strong> holds:</p>
+<ul>
+  <li>the <strong>site title</strong> and <strong>tagline</strong>;</li>
+  <li>the <strong>grid</strong> (photos keeping their shape, or squares) and whether a photo opens <strong>over the grid or on its own page</strong>;</li>
+  <li><strong>privacy</strong>: show camera details (on to begin with) and show where photos were taken (off to begin with);</li>
+  <li>the <strong>licence</strong> your photos are published under: all rights reserved, or one of the Creative Commons licences. It is shown on every photo page, and a photo can have its own;</li>
+  <li><strong>downloads</strong>: whether visitors may download photos (off to begin with). A download is a large copy with all camera data removed. The file exactly as you uploaded it is handed out only by a site that also shows where photos were taken, because that file carries everything the camera recorded;</li>
+  <li><strong>new uploads start as drafts</strong>;</li>
+  <li>the <strong>slideshow's</strong> timing and order.</li>
+</ul>
+
+<h2 id="own">Making the site your own</h2>
+<p>Nothing a visitor sees has to say "Fotobogen". It is your site, at your address, under your name.</p>
+<h3>Site text</h3>
+<p><strong>Admin, Site text</strong> holds the site's title and tagline, and every fixed piece of text on the public pages: the links at the top, the buttons, the labels beside a photo, the slideshow's controls, and what is shown when a page cannot be found. Each field shows the wording used now. Type your own to replace it; leave it empty to keep the default.</p>
+<ul>
+  <li>There is a <strong>line of your own for the footer</strong>, empty to begin with: a copyright notice, for instance.</li>
+  <li><strong>Language</strong> is a code such as <code>en</code>, <code>de</code>, or <code>pt-BR</code>. It tells screen readers how to pronounce your site and search engines what language it is in. It does not translate anything; you do that by rewording the fields.</li>
+  <li>One button puts every field back to its default.</li>
+</ul>
+<h3>Search and sharing</h3>
+<p><strong>Admin, Search and sharing</strong> decides what search engines show for your site and what appears when someone shares a link to it. Every field is optional, and the page previews the result as you type.</p>
+<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
+  <thead><tr><th>Setting</th><th>If you leave it alone</th></tr></thead>
+  <tbody>
+    <tr><td>Title of your home page</td><td>Your site's title</td></tr>
+    <tr><td>Description of your site</td><td>Your tagline</td></tr>
+    <tr><td>How the titles of other pages are written</td><td>"Photo | Site"</td></tr>
+    <tr><td>Picture shown when your site is shared</td><td>Your newest photo</td></tr>
+    <tr><td>Let search engines list this site</td><td>Yes</td></tr>
+    <tr><td>Your site's proper address</td><td>The address each visitor used</td></tr>
+    <tr><td>Photographer's name, and username on X</td><td>None</td></tr>
+    <tr><td>Google and Bing verification codes</td><td>None</td></tr>
+  </tbody>
+</table></div>
+<p>A link to one photo always shows that photo, with its own title, description, and alt text. Asking search engines not to list the site is a request the well-known ones honour; it does not make the site private.</p>
+<h3>How it looks</h3>
+<p><a href="/docs/skins/">Skins</a> change the look, the colours, and light or dark.</p>
+
+<h2 id="samples">Sample photos</h2>
+<p>Fotobogen can download 25 photographs so that a new site has something to show. They come from <a href="https://picsum.photos">Lorem Picsum</a> (Unsplash photographs, credited to their photographers) and are not part of the software. The dashboard always has <strong>Download sample photos</strong>, and <strong>Remove sample photos</strong> deletes all of them, and only them.</p>
+
+<h2 id="system">Backups and updates</h2>
+<p><strong>Admin, System</strong> shows the version, what is stored, and the free space, and has <strong>Download a backup</strong>, restore, and <strong>Check for updates</strong>. Take a backup regularly and keep it somewhere other than the server. <a href="/docs/faq/#backups">Backing up and restoring</a> are covered with the questions.</p>
+
+<h2 id="keyboard">Keyboard and accessibility</h2>
+<p>The admin and the public site are built to WCAG 2.1 level AA and are tested for it on every change: everything can be reached and worked from the keyboard, text has a contrast of at least 4.5 to 1 in light and dark, and nothing scrolls sideways on a phone. Motion is reduced when your device asks for that. If you find something that does not meet this, it is a bug: please <a href="https://github.com/cschweda/fotobogen/issues" data-goal="GitHub click" data-where="docs-issue">report it</a>.</p>
+    <p class="next">
+      <a href="/docs/installation/">Back: Installation</a>
+      <a href="/docs/skins/">Next: Skins</a>
+    </p>
+  </main>
+</div>
+<footer>
+  <div class="wrap">
+    <span>Fotobogen is free and open source, under the MIT licence.</span>
+    <span>It comes with no warranty. Keep backups of your photographs.</span>
+    <span>&copy; 2026 <a href="https://github.com/cschweda" data-goal="Author click">Christopher Schweda</a></span>
+  </div>
+</footer>
+</body>
+</html>

@@ -33,7 +33,8 @@ const answers = reactive({
   password: '',
   grid: 'masonry' as 'masonry' | 'square',
   photoView: 'modal' as 'modal' | 'page',
-  samples: null as boolean | null,
+  // Starting empty is the default; downloading samples is the option.
+  samples: false as boolean | null,
 })
 
 const headingEl = ref<HTMLElement>()
@@ -236,21 +237,18 @@ async function submit() {
           <!-- 5: samples -->
           <template v-else-if="step === 5">
             <p class="fb-lead setup__lead">
-              Twenty-five placeholder photographs show how the site looks before you add your own. They can be removed in one click.
+              Twenty-five placeholder photographs can show how the site looks before you add your own. They can be removed in one click, and downloaded later if you skip them now.
             </p>
             <FbChoice
               v-model="answers.samples" name="samples" legend="Sample photos" :error="errors.samples"
               :options="[
-                { value: true, label: 'Download 25 sample photos', note: 'Fetched from Lorem Picsum, the only outside request Fotobogen makes.' },
                 { value: false, label: 'Start empty', note: 'Nothing is downloaded.' },
+                { value: true, label: 'Download 25 sample photos', note: 'Fetched from Lorem Picsum, the only outside request Fotobogen makes.' },
               ]"
             >
-              <template #true><SetupDiagram kind="samples" /></template>
               <template #false><SetupDiagram kind="empty" /></template>
+              <template #true><SetupDiagram kind="samples" /></template>
             </FbChoice>
-            <p class="fb-small setup__note">
-              Sample download is not part of this version yet. Your choice is saved and will be used once it is.
-            </p>
           </template>
 
           <div class="setup__actions">
@@ -271,8 +269,9 @@ async function submit() {
             <div class="summary__row"><dt>Admin</dt><dd>{{ answers.username }}</dd></div>
             <div class="summary__row"><dt>Grid</dt><dd>{{ answers.grid === 'masonry' ? 'Masonry' : 'Square' }}</dd></div>
             <div class="summary__row"><dt>Photo view</dt><dd>{{ answers.photoView === 'modal' ? 'Modal' : 'Page' }}</dd></div>
-            <div class="summary__row"><dt>Samples</dt><dd>{{ answers.samples ? 'Download requested' : 'Start empty' }}</dd></div>
+            <div class="summary__row"><dt>Samples</dt><dd>{{ answers.samples ? 'Download 25 sample photos' : 'Start empty' }}</dd></div>
           </dl>
+          <SampleDownload v-if="answers.samples" variant="setup" />
           <div class="setup__actions">
             <a class="fb-button" href="/admin">Open admin</a>
             <a class="fb-button fb-button--quiet" href="/">View your site</a>

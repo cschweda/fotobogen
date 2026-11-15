@@ -15,8 +15,11 @@ services:
     user: "${PUID:-1000}:${PGID:-1000}"
     environment:
       TRUST_PROXY: "1"
+      # Upload limits. If you raise MAX_UPLOAD_MB, raise the proxy's body limit to match.
+      MAX_UPLOAD_MB: "${MAX_UPLOAD_MB:-50}"
+      MAX_MEGAPIXELS: "${MAX_MEGAPIXELS:-100}"
     volumes:
       - ./data:/data
     ports:
       # Local interface only; never published to the internet.
-      - "127.0.0.1:${PORT:-3000}:3000"
+      - "127.0.0.1:${PORT:-5150}:5150"

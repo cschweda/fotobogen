@@ -96,6 +96,8 @@ describe('a fresh install', () => {
     it('stores the wizard answers and the default settings', () => {
       const rows = query<{ key: string, value: string }>(server, 'select key, value from settings')
       const settings = Object.fromEntries(rows.map(row => [row.key, JSON.parse(row.value)]))
+      // Bookkeeping the server writes by itself once a minute: when it last looked for photos that went live.
+      delete settings['webhooks.last_scan']
       expect(settings).toEqual({
         'site.title': 'Test Photos',
         'site.tagline': 'Pictures of things',
@@ -207,13 +209,18 @@ describe('completeSetup helper', () => {
 })
 
 describe('GET /api/site', () => {
-  it('returns the public title and tagline, and nothing else', async () => {
+  it('returns what the public pages need, and nothing private', async () => {
     const server = await startServer()
     try {
       await completeSetup(server)
       const response = await get(server, '/api/site')
       expect(response.status).toBe(200)
-      expect(await response.json()).toEqual({ title: 'Test Photos', tagline: 'Pictures of things' })
+      expect(await response.json()).toEqual({
+        title: 'Test Photos', tagline: 'Pictures of things', grid: 'masonry', photoView: 'modal', skinVersion: expect.stringMatching(/^[0-9a-f]{10}$/), mode: 'dark', hasAlbums: false,
+        // The site's words and search settings, all at their defaults on a new site.
+        language: 'en', text: {},
+        seo: { homeTitle: '', titlePattern: '{page} | {site}', description: '', indexing: true, siteUrl: '', author: '', twitter: '', googleVerification: '', bingVerification: '', card: null },
+      })
     }
     finally { await server.stop() }
   })

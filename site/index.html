@@ -16,7 +16,7 @@
 <meta property="og:image" content="https://fotobogen.com/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Fotobogen wordmark beside a contact sheet of sixteen numbered frames, one of them red.">
+<meta property="og:image:alt" content="Fotobogen wordmark beside a contact sheet of sixteen numbered frames, one of them red. Above the wordmark: German for photo sheet, as in a contact sheet.">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230a0a0b'/%3E%3Crect x='6' y='9' width='20' height='14' fill='%23e30613'/%3E%3C/svg%3E">
 <!-- Privacy-friendly analytics by Plausible -->
@@ -52,6 +52,8 @@ header .wrap.bar{display:flex;justify-content:space-between;align-items:center;p
 .label{font-size:.8125rem;letter-spacing:.14em;text-transform:uppercase;color:var(--low)}
 .toggle{font:inherit;font-size:.8125rem;letter-spacing:.14em;text-transform:uppercase;color:var(--fg);background:none;border:1px solid var(--rule);padding:8px 14px;cursor:pointer;border-radius:0}
 .toggle:hover{border-color:var(--fg)}
+.barlinks{display:flex;align-items:center;gap:20px;font-size:.9375rem}
+.go{margin-top:clamp(20px,3vw,32px);display:flex;flex-wrap:wrap;gap:12px 28px;font-size:1.125rem;font-weight:700}
 
 main{flex:1}
 .state{display:grid;grid-template-columns:repeat(12,1fr);column-gap:clamp(16px,2vw,24px);align-items:baseline;padding:18px 0;border-bottom:1px solid var(--rule);margin-bottom:clamp(44px,9vw,104px)}
@@ -90,6 +92,56 @@ footer .wrap{border-top:1px solid var(--rule);padding-top:20px;padding-bottom:28
 .status::before{content:"";display:inline-block;width:.6em;height:.6em;background:var(--red);margin-right:.6em}
 .status{color:var(--fg)}
 
+.part{margin-top:clamp(64px,10vw,128px);border-top:1px solid var(--rule);padding-top:18px}
+.part-head{display:grid;grid-template-columns:repeat(12,1fr);column-gap:clamp(16px,2vw,24px);margin-bottom:clamp(32px,5vw,56px)}
+.part-head h2{grid-column:1/span 5;font-size:clamp(1.75rem,3.6vw,2.75rem);font-weight:700;letter-spacing:-.03em;line-height:1.05}
+.part-head p{grid-column:7/span 6;font-size:clamp(1.0625rem,1.4vw,1.25rem);color:var(--mid);max-width:38ch}
+
+.tour{list-style:none}
+.tour li{display:grid;grid-template-columns:repeat(12,1fr);column-gap:clamp(16px,2vw,24px);row-gap:16px;padding:clamp(24px,3.5vw,40px) 0;border-top:1px solid var(--rule)}
+.tour .cap{grid-column:1/span 4}
+.tour .num{display:block;font-size:.6875rem;letter-spacing:.08em;color:var(--low);font-variant-numeric:tabular-nums;margin-bottom:10px}
+.tour h3{font-size:1.25rem;font-weight:700;letter-spacing:-.015em;margin-bottom:6px}
+.tour .cap p{font-size:.9375rem;color:var(--mid);max-width:32ch}
+.tour .cap .where{margin-top:10px;font-size:.8125rem;color:var(--low)}
+.tour figure{grid-column:6/span 7}
+.tour img{display:block;width:100%;height:auto;border:1px solid var(--rule);background:#0a0a0b}
+
+.runs{display:grid;grid-template-columns:repeat(12,1fr);column-gap:clamp(16px,2vw,24px);row-gap:32px}
+.chain{grid-column:1/span 12;list-style:none;display:grid;grid-template-columns:1fr auto 1fr auto 1fr;align-items:stretch;column-gap:clamp(8px,1.4vw,18px)}
+.chain .box{border:1px solid var(--fg);padding:16px 18px 18px}
+.chain .box.you{border-color:var(--red);border-width:2px;padding:15px 17px 17px}
+.chain .box b{display:block;font-size:1.0625rem;letter-spacing:-.01em;margin-bottom:4px}
+.chain .box span{font-size:.9375rem;color:var(--mid)}
+.chain .to{align-self:center;width:clamp(16px,3vw,44px);height:1px;background:var(--fg);position:relative}
+.chain .to::after{content:"";position:absolute;right:0;top:-4px;width:8px;height:8px;border-top:1px solid var(--fg);border-right:1px solid var(--fg);transform:rotate(45deg)}
+.runs .note{grid-column:1/span 5;font-size:clamp(1.0625rem,1.4vw,1.25rem);line-height:1.4}
+.runs .needs{grid-column:7/span 6;list-style:none;font-size:.9375rem;color:var(--mid)}
+.runs .needs li{display:grid;grid-template-columns:8rem 1fr;gap:16px;padding:10px 0;border-top:1px solid var(--rule)}
+.runs .needs li:last-child{border-bottom:1px solid var(--rule)}
+.runs .needs b{color:var(--fg);font-weight:400}
+
+.plan{list-style:none;display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(8px,1.2vw,14px);row-gap:clamp(20px,3vw,32px)}
+.plan li{display:block}
+.plan .t{margin-bottom:10px;aspect-ratio:3/1}
+.plan .done .t{background:var(--red)}
+.plan .now .t{background:none;border:2px solid var(--red)}
+.plan .later .t{background:color-mix(in srgb,var(--fg) 12%,var(--bg))}
+.plan b{display:block;font-size:1rem;letter-spacing:-.01em}
+.plan span.s{display:block;font-size:.8125rem;color:var(--low);margin-top:2px}
+.plan p{font-size:.875rem;color:var(--mid);margin-top:6px;max-width:24ch}
+.credit{margin-top:24px;font-size:.8125rem;color:var(--low);max-width:60ch}
+.source{margin-top:clamp(40px,6vw,64px);font-size:clamp(1.0625rem,1.4vw,1.25rem)}
+
+@media (max-width:860px){
+  .part-head h2,.part-head p,.tour .cap,.tour figure,.runs .note,.runs .needs{grid-column:1/-1}
+  .part-head p{margin-top:12px}
+  .chain{grid-template-columns:1fr;row-gap:0}
+  .chain .to{width:1px;height:28px;justify-self:center}
+  .chain .to::after{right:-4px;top:auto;bottom:0;transform:rotate(135deg)}
+  .plan{grid-template-columns:repeat(2,1fr)}
+}
+
 @media (max-width:860px){
   .lede,.points{grid-column:1/-1}
 }
@@ -107,16 +159,20 @@ footer .wrap{border-top:1px solid var(--rule);padding-top:20px;padding-bottom:28
 <header>
   <div class="wrap bar">
     <span class="label">Photo publishing platform</span>
-    <button class="toggle" type="button" id="theme" aria-label="Switch colour theme">Theme</button>
+    <span class="barlinks">
+      <a href="/docs/" data-goal="Docs click" data-where="header">Documentation</a>
+      <button class="toggle" type="button" id="theme" aria-label="Switch colour theme">Theme</button>
+    </span>
   </div>
 </header>
 
 <main id="main">
   <div class="wrap">
     <section class="hero" aria-labelledby="name">
-      <p class="state"><strong>In development</strong><span>Still being built. Nothing to download or install yet.</span></p>
+      <p class="state"><strong>In development</strong><span>It installs, takes your photographs, and publishes them. No release has been tagged yet; the source is on GitHub. This page shows what it looks like so far.</span></p>
       <h1 id="name">Fotobogen</h1>
       <p class="tag">Publish your photographs on a website of your own.</p>
+      <p class="go"><a href="/docs/installation/" data-goal="Docs click" data-where="hero-install">How to install it</a> <a href="/docs/" data-goal="Docs click" data-where="hero">Read the documentation</a></p>
     </section>
 
     <ul class="sheet" aria-hidden="true">
@@ -151,6 +207,95 @@ footer .wrap{border-top:1px solid var(--rule);padding-top:20px;padding-bottom:28
         <li><span class="num" aria-hidden="true">04</span><h2>Make it yours</h2><p>Change the look with a skin. Add features such as black-and-white conversion with modules.</p></li>
       </ol>
     </section>
+    <section class="part" aria-labelledby="tour-h">
+      <div class="part-head">
+        <h2 id="tour-h">A look around</h2>
+        <p>These are real screens from the current build. The installer is a web page: you open your new site in a browser and answer six short steps. Then you upload, and your site is live.</p>
+      </div>
+      <ol class="tour">
+        <li>
+          <div class="cap"><span class="num" aria-hidden="true">01</span><h3>Prove the server is yours</h3><p>When Fotobogen first starts it prints a one-time token. The setup page asks for it, so only the person running the server can claim the site.</p><p class="where">Setup, step 1 of 6</p></div>
+          <figure><img src="screens/setup-1-token.png" width="1072" height="720" loading="lazy" decoding="async" alt="Setup page titled Enter your setup token, with one text field and a six-frame progress strip whose first frame is red."></figure>
+        </li>
+        <li>
+          <div class="cap"><span class="num" aria-hidden="true">02</span><h3>Create your login</h3><p>One account, one password, with a meter that says how strong it is. There is no email and nothing to sign up for.</p><p class="where">Setup, step 3 of 6</p></div>
+          <figure><img src="screens/setup-3-account.png" width="1072" height="784" loading="lazy" decoding="async" alt="Setup page titled Create the admin account, with username and password fields and a strength meter reading Strong."></figure>
+        </li>
+        <li>
+          <div class="cap"><span class="num" aria-hidden="true">03</span><h3>Choose how photos are shown</h3><p>Pick a grid and a way to open photos from small diagrams. Both can be changed later.</p><p class="where">Setup, step 4 of 6</p></div>
+          <figure><img src="screens/setup-4-display.png" width="1072" height="1074" loading="lazy" decoding="async" alt="Setup page titled Choose how photos are shown, with diagrams for masonry or square grids and for opening a photo over the grid or on its own page."></figure>
+        </li>
+        <li>
+          <div class="cap"><span class="num" aria-hidden="true">04</span><h3>Start empty, or with samples</h3><p>The installer can fetch 25 placeholder photographs so the site has something to show. A counter follows the download, which never holds you up and can be cancelled or skipped.</p><p class="where">Setup, step 6 of 6</p></div>
+          <figure><img src="screens/setup-6-downloading.png" width="1072" height="980" loading="lazy" decoding="async" alt="Setup page titled Fotobogen is ready, listing the choices made, with a counter reading 9 of 25 sample photos downloaded and a Cancel download button."></figure>
+        </li>
+        <li>
+          <div class="cap"><span class="num" aria-hidden="true">05</span><h3>Sign in to the dashboard</h3><p>The dashboard sits behind your login. From here you upload, and download or remove the sample photos whenever you like.</p><p class="where">Dashboard</p></div>
+          <figure><img src="screens/admin.png" width="1072" height="820" loading="lazy" decoding="async" alt="Dashboard titled Admin, showing the site name, the signed-in account, the number of photos, and buttons to upload photos and download sample photos."></figure>
+        </li>
+        <li>
+          <div class="cap"><span class="num" aria-hidden="true">06</span><h3>Upload</h3><p>Choose files or drop them on the page. Each photo is checked, stored untouched, and resized for every screen; anything that is not a photo, or is already in your library, is explained on its own row.</p><p class="where">Upload</p></div>
+          <figure><img src="screens/upload.png" width="1072" height="1045" loading="lazy" decoding="async" alt="Upload page listing five files: three ready with small thumbnails, one marked already in your library, and one marked not accepted with the reason."></figure>
+        </li>
+        <li>
+          <div class="cap"><span class="num" aria-hidden="true">07</span><h3>Your photographs, published</h3><p>Visitors see a grid that keeps each photo its own shape, or equal squares if you prefer. It is laid out without scripts, loads a blurred placeholder first, and never jumps as pictures arrive.</p><p class="where">The public site</p></div>
+          <figure><img src="screens/gallery.jpg" width="1072" height="760" loading="lazy" decoding="async" alt="A dark page titled Kodachrome Days with a masonry grid of photographs of different shapes: a game controller, a pine forest, a lighthouse, a whitewashed town, a coffee mug."></figure>
+        </li>
+        <li>
+          <div class="cap"><span class="num" aria-hidden="true">08</span><h3>One photo, with its words</h3><p>Each photo has its own page and address, with its title, description, date, and camera details, and links to the next and the previous. It can also open over the grid.</p><p class="where">A photo page</p></div>
+          <figure><img src="screens/photo.jpg" width="1072" height="760" loading="lazy" decoding="async" alt="A photo page: a man in a suit crossing an empty road, with the title Crossing and a description beside it, and Previous and Next links."></figure>
+        </li>
+        <li>
+          <div class="cap"><span class="num" aria-hidden="true">09</span><h3>Film looks and frames</h3><p>Modules change how a photo looks without touching the file you uploaded. Under each photo is a strip of previews: black-and-white, a colour slide, a contact-print frame with made-up film markings. Pick one, adjust it, save. Switching it off puts the photo back.</p><p class="where">Editing a photo</p></div>
+          <figure><img src="screens/looks.jpg" width="1072" height="1060" loading="lazy" decoding="async" alt="The edit page for a photo, previewing it inside a ragged black film border with sprocket holes, above a strip of seven small previews of different film looks."></figure>
+        </li>
+        <li>
+          <div class="cap"><span class="num" aria-hidden="true">10</span><h3>A library you can arrange</h3><p>Drag photos into order or use the keyboard. Hide, show, tag, or delete several at once. Group them into albums. Schedule one to appear later.</p><p class="where">The library</p></div>
+          <figure><img src="screens/library.jpg" width="1072" height="760" loading="lazy" decoding="async" alt="The photo library: a grid of photo cards with checkboxes, each with Up, Down, and To top buttons, under an Upload photos button and a filter."></figure>
+        </li>
+      </ol>
+      <p class="credit">The photographs in these screens are the sample photos Fotobogen can download for you: Unsplash photographs, served by Lorem Picsum. The pictures in the upload screen are generated gradients.</p>
+    </section>
+
+    <section class="part" aria-labelledby="runs-h">
+      <div class="part-head">
+        <h2 id="runs-h">Where it runs</h2>
+        <p>Not here. This page is only an introduction. Fotobogen runs on a server you control, and your photographs stay on it.</p>
+      </div>
+      <div class="runs">
+        <ol class="chain" aria-label="How a visitor reaches your photographs">
+          <li class="box you"><b>Your server</b><span>Fotobogen and all your photographs, in one folder you can back up or move.</span></li>
+          <li class="to" aria-hidden="true"></li>
+          <li class="box"><b>Your address</b><span>A domain name you own, pointing at that server.</span></li>
+          <li class="to" aria-hidden="true"></li>
+          <li class="box"><b>Any browser</b><span>Visitors see the gallery. You sign in from anywhere to manage it.</span></li>
+        </ol>
+        <p class="note">There is no hosted version, no account with us, and nothing to install on the computers you browse from.</p>
+        <ul class="needs">
+          <li><b>Server</b><span>A small Linux server is enough: 1 GB of memory, about $6 a month. A Mac or Windows PC works for trying it out.</span></li>
+          <li><b>Software</b><span>Docker, or Node 24. Nothing else.</span></li>
+          <li><b>Outside services</b><span>None. No database server, no cloud storage, no API keys.</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="part" aria-labelledby="plan-h">
+      <div class="part-head">
+        <h2 id="plan-h">What is built, what is next</h2>
+        <p>Fotobogen is being built in the open, one stage at a time. A red frame is finished; the outlined frame is next.</p>
+      </div>
+      <ol class="plan">
+        <li class="done"><span class="t"></span><b>Installer and login</b><span class="s">Built</span><p>Six steps in a browser, with a check that the server is up to it.</p></li>
+        <li class="done"><span class="t"></span><b>Uploading</b><span class="s">Built</span><p>Photos resized for every screen, camera details read from the file.</p></li>
+        <li class="done"><span class="t"></span><b>Public gallery</b><span class="s">Built</span><p>The grid, the photo page, a slideshow, albums, and tags.</p></li>
+        <li class="done"><span class="t"></span><b>Photo library</b><span class="s">Built</span><p>Edit, reorder, hide, schedule, and delete from the dashboard.</p></li>
+        <li class="done"><span class="t"></span><b>Skins and modules</b><span class="s">Built</span><p>Change the look; add film looks, frames, and a watermark.</p></li>
+        <li class="done"><span class="t"></span><b>Backup and restore</b><span class="s">Built</span><p>Everything in one file, from the dashboard or the command line.</p></li>
+        <li class="now"><span class="t"></span><b>For developers</b><span class="s">Next</span><p>A public API, webhooks, importers, and more kinds of module.</p></li>
+        <li class="later"><span class="t"></span><b>First release</b><span class="s">Planned</span><p>A tagged version and a ready-made Docker image.</p></li>
+      </ol>
+      <p class="source">The source, the design document, and the change log are on <a href="https://github.com/cschweda/fotobogen" data-goal="GitHub click" data-where="roadmap">GitHub</a>.</p>
+    </section>
   </div>
 </main>
 
@@ -158,7 +303,7 @@ footer .wrap{border-top:1px solid var(--rule);padding-top:20px;padding-bottom:28
   <div class="wrap">
     <span class="status">In development</span>
     <span>Free and open source &middot; MIT</span>
-    <span>&copy; 2026 <a href="https://github.com/cschweda">Christopher Schweda</a></span>
+    <span>&copy; 2026 <a href="https://github.com/cschweda" data-goal="Author click">Christopher Schweda</a></span>
   </div>
 </footer>
 
@@ -171,6 +316,31 @@ footer .wrap{border-top:1px solid var(--rule);padding-top:20px;padding-bottom:28
   label();
   btn.addEventListener('click',function(){var t=current()==='dark'?'light':'dark';root.setAttribute('data-theme',t);try{localStorage.setItem('fotobogen-theme',t)}catch(e){}label()});
   if(mq.addEventListener)mq.addEventListener('change',label);
+
+  // Named events for Plausible, so they can be set up as goals there:
+  //   "GitHub click" (where: roadmap), "Author click",
+  //   "Docs click" (where: header | hero | hero-install),
+  //   "Theme switch" (to: light | dark),
+  //   "Section viewed" (section: tour | runs | plan), once each per visit,
+  //   "Screenshot viewed" (screen: the file name), once each per visit.
+  function track(name,props){try{window.plausible(name,props?{props:props}:undefined)}catch(e){}}
+  document.addEventListener('click',function(event){
+    var link=event.target.closest&&event.target.closest('[data-goal]');
+    if(link)track(link.getAttribute('data-goal'),link.getAttribute('data-where')?{where:link.getAttribute('data-where')}:undefined);
+  });
+  btn.addEventListener('click',function(){track('Theme switch',{to:current()})});
+  if('IntersectionObserver' in window){
+    var seen=new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if(!entry.isIntersecting)return;
+        seen.unobserve(entry.target);
+        if(entry.target.tagName==='IMG')track('Screenshot viewed',{screen:entry.target.getAttribute('src').split('/').pop()});
+        else track('Section viewed',{section:entry.target.getAttribute('aria-labelledby').replace('-h','')});
+      });
+    },{threshold:0.4});
+    document.querySelectorAll('section.part').forEach(function(section){seen.observe(section)});
+    document.querySelectorAll('.tour img').forEach(function(image){seen.observe(image)});
+  }
 })();
 </script>
 </body>

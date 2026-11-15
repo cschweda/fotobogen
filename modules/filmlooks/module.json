@@ -1,0 +1,7 @@
+{
+  "name": "filmlooks",
+  "version": "1.0.0",
+  "label": "Film looks",
+  "description": "Gives a photo the tone and grain of a kind of film: classic and pushed black-and-white, a saturated colour slide, a soft colour negative.",
+  "entry": "index.mjs"
+}

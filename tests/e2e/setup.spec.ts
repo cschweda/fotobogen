@@ -86,15 +86,14 @@ test('the whole wizard can be completed with the keyboard alone', async ({ page 
   await tabTo(page, page.getByRole('button', { name: 'Continue' }))
   await page.keyboard.press('Enter')
 
-  // Step 5: a choice is required
+  // Step 5: starting empty is the default; downloading samples is the option
   await expect(heading(page, 'Start with sample photos?')).toBeFocused()
   await expectNoAxeViolations(page)
-  await tabTo(page, page.getByRole('button', { name: 'Finish setup' }))
-  await page.keyboard.press('Enter')
-  await expect(page.getByRole('alert')).toContainText('Choose whether to download the sample photos.')
-  // The error moves focus into the group; arrow keys pick an option.
-  await expect(page.getByRole('radio', { name: /Download 25 sample photos/ })).toBeFocused()
+  await expect(page.getByRole('radio', { name: /Start empty/ })).toBeChecked()
+  await tabTo(page, page.getByRole('radio', { name: /Start empty/ }))
   await page.keyboard.press('ArrowRight')
+  await expect(page.getByRole('radio', { name: /Download 25 sample photos/ })).toBeChecked()
+  await page.keyboard.press('ArrowLeft')
   await expect(page.getByRole('radio', { name: /Start empty/ })).toBeChecked()
   await tabTo(page, page.getByRole('button', { name: 'Finish setup' }))
   await page.keyboard.press('Enter')
@@ -106,7 +105,18 @@ test('the whole wizard can be completed with the keyboard alone', async ({ page 
   await tabTo(page, page.getByRole('link', { name: 'Open admin' }))
   await page.keyboard.press('Enter')
 
-  // Logged in, on the placeholder dashboard
+  // Logged in. First, and only once, the notice about backups: nothing else
+  // in the admin opens until it is accepted.
+  await expect(page).toHaveURL(server.url + '/admin/welcome')
+  await expect(heading(page, 'Back up your photographs')).toBeVisible()
+  await expect(page.getByText('no warranty')).toBeVisible()
+  await expectNoAxeViolations(page)
+  await page.goto(server.url + '/admin/upload')
+  await expect(page).toHaveURL(server.url + '/admin/welcome')
+  await tabTo(page, page.getByRole('button', { name: 'I understand' }))
+  await page.keyboard.press('Enter')
+
+  // Then the dashboard, and the notice does not come back.
   await expect(page).toHaveURL(server.url + '/admin')
   await expect(heading(page, 'Admin')).toBeVisible()
   await expect(page.getByText(`Signed in as ${ADMIN.username}`)).toBeVisible()
@@ -138,7 +148,7 @@ test('the wizard is gone once setup is complete', async ({ page }) => {
   await expectNoAxeViolations(page)
 })
 
-test('the public placeholder shows the site title and tagline', async ({ page }) => {
+test('the public site shows the site title and tagline', async ({ page }) => {
   await page.goto(server.url + '/')
   await expect(heading(page, 'Kodachrome Days')).toBeVisible()
   await expect(page.getByText('Slides from the shoebox')).toBeVisible()

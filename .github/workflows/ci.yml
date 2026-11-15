@@ -21,6 +21,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
       - run: pnpm build
+      # The same check the app runs before it starts.
+      - run: pnpm preflight
       # Unit tests, then tests against the built server.
       - run: pnpm test
         env:
@@ -36,3 +38,29 @@ jobs:
           name: playwright-traces
           path: test-results/
           retention-days: 7
+
+  # The same install a Windows user would do, in PowerShell: install, build,
+  # run the tests, then start the built server and walk through setup.
+  windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm preflight
+      - run: pnpm test
+        env:
+          FB_SKIP_BUILD: "1"
+      - run: ./scripts/smoke-test.ps1
+      - run: pnpm exec playwright install chromium
+      - run: pnpm test:e2e
+        env:
+          FB_SKIP_BUILD: "1"

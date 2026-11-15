@@ -1,8 +1,9 @@
 // Validation shared by the setup wizard, the login form, and the server.
 // The server always validates again; the browser check is a convenience.
+import config from '../fotobogen.config.js'
 import { z } from 'zod'
 
-export const PASSWORD_MIN_LENGTH = 12
+export const PASSWORD_MIN_LENGTH = config.internals.auth.passwordMinLength
 export const PASSWORD_MAX_LENGTH = 256
 
 export const siteTitleSchema = z.string().trim()

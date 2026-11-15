@@ -1,7 +1,7 @@
 # Quick start: Fotobogen behind Caddy, for a server with nothing on it but Docker.
 #
 #   mkdir -p data                 # so the data directory belongs to you, not root
-#   cp .env.example .env          # then set DOMAIN (leave it unset to try it on localhost)
+#   cp .env.sample .env           # then set DOMAIN (leave it unset to try it on localhost)
 #   docker compose up -d
 #   docker compose logs app       # shows the setup token
 #
@@ -15,10 +15,13 @@ services:
     user: "${PUID:-1000}:${PGID:-1000}"
     environment:
       TRUST_PROXY: "1"            # Caddy is the only thing that talks to the app
+      # Upload limits. If you raise MAX_UPLOAD_MB, raise the proxy's body limit to match.
+      MAX_UPLOAD_MB: "${MAX_UPLOAD_MB:-50}"
+      MAX_MEGAPIXELS: "${MAX_MEGAPIXELS:-100}"
     volumes:
       - ./data:/data
     expose:
-      - "3000"
+      - "5150"
 
   caddy:
     image: caddy:2
