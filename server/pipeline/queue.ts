@@ -19,6 +19,8 @@ export interface QueueOptions {
   run?: (ctx: PipelineContext, job: Job) => Promise<void>
   /** Told about every failed attempt, for the server log. */
   onError?: (job: Job, error: unknown) => void
+  /** Told when a job has finished successfully. */
+  onDone?: (job: Job) => void
 }
 
 export interface Queue {
@@ -91,6 +93,10 @@ export function createQueue(ctx: PipelineContext, options: QueueOptions = {}): Q
       try {
         if (!failure) {
           sqlite.prepare(`update jobs set status = 'done', error = null, finished_at = ? where id = ?`).run(Date.now(), job.id)
+          try {
+            options.onDone?.(job)
+          }
+          catch { /* a listener's trouble is not the queue's */ }
         }
         else {
           const message = failure.error instanceof Error ? failure.error.message : String(failure.error)

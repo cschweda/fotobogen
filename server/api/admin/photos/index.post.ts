@@ -6,6 +6,7 @@ import { defineEventHandler, getRequestHeader } from 'nuxt/server'
 import { acceptUpload, type AcceptResult } from '../../../pipeline/accept.ts'
 import { receiveUpload, type Received } from '../../../pipeline/receive.ts'
 import { getPipeline, getQueue } from '../../../utils/app.ts'
+import { photoUploaded } from '../../../utils/photo-events.ts'
 import { fail } from '../../../utils/respond.ts'
 import { requireAdmin } from '../../../utils/session.ts'
 import { getSetting } from '../../../utils/settings.ts'
@@ -49,6 +50,7 @@ export default defineEventHandler(async (event) => {
     visibility: getSetting<'public' | 'hidden'>('uploads.default_visibility', 'public'),
   })
   if (outcome.result === 'accepted') {
+    photoUploaded(outcome.photo.id)
     getQueue().kick()
     return outcome
   }

@@ -58,6 +58,14 @@ export default {
     maxMegapixels: 100,
   },
 
+  webhooks: {
+    // Webhooks may only call addresses on the public internet, so that a
+    // webhook cannot be pointed at this machine or the network behind it.
+    // Set to true if you want to call something on your own network, such
+    // as an automation tool on this server.      .env: WEBHOOKS_ALLOW_PRIVATE=1
+    allowPrivate: false,
+  },
+
   // ══════════════════════════════════════════════════════════════════════
   //  DO NOT TOUCH
   //  The rest of the app is built and tested around these values. Changing
