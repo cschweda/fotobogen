@@ -163,7 +163,7 @@ footer .wrap{border-top:1px solid var(--rule);padding-top:20px;padding-bottom:28
 <main id="main">
   <div class="wrap">
     <section class="hero" aria-labelledby="name">
-      <p class="state"><strong>In development</strong><span>Installing and signing in work today. Uploading and the public gallery are being built. This page shows what it looks like so far.</span></p>
+      <p class="state"><strong>In development</strong><span>Installing, signing in, and uploading work today. The public gallery is being built. This page shows what it looks like so far.</span></p>
       <h1 id="name">Fotobogen</h1>
       <p class="tag">Publish your photographs on a website of your own.</p>
     </section>
@@ -202,8 +202,8 @@ footer .wrap{border-top:1px solid var(--rule);padding-top:20px;padding-bottom:28
     </section>
     <section class="part" aria-labelledby="tour-h">
       <div class="part-head">
-        <h2 id="tour-h">The first five minutes</h2>
-        <p>These are real screens from the current build. The installer is a web page: you open your new site in a browser and answer six short steps.</p>
+        <h2 id="tour-h">The first ten minutes</h2>
+        <p>These are real screens from the current build. The installer is a web page: you open your new site in a browser and answer six short steps. The upload thumbnails shown are generated gradients, not photographs.</p>
       </div>
       <ol class="tour">
         <li>
@@ -219,12 +219,16 @@ footer .wrap{border-top:1px solid var(--rule);padding-top:20px;padding-bottom:28
           <figure><img src="screens/setup-4-display.png" width="1072" height="1074" loading="lazy" decoding="async" alt="Setup page titled Choose how photos are shown, with diagrams for masonry or square grids and for opening a photo over the grid or on its own page."></figure>
         </li>
         <li>
-          <div class="cap"><span class="num" aria-hidden="true">04</span><h3>Done</h3><p>The last step lists what you chose and closes the installer for good. From here on the site belongs to your login.</p><p class="where">Setup, step 6 of 6</p></div>
-          <figure><img src="screens/setup-6-done.png" width="1072" height="720" loading="lazy" decoding="async" alt="Setup page titled Fotobogen is ready, listing the site name, admin, grid, photo view, and samples choices."></figure>
+          <div class="cap"><span class="num" aria-hidden="true">04</span><h3>Start empty, or with samples</h3><p>The installer can fetch 25 placeholder photographs so the site has something to show. A counter follows the download, which never holds you up and can be cancelled or skipped.</p><p class="where">Setup, step 6 of 6</p></div>
+          <figure><img src="screens/setup-6-downloading.png" width="1072" height="980" loading="lazy" decoding="async" alt="Setup page titled Fotobogen is ready, listing the choices made, with a counter reading 9 of 25 sample photos downloaded and a Cancel download button."></figure>
         </li>
         <li>
-          <div class="cap"><span class="num" aria-hidden="true">05</span><h3>Sign in to the dashboard</h3><p>The dashboard sits behind your login. Today it is a placeholder; uploading, the photo library, and settings arrive next.</p><p class="where">Dashboard</p></div>
-          <figure><img src="screens/admin.png" width="1072" height="720" loading="lazy" decoding="async" alt="Dashboard titled Admin, showing the site name, the signed-in account, and the version."></figure>
+          <div class="cap"><span class="num" aria-hidden="true">05</span><h3>Sign in to the dashboard</h3><p>The dashboard sits behind your login. From here you upload, and download or remove the sample photos whenever you like.</p><p class="where">Dashboard</p></div>
+          <figure><img src="screens/admin.png" width="1072" height="820" loading="lazy" decoding="async" alt="Dashboard titled Admin, showing the site name, the signed-in account, the number of photos, and buttons to upload photos and download sample photos."></figure>
+        </li>
+        <li>
+          <div class="cap"><span class="num" aria-hidden="true">06</span><h3>Upload</h3><p>Choose files or drop them on the page. Each photo is checked, stored untouched, and resized for every screen; anything that is not a photo, or is already in your library, is explained on its own row.</p><p class="where">Upload</p></div>
+          <figure><img src="screens/upload.png" width="1072" height="1045" loading="lazy" decoding="async" alt="Upload page listing five files: three ready with small thumbnails, one marked already in your library, and one marked not accepted with the reason."></figure>
         </li>
       </ol>
     </section>
@@ -254,16 +258,16 @@ footer .wrap{border-top:1px solid var(--rule);padding-top:20px;padding-bottom:28
     <section class="part" aria-labelledby="plan-h">
       <div class="part-head">
         <h2 id="plan-h">What is built, what is next</h2>
-        <p>Fotobogen is being built in the open, one stage at a time. A red frame is finished; the outlined frame is in progress.</p>
+        <p>Fotobogen is being built in the open, one stage at a time. A red frame is finished; the outlined frame is next.</p>
       </div>
       <ol class="plan">
         <li class="done"><span class="t"></span><b>Foundation</b><span class="s">Built</span><p>Runs from one folder, in Docker or on Node.</p></li>
         <li class="done"><span class="t"></span><b>Installer and login</b><span class="s">Built</span><p>The six steps above, and a guarded dashboard.</p></li>
-        <li class="now"><span class="t"></span><b>Uploading</b><span class="s">In progress</span><p>Photos resized for every screen, camera details read from the file.</p></li>
-        <li class="later"><span class="t"></span><b>Public gallery</b><span class="s">Next</span><p>The grid, the photo view, and the Swiss skin.</p></li>
+        <li class="done"><span class="t"></span><b>Uploading</b><span class="s">Built</span><p>Photos resized for every screen, camera details read from the file.</p></li>
+        <li class="done"><span class="t"></span><b>Sample photos</b><span class="s">Built</span><p>Twenty-five placeholders to start with, removable in one click.</p></li>
+        <li class="now"><span class="t"></span><b>Public gallery</b><span class="s">Next</span><p>The grid, the photo view, and the Swiss skin.</p></li>
         <li class="later"><span class="t"></span><b>Photo library</b><span class="s">Planned</span><p>Edit, reorder, hide, and delete from the dashboard.</p></li>
         <li class="later"><span class="t"></span><b>Modules</b><span class="s">Planned</span><p>Black-and-white and tone looks that never alter the original.</p></li>
-        <li class="later"><span class="t"></span><b>Sample photos</b><span class="s">Planned</span><p>Twenty-five placeholders to start with, removable in one click.</p></li>
         <li class="later"><span class="t"></span><b>First release</b><span class="s">Planned</span><p>An install guide a stranger can follow.</p></li>
       </ol>
       <p class="source">The source, the design document, and the change log are on <a href="https://github.com/cschweda/fotobogen">GitHub</a>.</p>

@@ -3,6 +3,7 @@
 // directory, with the same DATA_DIR the app uses:
 //
 //   pnpm fotobogen reset-admin
+//   pnpm seed:fetch                 (development: download the sample photos)
 //   docker compose exec app node scripts/fotobogen.mjs reset-admin
 //
 // It works on the data directory directly and does not need the app running.
@@ -18,6 +19,9 @@ const USAGE = `Usage: fotobogen <command>
 
 Commands:
   reset-admin [--username <name>]   Set a new admin password and sign out all sessions
+  seed-fetch                        Download the 25 sample photos into the library
+                                    (needs a source checkout; in a running site,
+                                    use Admin > Download sample photos instead)
 
 The data directory is read from DATA_DIR (default: ./data).`
 
@@ -95,10 +99,58 @@ async function resetAdmin(args) {
   }
 }
 
+/**
+ * Downloads the sample photos and processes them here, in this process. The
+ * image code is loaded only for this command, so the other commands keep
+ * working where it is not installed (the Docker image).
+ */
+async function seedFetch() {
+  const paths = dataPaths(resolveDataDir(process.env, process.cwd()))
+  if (!existsSync(paths.db)) {
+    throw new CliError(`No Fotobogen database found at ${paths.db}. Start the app once first, or check DATA_DIR.`)
+  }
+  const { mkdirSync } = await import('node:fs')
+  const { createLocalStorage } = await import('../server/storage/local.ts')
+  const { readLimits } = await import('../server/pipeline/limits.ts')
+  const { createQueue } = await import('../server/pipeline/queue.ts')
+  const { fetchSamples, readManifest, PICSUM } = await import('../server/pipeline/samples.ts')
+
+  mkdirSync(paths.tmp, { recursive: true })
+  const sqlite = new Database(paths.db, { fileMustExist: true })
+  sqlite.pragma('busy_timeout = 5000')
+  sqlite.pragma('foreign_keys = ON')
+  try {
+    const ctx = {
+      sqlite,
+      storage: createLocalStorage({ originals: paths.originals, derivatives: paths.derivatives }),
+      limits: readLimits(process.env),
+      tmpDir: paths.tmp,
+    }
+    const entries = readManifest()
+    const result = await fetchSamples(ctx, entries, {
+      baseUrl: process.env.SAMPLES_BASE_URL || PICSUM,
+      onProgress: progress => console.log(`${progress.added + progress.skipped + progress.failed.length} of ${entries.length}`),
+    })
+    const queue = createQueue(ctx, { onError: (job, error) => console.error(`Photo ${job.photoId}: ${error.message}`) })
+    queue.kick()
+    await queue.idle()
+    console.log(`Sample photos: ${result.added} added, ${result.skipped} already there, ${result.failed.length} failed.`)
+    if (result.failed.length > 0) {
+      throw new CliError('Some sample photos could not be downloaded. Lorem Picsum may be unreachable; run the command again later.')
+    }
+  }
+  finally {
+    sqlite.close()
+  }
+}
+
 const [command, ...args] = process.argv.slice(2)
 try {
   if (command === 'reset-admin') {
     await resetAdmin(args)
+  }
+  else if (command === 'seed-fetch') {
+    await seedFetch()
   }
   else if (command === '--help' || command === '-h' || command === 'help') {
     console.log(USAGE)

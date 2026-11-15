@@ -53,7 +53,8 @@ export async function startServer(options: { env?: Record<string, string>, dataD
   async function launch() {
     printed = ''
     child = spawn(process.execPath, [resolve('.output/server/index.mjs')], {
-      env: { ...baseEnv(), DATA_DIR: dataDir, PORT: String(port), HOST: '127.0.0.1', ...options.env },
+      // SAMPLES_BASE_URL points nowhere by default, so no test reaches the real Lorem Picsum.
+      env: { ...baseEnv(), DATA_DIR: dataDir, PORT: String(port), HOST: '127.0.0.1', SAMPLES_BASE_URL: 'http://127.0.0.1:9', ...options.env },
       stdio: ['ignore', 'pipe', 'pipe'],
     })
     child.stdout!.on('data', chunk => { printed += chunk })

@@ -27,3 +27,14 @@ uses [Semantic Versioning](https://semver.org/).
 - Screenshots of the setup wizard, login, and admin placeholder in the README.
 - The social card (`site/og.png`) now says what the name means: German for "photo sheet", as in a contact sheet. Its source is `docs/og/og.html`.
 - fotobogen.com is now a visual guide: real screens from the installer, a diagram of where the software runs, and what is built so far.
+- Uploading from the admin: JPEG, PNG, WebP, TIFF, and AVIF, judged by content; 50 MB and 100 megapixel limits (`MAX_UPLOAD_MB`, `MAX_MEGAPIXELS`); duplicates refused by checksum.
+- Background processing, one photo at a time: EXIF read into the database, rotation, sRGB, WebP copies at four sizes with content-hashed names, and a thumbhash placeholder. Interrupted work resumes after a restart; three failed tries mark a photo failed, with a retry button.
+- Lower pixel limits for formats that must be held whole in memory to open: AVIF 16 megapixels, WebP 60, interlaced PNG 40. The refusal says so and suggests JPEG.
+- `/media/` serves the resized copies, so a proxy serving them from disk is optional.
+- Storage adapter interface with a local-disk adapter.
+- Sample photos: 25 placeholders from Lorem Picsum, downloaded only on request, from the setup wizard (default is to start empty), the dashboard, or `pnpm seed:fetch`. A counter shows progress; a failed download can be retried, cancelled, or skipped; samples can be removed in one click.
+- Windows: CI installs, builds, and tests on Windows, including a PowerShell smoke test (`scripts/smoke-test.ps1`).
+
+### Fixed
+
+- Installing no longer compiles `better-sqlite3` from source. It failed on Windows without Visual Studio; the package's own prebuilt binaries are used on every platform.

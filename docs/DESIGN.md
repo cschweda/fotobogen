@@ -157,8 +157,8 @@ The token is compared in constant time. Wrong-token attempts share the login lim
 2. Site title and tagline.
 3. Admin username and password (minimum 12 characters; show strength, do not impose composition rules).
 4. Display defaults: grid layout (masonry or square), photo view (modal or page).
-5. Sample photos: download the 25 samples (section 12) or start empty.
-6. Done: links to the site and to `/admin`.
+5. Sample photos: start empty (the default) or download the 25 samples (section 12).
+6. Done: links to the site and to `/admin`. If samples were chosen, a counter shows the download, which runs in the background and never holds up setup; if it fails, the page offers another try or skipping, and leads with skipping after two failures.
 
 **How the wizard submits.** Step 1 checks the token against `POST /api/setup/verify`. Steps 2 to 5 are held in the browser and nothing is written until the final submit, `POST /api/setup/complete`, which carries the token again along with all answers. The server validates everything and returns field-level errors. Abandoning the wizard part-way leaves the install untouched.
 
@@ -196,7 +196,7 @@ The password strength indicator is a small built-in estimate (length and charact
 
 **Upload (synchronous part)**
 
-1. Stream the multipart body to a temp file.
+1. Stream the multipart body (one file per request, field `file`) to a temp file in `data/tmp/`, which is on the same disk as the originals and is emptied at boot. The file's first bytes must match one of the accepted formats before it is handed to the image library.
 2. Compute SHA-256. If a photo with that checksum exists, reject with a "duplicate" result naming the existing photo.
 3. Read dimensions with `sharp`; reject if undecodable or over the pixel limit.
 4. Move to `data/originals/<id>.<ext>`, insert the `photos` row with `status = processing`, enqueue an `ingest` job, return immediately.
@@ -215,7 +215,9 @@ The password strength indicator is a small built-in estimate (length and charact
 | `medium` | 1280 px long edge | Photo view on small screens |
 | `large` | 2560 px long edge | Photo view on large screens |
 
-Never upscale: skip a size the original cannot fill.
+Never upscale. A size the original cannot fill is made at the original's own size instead, so every photo has a thumb, a square, and a medium; `large` is skipped when it would be identical to `medium`.
+
+The original is decoded once, straight down to a working raster of at most 2560 px on the long edge, and every derivative is made from that. JPEG, ordinary PNG, and TIFF are shrunk as they are read, so even a 100-megapixel original peaks at a few hundred MB (a 40 MP JPEG, PNG, and TIFF peaked at 250 MB in a 1 GB container with no swap). AVIF, WebP, and interlaced PNG are held whole while decoding (measured: AVIF about 27 MB per megapixel), so they have lower pixel limits: 16, 60, and 40 megapixels.
 
 5. Compute thumbhash, set `status = ready`.
 
@@ -344,7 +346,7 @@ Same approach as openMantel: fetched from Lorem Picsum by fixed id, never commit
 - One fetch routine, used two ways: `pnpm seed:fetch` on the command line for development, and wizard step 5 during setup. It downloads into a temp directory, skips files already present, retries once per photo, then pushes each file through the normal ingest pipeline flagged `is_sample`.
 - **Credits.** Picsum serves Unsplash photographs and exposes each one's author and Unsplash URL through its info endpoint. The fetch routine reads that and writes "Photo by … on Unsplash" into the sample's description, so credit shows on the photo page.
 - **Licensing.** No photographs live in the repository or the Docker image, so the MIT `LICENSE` covers everything that ships. `seed/README.md` notes that the downloaded samples are Unsplash photos under the Unsplash License and are meant as placeholders.
-- **Failure.** If the server is offline or Picsum is unreachable, setup completes with an empty library and says so. Admin → System offers "Fetch sample photos" while the library has no samples.
+- **Failure.** If the server is offline or Picsum is unreachable, setup completes with an empty library and says so. The download gives up after the first three photos fail rather than waiting out every timeout. The admin can try again, cancel a running download, or skip; nobody is left retrying a service that is down. The admin dashboard always offers "Download sample photos" while any are missing.
 - This is the app's only outbound request, and it happens only when the admin asks for it.
 - "Remove sample photos" in admin deletes all flagged rows and their files in one action.
 
@@ -427,11 +429,11 @@ For running without Docker, and for development servers.
 |---|---|---|
 | 0 | Scaffold, data directory, database, migrations, health endpoint, Dockerfile, both compose files, Forge nginx snippet, pm2 config, MIT `LICENSE` | App boots on a clean machine and creates `data/`, both natively and with `docker compose up` |
 | 1 | Setup token, wizard, login, session guard, `reset-admin` CLI | Fresh install can be claimed only with the token; `/setup` is dead afterward |
-| 2 | Upload, ingest queue, derivatives, EXIF, thumbhash, storage adapter, sample manifest and `pnpm seed:fetch` | A 40 MP JPEG processes on a 1 GB droplet without the process being killed |
+| 2 | Upload (API and a minimal upload page), ingest queue, derivatives, EXIF, thumbhash, storage adapter, `/media/`, sample manifest and `pnpm seed:fetch`, sample download in the wizard and dashboard | A 40 MP JPEG processes on a 1 GB droplet without the process being killed |
 | 3 | Public grid (both layouts), photo page and modal, Swiss skin, skin loader | Site is presentable with sample photos; no layout shift; works without JavaScript |
 | 4 | Admin: library, edit, bulk actions, reorder, settings, skins, system | Every v1 setting is changeable from admin |
 | 5 | Module loader, recipe model, preview, `mono` and `tone` | A transform can be applied, previewed, and fully reverted |
-| 6 | Sample fetch wired into the setup wizard and admin, accessibility audit, README install guide, backup CLI | A stranger can install from the README |
+| 6 | Accessibility audit, README install guide, backup CLI | A stranger can install from the README |
 
 **v2 candidates:** a slideshow (if added, follow how openMantel, `cschweda/openmantel`, runs its slideshow), albums and tags, search, multiple users, object storage adapter, AVIF output, HEIC input, layer-based skins, more hook types, install skins and modules from admin.
 
@@ -459,3 +461,12 @@ For running without Docker, and for development servers.
 - **`TRUST_PROXY=1`** set by every shipped deployment file; off by default (section 6).
 - **`users.session_version`** added so a password reset signs out old sessions (section 4).
 - **Setup-token attempts are rate limited** like logins (section 5).
+
+**Revised 2026-11-15, while building Phase 2:**
+
+- **Small originals** get derivatives at their own size rather than none (section 7).
+- **A minimal upload page and the `/media/` route ship in Phase 2,** so uploads can be tried by hand before the admin library exists.
+- **Sample download moved from Phase 6 to Phase 2,** wired into the wizard and the dashboard, with progress, cancel, retry, and skip. Starting empty is the wizard's default (sections 5 and 12). Requested 2026-11-15.
+- **`pnpm seed:fetch` is a development command.** It needs a source checkout and is not in the Docker image; a running site uses the dashboard.
+- **Upload limits** are `MAX_UPLOAD_MB` and `MAX_MEGAPIXELS`.
+- **Windows is a tested platform** for the Node install path: CI installs, builds, and tests there. `better-sqlite3` is no longer compiled at install time on any platform.
