@@ -1,11 +1,13 @@
 # Fotobogen. Debian slim rather than Alpine, so better-sqlite3 (and later
 # sharp) use their prebuilt glibc binaries and nothing is compiled.
+# better-sqlite3 ships those binaries inside its package; it is deliberately
+# not in pnpm's build list, which would compile it from source instead.
 
 FROM node:24-bookworm-slim AS build
 WORKDIR /app
 RUN corepack enable
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile --ignore-scripts && pnpm rebuild better-sqlite3 esbuild
+RUN pnpm install --frozen-lockfile --ignore-scripts && pnpm rebuild esbuild
 COPY . .
 RUN pnpm build
 
