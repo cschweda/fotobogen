@@ -57,6 +57,8 @@
         <li><a href="#docker-vps">Docker on a fresh VPS</a></li>
         <li><a href="#docker-forge">Docker on a Laravel Forge server</a></li>
         <li><a href="#linux">Linux without Docker</a></li>
+        <li><a href="#nginx">nginx in front of the app</a></li>
+        <li><a href="#forge-pm2">Laravel Forge with pm2, no Docker</a></li>
         <li><a href="#docker-local">Docker on your own computer</a></li>
         <li><a href="#first-run">The first run</a></li>
         <li><a href="#settings">Settings on the server</a></li>
@@ -77,7 +79,8 @@
     <tr><td>A Windows PC</td><td><a href="#windows">Windows</a></td><td><code>http://localhost:5150</code></td></tr>
     <tr><td>A new rented server (VPS) with nothing on it</td><td><a href="#docker-vps">Docker on a fresh VPS</a></td><td>A public site with HTTPS</td></tr>
     <tr><td>A server set up by Laravel Forge</td><td><a href="#docker-forge">Docker on a Forge server</a></td><td>A public site behind Forge's nginx</td></tr>
-    <tr><td>A Linux server, and you prefer no Docker</td><td><a href="#linux">Linux without Docker</a></td><td>A public site behind nginx</td></tr>
+    <tr><td>A server set up by Laravel Forge, and you prefer no Docker</td><td><a href="#forge-pm2">Forge with pm2</a></td><td>A public site behind Forge's nginx</td></tr>
+    <tr><td>A Linux server, and you prefer no Docker</td><td><a href="#linux">Linux without Docker</a>, then <a href="#nginx">nginx</a></td><td>A public site behind nginx</td></tr>
     <tr><td>Docker on your own computer</td><td><a href="#docker-local">Docker on your own computer</a></td><td><code>http://localhost</code></td></tr>
   </tbody>
 </table></div>
@@ -217,9 +220,78 @@ pm2 start ecosystem.config.cjs
 pm2 logs fotobogen</code></pre>
   The last command shows the setup token.</li>
   <li><strong>Start it at boot:</strong> run <code>pm2 save</code>, then <code>pm2 startup</code>, and run the line that prints.</li>
-  <li><strong>Put nginx in front of it</strong> with a certificate, using <a href="https://github.com/cschweda/fotobogen/blob/main/deploy/forge-nginx.conf"><code>deploy/forge-nginx.conf</code></a> as the server block. Visitors must reach the site over HTTPS, or logging in will not work.</li>
+  <li><strong>Put nginx in front of it</strong>, as in the next section.</li>
 </ol>
 <p>To update: <code>scripts/rebuild.sh</code>, which pulls the new code, builds it, and reloads.</p>
+
+<h2 id="nginx">nginx in front of the app</h2>
+<p>Without Docker, Fotobogen listens on <code>127.0.0.1:5150</code>, which only the server itself can reach. nginx answers the public and passes each request on. Save this as <code>/etc/nginx/sites-available/photos.example.com</code>, with your own domain:</p>
+<pre tabindex="0"><code>server {
+    listen 80;
+    listen [::]:80;
+    server_name photos.example.com;
+
+    # The largest upload nginx lets through. Keep it equal to MAX_UPLOAD_MB.
+    client_max_body_size 50m;
+
+    location / {
+        # Where Fotobogen is listening.
+        proxy_pass http://127.0.0.1:5150;
+        proxy_http_version 1.1;
+        # The name the visitor asked for. Without this, saving in the admin is refused.
+        proxy_set_header Host $http_host;
+        # The visitor's own address, for the limit on wrong passwords.
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        # Whether the visitor used http or https.
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 120s;
+    }
+}</code></pre>
+<p>Switch it on, check it, reload, and add a certificate with <a href="https://certbot.eff.org">Certbot</a>:</p>
+<pre tabindex="0"><code>sudo ln -s /etc/nginx/sites-available/photos.example.com /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
+sudo apt install certbot python3-certbot-nginx
+sudo certbot --nginx -d photos.example.com</code></pre>
+<p>Visitors must reach the site over HTTPS, or logging in will not work.</p>
+<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
+  <thead><tr><th>What you see</th><th>Cause</th></tr></thead>
+  <tbody>
+    <tr><td><code>502 Bad Gateway</code></td><td>Fotobogen is not running, or is on another port. Run <code>pm2 status</code> and <code>pm2 logs fotobogen</code>.</td></tr>
+    <tr><td>Saving in the admin says "This request did not come from this site"</td><td>The <code>proxy_set_header Host $http_host;</code> line is missing.</td></tr>
+    <tr><td><code>413 Request Entity Too Large</code> on upload</td><td><code>client_max_body_size</code> is smaller than the file. Raise it and <code>MAX_UPLOAD_MB</code> together.</td></tr>
+    <tr><td>Logging in returns to the login page</td><td>The site is being used over http.</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="forge-pm2">Laravel Forge with pm2, no Docker</h2>
+<p>Fotobogen runs under pm2 as the <code>forge</code> user, and the nginx that Forge manages passes requests to it. This follows Forge's usual way of working but has not been tried on a Forge server yet.</p>
+<ol>
+  <li><strong>Create the site</strong> in Forge with your domain, as a project type with no PHP, and install the repository <code>cschweda/fotobogen</code> (branch <code>main</code>) into it.</li>
+  <li><strong>Install Node.js 24, pnpm, and pm2</strong> for the <code>forge</code> user, over SSH:
+<pre tabindex="0"><code>curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | bash
+source ~/.nvm/nvm.sh && nvm install 24 && nvm alias default 24
+npm install -g pnpm@10 pm2</code></pre>
+  On a 1 GB server, <a href="#swap">add swap</a> first.</li>
+  <li><strong>Build and start</strong> in the site's folder:
+<pre tabindex="0"><code>cd /home/forge/photos.example.com
+pnpm install --frozen-lockfile
+pnpm build
+pm2 start ecosystem.config.cjs
+pm2 logs fotobogen</code></pre>
+  The last command shows the setup token.</li>
+  <li><strong>Make it start after a reboot:</strong> <code>pm2 save</code>, then <code>pm2 startup</code>, and run the <code>sudo</code> command it prints.</li>
+  <li><strong>Point nginx at it.</strong> In Forge, open the site's nginx configuration. Inside the <code>server</code> block, replace the <code>location /</code> block with the blocks from <a href="https://github.com/cschweda/fotobogen/blob/main/deploy/forge-nginx.conf"><code>deploy/forge-nginx.conf</code></a>, changing the two marked lines. Leave the rest of what Forge wrote as it is.</li>
+  <li><strong>Issue the certificate</strong> in Forge.</li>
+  <li><strong>Set the deploy script</strong>, so that Forge's Deploy button updates the site:
+<pre tabindex="0"><code>cd /home/forge/photos.example.com
+source ~/.nvm/nvm.sh
+git pull origin $FORGE_SITE_BRANCH
+pnpm install --frozen-lockfile
+pnpm build
+pm2 reload ecosystem.config.cjs --update-env</code></pre>
+  The <code>source</code> line matters: Forge runs the script without your login shell's setup, so Node.js would not be found without it.</li>
+</ol>
 
 <h2 id="docker-local">Docker on your own computer</h2>
 <p>If you already use Docker Desktop, OrbStack, or Colima and would rather not install Node.js:</p>

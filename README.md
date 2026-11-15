@@ -42,6 +42,8 @@ plan is in [docs/DESIGN.md](docs/DESIGN.md); changes are recorded in
 - [Docker quick start](#docker-quick-start)
 - [Laravel Forge](#laravel-forge)
 - [Without Docker (pm2)](#without-docker-pm2)
+- [nginx in front of the app](#nginx-in-front-of-the-app)
+- [Laravel Forge with pm2 (no Docker)](#laravel-forge-with-pm2-no-docker)
 - [Backup and restore](#backup-and-restore)
 - [Updates](#updates)
 - [For developers](#for-developers)
@@ -573,7 +575,8 @@ Update with `docker compose pull && docker compose up -d`.
 ## Laravel Forge
 
 For a Forge-provisioned server, where nginx already owns ports 80 and 443 and
-Forge manages the certificate.
+Forge manages the certificate. This section uses Docker; to run it under
+pm2 instead, see [Laravel Forge with pm2](#laravel-forge-with-pm2-no-docker).
 
 1. Install Docker on the server and add the `forge` user to the `docker` group.
 2. Create the site in Forge and install this repository into it.
@@ -601,8 +604,174 @@ pm2 start ecosystem.config.cjs
 pm2 logs fotobogen           # shows the setup token
 ```
 
-Put nginx in front of it with [deploy/forge-nginx.conf](deploy/forge-nginx.conf).
-Update with `scripts/rebuild.sh`.
+`ecosystem.config.cjs` starts Fotobogen through its launcher (so the
+preflight check runs), names the process `fotobogen`, and sets:
+
+| Setting | Value | Why |
+|---|---|---|
+| `HOST` | `127.0.0.1` | Only this machine can reach the app; visitors come through nginx |
+| `PORT` | `5150` | The port nginx forwards to. To use another, change it in this file **and** in nginx |
+| `DATA_DIR` | `data` beside the app | Where the site keeps everything |
+| `TRUST_PROXY` | `1` | nginx is the only client, so the visitor's address is taken from its headers |
+
+**Start it again after a reboot.** pm2 keeps the app running, and restarts
+it if it stops, but only comes back after a reboot if you tell it to:
+
+```bash
+pm2 save        # remember what is running now
+pm2 startup     # prints one command beginning with "sudo"; run that command
+```
+
+Check with `pm2 status` after the next reboot. Update with
+`scripts/rebuild.sh` (pull, install, build, reload).
+
+Then put nginx in front of it, as below.
+
+## nginx in front of the app
+
+Fotobogen listens on `127.0.0.1:5150`. nginx answers the public on ports 80
+and 443 and passes each request to that address. This applies to any install
+without Docker: pm2 on a plain server, or pm2 on Laravel Forge.
+
+A complete site file for a plain server (on Forge, see the next section).
+Save it as `/etc/nginx/sites-available/photos.example.com`, with your domain
+in place of `photos.example.com`:
+
+```nginx
+server {
+    listen 80;
+    listen [::]:80;
+    server_name photos.example.com;
+
+    # The largest upload nginx lets through. Keep it equal to MAX_UPLOAD_MB.
+    client_max_body_size 50m;
+
+    location / {
+        # Where Fotobogen is listening: the HOST and PORT in ecosystem.config.cjs.
+        proxy_pass http://127.0.0.1:5150;
+        proxy_http_version 1.1;
+
+        # The name and port the visitor asked for. Fotobogen compares it with
+        # the Origin of every request that changes something; without this
+        # line, saving anything in the admin answers "This request did not
+        # come from this site."
+        proxy_set_header Host $http_host;
+
+        # The visitor's own address, for the limit on wrong passwords.
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+        # Whether the visitor used http or https, so the links Fotobogen
+        # writes out begin the right way.
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # A large upload can take a while to arrive and be checked.
+        proxy_read_timeout 120s;
+    }
+}
+```
+
+Switch it on, check it, and reload:
+
+```bash
+sudo ln -s /etc/nginx/sites-available/photos.example.com /etc/nginx/sites-enabled/
+sudo nginx -t                   # must say "syntax is ok" and "test is successful"
+sudo systemctl reload nginx
+```
+
+Then add HTTPS, which logging in requires. With
+[Certbot](https://certbot.eff.org):
+
+```bash
+sudo apt install certbot python3-certbot-nginx
+sudo certbot --nginx -d photos.example.com
+```
+
+Certbot edits the file to listen on 443 with a certificate, redirects port
+80 to it, and renews the certificate by itself.
+
+**Optional: let nginx serve the pictures itself.** The file above sends
+everything to the app, which is all that is needed. nginx can instead read
+the resized photos straight from disk, which is a little faster on a busy
+site. [deploy/forge-nginx.conf](deploy/forge-nginx.conf) has that version:
+a `location /media/` block whose `alias` points at your
+`data/derivatives/` folder. The user nginx runs as must be able to read
+that folder; if photos then answer 403, use the simpler file above.
+
+**If something is wrong:**
+
+| What you see | Cause |
+|---|---|
+| `502 Bad Gateway` | Fotobogen is not running, or is on another port. `pm2 status`, `pm2 logs fotobogen` |
+| Saving in the admin answers "This request did not come from this site" | The `proxy_set_header Host $http_host;` line is missing |
+| An upload answers `413 Request Entity Too Large` | `client_max_body_size` is smaller than the file. Raise it and `MAX_UPLOAD_MB` together |
+| Logging in returns to the login page | The site is being used over http. Logging in needs https (or `localhost`) |
+| Links copied from the admin begin with `http://127.0.0.1:5150` | Set `SITE_URL`, or the address under **Search and sharing** |
+
+## Laravel Forge with pm2 (no Docker)
+
+On a Forge server nginx is already running and Forge manages each site's
+nginx file and certificate. Fotobogen runs under pm2 as the `forge` user,
+and Forge's nginx forwards to it. This follows Forge's usual way of working,
+but has not been tried on a Forge server yet; the Docker route above has the
+same standing.
+
+1. **Create the site** in Forge with your domain. Choose a project type with
+   no PHP (Static HTML, or Other). Install the repository
+   `cschweda/fotobogen`, branch `main`, into it.
+2. **Install Node 24, pnpm, and pm2** for the `forge` user. Log in with SSH
+   as `forge`:
+
+   ```bash
+   node --version                 # if this is not v24, install it:
+   curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | bash
+   source ~/.nvm/nvm.sh && nvm install 24 && nvm alias default 24
+   npm install -g pnpm@10 pm2
+   ```
+
+   On a 1 GB server, add swap before building (see
+   [the docs](https://fotobogen.com/docs/installation/#docker-vps)).
+3. **Build and start**, in the site's folder:
+
+   ```bash
+   cd /home/forge/photos.example.com
+   pnpm install --frozen-lockfile
+   pnpm build
+   pm2 start ecosystem.config.cjs
+   pm2 logs fotobogen             # shows the setup token; Control + C to leave
+   ```
+
+4. **Make it start after a reboot:**
+
+   ```bash
+   pm2 save
+   pm2 startup                    # run the "sudo ..." command it prints
+   ```
+
+5. **Point nginx at it.** In Forge, open the site, **Edit Files, Edit Nginx
+   Configuration**. Inside the `server { ... }` block, replace the whole
+   `location / { ... }` block with the blocks from
+   [deploy/forge-nginx.conf](deploy/forge-nginx.conf), and change the two
+   marked lines: the path to your site's `data/derivatives/` folder, and
+   the port if you changed it. Leave everything else Forge wrote (the
+   `listen` lines, the certificate, its `include` lines) as it is. Save;
+   Forge checks the file and reloads nginx.
+6. **Issue the certificate**: the site's **SSL** tab, Let's Encrypt.
+7. **Set the deploy script** (the site's **Deployments** tab) so that
+   "Deploy Now" updates the site:
+
+   ```bash
+   cd /home/forge/photos.example.com
+   source ~/.nvm/nvm.sh
+   git pull origin $FORGE_SITE_BRANCH
+   pnpm install --frozen-lockfile
+   pnpm build
+   pm2 reload ecosystem.config.cjs --update-env
+   ```
+
+   The `source` line matters: Forge runs the script without your login
+   shell's setup, so Node would not be found without it.
+
+Open `https://photos.example.com` and enter the setup token.
 
 ## Backup and restore
 
