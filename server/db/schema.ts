@@ -49,6 +49,9 @@ export const photos = sqliteTable('photos', {
   recipeJson: text('recipe_json', { mode: 'json' }),
   status: text('status', { enum: ['processing', 'ready', 'failed'] }).notNull().default('processing'),
   visibility: text('visibility', { enum: ['public', 'hidden'] }).notNull().default('public'),
+  // When a public photo goes live. Null means at once; a time in the future
+  // keeps it off the site until then.
+  publishAt: integer('publish_at'),
   isSample: integer('is_sample', { mode: 'boolean' }).notNull().default(false),
   sortOrder: integer('sort_order').notNull().default(0),
   createdAt: integer('created_at').notNull(),

@@ -12,5 +12,7 @@ export default defineEventHandler(async (event) => {
     photoView: getSetting<'modal' | 'page'>('layout.photo_view', 'modal'),
     showExif: getSetting('privacy.show_exif', true),
     showLocation: getSetting('privacy.show_location', false),
+    // Whether a new upload is public at once or starts hidden, as a draft.
+    newUploads: getSetting<'public' | 'hidden'>('uploads.default_visibility', 'public'),
   }
 })

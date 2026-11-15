@@ -8,7 +8,7 @@ useHead({ title: 'Photos | Fotobogen' })
 
 interface Photo {
   id: string, title: string | null, filename: string, status: 'processing' | 'ready' | 'failed'
-  hidden: boolean, missingAlt: boolean, isSample: boolean
+  hidden: boolean, missingAlt: boolean, isSample: boolean, scheduledFor: number | null
   thumb: { url: string, width: number, height: number } | null
 }
 interface Listing { counts: { total: number, hidden: number, missingAlt: number, failed: number, processing: number }, photos: Photo[] }
@@ -122,6 +122,7 @@ function selectAll(on: boolean) {
         <select v-model="show">
           <option value="">All photos</option>
           <option value="hidden">Hidden</option>
+          <option value="scheduled">Scheduled</option>
           <option value="missing-alt">Without alt text</option>
           <option value="failed">Could not be processed</option>
         </select>
@@ -175,10 +176,11 @@ function selectAll(on: boolean) {
           <input v-model="selected" type="checkbox" :value="photo.id">
           <span class="card__name">{{ name(photo) }}</span>
         </label>
-        <p v-if="photo.hidden || photo.missingAlt || photo.status !== 'ready' || photo.isSample" class="card__badges">
+        <p v-if="photo.hidden || photo.scheduledFor || photo.missingAlt || photo.status !== 'ready' || photo.isSample" class="card__badges">
           <span v-if="photo.status === 'processing'" class="badge">Processing</span>
           <span v-if="photo.status === 'failed'" class="badge badge--problem">Could not be processed</span>
           <span v-if="photo.hidden" class="badge">Hidden</span>
+          <span v-if="photo.scheduledFor" class="badge">Scheduled for {{ new Date(photo.scheduledFor).toLocaleDateString() }}</span>
           <span v-if="photo.missingAlt" class="badge badge--problem">No alt text</span>
           <span v-if="photo.isSample" class="badge">Sample</span>
         </p>

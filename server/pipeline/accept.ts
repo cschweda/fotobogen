@@ -27,6 +27,8 @@ export interface UploadInput {
   /** The name the file had on the uploader's computer. Used for display and the slug only. */
   filename: string
   isSample?: boolean
+  /** Hidden uploads are drafts: in the library, not on the site. Default: public. */
+  visibility?: 'public' | 'hidden'
   title?: string
   description?: string
   alt?: string
@@ -150,9 +152,9 @@ export async function acceptUpload(ctx: PipelineContext, input: UploadInput): Pr
       sqlite.prepare(`
         insert into photos (id, slug, title, description, alt, original_path, original_filename, mime, bytes,
           checksum, width, height, status, visibility, is_sample, sort_order, created_at, updated_at)
-        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'processing', 'public', ?, ?, ?, ?)
+        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'processing', ?, ?, ?, ?, ?)
       `).run(id, slug, title, input.description?.trim() || null, input.alt?.trim() || null, key, filename, mime,
-        fileBytes, checksum, size.width, size.height, input.isSample ? 1 : 0, next, now, now)
+        fileBytes, checksum, size.width, size.height, input.visibility === 'hidden' ? 'hidden' : 'public', input.isSample ? 1 : 0, next, now, now)
       sqlite.prepare(`insert into jobs (id, type, photo_id, status, attempts, created_at) values (?, 'ingest', ?, 'queued', 0, ?)`)
         .run(newId(), id, now)
       return slug

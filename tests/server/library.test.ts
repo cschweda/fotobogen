@@ -101,7 +101,7 @@ describe('the photo library', () => {
   it('saves settings, which change the public site at once', async () => {
     const settings = { siteTitle: 'Salt and Light', tagline: 'Coastal photographs', grid: 'square', photoView: 'page', showExif: false, showLocation: false }
     expect((await send('PUT', '/api/admin/settings', settings)).status).toBe(200)
-    expect(await (await get(server, '/api/admin/settings', { cookie })).json()).toEqual(settings)
+    expect(await (await get(server, '/api/admin/settings', { cookie })).json()).toEqual({ ...settings, newUploads: 'public' })
     expect(await (await get(server, '/api/site')).json()).toMatchObject({ title: 'Salt and Light', tagline: 'Coastal photographs', grid: 'square', photoView: 'page' })
     expect(await (await get(server, '/')).text()).toContain('fb-grid--square')
     const invalid = await send('PUT', '/api/admin/settings', { ...settings, siteTitle: '', grid: 'hexagons' })

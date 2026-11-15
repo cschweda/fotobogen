@@ -3,9 +3,9 @@
 definePageMeta({ middleware: 'admin' })
 useHead({ title: 'Settings | Fotobogen' })
 
-interface Settings { siteTitle: string, tagline: string, grid: 'masonry' | 'square', photoView: 'modal' | 'page', showExif: boolean, showLocation: boolean }
+interface Settings { siteTitle: string, tagline: string, grid: 'masonry' | 'square', photoView: 'modal' | 'page', showExif: boolean, showLocation: boolean, newUploads: 'public' | 'hidden' }
 const { data } = await useFetch<Settings>('/api/admin/settings')
-const form = reactive<Settings>({ siteTitle: '', tagline: '', grid: 'masonry', photoView: 'modal', showExif: true, showLocation: false, ...data.value })
+const form = reactive<Settings>({ siteTitle: '', tagline: '', grid: 'masonry', photoView: 'modal', showExif: true, showLocation: false, newUploads: 'public', ...data.value })
 const errors = ref<Record<string, string>>({})
 const message = ref('')
 const problem = ref('')
@@ -60,6 +60,13 @@ async function save() {
         <template #page><SetupDiagram kind="page" /></template>
       </FbChoice>
 
+      <h2 class="settings__heading">New uploads</h2>
+      <fieldset class="uploads">
+        <legend class="fb-visually-hidden">What happens to a photo when it is uploaded</legend>
+        <label class="check"><input v-model="form.newUploads" type="radio" name="newUploads" value="public"><span>Go on the site as soon as they are processed</span></label>
+        <label class="check uploads__second"><input v-model="form.newUploads" type="radio" name="newUploads" value="hidden"><span>Stay hidden as drafts until you publish them</span></label>
+      </fieldset>
+
       <h2 class="settings__heading">Privacy</h2>
       <label class="check">
         <input v-model="form.showExif" type="checkbox" aria-describedby="exif-note">
@@ -87,6 +94,8 @@ async function save() {
 .settings__heading { margin: 2.5rem 0 1.25rem; padding-top: 1.25rem; border-top: 1px solid var(--fb-line); font-size: 1.25rem; font-weight: 700; letter-spacing: -0.015em; }
 .check { display: flex; align-items: center; gap: 0.6rem; font-weight: 700; cursor: pointer; }
 .check input { width: 1.25rem; height: 1.25rem; margin: 0; accent-color: var(--fb-red); }
+.uploads { margin: 0; padding: 0; border: 0; }
+.uploads__second { margin-top: 0.6rem; }
 .check__note { margin: 0.25rem 0 1.25rem 1.85rem; max-width: 34rem; color: var(--fb-muted); font-size: 0.875rem; }
 .actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 2.5rem; }
 .saved { margin-top: 0.75rem; }
