@@ -45,8 +45,15 @@ describe('the check before installing and building', () => {
   })
 
   it('runs as a script: silent and successful here, and a failure with the explanation under a wrong installer', () => {
-    expect(execFileSync(process.execPath, ['scripts/check-tools.cjs'], { encoding: 'utf8', env: { ...process.env, npm_config_user_agent: 'pnpm/10.33.4 npm/? node/v24.22.3' } })).toBe('')
-    const wrong = spawnSync(process.execPath, ['scripts/check-tools.cjs'], { encoding: 'utf8', env: { ...process.env, npm_config_user_agent: 'npm/11.19.1 node/v24.22.3' } })
+    // The environment as an installer would leave it. On Windows the names of
+    // environment variables ignore case, so the real one is removed first,
+    // however it is spelt, or it would win over the one set here.
+    const as = (installer: string) => ({
+      ...Object.fromEntries(Object.entries(process.env).filter(([name]) => name.toLowerCase() !== 'npm_config_user_agent')),
+      npm_config_user_agent: installer,
+    })
+    expect(execFileSync(process.execPath, ['scripts/check-tools.cjs'], { encoding: 'utf8', env: as('pnpm/10.33.4 npm/? node/v24.22.3') })).toBe('')
+    const wrong = spawnSync(process.execPath, ['scripts/check-tools.cjs'], { encoding: 'utf8', env: as('npm/11.19.1 node/v24.22.3') })
     expect(wrong.status).toBe(1)
     expect(wrong.stderr).toContain('Fotobogen cannot be installed or built yet.')
     expect(wrong.stderr).toContain('npm install -g pnpm@10')
