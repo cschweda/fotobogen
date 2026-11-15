@@ -22,7 +22,7 @@ test.beforeEach(async ({ page }) => {
   await page.getByLabel('Username').fill(ADMIN.username)
   await page.getByLabel('Password', { exact: true }).fill(ADMIN.password)
   await page.getByRole('button', { name: 'Log in' }).click()
-  await expect(heading(page, 'Admin')).toBeVisible()
+  await expect(heading(page, 'Overview')).toBeVisible()
 })
 
 test('an album is created, filled from the library, and edited', async ({ page }) => {

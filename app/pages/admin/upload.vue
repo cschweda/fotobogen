@@ -160,8 +160,7 @@ onBeforeUnmount(() => clearTimeout(poll))
 </script>
 
 <template>
-  <FbShell context="Admin" wordmark-href="/">
-    <p class="back"><NuxtLink class="fb-link" to="/admin">Admin</NuxtLink></p>
+  <FbShell context="Admin" wordmark-href="/" nav>
     <h1 class="fb-h1">Upload photos</h1>
     <p class="fb-lead">
       JPEG, PNG, WebP, TIFF, or AVIF. Each photo is resized for every screen; the file you upload is kept untouched.

@@ -38,7 +38,7 @@ test('logging in and out works with the keyboard alone', async ({ page }) => {
   await expect(page.getByText(`Signed in as ${ADMIN.username}`)).toBeVisible()
 
   await page.reload()
-  await expect(heading(page, 'Admin')).toBeVisible()
+  await expect(heading(page, 'Overview')).toBeVisible()
 
   await tabTo(page, page.getByRole('button', { name: 'Log out' }))
   await page.keyboard.press('Enter')

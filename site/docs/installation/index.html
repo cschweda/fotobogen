@@ -40,7 +40,9 @@
     <ul class="pages__all">
       <li><a href="/docs/">Overview</a></li>
       <li><a href="/docs/installation/" aria-current="page">Installation</a></li>
+      <li><a href="/docs/configuration/">Configuration</a></li>
       <li><a href="/docs/usage/">Using Fotobogen</a></li>
+      <li><a href="/docs/customization/">Customization</a></li>
       <li><a href="/docs/skins/">Skins</a></li>
       <li><a href="/docs/modules/">Modules</a></li>
       <li><a href="/docs/faq/">Questions</a></li>
@@ -257,7 +259,7 @@ docker compose logs app</code></pre>
     <tr><td><code>MAX_MEGAPIXELS</code></td><td><code>100</code></td><td>The largest image, as width times height.</td></tr>
   </tbody>
 </table></div>
-<p>Every other value is written down, with a comment on each, in <a href="https://github.com/cschweda/fotobogen/blob/main/fotobogen.config.js"><code>fotobogen.config.js</code></a>.</p>
+<p>Every other value is listed and explained on the <a href="/docs/configuration/">configuration page</a>.</p>
 <p><strong>Two copies on one machine.</strong> If Fotobogen is already running when you start it in a terminal, it asks whether to run both (the new one gets its own port), stop the running one, or cancel. Two copies never share a data folder.</p>
 
 <h2 id="monitoring">Watching that it is up</h2>
@@ -276,7 +278,7 @@ docker compose logs app</code></pre>
 <p>Changes to the database are applied by themselves when the new version starts. Under <strong>Admin, System</strong>, <strong>Check for updates</strong> asks GitHub whether a newer release exists; it does not check by itself unless you tick <strong>Check once a day</strong>.</p>
     <p class="next">
       <a href="/docs/">Back: Overview</a>
-      <a href="/docs/usage/">Next: Using Fotobogen</a>
+      <a href="/docs/configuration/">Next: Configuration</a>
     </p>
   </main>
 </div>

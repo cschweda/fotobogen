@@ -23,7 +23,7 @@ test('the admin checks for updates on request, and the dashboard says when there
   await page.getByLabel('Username').fill(ADMIN.username)
   await page.getByLabel('Password', { exact: true }).fill(ADMIN.password)
   await page.getByRole('button', { name: 'Log in' }).click()
-  await expect(heading(page, 'Admin')).toBeVisible()
+  await expect(heading(page, 'Overview')).toBeVisible()
   // Nothing is known, so the dashboard says nothing.
   await expect(page.getByRole('heading', { name: /is available/ })).toHaveCount(0)
 

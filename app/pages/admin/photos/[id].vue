@@ -258,7 +258,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <FbShell context="Admin" wordmark-href="/">
+  <FbShell context="Admin" wordmark-href="/" nav>
     <p class="back"><NuxtLink class="fb-link" to="/admin/photos">Photos</NuxtLink></p>
     <h1 class="fb-h1 title">{{ name }}</h1>
     <p class="fb-visually-hidden" role="status">{{ message }}</p>

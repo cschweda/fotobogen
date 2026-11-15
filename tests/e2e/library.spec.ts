@@ -25,13 +25,13 @@ test.beforeEach(async ({ page }) => {
   await page.getByLabel('Username').fill(ADMIN.username)
   await page.getByLabel('Password', { exact: true }).fill(ADMIN.password)
   await page.getByRole('button', { name: 'Log in' }).click()
-  await expect(heading(page, 'Admin')).toBeVisible()
+  await expect(heading(page, 'Overview')).toBeVisible()
 })
 
 const names = (page: import('@playwright/test').Page) => page.locator('.card__name').allTextContents()
 
 test('the library lists photos, flags missing alt text, and reorders from the keyboard', async ({ page }) => {
-  await page.getByRole('link', { name: 'Photos', exact: true }).click()
+  await page.getByRole('link', { name: 'Library', exact: true }).click()
   await expect(heading(page, 'Photos')).toBeVisible()
   expect(await names(page)).toEqual(['cedar.jpg', 'birch.jpg', 'apple.jpg'])
   await expect(page.getByText('No alt text')).toHaveCount(3)
