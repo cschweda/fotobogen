@@ -214,7 +214,7 @@ describe('GET /api/site', () => {
       const response = await get(server, '/api/site')
       expect(response.status).toBe(200)
       expect(await response.json()).toEqual({
-        title: 'Test Photos', tagline: 'Pictures of things', grid: 'masonry', photoView: 'modal', skinVersion: expect.stringMatching(/^[0-9a-f]{10}$/), hasAlbums: false,
+        title: 'Test Photos', tagline: 'Pictures of things', grid: 'masonry', photoView: 'modal', skinVersion: expect.stringMatching(/^[0-9a-f]{10}$/), mode: 'dark', hasAlbums: false,
       })
     }
     finally { await server.stop() }

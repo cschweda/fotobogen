@@ -11,6 +11,8 @@ export default defineEventHandler(() => ({
   photoView: getSetting<'modal' | 'page'>('layout.photo_view', 'modal'),
   // Changes whenever the skin or its options change, so browsers refetch the stylesheet.
   skinVersion: activeSkin().version,
+  // The mode a visitor sees first: 'light', 'dark', or 'auto' (their device's setting).
+  mode: activeSkin().mode,
   // Whether to offer visitors a link to the albums.
   hasAlbums: publicAlbums().length > 0,
 }))
