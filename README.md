@@ -18,6 +18,7 @@ plan is in [docs/DESIGN.md](docs/DESIGN.md); changes are recorded in
 
 ## Contents
 
+- [Screenshots](#screenshots)
 - [How it runs](#how-it-runs)
 - [Local development](#local-development)
 - [Running the built server](#running-the-built-server)
@@ -31,6 +32,34 @@ plan is in [docs/DESIGN.md](docs/DESIGN.md); changes are recorded in
 - [Branches](#branches)
 - [The fotobogen.com placeholder page](#the-fotobogencom-placeholder-page)
 - [Licence](#licence)
+
+## Screenshots
+
+Taken from a local install at the current stage of development.
+
+The setup wizard opens on first visit and asks for the one-time token the
+server printed when it started:
+
+![Setup wizard, step 1 of 6: enter your setup token](docs/screenshots/setup-1-token.png)
+
+It then creates the single admin account, with a password strength meter:
+
+![Setup wizard, step 3 of 6: create the admin account](docs/screenshots/setup-3-account.png)
+
+Grid layout and photo view are picked from diagrams and can be changed later:
+
+![Setup wizard, step 4 of 6: choose masonry or square grid, modal or page photo view](docs/screenshots/setup-4-display.png)
+
+The last step lists what was chosen and closes the wizard for good:
+
+![Setup wizard, step 6 of 6: Fotobogen is ready](docs/screenshots/setup-6-done.png)
+
+After setup, the admin area sits behind a login. The dashboard is a
+placeholder until uploading and the photo library are built:
+
+![Log in page](docs/screenshots/login.png)
+
+![Placeholder admin dashboard showing site name, account, and version](docs/screenshots/admin.png)
 
 ## How it runs
 
