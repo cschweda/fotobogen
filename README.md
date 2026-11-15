@@ -13,8 +13,9 @@ admin backend. Think "WordPress for photos".
 data directory, can be claimed once through a token-protected setup wizard,
 and guards an admin area behind a login. From the admin you can upload
 photographs, which are checked, stored, and resized for every screen, and
-download or remove 25 sample photos. The public photo grid, the photo
-library, skins, and modules are not built yet. The full
+download or remove 25 sample photos, and apply modules (a film frame and
+film looks). The public photo grid, the full photo library, and skins are
+not built yet. The full
 plan is in [docs/DESIGN.md](docs/DESIGN.md); changes are recorded in
 [CHANGELOG.md](CHANGELOG.md).
 
@@ -26,6 +27,7 @@ plan is in [docs/DESIGN.md](docs/DESIGN.md); changes are recorded in
 - [Running the built server](#running-the-built-server)
 - [Uploading photos](#uploading-photos)
 - [Sample photos](#sample-photos)
+- [Modules](#modules)
 - [Tests](#tests)
 - [Windows](#windows)
 - [Docker quick start](#docker-quick-start)
@@ -171,6 +173,28 @@ and only when you ask.
 
 See [seed/README.md](seed/README.md) for the list and the licence.
 
+## Modules
+
+Modules change how photos look without touching the files you uploaded. Two
+come with Fotobogen, both switched off until you switch them on under
+**Admin, Modules**:
+
+- **Film frame** makes a photo look contact printed: the negative's border,
+  sprocket holes, and edge markings around it, on white paper. The border
+  can be thicker or thinner, its outer edge ragged or straight, and the
+  markings and sprocket holes on or off. The stock names are made up.
+- **Film looks** gives the tone and grain of a kind of film: classic and
+  pushed black-and-white, a saturated colour slide, a soft colour negative,
+  with the grain turned up or down. These are impressions, not measured
+  emulations of any product.
+
+A transform can be set for all photos at once, or chosen for one photo from
+its edit page, with a preview before saving.
+
+Adding a module means copying its folder into `data/modules/` and
+restarting; nothing is rebuilt. [docs/MODULES.md](docs/MODULES.md) explains
+how to write one, using the two bundled modules as examples.
+
 ## Tests
 
 ```bash
@@ -294,7 +318,8 @@ means copying it.
 | `originals/` | The photos exactly as you uploaded them. Back these up |
 | `derivatives/` | Resized copies. They can always be made again from the originals |
 | `tmp/` | Uploads in progress. Emptied every time the server starts |
-| `skins/`, `modules/` | Skins and modules you install (later versions) |
+| `modules/` | Modules you install, one folder each (see [docs/MODULES.md](docs/MODULES.md)) |
+| `skins/` | Skins you install (later versions) |
 
 ## Settings
 

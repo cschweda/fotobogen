@@ -8,6 +8,8 @@ import filmlooksManifest from '../../modules/filmlooks/module.json'
 import type { BundledModule } from './registry.ts'
 
 export const bundledModules: BundledModule[] = [
-  { manifest: filmframeManifest, definition: filmframe },
+  // Transforms run in this order, so the look is applied to the photo
+  // before the frame goes around it.
   { manifest: filmlooksManifest, definition: filmlooks },
+  { manifest: filmframeManifest, definition: filmframe },
 ]
