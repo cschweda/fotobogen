@@ -92,7 +92,7 @@ function checkParam(key: string, spec: unknown): ParamSpec {
   }
   if (spec.type === 'select') {
     const { options, default: fallback } = spec
-    if (!Array.isArray(options) || options.length === 0 || !options.every(option => typeof option === 'string') || !options.includes(fallback)) {
+    if (!Array.isArray(options) || options.length === 0 || !options.every(option => typeof option === 'string') || typeof fallback !== 'string' || !options.includes(fallback)) {
       throw new Error(`Select parameter "${key}" needs a list of text options and a default that is one of them.`)
     }
     return { type: 'select', label, options: options as string[], default: fallback as string }

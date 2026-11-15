@@ -13,6 +13,8 @@ import { join } from 'node:path'
 import exifr from 'exifr'
 import { rgbaToThumbHash } from 'thumbhash'
 import { newId } from '../core/ids.ts'
+import type { RecipeStep } from '../modules/contract.ts'
+import type { Raster } from '../modules/registry.ts'
 import type { PipelineContext } from './context.ts'
 import { exifColumns, exifForStorage } from './exif.ts'
 import sharp from './image.ts'
@@ -21,7 +23,7 @@ import { planDerivatives, WORKING_EDGE, type PlannedDerivative } from './plan.ts
 const WEBP_QUALITY: Record<PlannedDerivative['kind'], number> = { thumb: 78, square: 78, medium: 82, large: 82 }
 const THUMBHASH_EDGE = 100
 
-interface PhotoRow { id: string, original_path: string, width: number, height: number }
+interface PhotoRow { id: string, original_path: string, width: number, height: number, recipe_json: string | null }
 
 async function readExif(path: string): Promise<Record<string, unknown> | undefined> {
   try {
@@ -32,6 +34,50 @@ async function readExif(path: string): Promise<Record<string, unknown> | undefin
   }
 }
 
+/** Decode a stored original, upright and in sRGB, no larger than `edge` on its long side. */
+async function workingRaster(ctx: PipelineContext, path: string, edge: number): Promise<Raster> {
+  const { data, info } = await sharp(path, { limitInputPixels: ctx.limits.maxPixels, sequentialRead: true })
+    .rotate() // upright, from the EXIF orientation
+    .resize({ width: edge, height: edge, fit: 'inside', withoutEnlargement: true })
+    .toColourspace('srgb')
+    .raw({ depth: 'uchar' })
+    .toBuffer({ resolveWithObject: true })
+  return { data, width: info.width, height: info.height, channels: info.channels }
+}
+
+const PREVIEW_EDGE = 1024
+
+/**
+ * What a photo would look like with a recipe, as a WebP, without saving
+ * anything. Made at a small size so the edit screen can show it at once.
+ */
+export async function renderPreview(ctx: PipelineContext, photoId: string, recipe: unknown): Promise<Buffer | null> {
+  const photo = ctx.sqlite.prepare(`select original_path from photos where id = ?`).get(photoId) as { original_path: string } | undefined
+  if (!photo || !ctx.modules) return null
+  const decoded = await workingRaster(ctx, ctx.storage.localPath('originals', photo.original_path), PREVIEW_EDGE)
+  const result = await ctx.modules.apply(decoded, ctx.modules.cleanRecipe(recipe))
+  return sharp(result.data, { raw: { width: result.width, height: result.height, channels: result.channels } }).webp({ quality: 80 }).toBuffer()
+}
+
+/**
+ * Store a new recipe for a photo and queue it to be rendered again. Returns
+ * the cleaned recipe, or null when there is no such photo or it is busy.
+ */
+export function setRecipe(ctx: PipelineContext, photoId: string, recipe: unknown): RecipeStep[] | null {
+  if (!ctx.modules) return null
+  const clean = ctx.modules.cleanRecipe(recipe)
+  const { sqlite } = ctx
+  const saved = sqlite.transaction(() => {
+    const changed = sqlite.prepare(`update photos set recipe_json = ?, status = 'processing', updated_at = ? where id = ? and status in ('ready', 'failed')`)
+      .run(clean.length > 0 ? JSON.stringify(clean) : null, Date.now(), photoId).changes
+    if (changed === 0) return false
+    sqlite.prepare(`insert into jobs (id, type, photo_id, status, attempts, created_at) values (?, 'rerender', ?, 'queued', 0, ?)`)
+      .run(newId(), photoId, Date.now())
+    return true
+  })()
+  return saved ? clean : null
+}
+
 export interface ProcessOptions {
   /** False when re-rendering, so details the admin has edited are kept. */
   readMetadata?: boolean
@@ -39,7 +85,7 @@ export interface ProcessOptions {
 
 export async function processPhoto(ctx: PipelineContext, photoId: string, options: ProcessOptions = {}): Promise<void> {
   const { sqlite, storage } = ctx
-  const photo = sqlite.prepare(`select id, original_path, width, height from photos where id = ?`).get(photoId) as PhotoRow | undefined
+  const photo = sqlite.prepare(`select id, original_path, width, height, recipe_json from photos where id = ?`).get(photoId) as PhotoRow | undefined
   if (!photo) throw new Error(`There is no photo with id ${photoId}.`)
   const original = storage.localPath('originals', photo.original_path)
   if (await storage.size('originals', photo.original_path) === null) {
@@ -48,19 +94,20 @@ export async function processPhoto(ctx: PipelineContext, photoId: string, option
 
   const exif = options.readMetadata === false ? undefined : await readExif(original)
 
-  const working = await sharp(original, { limitInputPixels: ctx.limits.maxPixels, sequentialRead: true })
-    .rotate() // upright, from the EXIF orientation
-    .resize({ width: WORKING_EDGE, height: WORKING_EDGE, fit: 'inside', withoutEnlargement: true })
-    .toColourspace('srgb')
-    .raw({ depth: 'uchar' })
-    .toBuffer({ resolveWithObject: true })
-  const raster = () => sharp(working.data, {
-    raw: { width: working.info.width, height: working.info.height, channels: working.info.channels },
-  })
+  const recipe = ctx.modules?.cleanRecipe(photo.recipe_json ? JSON.parse(photo.recipe_json) : []) ?? []
+  const decoded = await workingRaster(ctx, original, WORKING_EDGE)
+  // The recipe is applied to the working copy; the original file is never changed.
+  const working = recipe.length > 0 && ctx.modules ? await ctx.modules.apply(decoded, recipe) : decoded
+  const raster = () => sharp(working.data, { raw: { width: working.width, height: working.height, channels: working.channels } })
 
-  // Dimensions recorded at upload are the photo's real size; the plan is
-  // made from those, and the working raster is large enough for all of it.
-  const plan = planDerivatives(photo.width, photo.height)
+  // Without a recipe, the plan comes from the photo's real size, recorded at
+  // upload. A transform may change the size (a border does), so with a
+  // recipe the plan comes from the transformed picture, scaled back up by
+  // however much the original was shrunk to make the working copy.
+  const shrink = Math.max(photo.width, photo.height) / Math.max(decoded.width, decoded.height)
+  const plan = working === decoded
+    ? planDerivatives(photo.width, photo.height)
+    : planDerivatives(Math.round(working.width * shrink), Math.round(working.height * shrink))
   const scratch: string[] = []
   const written: { plan: PlannedDerivative, key: string, bytes: number }[] = []
   try {

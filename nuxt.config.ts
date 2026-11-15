@@ -9,6 +9,10 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
   devtools: { enabled: false },
 
+  // The top-level modules/ folder holds Fotobogen's photo modules (DESIGN.md
+  // section 10), not Nuxt build modules, so Nuxt is told to look elsewhere.
+  dir: { modules: 'nuxt-modules' },
+
   app: {
     head: {
       htmlAttrs: { lang: 'en', class: 'dark' },
