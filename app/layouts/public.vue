@@ -20,9 +20,10 @@ useHead({
     <header class="fb-site-header">
       <p class="fb-site-title"><a href="/">{{ site?.title || 'Fotobogen' }}</a></p>
       <p v-if="site?.tagline" class="fb-site-tagline">{{ site.tagline }}</p>
-      <nav v-if="site?.hasAlbums" class="fb-nav" aria-label="Site">
+      <nav class="fb-nav" aria-label="Site">
         <a href="/">Photos</a>
-        <a href="/albums">Albums</a>
+        <a v-if="site?.hasAlbums" href="/albums">Albums</a>
+        <a href="/slideshow">Slideshow</a>
       </nav>
     </header>
     <main id="main" class="fb-main">
