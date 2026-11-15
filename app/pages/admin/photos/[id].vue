@@ -13,6 +13,7 @@ interface Detail {
   visibility: 'public' | 'hidden', takenAt: number | null, filename: string, status: 'processing' | 'ready' | 'failed'
   width: number, height: number
   details: { camera: string | null, lens: string | null, focalLength: string | null, aperture: string | null, shutter: string | null, iso: number | null, location: { lat: number, lng: number } | null, bytes: number, mime: string }
+  tags: string[], albums: string[]
   own: RecipeStep[] | null, site: RecipeStep[], recipe: RecipeStep[], skipped: string[]
   medium: { url: string, width: number, height: number } | null
 }
@@ -23,6 +24,7 @@ const { data: photo, refresh, error } = await useFetch<Detail>(`/api/admin/photo
 if (error.value || !photo.value) throw createError({ status: 404, statusText: 'Photo not found', fatal: true })
 const { data: listing } = await useFetch<{ modules: ModuleInfo[] }>('/api/admin/modules')
 const modules = computed(() => listing.value?.modules ?? [])
+const { data: albumList } = await useFetch<{ albums: { id: string, title: string }[] }>('/api/admin/albums')
 const name = computed(() => photo.value!.title ?? photo.value!.filename)
 useHead({ title: () => `${name.value} | Fotobogen` })
 
@@ -39,6 +41,9 @@ const form = reactive({
   alt: photo.value.alt ?? '',
   taken: toDate(photo.value.takenAt),
   visibility: photo.value.visibility,
+  // Typed as one line, separated by commas.
+  tags: photo.value.tags.join(', '),
+  albums: [...photo.value.albums],
 })
 const errors = ref<Record<string, string>>({})
 const savingDetails = ref(false)
@@ -49,11 +54,16 @@ async function saveDetails() {
   errors.value = {}
   problem.value = ''
   try {
-    const result = await $fetch<{ slug: string }>(`/api/admin/photos/${id}`, {
+    const result = await $fetch<{ slug: string, tags?: string[] }>(`/api/admin/photos/${id}`, {
       method: 'PATCH',
-      body: { title: form.title, slug: form.slug, description: form.description, alt: form.alt, visibility: form.visibility, takenAt: form.taken ? Date.parse(`${form.taken}T00:00:00Z`) : null },
+      body: {
+        title: form.title, slug: form.slug, description: form.description, alt: form.alt, visibility: form.visibility,
+        takenAt: form.taken ? Date.parse(`${form.taken}T00:00:00Z`) : null,
+        tags: form.tags.split(','), albums: form.albums,
+      },
     })
     form.slug = result.slug
+    if (result.tags) form.tags = result.tags.join(', ')
     message.value = 'Details saved.'
     await refresh()
   }
@@ -263,6 +273,13 @@ onBeforeUnmount(() => {
           />
           <FbField id="slug" v-model="form.slug" label="Address" :maxlength="80" :error="errors.slug" hint="The end of the photo's web address: /photo/…" />
           <FbField id="taken" v-model="form.taken" label="Date taken" type="date" :error="errors.takenAt" />
+          <FbField id="tags" v-model="form.tags" label="Tags" plain-text hint="Short labels, separated by commas: street, night, Lisbon." />
+          <fieldset v-if="albumList?.albums.length" class="scope">
+            <legend class="scope__legend">Albums</legend>
+            <label v-for="album in albumList.albums" :key="album.id" class="scope__choice">
+              <input v-model="form.albums" type="checkbox" :value="album.id"><span>{{ album.title }}</span>
+            </label>
+          </fieldset>
           <fieldset class="scope">
             <legend class="scope__legend">Visibility</legend>
             <label class="scope__choice"><input v-model="form.visibility" type="radio" name="visibility" value="public"><span>Public: shown on your site</span></label>

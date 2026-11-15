@@ -42,6 +42,8 @@ export default defineEventHandler(async (event) => {
       location: photo.lat !== null && photo.lng !== null ? { lat: photo.lat, lng: photo.lng } : null,
       bytes: photo.bytes, mime: photo.mime,
     },
+    tags: (sqlite.prepare(`select t.name from tags t join photo_tags pt on pt.tag_id = t.id where pt.photo_id = ? order by t.name collate nocase`).all(photo.id) as { name: string }[]).map(tag => tag.name),
+    albums: (sqlite.prepare(`select album_id as id from album_photos where photo_id = ?`).all(photo.id) as { id: string }[]).map(album => album.id),
     filename: photo.filename,
     status: photo.status,
     width: photo.width,

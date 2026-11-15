@@ -21,7 +21,10 @@ export default defineEventHandler(async (event) => {
   // ?show=hidden | missing-alt | failed narrows the list.
   const FILTERS: Record<string, string> = { 'hidden': `p.visibility = 'hidden'`, 'missing-alt': `(p.alt is null or p.alt = '')`, 'failed': `p.status = 'failed'` }
   const narrowed = FILTERS[String(getQuery(event).show ?? '')]
-  const conditions = [wanted.length > 0 ? `p.id in (${wanted.map(() => '?').join(', ')})` : '', narrowed ?? ''].filter(Boolean)
+  // ?album=<id> lists one album's photos.
+  const album = String(getQuery(event).album ?? '')
+  const inAlbum = /^[A-Za-z0-9_-]{1,32}$/.test(album) ? `p.id in (select photo_id from album_photos where album_id = ?)` : ''
+  const conditions = [wanted.length > 0 ? `p.id in (${wanted.map(() => '?').join(', ')})` : '', narrowed ?? '', inAlbum].filter(Boolean)
   const filter = conditions.length > 0 ? `where ${conditions.join(' and ')}` : ''
   const rows = sqlite.prepare(`
     select p.id, p.slug, p.title, p.original_filename as filename, p.status, p.width, p.height,
@@ -33,7 +36,7 @@ export default defineEventHandler(async (event) => {
     ${filter}
     order by p.sort_order desc
     limit ?
-  `).all(...wanted, LIMIT) as Row[]
+  `).all(...wanted, ...(inAlbum ? [album] : []), LIMIT) as Row[]
   const counts = sqlite.prepare(`
     select count(*) as total, coalesce(sum(is_sample), 0) as samples,
       coalesce(sum(status = 'processing'), 0) as processing, coalesce(sum(status = 'failed'), 0) as failed,

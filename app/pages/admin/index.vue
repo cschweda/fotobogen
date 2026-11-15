@@ -32,6 +32,7 @@ async function logOut() {
     <div class="actions">
       <NuxtLink class="fb-button" to="/admin/upload">Upload photos</NuxtLink>
       <NuxtLink class="fb-button fb-button--quiet" to="/admin/photos">Photos</NuxtLink>
+      <NuxtLink class="fb-button fb-button--quiet" to="/admin/albums">Albums</NuxtLink>
       <NuxtLink class="fb-button fb-button--quiet" to="/admin/modules">Modules</NuxtLink>
       <NuxtLink class="fb-button fb-button--quiet" to="/admin/skins">Skins</NuxtLink>
       <NuxtLink class="fb-button fb-button--quiet" to="/admin/settings">Settings</NuxtLink>

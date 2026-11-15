@@ -20,9 +20,11 @@ export async function deletePhotos(ctx: PipelineContext, where: 'samples' | { id
       for (const row of sqlite.prepare(`select path from derivatives where photo_id = ?`).all(photo.id) as { path: string }[]) {
         files.push({ area: 'derivatives', key: row.path })
       }
-      // Derivative and job rows go with the photo (ON DELETE CASCADE).
+      // Derivative, job, album-membership, and tag rows go with the photo (ON DELETE CASCADE).
       sqlite.prepare(`delete from photos where id = ?`).run(photo.id)
     }
+    // Tags that no photo carries any more go too.
+    sqlite.prepare(`delete from tags where id not in (select tag_id from photo_tags)`).run()
     return { count: photos.length, files }
   })()
   // Files last: a crash here leaves stray files, never rows without files.

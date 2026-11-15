@@ -14,7 +14,14 @@ interface Photo {
 interface Listing { counts: { total: number, hidden: number, missingAlt: number, failed: number, processing: number }, photos: Photo[] }
 
 const show = ref('')
-const { data, refresh } = await useFetch<Listing>('/api/admin/photos', { query: { show } })
+const route = useRoute()
+// ?album=<id> lists one album's photos.
+const album = computed(() => typeof route.query.album === 'string' ? route.query.album : '')
+const { data, refresh } = await useFetch<Listing>('/api/admin/photos', { query: { show, album } })
+const { data: albumList } = await useFetch<{ albums: { id: string, title: string }[] }>('/api/admin/albums')
+const inAlbum = computed(() => albumList.value?.albums.find(candidate => candidate.id === album.value))
+const toAlbum = ref('')
+const tag = ref('')
 const photos = computed(() => data.value?.photos ?? [])
 const counts = computed(() => data.value?.counts)
 const selected = ref<string[]>([])
@@ -60,6 +67,30 @@ async function move(photo: Photo, body: { to: string } | { before: string | null
   await refresh()
 }
 
+/** Adds the selected photos to an album, takes them out of the one being viewed, or tags them. */
+async function group(body: Record<string, string>, said: (changed: number) => string) {
+  problem.value = ''
+  try {
+    const { changed } = await $fetch<{ changed: number }>('/api/admin/photos/bulk', { method: 'POST', body: { ids: selected.value, ...body } })
+    message.value = said(changed)
+    tag.value = ''
+  }
+  catch (error) {
+    problem.value = failure(error)
+  }
+  await refresh()
+}
+
+// These two buttons are always usable; pressed with nothing chosen, they say what is missing.
+function addToAlbum() {
+  if (!toAlbum.value) problem.value = 'Choose an album first.'
+  else void group({ action: 'add-to-album', album: toAlbum.value }, changed => `${plural(changed)} added to the album.`)
+}
+function addTag() {
+  if (!tag.value.trim()) problem.value = 'Type a tag first.'
+  else void group({ action: 'add-tag', tag: tag.value }, changed => `Tag added to ${plural(changed)}.`)
+}
+
 function drop(target: Photo) {
   const moved = photos.value.find(photo => photo.id === dragging.value)
   dragging.value = null
@@ -75,7 +106,8 @@ function selectAll(on: boolean) {
 <template>
   <FbShell context="Admin" wordmark-href="/">
     <p class="back"><NuxtLink class="fb-link" to="/admin">Admin</NuxtLink></p>
-    <h1 class="fb-h1">Photos</h1>
+    <h1 class="fb-h1">{{ inAlbum ? inAlbum.title : 'Photos' }}</h1>
+    <p v-if="inAlbum" class="fb-small"><NuxtLink class="fb-link" to="/admin/photos">All photos</NuxtLink> · <NuxtLink class="fb-link" to="/admin/albums">Albums</NuxtLink></p>
     <p v-if="counts" class="fb-lead">
       {{ plural(counts.total) }}<template v-if="counts.hidden">, {{ counts.hidden }} hidden</template><template v-if="counts.missingAlt">, {{ counts.missingAlt }} without alt text</template>.
       The first photo here is the first on your site.
@@ -105,6 +137,20 @@ function selectAll(on: boolean) {
         <button type="button" class="fb-button fb-button--quiet bar__small" @click="bulk('hide')">Hide</button>
         <button type="button" class="fb-button fb-button--quiet bar__small" @click="bulk('show')">Show</button>
         <button type="button" class="fb-button fb-button--quiet bar__small" @click="confirming = true">Delete</button>
+        <button v-if="inAlbum" type="button" class="fb-button fb-button--quiet bar__small" @click="group({ action: 'remove-from-album', album }, changed => `${plural(changed)} taken out of ${inAlbum!.title}.`)">Take out of this album</button>
+        <span v-if="albumList?.albums.length" class="bulk__group">
+          <label class="fb-visually-hidden" for="to-album">Album to add the selected photos to</label>
+          <select id="to-album" v-model="toAlbum">
+            <option value="">Choose an album</option>
+            <option v-for="choice in albumList.albums" :key="choice.id" :value="choice.id">{{ choice.title }}</option>
+          </select>
+          <button type="button" class="fb-button fb-button--quiet bar__small" @click="addToAlbum">Add to album</button>
+        </span>
+        <span class="bulk__group">
+          <label class="fb-visually-hidden" for="bulk-tag">Tag to add to the selected photos</label>
+          <input id="bulk-tag" v-model="tag" type="text" placeholder="A tag" maxlength="40" @keydown.enter.prevent="addTag">
+          <button type="button" class="fb-button fb-button--quiet bar__small" @click="addTag">Add tag</button>
+        </span>
       </template>
       <template v-else>
         <span class="bulk__warning">Delete {{ plural(selected.length) }} for good, including the files you uploaded?</span>
@@ -155,6 +201,10 @@ function selectAll(on: boolean) {
 .bulk { margin-top: 1rem; padding: 0.75rem 1rem; background: var(--fb-panel); border-left: 4px solid var(--fb-text); }
 .bulk__count { font-weight: 700; margin-right: 0.5rem; }
 .bulk__warning { color: var(--fb-text); }
+.bulk__group { display: inline-flex; gap: 0.4rem; align-items: center; }
+.bulk__group select, .bulk__group input { min-height: 2.25rem; padding: 0 0.6rem; border: 1px solid var(--fb-edge); background: var(--fb-ground); color: var(--fb-text); font: inherit; border-radius: 0; }
+.bulk__group input { width: 9rem; }
+.bulk__group input::placeholder { color: var(--fb-muted); }
 .bulk__delete { background: var(--fb-error); border-color: var(--fb-error); color: var(--fb-ground); }
 .empty { margin-top: 2.5rem; color: var(--fb-muted); }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); gap: 2rem 1rem; margin: 2rem 0 0; padding: 0; list-style: none; }
