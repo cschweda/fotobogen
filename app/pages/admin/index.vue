@@ -16,7 +16,7 @@ async function logOut() {
   <FbShell context="Admin" wordmark-href="/">
     <h1 class="fb-h1">Admin</h1>
     <p class="fb-lead">
-      Your site is installed and you can upload photographs. The photo library, the public gallery, and settings are not built yet.
+      Your site is installed. Upload photographs and they appear on your public site.
     </p>
     <dl v-if="overview" class="facts">
       <div class="facts__row"><dt>Site</dt><dd>{{ overview.siteTitle }}</dd></div>
@@ -33,6 +33,7 @@ async function logOut() {
       <NuxtLink class="fb-button" to="/admin/upload">Upload photos</NuxtLink>
       <NuxtLink class="fb-button fb-button--quiet" to="/admin/photos">Photos</NuxtLink>
       <NuxtLink class="fb-button fb-button--quiet" to="/admin/modules">Modules</NuxtLink>
+      <NuxtLink class="fb-button fb-button--quiet" to="/admin/skins">Skins</NuxtLink>
       <a class="fb-button fb-button--quiet" href="/">View your site</a>
       <button type="button" class="fb-button fb-button--quiet" @click="logOut">Log out</button>
     </div>

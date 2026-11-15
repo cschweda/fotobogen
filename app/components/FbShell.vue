@@ -2,6 +2,9 @@
      wordmark top-left, a one-word context top-right, a rule, then content. -->
 <script setup lang="ts">
 defineProps<{ context?: string, wordmarkHref?: string }>()
+
+// Setup, login, and the admin are not for search engines.
+useHead({ meta: [{ name: 'robots', content: 'noindex' }] })
 </script>
 
 <template>
