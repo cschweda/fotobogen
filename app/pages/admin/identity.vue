@@ -110,7 +110,7 @@ async function saveHeight() {
           {{ meta.icon ? 'Replace the icon' : 'Choose an icon' }}
           <input class="fb-visually-hidden" type="file" accept="image/png,image/jpeg,image/webp" @change="upload('icon', $event)">
         </label>
-        <button v-if="meta.icon" type="button" class="fb-button fb-button--quiet" @click="remove('icon')">Remove the icon</button>
+        <button v-if="meta.icon" type="button" class="fb-button fb-button--quiet" :aria-disabled="busy !== null" @click="remove('icon')">Remove the icon</button>
       </div>
     </section>
 
@@ -134,7 +134,7 @@ async function saveHeight() {
               {{ meta.logo[mode] ? 'Replace' : 'Choose a logo' }}<span class="fb-visually-hidden"> for {{ mode }} mode</span>
               <input class="fb-visually-hidden" type="file" accept="image/png,image/jpeg,image/webp" @change="upload(`logo-${mode}`, $event)">
             </label>
-            <button v-if="meta.logo[mode]" type="button" class="fb-button fb-button--quiet" @click="remove(`logo-${mode}`)">Remove<span class="fb-visually-hidden"> the logo for {{ mode }} mode</span></button>
+            <button v-if="meta.logo[mode]" type="button" class="fb-button fb-button--quiet" :aria-disabled="busy !== null" @click="remove(`logo-${mode}`)">Remove<span class="fb-visually-hidden"> the logo for {{ mode }} mode</span></button>
           </div>
         </div>
       </div>

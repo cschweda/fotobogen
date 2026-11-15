@@ -59,9 +59,13 @@ test('an icon and a logo are uploaded, previewed, shown on the site in the right
 
   // Removing both logos brings the name back as text.
   await page.goto(server.url + '/admin/identity')
+  // One at a time: each is confirmed before the next.
   await page.getByRole('button', { name: 'Remove the logo for light mode' }).click()
+  await expect(page.locator('p.status')).toHaveText('The logo for light mode is removed.')
   await page.getByRole('button', { name: 'Remove the logo for dark mode' }).click()
+  await expect(page.locator('p.status')).toHaveText('The logo for dark mode is removed.')
   await page.getByRole('button', { name: 'Remove the icon' }).click()
+  await expect(page.locator('p.status')).toHaveText('The icon is removed.')
   await expect(page.getByText('No icon yet.')).toBeVisible()
   await page.goto(server.url + '/')
   await expect(page.getByRole('link', { name: 'Test Photos' }).getByRole('img')).toHaveCount(0)
