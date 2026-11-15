@@ -11,6 +11,7 @@ export interface PublicPhoto {
   takenAt: number | null
   exif: { camera: string | null, lens: string | null, focalLength: string | null, aperture: string | null, shutter: string | null, iso: number | null } | null
   location: { lat: number, lng: number } | null
+  size: { width: number, height: number } | null
   images: { url: string, width: number, height: number }[]
   tags: { slug: string, name: string }[]
   albums: { slug: string, title: string }[]
@@ -26,6 +27,28 @@ const { t } = useSiteText()
 const emit = defineEmits<{ go: [slug: string, event: MouseEvent] }>()
 
 const largest = computed(() => props.photo.images.at(-1))
+const sizeText = computed(() => props.photo.size ? t('sizeValue', { width: props.photo.size.width.toLocaleString('en'), height: props.photo.size.height.toLocaleString('en') }) : null)
+
+// Full screen: the photograph alone, as large as the screen allows. Escape,
+// the button, or a click on the photo leaves it. Not every browser can
+// (an iPhone cannot, for a picture), so the button is only offered where it works.
+const figure = ref<HTMLElement>()
+const expanded = ref(false)
+const canExpand = ref(false)
+const onFullscreenChange = () => { expanded.value = document.fullscreenElement === figure.value }
+onMounted(() => {
+  // Asked of the element itself: some browsers say full screen is unavailable for the page as a whole yet allow it, and an iPhone has no such method for a picture at all.
+  canExpand.value = typeof figure.value?.requestFullscreen === 'function'
+  document.addEventListener('fullscreenchange', onFullscreenChange)
+})
+onBeforeUnmount(() => document.removeEventListener('fullscreenchange', onFullscreenChange))
+async function toggleExpand() {
+  try {
+    if (document.fullscreenElement) await document.exitFullscreen()
+    else await figure.value?.requestFullscreen()
+  }
+  catch { /* refused by the browser: the page stays as it is */ }
+}
 const srcset = computed(() => props.photo.images.map(image => `${image.url} ${image.width}w`).join(', '))
 const taken = computed(() => props.photo.takenAt === null
   ? null
@@ -39,21 +62,26 @@ const settings = computed(() => {
 
 <template>
   <article class="fb-photo">
-    <figure class="fb-photo__figure">
+    <figure ref="figure" class="fb-photo__figure" :class="{ 'fb-photo__figure--expanded': expanded }">
+      <!-- A click on the photo is a shortcut for mouse users; the button beside it does the same for everyone. -->
       <img
-        v-if="largest" class="fb-photo__image" :src="largest.url" :srcset="srcset" sizes="(max-width: 52rem) 100vw, 70vw"
+        v-if="largest" class="fb-photo__image" :class="{ 'fb-photo__image--expandable': canExpand }" :src="largest.url" :srcset="srcset"
+        :sizes="expanded ? '100vw' : '(max-width: 52rem) 100vw, 70vw'"
         :width="largest.width" :height="largest.height" :alt="photo.alt" decoding="async"
-        :style="photo.placeholder ? { backgroundImage: `url(${photo.placeholder})` } : undefined"
+        :style="photo.placeholder && !expanded ? { backgroundImage: `url(${photo.placeholder})` } : undefined"
+        @click="canExpand && toggleExpand()"
       >
+      <button v-if="largest && canExpand" type="button" class="fb-photo__expand" :aria-pressed="expanded" @click="toggleExpand">{{ expanded ? t('shrink') : t('expand') }}</button>
     </figure>
     <div class="fb-photo__text">
       <component :is="headingLevel ?? 'h1'" v-if="photo.title" class="fb-photo__title">{{ photo.title }}</component>
       <p v-if="photo.description" class="fb-photo__description">{{ photo.description }}</p>
-      <dl v-if="taken || photo.exif?.camera || photo.exif?.lens || settings" class="fb-photo__facts">
+      <dl v-if="taken || photo.exif?.camera || photo.exif?.lens || settings || sizeText" class="fb-photo__facts">
         <div v-if="taken" class="fb-photo__fact"><dt>{{ t('factTaken') }}</dt><dd>{{ taken }}</dd></div>
         <div v-if="photo.exif?.camera" class="fb-photo__fact"><dt>{{ t('factCamera') }}</dt><dd>{{ photo.exif.camera }}</dd></div>
         <div v-if="photo.exif?.lens" class="fb-photo__fact"><dt>{{ t('factLens') }}</dt><dd>{{ photo.exif.lens }}</dd></div>
         <div v-if="settings" class="fb-photo__fact"><dt>{{ t('factSettings') }}</dt><dd>{{ settings }}</dd></div>
+        <div v-if="sizeText" class="fb-photo__fact"><dt>{{ t('factSize') }}</dt><dd>{{ sizeText }}</dd></div>
       </dl>
       <p v-if="photo.albums.length" class="fb-photo__albums">
         {{ t('inAlbums') }} <template v-for="(album, index) in photo.albums" :key="album.slug"><template v-if="index > 0">, </template><a :href="`/album/${album.slug}`">{{ album.title }}</a></template>

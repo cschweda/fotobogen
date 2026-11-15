@@ -12,6 +12,8 @@
 		@exists file
 		handle @exists {
 			header Cache-Control "public, max-age=31536000, immutable"
+			# The app sends this with photos too: any site may show or read them.
+			header Access-Control-Allow-Origin "*"
 			file_server
 		}
 		handle {

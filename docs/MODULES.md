@@ -8,6 +8,8 @@ A module changes how photos look: a film look, a border, a tint. Three come with
 Each bundled module has a **Sharpening** slider, from 0 (none) to 100. Around 25 is what a print or scan is normally given; 60 and up gives the crisp look of a sharp lens on black-and-white film. Film looks starts at 25; the frame and the watermark start at 0. The function is a dozen lines (`sharpened` in each `index.mjs`) and can be copied into a module of your own. A [skin](SKINS.md#a-look-for-every-photo) can set a module's look for every photo.
 - [`modules/watermark`](../modules/watermark/index.mjs): a line of text in a corner. It shows a `text` parameter and drawing over the photo.
 
+> **New to this?** The step-by-step guide, with five worked examples, is at [fotobogen.com/docs/writing-a-module](https://fotobogen.com/docs/writing-a-module/). This file is the reference.
+
 ## Contents
 
 - [Starting and testing a module from the command line](#starting-and-testing-a-module-from-the-command-line)

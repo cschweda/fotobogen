@@ -58,7 +58,7 @@
 
 <h3>Links to a photo</h3>
 <p>Further down the same page is a <strong>Links</strong> panel: the full address of the photo's page, the address of each size of the picture, and a line of HTML that shows the photo linked to its page. Each has a <strong>Copy</strong> button. Use them in an email, a post, or another website.</p>
-<p>The pictures are public files: anyone with a picture's address can open it, with no login. The links begin with your site's address. On your own machine they begin with <code>http://localhost:5150</code>, which works only there, until you set the address under <strong>Admin, Search and sharing</strong> or as <code>SITE_URL</code> on the server.</p>
+<p>The pictures are public files: anyone with a picture's address can open it, with no login, and any website can show it. Nothing needs setting up for that (no CORS configuration); Fotobogen already tells browsers that other sites may read its photos. The links begin with your site's address. On your own machine they begin with <code>http://localhost:5150</code>, which works only there, until you set the address under <strong>Admin, Search and sharing</strong> or as <code>SITE_URL</code> on the server.</p>
 
 <h2 id="publishing">Publishing, scheduling, and drafts</h2>
 <p>On a photo's page, <strong>Publish</strong> has three choices:</p>
@@ -82,7 +82,7 @@
 </div>
 <ul>
   <li><strong>The grid</strong>, at your address: photos newest first, thirty to a page, each keeping its shape or all cut square. It works with JavaScript switched off, and nothing jumps as images arrive.</li>
-  <li><strong>A photo</strong>: the picture, its title, description, date, and camera details, with previous and next. It opens over the grid or on a page of its own, as you chose.</li>
+  <li><strong>A photo</strong>: the picture, its title, description, date, camera details, and size in pixels, with previous and next. It opens over the grid or on a page of its own, as you chose. A <strong>Full screen</strong> button appears over the photo when you point at it, and a click on the photo does the same; <kbd>Escape</kbd> leaves it. Photos with no camera data, such as the samples, show only their size.</li>
   <li><strong>Albums and tags</strong>, each with its own page.</li>
   <li><strong>The slideshow</strong>, at <code>/slideshow</code>: full screen, one photo after another, for the whole site or one album or tag. Pressing a photo shows its details. <kbd>Space</kbd> pauses, the arrow keys step, <kbd>F</kbd> is full screen, <kbd>Escape</kbd> leaves. Seconds per photo and the order are in Settings.</li>
   <li><strong>A light and dark switch</strong> at the top. <a href="/docs/skins/#light-dark">More about that.</a></li>

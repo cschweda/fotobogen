@@ -103,6 +103,11 @@ async function applyToAll() {
       <p class="block__about">
         Put the module's folder in <code>data/modules</code> on the server and restart Fotobogen. It then appears in the list above, switched off. Nothing is rebuilt: the controls on this page are made from what each module declares.
       </p>
+      <p class="block__about">
+        Want to make one? A module is a small folder of plain JavaScript, with no build step.
+        <a class="fb-link" href="https://fotobogen.com/docs/writing-a-module/" target="_blank" rel="noopener">How to write a module<span class="fb-visually-hidden"> (opens in a new tab)</span></a>
+        takes you through it step by step, with worked examples.
+      </p>
     </section>
   </FbShell>
 </template>

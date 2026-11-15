@@ -132,6 +132,11 @@ async function save() {
     <section class="adding" aria-labelledby="adding-heading">
       <h2 id="adding-heading" class="skins__heading">Adding a skin</h2>
       <p>Put the skin's folder in <code>data/skins</code> on the server and restart Fotobogen. It then appears in the list above.</p>
+      <p>
+        Want to make one? A skin is a stylesheet and a short settings file; if you can write CSS, you can write one.
+        <a class="fb-link" href="https://fotobogen.com/docs/writing-a-skin/" target="_blank" rel="noopener">How to write a skin<span class="fb-visually-hidden"> (opens in a new tab)</span></a>
+        takes you through it step by step.
+      </p>
     </section>
   </FbShell>
 </template>

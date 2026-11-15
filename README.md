@@ -363,10 +363,15 @@ Visitors see two kinds of page:
   appear. Each tile shows a blurred placeholder until its image loads, and
   nothing shifts as they arrive. Thirty photos a page, with "More photos".
 - **A photo** at `/photo/<name>`: the picture, its title, description, date,
-  and camera details (if you show them), with previous and next links and
+  camera details, and size in pixels (if you show camera details), with previous and next links and
   the left and right arrow keys. If the site is set to open photos over the
   grid, the same content appears in a modal; the address still changes, and
   Back, Escape, or Close returns to the grid where you were.
+  A **Full screen** button appears over the photo when you point at it (it
+  is always there for the keyboard and on a touch screen), and a click on
+  the photo does the same: the photo alone on black, as large as the screen
+  allows. Escape, the button, or another click leaves it. Beside an upright
+  photo the words sit next to the picture rather than across the page.
 - **Albums and tags**: `/albums`, `/album/<name>`, and `/tag/<name>` (see
   [Albums and tags](#albums-and-tags)).
 
@@ -422,6 +427,13 @@ rebuilt.
 | Plakat | ![Plakat, light: black on yellow with a very large site name](docs/screenshots/skin-plakat-light.jpg) | ![Plakat, dark: white on black with a very large site name](docs/screenshots/skin-plakat.jpg) |
 
 To add a skin, copy its folder into `data/skins/` and restart.
+
+**Writing one.** A skin is a stylesheet and a short settings file.
+[Writing a skin](https://fotobogen.com/docs/writing-a-skin/) is the
+step-by-step guide: colours for light and dark, options, the HTML you are
+styling with every class name, accessibility, and every error message.
+[docs/SKINS.md](docs/SKINS.md) is the reference. The admin's Skins page
+links to the guide.
 [docs/SKINS.md](docs/SKINS.md) explains how to write one.
 
 ## Uploading photos
@@ -536,7 +548,12 @@ mark appears only in the admin.
 **Admin, Skins** changes how it looks ([Skins](#skins)).
 
 **Links to a photo.** The resized copies of every public photo are served
-at `/media/…` with no login, so they can be linked to from anywhere. Each
+at `/media/…` with no login, so they can be linked to and shown from
+anywhere. No CORS set-up is needed: showing a picture from another site with
+`<img>` never needs it, and for a script on another site that wants the
+picture's data, Fotobogen already sends `Access-Control-Allow-Origin: *`
+with photos and with the public API (the nginx and Caddy files that come
+with it do the same when they serve photos from disk). Each
 photo's page in the library has a **Links** panel: the full address of the photo's page and of each size of the picture,
 and a line of HTML that shows the photo linked to its page, each with a Copy
 button. Together with the title, description, and alt text above it, that
@@ -622,8 +639,13 @@ A transform can be set for all photos at once, or chosen for one photo from
 its edit page, with a preview before saving.
 
 Adding a module means copying its folder into `data/modules/` and
-restarting; nothing is rebuilt. [docs/MODULES.md](docs/MODULES.md) explains
-how to write one, using the two bundled modules as examples.
+restarting; nothing is rebuilt.
+
+**Writing one.** A module is a small folder of plain JavaScript with no
+build step. [Writing a module](https://fotobogen.com/docs/writing-a-module/)
+is the step-by-step guide, with five worked examples that have each been
+run through the module tester; [docs/MODULES.md](docs/MODULES.md) is the
+reference. The admin's Modules page links to the guide.
 
 ## Tests
 

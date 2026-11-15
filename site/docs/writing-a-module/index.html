@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Writing a module | Fotobogen documentation</title>
+<meta name="description" content="A complete, step-by-step guide to writing a Fotobogen module: the two files, every field, the four kinds of setting, the apply function, five worked examples, testing from the command line, installing, and every error message.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f5f5f2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0a0a0b" media="(prefers-color-scheme: dark)">
+<link rel="canonical" href="https://fotobogen.com/docs/writing-a-module/">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://fotobogen.com/docs/writing-a-module/">
+<meta property="og:title" content="Writing a module | Fotobogen documentation">
+<meta property="og:description" content="A complete, step-by-step guide to writing a Fotobogen module: the two files, every field, the four kinds of setting, the apply function, five worked examples, testing from the command line, installing, and every error message.">
+<meta property="og:image" content="https://fotobogen.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Fotobogen wordmark beside a contact sheet of sixteen numbered frames, one of them red. Above the wordmark: German for photo sheet, as in a contact sheet.">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230a0a0b'/%3E%3Crect x='6' y='9' width='20' height='14' fill='%23e30613'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/docs/docs.css">
+<script src="/docs/docs.js" defer></script>
+<!-- Privacy-friendly analytics by Plausible -->
+<script async src="https://plausible.io/js/pa-UXO2Zaq02zXvfaEecXWvD.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header>
+  <div class="wrap bar">
+    <a class="bar__name" href="/">Fotobogen<span>Documentation</span></a>
+    <div class="bar__links">
+      <a href="https://github.com/cschweda/fotobogen" data-goal="GitHub click" data-where="docs">Source on GitHub</a>
+      <button class="toggle" type="button" id="theme">Dark</button>
+    </div>
+  </div>
+</header>
+<div class="wrap layout">
+  <nav class="pages" aria-label="Documentation">
+    <ul class="pages__all">
+      <li><a href="/docs/">Overview</a></li>
+      <li><a href="/docs/installation/">Installation</a></li>
+      <li><a href="/docs/configuration/">Configuration</a></li>
+      <li><a href="/docs/usage/">Using Fotobogen</a></li>
+      <li><a href="/docs/customization/">Customization</a></li>
+      <li><a href="/docs/skins/">Skins</a></li>
+      <li><a href="/docs/writing-a-skin/">Writing a skin</a></li>
+      <li><a href="/docs/modules/">Modules</a></li>
+      <li><a href="/docs/writing-a-module/" aria-current="page">Writing a module</a></li>
+      <li><a href="/docs/faq/">Questions</a></li>
+    </ul>
+    <div class="pages__here">
+      <h2>On this page</h2>
+      <ul>
+        <li><a href="#overview">What you are making</a></li>
+        <li><a href="#start">Step 1: start one</a></li>
+        <li><a href="#manifest">Step 2: module.json</a></li>
+        <li><a href="#entry">Step 3: the code file</a></li>
+        <li><a href="#params">Step 4: settings</a></li>
+        <li><a href="#apply">Step 5: the apply function</a></li>
+        <li><a href="#examples">Worked examples</a></li>
+        <li><a href="#test">Step 6: test it</a></li>
+        <li><a href="#install">Step 7: install it and switch it on</a></li>
+        <li><a href="#together">How yours works with the others</a></li>
+        <li><a href="#errors">When something goes wrong</a></li>
+        <li><a href="#checklist">Before you share it</a></li>
+        <li><a href="#read">Read the ones that come with Fotobogen</a></li>
+      </ul>
+    </div>
+  </nav>
+  <main id="main" class="doc">
+<h1>Writing a module</h1>
+<p class="lead">A module is a small folder of plain JavaScript that changes how photographs look. There is nothing to compile, no package to publish, and no admin code to write. This page takes you from an empty folder to a working, tested module.</p>
+
+<h2 id="overview">What you are making</h2>
+<p>A module is a folder with two files:</p>
+<pre tabindex="0"><code>data/modules/sepia/
+├── module.json     what the module is called
+└── index.mjs       what settings it has, and what it does to a picture</code></pre>
+<p>It contributes one or more <strong>transforms</strong>. A transform takes a photograph, and a few settings, and returns a changed photograph. Fotobogen does the rest:</p>
+<ul>
+  <li>The <strong>admin draws the controls</strong> from the settings you declare: a slider, a menu, a checkbox, or a text field for each. You write no interface code.</li>
+  <li>The <strong>server checks every value</strong> before your code sees it, so your code can trust its inputs.</li>
+  <li>Your transform is run on <strong>every size</strong> of every photo that uses it, in the background, and on small previews in the admin.</li>
+  <li>The <strong>uploaded file is never touched</strong>. Every copy is made from the original plus the list of transforms, so switching yours off always gets the photo back exactly.</li>
+</ul>
+<p>The whole of the image library <a href="https://sharp.pixelplumbing.com">sharp</a> is available to you, without installing or importing anything.</p>
+
+<h3>What a module cannot do</h3>
+<ul>
+  <li>Add screens, pages, or its own kind of control to the admin.</li>
+  <li>Read or change a photo's title, description, or other details.</li>
+  <li>Change the uploaded file.</li>
+  <li>Produce a picture larger than 40 megapixels.</li>
+</ul>
+<p>And two things it must not do, though nothing stops it: read or write files, and use the network. A module runs inside the server with the server's permissions.</p>
+
+<h2 id="start">Step 1: start one</h2>
+<p>You need a copy of Fotobogen's source with its packages installed (<a href="/docs/installation/#macos">how</a>). From that folder:</p>
+<pre tabindex="0"><code>pnpm fotobogen module new my-module</code></pre>
+<p>This writes <code>data/modules/my-module/</code> with a <code>module.json</code> and an <code>index.mjs</code> holding one working transform with three settings. It is a real module: you can test and install it as it is, then change it.</p>
+<p>The name is lowercase letters, digits, and hyphens, starting with a letter, up to 40 characters. It becomes the folder's name and the module's.</p>
+<p>You can also make the folder and the two files by hand. The command only saves typing.</p>
+
+<h2 id="manifest">Step 2: <code>module.json</code></h2>
+<pre tabindex="0"><code>{
+  "name": "sepia",
+  "version": "1.0.0",
+  "label": "Sepia",
+  "description": "A warm brown tone.",
+  "entry": "index.mjs"
+}</code></pre>
+<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
+  <thead><tr><th>Field</th><th>Required</th><th>Rules</th></tr></thead>
+  <tbody>
+    <tr><td><code>name</code></td><td>Yes</td><td>Lowercase letters, digits, and hyphens, starting with a letter; 40 characters at most. <strong>It must be the folder's name exactly.</strong></td></tr>
+    <tr><td><code>version</code></td><td>Yes</td><td>Any text that is not empty. <code>1.0.0</code> is the convention. Shown in the admin.</td></tr>
+    <tr><td><code>label</code></td><td>Yes</td><td>The name people see in the admin.</td></tr>
+    <tr><td><code>description</code></td><td>No</td><td>A sentence shown under the label.</td></tr>
+    <tr><td><code>entry</code></td><td>Yes</td><td>The file name of your code: a <code>.mjs</code> or <code>.js</code> file in the same folder.</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="entry">Step 3: the code file</h2>
+<p>The entry file exports one object, with a list of transforms:</p>
+<pre tabindex="0"><code>// data/modules/sepia/index.mjs
+export default {
+  transforms: [
+    {
+      id: 'tone',
+      label: 'Sepia tone',
+      description: 'Black and white, tinted warm.',
+      params: {
+        warmth: { type: 'range', label: 'Warmth', min: 0, max: 100, step: 5, default: 60 },
+        fade: { type: 'boolean', label: 'Faded blacks', default: false },
+      },
+      apply(image, params) {
+        const amount = params.warmth / 100
+        let toned = image.removeAlpha().tint({ r: 128 + 40 * amount, g: 128 - 6 * amount, b: 128 - 60 * amount })
+        if (params.fade) toned = toned.linear(0.9, 20)
+        return toned
+      },
+    },
+  ],
+}</code></pre>
+<p>That is a complete module. Each transform has:</p>
+<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
+  <thead><tr><th>Field</th><th>Required</th><th>Rules</th></tr></thead>
+  <tbody>
+    <tr><td><code>id</code></td><td>Yes</td><td>Lowercase letters, digits, and hyphens, starting with a letter. Unique within the module. <strong>Do not change it later</strong>: photos remember the transform by this id.</td></tr>
+    <tr><td><code>label</code></td><td>Yes</td><td>What people see in the admin.</td></tr>
+    <tr><td><code>description</code></td><td>No</td><td>A sentence about what it does.</td></tr>
+    <tr><td><code>params</code></td><td>No</td><td>The settings, by name. Leave it out for a transform with none.</td></tr>
+    <tr><td><code>apply</code></td><td>Yes</td><td>The function that changes the picture.</td></tr>
+  </tbody>
+</table></div>
+<p>A module can hold several transforms: add more objects to the list. Each appears separately in the admin.</p>
+
+<h2 id="params">Step 4: settings</h2>
+<p>Each setting has a name (letters and digits, starting with a letter) and one of four types. Every type takes an optional <code>label</code>; without one, the name is shown.</p>
+
+<h3><code>range</code>: a slider</h3>
+<pre tabindex="0"><code>warmth: { type: 'range', label: 'Warmth', min: 0, max: 100, step: 5, default: 60 }</code></pre>
+<ul>
+  <li><code>min</code>, <code>max</code>, and <code>default</code> are required numbers, with <code>min</code> below <code>max</code>. <code>step</code> is optional.</li>
+  <li><strong>Your code receives</strong> a number between <code>min</code> and <code>max</code>. A value outside is pulled to the nearest end; anything that is not a number becomes the default.</li>
+</ul>
+
+<h3><code>select</code>: a menu</h3>
+<pre tabindex="0"><code>colour: { type: 'select', label: 'Colour', options: ['white', 'black'], default: 'white' }</code></pre>
+<ul>
+  <li><code>options</code> is a list of texts; <code>default</code> must be one of them.</li>
+  <li><strong>Your code receives</strong> exactly one of the options. Anything else becomes the default.</li>
+  <li><strong>Put a <code>select</code> first if it defines the look.</strong> Under each photo in the admin is a strip of small previews. If a transform's first setting is a <code>select</code>, the strip shows one preview for every option, side by side. That is how the film looks appear there.</li>
+</ul>
+
+<h3><code>boolean</code>: a checkbox</h3>
+<pre tabindex="0"><code>fade: { type: 'boolean', label: 'Faded blacks', default: false }</code></pre>
+<ul><li><strong>Your code receives</strong> <code>true</code> or <code>false</code>.</li></ul>
+
+<h3><code>text</code>: a one-line text field</h3>
+<pre tabindex="0"><code>words: { type: 'text', label: 'Your name', default: '', maxLength: 60 }</code></pre>
+<ul>
+  <li><code>default</code> is required and may be empty. <code>maxLength</code> is optional: 80 unless you say, and never more than 200.</li>
+  <li><strong>Your code receives</strong> a text of at most that length, with line breaks and control characters replaced by spaces.</li>
+  <li><strong>Drawing text is your job, and the server has no fonts you can rely on.</strong> A font named in an SVG may not exist on the server. The bundled watermark draws its letters as dots for exactly this reason; read <code>modules/watermark/index.mjs</code> before attempting text.</li>
+  <li>If you put the text into an SVG, escape <code>&amp;</code>, <code>&lt;</code>, and <code>&gt;</code> first.</li>
+</ul>
+
+<h2 id="apply">Step 5: the <code>apply</code> function</h2>
+<pre tabindex="0"><code>apply(image, params, context)</code></pre>
+<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
+  <thead><tr><th>Argument</th><th>What it is</th></tr></thead>
+  <tbody>
+    <tr><td><code>image</code></td><td>The photograph, as a sharp pipeline. It is already the right way up, in sRGB, 8 bits a channel, and at most 2560 pixels on its long side.</td></tr>
+    <tr><td><code>params</code></td><td>Your settings, by name, already checked.</td></tr>
+    <tr><td><code>context.width</code>, <code>context.height</code></td><td>The size of <code>image</code>, in pixels.</td></tr>
+    <tr><td><code>context.sharp</code></td><td>The sharp function itself, for making a new picture from a buffer: an SVG you have written, or raw pixels. You need it only if you build something around or over the photo.</td></tr>
+  </tbody>
+</table></div>
+<p><strong>Return</strong> a sharp pipeline, or a promise of one (so <code>apply</code> may be <code>async</code>). The result may be a different size from what came in. Do not call <code>.toFile()</code>; Fotobogen writes the files.</p>
+
+<h3>Four rules</h3>
+<ol>
+  <li><strong>Work in proportions, not pixels.</strong> The same settings are run on a 240-pixel preview and on a 2560-pixel copy. A border of "6 percent of the shorter side" looks the same on both; a border of "40 pixels" does not. Use <code>context.width</code> and <code>context.height</code>.</li>
+  <li><strong>The same input must give the same output.</strong> Never use <code>Math.random()</code> or the time. If you need randomness (grain, specks, a ragged edge), make it from a seed built from the photo's size and your settings, as in the <a href="#example-seeded">example below</a>. Otherwise the picture changes each time it is rendered, and the preview does not match the result.</li>
+  <li><strong>Do not rely on the order you call sharp's methods in.</strong> Within one pipeline, sharp applies its operations in its own fixed order, whatever order you wrote them. If step two must come after step one, finish step one into pixels and start a new pipeline from them. <a href="#example-order">Example below.</a></li>
+  <li><strong>Do nothing but change the picture.</strong> No files, no network, nothing kept between calls.</li>
+</ol>
+
+<h2 id="examples">Worked examples</h2>
+<p>Each of these is a complete <code>index.mjs</code> that has been run through <code>module test</code>. Give each its own folder and <code>module.json</code>.</p>
+
+<h3 id="example-adjust">Adjusting the photo</h3>
+<p>The sepia module <a href="#entry">above</a> is this kind: it calls sharp's methods on <code>image</code> and returns the result. Anything in sharp's <a href="https://sharp.pixelplumbing.com/api-colour">colour</a> and <a href="https://sharp.pixelplumbing.com/api-operation">operation</a> pages works the same way: <code>modulate</code>, <code>tint</code>, <code>linear</code>, <code>recomb</code>, <code>greyscale</code>, <code>blur</code>, <code>sharpen</code>, <code>gamma</code>, <code>negate</code>.</p>
+
+<h3 id="example-larger">Making the picture larger: a border</h3>
+<p>Draw a bigger picture as an SVG, open it with <code>context.sharp</code>, and lay the photo on top.</p>
+<pre tabindex="0"><code>export default {
+  transforms: [
+    {
+      id: 'plain',
+      label: 'Plain border',
+      description: 'A white or black border, like a print with a margin.',
+      params: {
+        colour: { type: 'select', label: 'Colour', options: ['white', 'black'], default: 'white' },
+        width: { type: 'range', label: 'Width (percent of the shorter side)', min: 1, max: 20, step: 1, default: 6 },
+      },
+      async apply(image, params, { width, height, sharp }) {
+        // A share of the photo's size, so it looks the same on a small copy and a large one.
+        const border = Math.max(1, Math.round(Math.min(width, height) * params.width / 100))
+        const canvasWidth = width + border * 2
+        const canvasHeight = height + border * 2
+        const fill = params.colour === 'black' ? '#000000' : '#ffffff'
+        // A new, larger picture: a filled rectangle, drawn as SVG.
+        const canvas = Buffer.from(`&lt;svg xmlns="http://www.w3.org/2000/svg" width="${canvasWidth}" height="${canvasHeight}"&gt;&lt;rect width="100%" height="100%" fill="${fill}"/&gt;&lt;/svg&gt;`)
+        // The photo as it stands, to be laid on top.
+        const photo = await image.png().toBuffer()
+        return sharp(canvas).composite([{ input: photo, left: border, top: border }])
+      },
+    },
+  ],
+}</code></pre>
+<p>Because <code>colour</code> is a <code>select</code> and comes first, the strip under each photo in the admin shows the white and the black border side by side.</p>
+
+<h3 id="example-overlay">Laying something over the photo: darker corners</h3>
+<p>Draw an SVG the same size as the photo, mostly transparent, and composite it on top. This one needs no <code>await</code> and no <code>context.sharp</code>.</p>
+<pre tabindex="0"><code>export default {
+  transforms: [
+    {
+      id: 'corners',
+      label: 'Darker corners',
+      params: {
+        strength: { type: 'range', label: 'Strength', min: 0, max: 100, step: 5, default: 40 },
+      },
+      apply(image, params, { width, height }) {
+        if (params.strength === 0) return image
+        // A picture the same size as the photo: clear in the middle, dark at the edges.
+        const overlay = Buffer.from(`&lt;svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"&gt;
+          &lt;defs&gt;&lt;radialGradient id="v" cx="50%" cy="50%" r="75%"&gt;
+            &lt;stop offset="55%" stop-color="#000" stop-opacity="0"/&gt;
+            &lt;stop offset="100%" stop-color="#000" stop-opacity="${params.strength / 100}"/&gt;
+          &lt;/radialGradient&gt;&lt;/defs&gt;
+          &lt;rect width="100%" height="100%" fill="url(#v)"/&gt;&lt;/svg&gt;`)
+        return image.composite([{ input: overlay, blend: 'over' }])
+      },
+    },
+  ],
+}</code></pre>
+
+<h3 id="example-seeded">Randomness that repeats: specks of dust</h3>
+<p>A small generator that gives the same numbers for the same seed, and a seed made from the photo's size and the setting.</p>
+<pre tabindex="0"><code>/** A small repeatable random-number generator: the same seed always gives the same numbers. */
+function randomFrom(seed) {
+  let state = seed &gt;&gt;&gt; 0
+  return () =&gt; {
+    state = (state + 0x6d2b79f5) &gt;&gt;&gt; 0
+    let t = state
+    t = Math.imul(t ^ (t &gt;&gt;&gt; 15), t | 1)
+    t ^= t + Math.imul(t ^ (t &gt;&gt;&gt; 7), t | 61)
+    return ((t ^ (t &gt;&gt;&gt; 14)) &gt;&gt;&gt; 0) / 4294967296
+  }
+}
+
+export default {
+  transforms: [
+    {
+      id: 'specks',
+      label: 'Specks',
+      params: {
+        amount: { type: 'range', label: 'How many', min: 0, max: 200, step: 10, default: 60 },
+      },
+      apply(image, params, { width, height }) {
+        // Seeded from the photo's size and the setting, never from the clock,
+        // so the same photo always gets the same specks.
+        const random = randomFrom(width * 73856093 ^ height * 19349663 ^ params.amount * 83492791)
+        const size = Math.max(1, Math.min(width, height) / 400)
+        let specks = ''
+        for (let i = 0; i &lt; params.amount; i++) {
+          specks += `&lt;circle cx="${(random() * width).toFixed(1)}" cy="${(random() * height).toFixed(1)}" r="${(size * (0.5 + random())).toFixed(2)}" fill="#fff" opacity="${(0.3 + random() * 0.5).toFixed(2)}"/&gt;`
+        }
+        const overlay = Buffer.from(`&lt;svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"&gt;${specks}&lt;/svg&gt;`)
+        return image.composite([{ input: overlay }])
+      },
+    },
+  ],
+}</code></pre>
+<p>The seed includes the size on purpose: the preview and the full-size copy get different specks, each in proportion, and each the same every time.</p>
+
+<h3 id="example-order">Two steps in a fixed order</h3>
+<p>To be sure the toning happens before the border is added, finish the toning into raw pixels, then begin again from those pixels.</p>
+<pre tabindex="0"><code>export default {
+  transforms: [
+    {
+      id: 'toned-print',
+      label: 'Toned print',
+      params: {
+        border: { type: 'range', label: 'Border (percent)', min: 0, max: 15, step: 1, default: 5 },
+      },
+      async apply(image, params, { width, height, sharp }) {
+        // Step one: tone. Finish it, as raw pixels, before going on.
+        const { data, info } = await image.removeAlpha().greyscale().linear(1.15, -12).raw().toBuffer({ resolveWithObject: true })
+        // Step two starts from those pixels, so it happens after step one, whatever sharp's own order is.
+        const toned = sharp(data, { raw: { width: info.width, height: info.height, channels: info.channels } })
+        const border = Math.round(Math.min(width, height) * params.border / 100)
+        return border === 0 ? toned : toned.extend({ top: border, bottom: border, left: border, right: border, background: '#ffffff' })
+      },
+    },
+  ],
+}</code></pre>
+
+<h2 id="test">Step 6: test it</h2>
+<pre tabindex="0"><code>pnpm fotobogen module test my-module</code></pre>
+<p>This loads the module exactly as the server would and runs every transform with its default settings, at a large size (2560 pixels) and a small one (240), twice each. For each it prints a line:</p>
+<pre tabindex="0"><code>  ok   module.json: "Border", version 1.0.0
+  ok   index.mjs: 1 transform (plain)
+  ok   plain at 2560 px: 1296 x 896
+  ok   plain at 2560 px: the same result twice
+  ok   plain at 240 px: 260 x 180
+  ok   plain at 240 px: the same result twice
+
+Look at the results:
+  module-test/border-plain-2560.webp
+  module-test/border-plain-240.webp
+
+The module works. Copy its folder into data/modules/ on a site and restart to install it.</code></pre>
+<ul>
+  <li><strong>Look at the pictures.</strong> They are written to <code>./module-test</code>. Compare the large and the small one: they should look alike. If the small one's border is enormous or its grain coarse, you have used pixels where you needed proportions.</li>
+  <li><strong>"A different result the second time"</strong> means something is not repeatable: <code>Math.random()</code>, the time, or state kept between calls.</li>
+  <li><code>--image photo.jpg</code> tries it on a photograph of your own, in place of the built-in test picture.</li>
+  <li><code>--out some/folder</code> writes the results somewhere else.</li>
+  <li>A name means the module in <code>data/modules</code>. Anything else is taken as a path, so a module kept elsewhere can be tested: <code>pnpm fotobogen module test ../my-modules/border</code>.</li>
+</ul>
+<p>The sizes printed are of the result. The built-in test picture is 1200 by 800 and is never enlarged, so the "2560" run of a border module shows 1296 by 896: the picture plus its border.</p>
+<p>The test uses default settings only. Try the ends of your sliders in the admin, with its live preview, before you call it done.</p>
+
+<h2 id="install">Step 7: install it and switch it on</h2>
+<ol>
+  <li>Copy the folder into <code>data/modules/</code> on the site, so that you have <code>data/modules/&lt;name&gt;/module.json</code>. (If you made it with <code>module new</code> in the same copy of Fotobogen, it is already there.)</li>
+  <li>Restart Fotobogen.</li>
+  <li>Open <strong>Admin, Modules</strong>. Your module is listed, switched off. Switch it on.</li>
+  <li>Set it <strong>for all photos</strong> on that page, or for <strong>one photo</strong> on its page in the Library, where the strip of previews shows it.</li>
+</ol>
+<p>Nothing is rebuilt. The controls appear because the admin reads your declarations from the server when the page loads.</p>
+
+<h3>Changing a module that is already installed</h3>
+<ul>
+  <li>Edit the files and <strong>restart</strong>. Modules are read once, at start.</li>
+  <li>Photos already made keep their old look until they are made again. <strong>Switch the module off and on again</strong> under Admin, Modules, and every photo that uses it is made again in the background.</li>
+  <li>You may add settings: photos saved without them get the new setting's default.</li>
+  <li>Do not rename a transform's <code>id</code> or the module's <code>name</code>. Photos refer to them, and a photo whose transform has gone simply skips it.</li>
+</ul>
+
+<h3>Removing one</h3>
+<p>Switch it off, delete its folder, and restart. Photos that used it go back to how they would look without it.</p>
+
+<h2 id="together">How yours works with the others</h2>
+<ul>
+  <li>A photo's look is a list of transforms, <strong>up to eight</strong>, run one after another. Yours receives whatever the one before it produced, which may already be black and white, or larger than the photo.</li>
+  <li>They run in the order the modules are listed in the admin. The modules that come with Fotobogen go first: film looks, then the film frame, then the watermark. Installed modules follow, in name order.</li>
+  <li>A <a href="/docs/skins/#looks">skin can name your transform</a> as its look for every photo.</li>
+</ul>
+
+<h2 id="errors">When something goes wrong</h2>
+<p>A module that cannot be loaded never stops the site. It is listed under Admin, Modules with the reason, and the same line is in the server's log. <code>module test</code> prints it too.</p>
+<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
+  <thead><tr><th>Message</th><th>What to fix</th></tr></thead>
+  <tbody>
+    <tr><td>The folder is called "x" but module.json names the module "y". They must match.</td><td>Rename the folder, or change <code>name</code>.</td></tr>
+    <tr><td>module.json needs a "name" of lowercase letters, digits, and hyphens.</td><td>No capitals, spaces, or underscores; start with a letter.</td></tr>
+    <tr><td>module.json needs a "version". / a "label".</td><td>Add the missing field.</td></tr>
+    <tr><td>module.json needs an "entry": the file name of a .mjs or .js file in the module folder.</td><td>Name your code file, and keep it in the same folder.</td></tr>
+    <tr><td>The entry file index.mjs is missing.</td><td>The file named by <code>entry</code> is not there.</td></tr>
+    <tr><td>The module must export { transforms: [...] } with at least one transform.</td><td>Use <code>export default { transforms: [ … ] }</code>.</td></tr>
+    <tr><td>Each transform needs an "id" of lowercase letters, digits, and hyphens.</td><td>Add or correct <code>id</code>.</td></tr>
+    <tr><td>Two transforms share the id "x".</td><td>Give each its own.</td></tr>
+    <tr><td>Transform "x" needs a "label". / an "apply" function.</td><td>Add it.</td></tr>
+    <tr><td>Transform "x": parameter names are letters and digits, starting with a letter.</td><td>No hyphens or underscores in a setting's name: <code>edgeWidth</code>, not <code>edge-width</code>.</td></tr>
+    <tr><td>Range parameter "x" needs numeric min, max, and default, with min below max.</td><td>All three as numbers, not text.</td></tr>
+    <tr><td>Select parameter "x" needs a list of text options and a default that is one of them.</td><td>The default must appear in <code>options</code>, spelt the same.</td></tr>
+    <tr><td>Boolean parameter "x" needs a true or false default.</td><td><code>true</code> or <code>false</code>, without quotation marks.</td></tr>
+    <tr><td>Text parameter "x" needs a text default (it may be empty).</td><td>Use <code>default: ''</code>.</td></tr>
+    <tr><td>Parameter "x" has an unknown type. Use "range", "select", "boolean", or "text".</td><td>One of those four, spelt exactly.</td></tr>
+    <tr><td>The "x" transform produced a picture that is too large.</td><td>The result was over 40 megapixels. Make the border or the enlargement smaller.</td></tr>
+  </tbody>
+</table></div>
+<p>If <code>apply</code> throws while a photo is being made, that photo is marked failed with the error, in the Library, and can be tried again once the module is fixed or switched off. Other photos are not affected.</p>
+
+<h2 id="checklist">Before you share it</h2>
+<ul>
+  <li><code>pnpm fotobogen module test</code> says "The module works."</li>
+  <li>The large and small test pictures look alike.</li>
+  <li>Every slider has been tried at both ends in the admin.</li>
+  <li>It works on an upright photo, a wide one, and a small one (under 500 pixels).</li>
+  <li>It works after another transform: switch on Film frame with it and check the result.</li>
+  <li>Labels say what a setting does in plain words, with its unit: "Width (percent of the shorter side)".</li>
+  <li>It reads no files and uses no network.</li>
+</ul>
+
+<h2 id="read">Read the ones that come with Fotobogen</h2>
+<p>The three bundled modules are written to be read, with comments on every part:</p>
+<ul>
+  <li><a href="https://github.com/cschweda/fotobogen/blob/main/modules/filmlooks/index.mjs"><code>modules/filmlooks</code></a>: tone and grain. Adjusting colour, a seeded grain layer, and two steps kept in order.</li>
+  <li><a href="https://github.com/cschweda/fotobogen/blob/main/modules/filmframe/index.mjs"><code>modules/filmframe</code></a>: a border drawn round the photo. Making the picture larger, drawing with SVG, a ragged edge from seeded randomness.</li>
+  <li><a href="https://github.com/cschweda/fotobogen/blob/main/modules/watermark/index.mjs"><code>modules/watermark</code></a>: text on the photo. A <code>text</code> setting, and drawing letters without a font.</li>
+</ul>
+<p>A module is trusted code, like a WordPress plugin: whoever installs yours is trusting it with their server. Keep it small enough to read in one sitting, and say plainly what it does.</p>
+    <p class="next">
+      <a href="/docs/modules/">Back: Modules</a>
+      <a href="/docs/faq/">Next: Questions</a>
+    </p>
+  </main>
+</div>
+<footer>
+  <div class="wrap">
+    <span>Fotobogen is free and open source, under the MIT licence.</span>
+    <span>It comes with no warranty. Keep backups of your photographs.</span>
+    <span>&copy; 2026 <a href="https://github.com/cschweda" data-goal="Author click">Christopher Schweda</a></span>
+  </div>
+</footer>
+</body>
+</html>
