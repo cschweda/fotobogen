@@ -35,8 +35,7 @@ async function save() {
 </script>
 
 <template>
-  <FbShell context="Admin" wordmark-href="/">
-    <p class="back"><NuxtLink class="fb-link" to="/admin">Admin</NuxtLink></p>
+  <FbShell context="Admin" wordmark-href="/" nav>
     <h1 class="fb-h1">Settings</h1>
     <form class="settings" novalidate @submit.prevent="save">
       <div class="fb-alert" role="alert">{{ problem }}</div>
@@ -137,6 +136,7 @@ async function save() {
 .licence { display: block; width: 100%; max-width: 24rem; height: 2.75rem; margin-top: 0.5rem; padding: 0 0.6rem; border: 1px solid var(--fb-edge); background: var(--fb-panel); color: var(--fb-text); font: inherit; border-radius: 0; }
 .licence__note { margin-left: 0; }
 .check__note { margin: 0.25rem 0 1.25rem 1.85rem; max-width: 34rem; color: var(--fb-muted); font-size: 0.875rem; }
-.actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 2.5rem; }
+/* The save bar stays in view at the foot of the window on a long page. */
+.actions { position: sticky; bottom: 0; z-index: 1; display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 2.5rem; padding: 0.9rem 0; border-top: 1px solid var(--fb-line); background: var(--fb-ground); }
 .saved { margin-top: 0.75rem; }
 </style>

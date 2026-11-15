@@ -57,8 +57,7 @@ async function save() {
 </script>
 
 <template>
-  <FbShell context="Admin" wordmark-href="/">
-    <p class="back"><NuxtLink class="fb-link" to="/admin">Admin</NuxtLink></p>
+  <FbShell context="Admin" wordmark-href="/" nav>
     <h1 class="fb-h1">Search and sharing</h1>
     <p class="fb-lead">What search engines show for your site, and what appears when someone shares a link to it. Every field is optional; left alone, your site's title, tagline, and newest photo are used.</p>
 
@@ -175,7 +174,8 @@ async function save() {
 .share__none { margin: 0; padding: 2.5rem 1rem; text-align: center; color: var(--fb-muted); border-bottom: 1px solid var(--fb-line); }
 .share__words { padding: 0.8rem 1rem 1rem; }
 .share__title { margin: 0.15rem 0; font-weight: 700; overflow-wrap: anywhere; }
-.actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 2.5rem; }
+/* The save bar stays in view at the foot of the window on a long page. */
+.actions { position: sticky; bottom: 0; z-index: 1; display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 2.5rem; padding: 0.9rem 0; border-top: 1px solid var(--fb-line); background: var(--fb-ground); }
 .saved { margin-top: 0.75rem; }
 .also { max-width: 44rem; margin-top: 1rem; }
 .also ul { margin: 0; padding-left: 1.25rem; color: var(--fb-muted); }

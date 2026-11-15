@@ -81,6 +81,9 @@ uses [Semantic Versioning](https://semver.org/).
 - A Links panel on each photo's page in the library: the full address of the photo's page and of each size of the picture, and HTML to embed it, each with a Copy button.
 - `SITE_URL`: the site's proper address can be set on the server as well as in the admin, and is used for every full address the site writes out. The admin says when links still point at localhost and how to fix it.
 - Pages that cannot be shown (not found, or a failure) use the site's own frame, name, and words.
+- The admin has a menu down the side, grouped (Photos, Appearance, Site, Server), in place of a row of buttons on the dashboard; on a phone it folds behind a Menu button. The dashboard is now Overview: the site, the Fotobogen and Node.js versions, what is stored, and free space.
+- Save buttons stay in view at the foot of the window on the long admin pages.
+- Two more documentation pages: Configuration (every value in `fotobogen.config.js` and `.env.sample`, what it does, and whether to change it) and Customization (everything that can be made your own, where it is set, and how). A test fails if a setting is added without being documented.
 - Documentation pages at fotobogen.com/docs: installation (macOS, Windows, Linux, Docker on a fresh VPS, Docker on a Laravel Forge server, with minimum and recommended server sizes), using Fotobogen, skins, modules, and questions (backups, restoring, and ways to start over). Their source is `docs/site/`.
 - Windows: CI installs, builds, and tests on Windows, including a PowerShell smoke test (`scripts/smoke-test.ps1`).
 

@@ -16,7 +16,7 @@ test.beforeEach(async ({ page }) => {
   await page.getByLabel('Username').fill(ADMIN.username)
   await page.getByLabel('Password', { exact: true }).fill(ADMIN.password)
   await page.getByRole('button', { name: 'Log in' }).click()
-  await expect(heading(page, 'Admin')).toBeVisible()
+  await expect(heading(page, 'Overview')).toBeVisible()
 })
 
 test('the upload page is reached from the dashboard and needs a login', async ({ page, browser }) => {

@@ -1,0 +1,164 @@
+<!-- {"title": "Customization", "description": "Everything about a Fotobogen site that can be made your own: its name and words, its look, what search engines see, how photos are shown, and what is set on the server. Where each setting is, and how to change it."} -->
+<h1>Customization</h1>
+<p class="lead">A Fotobogen site is yours: your name, your words, your look, at your address. This page lists everything that can be changed, where it is, and how.</p>
+
+<h2 id="where">Where things are changed</h2>
+<p>There are three places, and each kind of setting lives in exactly one of them.</p>
+<div class="table"><table>
+  <thead><tr><th>Place</th><th>What is set there</th><th>Who can change it</th><th>Takes effect</th></tr></thead>
+  <tbody>
+    <tr><td><strong>The admin</strong>, at <code>/admin</code></td><td>Everything about the site: its name, words, look, photos, and what search engines are told</td><td>You, logged in, from any browser</td><td>At once, on the next page view</td></tr>
+    <tr><td><strong>Folders in <code>data</code></strong></td><td>Skins and modules you add</td><td>Whoever can put files on the server</td><td>After a restart</td></tr>
+    <tr><td><strong><code>.env</code> on the server</strong></td><td>How the app runs: port, address, data folder, upload limits</td><td>Whoever can log in to the server</td><td>After a restart</td></tr>
+  </tbody>
+</table></div>
+<p>Nothing in the admin needs a rebuild, a restart, or any knowledge of code. What is set in the admin is stored in the site's database, so it is included in every <a href="/docs/faq/#backups">backup</a> and survives updates.</p>
+
+<h2 id="menu">Finding your way round the admin</h2>
+<p>Every admin page is in the menu down the left side (behind a <strong>Menu</strong> button on a phone):</p>
+<div class="table"><table>
+  <thead><tr><th>Group</th><th>Page</th><th>What you change there</th></tr></thead>
+  <tbody>
+    <tr><td></td><td><strong>Overview</strong></td><td>Nothing: the site and its server at a glance</td></tr>
+    <tr><td rowspan="3">Photos</td><td><strong>Upload</strong></td><td>Adds photographs</td></tr>
+    <tr><td><strong>Library</strong></td><td>Order, visibility, and each photo's title, description, alt text, tags, look, licence, and links</td></tr>
+    <tr><td><strong>Albums</strong></td><td>Named sets of photos</td></tr>
+    <tr><td rowspan="3">Appearance</td><td><strong>Skins</strong></td><td>The look, the colours, light or dark, columns and spacing</td></tr>
+    <tr><td><strong>Modules</strong></td><td>Looks applied to photos: film, frames, watermark, sharpening</td></tr>
+    <tr><td><strong>Site text</strong></td><td>The site's name, tagline, language, and every word on it</td></tr>
+    <tr><td rowspan="2">Site</td><td><strong>Settings</strong></td><td>Layout, privacy, licence, downloads, drafts, slideshow</td></tr>
+    <tr><td><strong>Search and sharing</strong></td><td>Titles, description, sharing picture, search engines, the site's address</td></tr>
+    <tr><td rowspan="2">Server</td><td><strong>System</strong></td><td>Backup, restore, updates</td></tr>
+    <tr><td><strong>Webhooks</strong></td><td>Messages sent to other services when photos change</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="name">Its name and its words</h2>
+<p><strong>Where:</strong> Admin, Appearance, <strong>Site text</strong>.</p>
+<p>Nothing a visitor sees has to say "Fotobogen". The software's name appears only in the admin.</p>
+<div class="table"><table>
+  <thead><tr><th>What</th><th>How</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>Site title</td><td>The <strong>Site title</strong> field</td><td>At the top of every page, in the browser tab, in search results, and in the feed. Up to 80 characters.</td></tr>
+    <tr><td>Tagline</td><td>The <strong>Tagline</strong> field</td><td>A short line beside the title. Optional. Also the site's description unless you write one.</td></tr>
+    <tr><td>Language</td><td>The <strong>Language</strong> field: a code such as <code>en</code>, <code>de</code>, <code>pt-BR</code></td><td>Tells screen readers how to pronounce the site and search engines what language it is in. It does not translate anything.</td></tr>
+    <tr><td>Every label, link, button, and message</td><td>The fields under <strong>Words on the site</strong>, grouped by where they appear</td><td>About fifty pieces of text. Each field shows the wording used now; type your own to replace it. Up to 200 characters each.</td></tr>
+    <tr><td>A footer line of your own</td><td><strong>A line of your own in the footer</strong>, under Header and footer</td><td>Empty to begin with. A copyright notice, for instance.</td></tr>
+    <tr><td>Back to the original wording</td><td>Empty a field, or press <strong>Use the default wording everywhere</strong></td><td></td></tr>
+  </tbody>
+</table></div>
+<p>The groups of text are: header and footer; the photo grid; a photo; albums and tags; the slideshow; and what is shown when a page cannot be. To run the site in another language, set the language code and reword the fields. A few pieces of text contain names in curly brackets, such as <code>{count}</code>; keep those, as they are filled in when the page is shown.</p>
+<p><strong>What cannot be changed here:</strong> your photos' own titles and descriptions (those are on each photo's page in the Library), album names (Albums), and the licence wording (Settings). Text is always shown as text: HTML typed into a field appears as typed and is not run.</p>
+
+<h2 id="look">Its look</h2>
+<p><strong>Where:</strong> Admin, Appearance, <strong>Skins</strong>. <a href="/docs/skins/">The skins page</a> has the details.</p>
+<div class="table"><table>
+  <thead><tr><th>What</th><th>How</th></tr></thead>
+  <tbody>
+    <tr><td>The whole look</td><td>Choose one of the four skins: Swiss, Papier, Plakat, Rangefinder Dreams</td></tr>
+    <tr><td>Light or dark</td><td><strong>Visitors first see</strong>: the skin's own choice, light, dark, or whatever their device is set to. Visitors can switch with a button.</td></tr>
+    <tr><td>Accent colour</td><td>A colour picker for light mode and one for dark</td></tr>
+    <tr><td>Space between photos</td><td>None, a hairline, or wide</td></tr>
+    <tr><td>Columns on a wide screen</td><td>From 2 to 6</td></tr>
+    <tr><td>A look of your own</td><td>Put a skin's folder in <code>data/skins/</code> and restart. <a href="/docs/skins/#making">How to make one.</a></td></tr>
+  </tbody>
+</table></div>
+<p><strong>What a skin cannot do:</strong> change the structure of the pages, run scripts, or load anything from another site.</p>
+
+<h2 id="photos">How photographs look</h2>
+<p><strong>Where:</strong> Admin, Appearance, <strong>Modules</strong>, for all photos; and each photo's page in the <strong>Library</strong>, for one. <a href="/docs/modules/">The modules page</a> has the details.</p>
+<div class="table"><table>
+  <thead><tr><th>What</th><th>How</th></tr></thead>
+  <tbody>
+    <tr><td>Black and white, or a film's colour</td><td>Film looks: five looks, with grain and sharpening</td></tr>
+    <tr><td>A film border round each photo</td><td>Film frame: thickness, ragged or straight edge, markings, sprocket holes</td></tr>
+    <tr><td>Your name on each photo</td><td>Watermark: text, position, size, opacity</td></tr>
+    <tr><td>One photo different from the rest</td><td>Its page in the Library: choose a look, or none</td></tr>
+    <tr><td>A look that comes with a skin</td><td>Choosing Rangefinder Dreams sets black and white for every photo; a tick box declines it</td></tr>
+    <tr><td>A look of your own</td><td>Put a module's folder in <code>data/modules/</code> and restart. <a href="/docs/modules/#writing">How to write one.</a></td></tr>
+  </tbody>
+</table></div>
+<p>Modules start switched off. The file you uploaded is never changed, so any look can be undone exactly.</p>
+
+<h2 id="layout">How the site is laid out</h2>
+<p><strong>Where:</strong> Admin, Site, <strong>Settings</strong>.</p>
+<div class="table"><table>
+  <thead><tr><th>What</th><th>Choices</th><th>To begin with</th></tr></thead>
+  <tbody>
+    <tr><td>The grid</td><td>Masonry (each photo keeps its shape) or square</td><td>As chosen in setup</td></tr>
+    <tr><td>Opening a photo</td><td>Over the grid, or on a page of its own</td><td>As chosen in setup</td></tr>
+    <tr><td>Camera details beside a photo</td><td>Shown or not</td><td>Shown</td></tr>
+    <tr><td>Where a photo was taken</td><td>Shown or not</td><td>Not shown</td></tr>
+    <tr><td>The licence under each photo</td><td>All rights reserved, or a Creative Commons licence</td><td>All rights reserved</td></tr>
+    <tr><td>Downloads</td><td>Allowed or not</td><td>Not allowed</td></tr>
+    <tr><td>New uploads</td><td>Public at once, or hidden as drafts</td><td>Public at once</td></tr>
+    <tr><td>Slideshow</td><td>Seconds per photo (3 to 120); in order, or shuffled</td><td>8 seconds, in order</td></tr>
+  </tbody>
+</table></div>
+<p>The order of photos on the site is the order in the <strong>Library</strong>: drag them, or use the Up, Down, and To top buttons.</p>
+
+<h2 id="each-photo">Each photograph</h2>
+<p><strong>Where:</strong> Admin, Photos, <strong>Library</strong>, then open a photo.</p>
+<div class="table"><table>
+  <thead><tr><th>What</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>Title and description</td><td>Shown beside the photo, in the browser tab, and when its page is shared</td></tr>
+    <tr><td>Alt text</td><td>Describes the picture to people who cannot see it, and to search engines</td></tr>
+    <tr><td>Web address</td><td>The last part of <code>/photo/…</code></td></tr>
+    <tr><td>Date taken</td><td>Read from the file, and correctable</td></tr>
+    <tr><td>Albums and tags</td><td>Any number of each</td></tr>
+    <tr><td>Public now, public later, or a draft</td><td>A scheduled photo appears by itself at its time</td></tr>
+    <tr><td>Its own licence and download setting</td><td>Otherwise it follows the site's</td></tr>
+    <tr><td>Its own look</td><td>Otherwise it follows the site's</td></tr>
+    <tr><td>Links to copy</td><td>The address of its page and of each size of the picture, and HTML to embed it</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="search">What search engines and shared links show</h2>
+<p><strong>Where:</strong> Admin, Site, <strong>Search and sharing</strong>. The page previews a search result and a shared link as you type.</p>
+<div class="table"><table>
+  <thead><tr><th>What</th><th>If you leave it alone</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>Title of your home page</td><td>Your site's title</td><td>Search engines show about 60 characters</td></tr>
+    <tr><td>Description of your site</td><td>Your tagline</td><td>About 155 characters are shown</td></tr>
+    <tr><td>How other pages' titles are written</td><td>"Photo | Site"</td><td>Five ways to choose from</td></tr>
+    <tr><td>Picture shown when your site is shared</td><td>Your newest photo</td><td>Any public photo, or none. A link to one photo always shows that photo.</td></tr>
+    <tr><td>Let search engines list the site</td><td>Yes</td><td>Off is a request, which the well-known search engines honour. It does not make the site private.</td></tr>
+    <tr><td>Your site's proper address</td><td>The address each visitor used</td><td>Set this on a public site, so every link points to one address</td></tr>
+    <tr><td>Photographer's name</td><td>None</td><td>Added to every page as its author</td></tr>
+    <tr><td>Username on X</td><td>None</td><td>Credited when a page is shared there</td></tr>
+    <tr><td>Google and Bing verification codes</td><td>None</td><td>To prove the site is yours in their webmaster tools</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="address">Its address</h2>
+<p>The site answers at whatever address reaches the server. To use your own domain:</p>
+<ol>
+  <li>Point the domain at the server (an A record with whoever you bought the domain from).</li>
+  <li>Give the server a certificate for it. With the <a href="/docs/installation/#docker-vps">Docker quick start</a>, set <code>DOMAIN</code> in <code>.env</code> and Caddy does it; on <a href="/docs/installation/#docker-forge">Forge</a>, issue it in Forge.</li>
+  <li>Tell Fotobogen the address: <strong>Search and sharing, Your site's proper address</strong>, or <code>SITE_URL</code> in <code>.env</code>. Links copied from the admin, the feed, and the sitemap then use it.</li>
+</ol>
+
+<h2 id="server">How the app runs</h2>
+<p><strong>Where:</strong> the <code>.env</code> file in Fotobogen's folder on the server. Copy <code>.env.sample</code> to <code>.env</code>, edit it, and restart.</p>
+<div class="table"><table>
+  <thead><tr><th>What</th><th>Setting</th></tr></thead>
+  <tbody>
+    <tr><td>The port</td><td><code>PORT</code></td></tr>
+    <tr><td>Where data is kept</td><td><code>DATA_DIR</code></td></tr>
+    <tr><td>The site's address</td><td><code>SITE_URL</code></td></tr>
+    <tr><td>The largest upload</td><td><code>MAX_UPLOAD_MB</code>, <code>MAX_MEGAPIXELS</code></td></tr>
+  </tbody>
+</table></div>
+<p>Every setting, with what is safe to change and what is not, is on the <a href="/docs/configuration/">configuration page</a>.</p>
+
+<h2 id="cannot">What cannot be customized</h2>
+<ul>
+  <li><strong>The admin's own appearance.</strong> It is dark and says "Fotobogen". Only you see it.</li>
+  <li><strong>The structure of the public pages.</strong> A skin restyles them thoroughly but cannot rearrange or add to them. There are no custom pages (an "About" page, say) yet.</li>
+  <li><strong>The menu at the top of the site.</strong> Its links can be reworded, but not removed, reordered, or added to.</li>
+  <li><strong>A site icon or logo.</strong> The site's name is shown as text, and the browser tab has no icon of its own.</li>
+  <li><strong>The sizes of the resized copies.</strong> They are fixed; see <a href="/docs/configuration/#derivatives">why</a>.</li>
+  <li><strong>More than one account.</strong> There is one admin.</li>
+</ul>
+<p>Several of these are planned. The <a href="https://github.com/cschweda/fotobogen/blob/main/docs/ROADMAP.md">roadmap</a> says which.</p>

@@ -49,8 +49,7 @@ async function save() {
 </script>
 
 <template>
-  <FbShell context="Admin" wordmark-href="/">
-    <p class="back"><NuxtLink class="fb-link" to="/admin">Admin</NuxtLink></p>
+  <FbShell context="Admin" wordmark-href="/" nav>
     <h1 class="fb-h1">Skins</h1>
     <p class="fb-lead">A skin changes how your public site looks. Switching takes effect at once; nothing is rebuilt and no photo is touched.</p>
     <p class="fb-visually-hidden" role="status">{{ message }}</p>
@@ -163,7 +162,8 @@ async function save() {
 .option__value { min-width: 2rem; text-align: right; }
 .skins__warning { margin: 0 0 1.5rem; padding: 0.75rem 1rem; border-left: 4px solid var(--fb-error); background: var(--fb-panel); }
 .skins__warning p { margin: 0; }
-.actions { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+/* The save bar stays in view at the foot of the window on a long page. */
+.actions { position: sticky; bottom: 0; z-index: 1; display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 2.5rem; padding: 0.9rem 0; border-top: 1px solid var(--fb-line); background: var(--fb-ground); }
 .saved { margin-top: 0.75rem; }
 .adding { max-width: 44rem; margin-top: 3rem; color: var(--fb-muted); }
 .adding code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: var(--fb-text); }

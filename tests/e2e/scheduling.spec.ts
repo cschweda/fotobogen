@@ -19,7 +19,7 @@ test('a photo is scheduled for later from its page, and new uploads can be made 
   await page.getByLabel('Username').fill(ADMIN.username)
   await page.getByLabel('Password', { exact: true }).fill(ADMIN.password)
   await page.getByRole('button', { name: 'Log in' }).click()
-  await page.getByRole('link', { name: 'Photos', exact: true }).click()
+  await page.getByRole('link', { name: 'Library', exact: true }).click()
   await page.getByRole('link', { name: 'Edit harbour.jpg' }).click()
 
   await expect(page.getByRole('radio', { name: 'Public: shown on your site' })).toBeChecked()

@@ -118,7 +118,7 @@ test('the whole wizard can be completed with the keyboard alone', async ({ page 
 
   // Then the dashboard, and the notice does not come back.
   await expect(page).toHaveURL(server.url + '/admin')
-  await expect(heading(page, 'Admin')).toBeVisible()
+  await expect(heading(page, 'Overview')).toBeVisible()
   await expect(page.getByText(`Signed in as ${ADMIN.username}`)).toBeVisible()
   await expect(page.getByText('Kodachrome Days')).toBeVisible()
   await expectNoAxeViolations(page)

@@ -306,7 +306,7 @@ To add a skin, copy its folder into `data/skins/` and restart.
 
 ## Uploading photos
 
-Log in, then choose **Upload photos** on the dashboard. Pick files or drop
+Log in, then choose **Upload** in the menu. Pick files or drop
 them on the page; each one shows its progress and result.
 
 - Accepted: JPEG, PNG, WebP, TIFF, and AVIF. A file is judged by its
@@ -328,7 +328,7 @@ Once processed, a photo appears on the public site.
 
 ## Managing photos
 
-**Admin, Photos** is the library. The first photo there is the first on
+**Library**, in the admin's menu, holds every photo. The first photo there is the first on
 your site.
 
 - **Order:** drag a photo onto another to put it in front, or use each
@@ -439,7 +439,7 @@ and only when you ask.
 - **If the download fails**, you can try again or skip. After two failures
   the page leads with skipping, so nobody is stuck retrying a service that
   is down.
-- **Later**, the dashboard always has **Download sample photos**, and
+- **Later**, Overview always has **Download sample photos**, and
   **Remove sample photos** deletes all of them, and only them, in one click.
 - In a source checkout, `pnpm seed:fetch` does the same from the terminal.
 
@@ -616,7 +616,7 @@ until you update.
 ## Updates
 
 **Admin, System, Check for updates** asks GitHub whether a newer version of
-Fotobogen has been released, and the dashboard then says so until you have
+Fotobogen has been released, and Overview then says so until you have
 updated. Fotobogen does not check by itself unless you tick **Check once a
 day**. The check is a plain request for the latest release; nothing about
 your site is sent.

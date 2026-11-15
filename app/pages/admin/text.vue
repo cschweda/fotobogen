@@ -54,8 +54,7 @@ function useDefaults() {
 </script>
 
 <template>
-  <FbShell context="Admin" wordmark-href="/">
-    <p class="back"><NuxtLink class="fb-link" to="/admin">Admin</NuxtLink></p>
+  <FbShell context="Admin" wordmark-href="/" nav>
     <h1 class="fb-h1">Site text</h1>
     <p class="fb-lead">Your site in your own words. Its name, and every label, link, and message a visitor sees, can be changed here. Nothing on your site has to say “Fotobogen”.</p>
 
@@ -126,7 +125,8 @@ function useDefaults() {
 .item__input { display: block; width: 100%; height: 2.75rem; padding: 0 0.75rem; border: 1px solid var(--fb-edge); border-radius: 0; background: var(--fb-panel); color: var(--fb-text); font: inherit; }
 .item__input::placeholder { color: var(--fb-muted); opacity: 1; }
 .item__hint { margin: 0.35rem 0 0; color: var(--fb-muted); font-size: 0.875rem; }
-.actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 2.5rem; }
+/* The save bar stays in view at the foot of the window on a long page. */
+.actions { position: sticky; bottom: 0; z-index: 1; display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 2.5rem; padding: 0.9rem 0; border-top: 1px solid var(--fb-line); background: var(--fb-ground); }
 .saved { margin-top: 0.75rem; }
 .more { max-width: 44rem; margin-top: 1rem; }
 .more ul { margin: 0; padding-left: 1.25rem; color: var(--fb-muted); }

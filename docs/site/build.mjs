@@ -18,7 +18,9 @@ const root = join(here, '..', '..')
 export const PAGES = [
   { slug: '', file: 'index', nav: 'Overview' },
   { slug: 'installation', file: 'installation', nav: 'Installation' },
+  { slug: 'configuration', file: 'configuration', nav: 'Configuration' },
   { slug: 'usage', file: 'usage', nav: 'Using Fotobogen' },
+  { slug: 'customization', file: 'customization', nav: 'Customization' },
   { slug: 'skins', file: 'skins', nav: 'Skins' },
   { slug: 'modules', file: 'modules', nav: 'Modules' },
   { slug: 'faq', file: 'faq', nav: 'Questions' },
