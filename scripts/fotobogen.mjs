@@ -113,11 +113,9 @@ async function seedFetch() {
   const { createLocalStorage } = await import('../server/storage/local.ts')
   const { readLimits } = await import('../server/pipeline/limits.ts')
   const { createQueue } = await import('../server/pipeline/queue.ts')
-  const { configureImageLibrary } = await import('../server/pipeline/render.ts')
   const { fetchSamples, readManifest, PICSUM } = await import('../server/pipeline/samples.ts')
 
   mkdirSync(paths.tmp, { recursive: true })
-  configureImageLibrary()
   const sqlite = new Database(paths.db, { fileMustExist: true })
   sqlite.pragma('busy_timeout = 5000')
   sqlite.pragma('foreign_keys = ON')

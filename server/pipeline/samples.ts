@@ -125,7 +125,7 @@ export async function fetchSamples(ctx: PipelineContext, entries: SampleEntry[],
       }
       catch { /* counted as failed below */ }
       finally {
-        await rm(tmpPath, { force: true })
+        await rm(tmpPath, { force: true, maxRetries: 10, retryDelay: 50 })
       }
       if (added) {
         result.added++

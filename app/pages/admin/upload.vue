@@ -236,7 +236,7 @@ onBeforeUnmount(() => clearTimeout(poll))
 .item__name { overflow-wrap: anywhere; font-weight: 700; }
 .item__state { color: var(--fb-muted); font-size: 0.875rem; }
 .item--ready .item__state { color: var(--fb-text); }
-.item__size::before { content: "/ "; }
+.item__size::before { content: "/"; margin: 0 0.35em; color: var(--fb-edge); }
 .item__message { color: var(--fb-error); font-size: 0.875rem; }
 .item--duplicate .item__message { color: var(--fb-muted); }
 .item__bar { width: 100%; height: 0.25rem; appearance: none; border: 0; background: var(--fb-frame); }

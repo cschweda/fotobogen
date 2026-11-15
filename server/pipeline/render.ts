@@ -9,23 +9,17 @@ import { createHash } from 'node:crypto'
 import { readFile, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import exifr from 'exifr'
-import sharp from 'sharp'
 import { rgbaToThumbHash } from 'thumbhash'
 import { newId } from '../core/ids.ts'
 import type { PipelineContext } from './context.ts'
 import { exifColumns, exifForStorage } from './exif.ts'
+import sharp from './image.ts'
 import { planDerivatives, WORKING_EDGE, type PlannedDerivative } from './plan.ts'
 
 const WEBP_QUALITY: Record<PlannedDerivative['kind'], number> = { thumb: 78, square: 78, medium: 82, large: 82 }
 const THUMBHASH_EDGE = 100
 
 interface PhotoRow { id: string, original_path: string, width: number, height: number }
-
-/** Call once per process: one image at a time, and no cache, to hold memory flat. */
-export function configureImageLibrary(): void {
-  sharp.concurrency(1)
-  sharp.cache(false)
-}
 
 async function readExif(path: string): Promise<Record<string, unknown> | undefined> {
   try {
@@ -127,6 +121,6 @@ export async function processPhoto(ctx: PipelineContext, photoId: string, option
     throw error
   }
   finally {
-    for (const file of scratch) await rm(file, { force: true })
+    for (const file of scratch) await rm(file, { force: true, maxRetries: 10, retryDelay: 50 })
   }
 }

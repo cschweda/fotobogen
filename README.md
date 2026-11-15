@@ -55,16 +55,30 @@ Grid layout and photo view are picked from diagrams and can be changed later:
 
 ![Setup wizard, step 4 of 6: choose masonry or square grid, modal or page photo view](docs/screenshots/setup-4-display.png)
 
-The last step lists what was chosen and closes the wizard for good:
+Step 5 offers to start empty (the default) or download 25 sample photos:
 
-![Setup wizard, step 6 of 6: Fotobogen is ready](docs/screenshots/setup-6-done.png)
+![Setup wizard, step 5 of 6: start empty or download 25 sample photos](docs/screenshots/setup-5-samples.png)
 
-After setup, the admin area sits behind a login. The dashboard is a
-placeholder until uploading and the photo library are built:
+The last step lists what was chosen and closes the wizard for good. If
+samples were asked for, a counter shows them arriving, and the download can
+be cancelled:
+
+![Setup wizard, step 6 of 6: Fotobogen is ready, with 9 of 25 sample photos downloaded](docs/screenshots/setup-6-downloading.png)
+
+After setup, the admin area sits behind a login:
 
 ![Log in page](docs/screenshots/login.png)
 
-![Placeholder admin dashboard showing site name, account, and version](docs/screenshots/admin.png)
+The dashboard leads to uploading and can download or remove the sample
+photos at any time:
+
+![Admin dashboard showing site name, account, photo count, version, and a Download sample photos button](docs/screenshots/admin.png)
+
+Each upload shows its progress and result; a duplicate or a file that is not
+a photo is explained on its own row. (The pictures here are generated
+gradients, not photographs.)
+
+![Upload page listing five files: three ready with thumbnails, one duplicate, one not accepted](docs/screenshots/upload.png)
 
 ## How it runs
 

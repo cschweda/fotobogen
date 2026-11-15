@@ -11,7 +11,6 @@ import * as schema from '../db/schema.ts'
 import type { PipelineContext } from '../pipeline/context.ts'
 import { readLimits } from '../pipeline/limits.ts'
 import { createQueue, type Queue } from '../pipeline/queue.ts'
-import { configureImageLibrary } from '../pipeline/render.ts'
 import { createLocalStorage } from '../storage/local.ts'
 
 export type Db = BetterSQLite3Database<typeof schema>
@@ -53,7 +52,6 @@ async function boot(loadMigrations: () => Promise<Migration[]>): Promise<void> {
   // Uploads that were in flight when the server last stopped are gone.
   rmSync(paths.tmp, { recursive: true, force: true })
   mkdirSync(paths.tmp, { recursive: true })
-  configureImageLibrary()
   const pipeline: PipelineContext = {
     sqlite,
     storage: createLocalStorage({ originals: paths.originals, derivatives: paths.derivatives }),

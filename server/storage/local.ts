@@ -18,6 +18,24 @@ function checked(key: string): string {
   return key
 }
 
+// Windows refuses to move or delete a file that another handle still has
+// open (a virus scanner, or a reader that has not quite let go). Try again
+// briefly before giving up.
+const RM = { force: true, maxRetries: 10, retryDelay: 50 }
+const BUSY = new Set(['EBUSY', 'EPERM', 'EACCES'])
+
+async function moveWithRetry(from: string, to: string): Promise<void> {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await rename(from, to)
+    }
+    catch (error) {
+      if (attempt >= 10 || !BUSY.has((error as NodeJS.ErrnoException).code ?? '')) throw error
+      await new Promise(wait => setTimeout(wait, 50))
+    }
+  }
+}
+
 export function createLocalStorage(dirs: Record<StorageArea, string>): Storage {
   const localPath = (area: StorageArea, key: string) => join(dirs[area], checked(key))
 
@@ -28,13 +46,13 @@ export function createLocalStorage(dirs: Record<StorageArea, string>): Storage {
       const target = localPath(area, key)
       await mkdir(dirs[area], { recursive: true })
       try {
-        await rename(fromPath, target)
+        await moveWithRetry(fromPath, target)
       }
       catch (error) {
         // A different disk: copy, then remove the source.
         if ((error as NodeJS.ErrnoException).code !== 'EXDEV') throw error
         await copyFile(fromPath, target)
-        await rm(fromPath, { force: true })
+        await rm(fromPath, RM)
       }
     },
 
@@ -52,7 +70,7 @@ export function createLocalStorage(dirs: Record<StorageArea, string>): Storage {
     },
 
     async delete(area, key) {
-      await rm(localPath(area, key), { force: true })
+      await rm(localPath(area, key), RM)
     },
 
     publicUrl: key => `/media/${checked(key)}`,

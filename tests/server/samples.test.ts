@@ -1,6 +1,6 @@
 import { readdirSync } from 'node:fs'
 import { join } from 'node:path'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { whenProcessed } from '../helpers/photos.ts'
 import { startFakePicsum, type FakePicsum } from '../helpers/picsum.ts'
 import { get, post, startServer, type TestServer } from '../helpers/server.ts'
@@ -120,10 +120,11 @@ describe('sample photos', () => {
     expect(cancelled.status).toBe(200)
     picsum.slow = 0
     expect(await samples(server, cookie)).toMatchObject({ state: 'idle', inLibrary: 0, done: 0 })
-    await whenProcessed(server, cookie)
     expect(query(server, 'select count(*) as n from photos')).toEqual([{ n: 0 }])
     expect(readdirSync(join(server.dataDir, 'originals'))).toEqual([])
-    expect(readdirSync(join(server.dataDir, 'derivatives'))).toEqual([])
+    // A photo that was mid-resize when it was removed is cleaned up as soon
+    // as that resize ends.
+    await vi.waitFor(() => expect(readdirSync(join(server.dataDir, 'derivatives'))).toEqual([]), { timeout: 10_000 })
     expect((await send(server, cookie, 'POST')).status).toBe(202)
     expect(await whenFetched(server, cookie)).toMatchObject({ state: 'done', done: 25 })
     await whenProcessed(server, cookie)

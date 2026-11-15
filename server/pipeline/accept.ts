@@ -5,9 +5,9 @@ import { createHash } from 'node:crypto'
 import { createReadStream } from 'node:fs'
 import { open, rm } from 'node:fs/promises'
 import { basename, extname } from 'node:path'
-import sharp from 'sharp'
 import { newId } from '../core/ids.ts'
 import type { PipelineContext } from './context.ts'
+import sharp from './image.ts'
 import { slugify, uniqueSlug } from './slug.ts'
 
 export type ImageFormat = 'jpeg' | 'png' | 'webp' | 'tiff' | 'avif'
@@ -165,7 +165,7 @@ export async function acceptUpload(ctx: PipelineContext, input: UploadInput): Pr
     }
   }
   finally {
-    await rm(input.tmpPath, { force: true })
+    await rm(input.tmpPath, { force: true, maxRetries: 10, retryDelay: 50 })
     if (stored) await storage.delete('originals', stored)
   }
 }
