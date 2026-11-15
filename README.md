@@ -973,12 +973,64 @@ day**. The check is a plain request for the latest release; nothing about
 your site is sent.
 
 [docs/UPGRADING.md](docs/UPGRADING.md) says what a version number promises
-and how to go back.
+and how to go back. What is in each release is in
+[CHANGELOG.md](CHANGELOG.md).
 
-To update a Docker install: `docker compose pull && docker compose up -d`.
-To update a source install: `scripts/rebuild.sh`, or `git pull`, `pnpm
-install`, `pnpm build`, and restart. Download a backup first. Database
-changes are applied automatically when the new version starts.
+### Updating from the admin
+
+When a newer release is found, the System page offers to install it. What it
+can do depends on how Fotobogen was installed:
+
+| Installed with | What the System page does |
+|---|---|
+| git and pm2 | **Update to version X**: fetches, builds, and restarts by itself |
+| git, started with `pnpm start` | **Update to version X**: fetches and builds; you then restart it on the server |
+| Docker | Shows the two commands to run on the server; a container cannot replace itself |
+
+Pressing **Update** does this, in order, and shows each step as it happens:
+
+1. Saves a copy of the database in the data folder
+   (`before-update-<time>.db`). Changes to the database only go forward, so
+   this copy is the way back.
+2. Fetches the release from where the copy was cloned from, and checks that
+   it is a real, later release that follows on from the one installed.
+3. Switches to it and installs its packages.
+4. Builds it. This takes a few minutes and needs about 2 GB of memory,
+   counting swap. The site may be slow or show an error for a minute or two.
+5. Restarts (under pm2), or waits for you to restart it.
+
+**If any step fails, the old version is put back and built again**, and the
+site carries on as it was; the page says what went wrong and keeps the
+output. Photographs are never touched. Files you changed on the server (a
+port in `ecosystem.config.cjs`, say) are left as they are; if one of them
+stands in the way of the new version, nothing is changed and the page says
+so. Download a backup first all the same.
+
+Only the logged-in owner can update: an API token or a demo visitor cannot.
+The version installed is always the one the check found, never one sent by
+the page. A copy with commits of its own that the release does not contain
+is left alone.
+
+The same from the command line, for an install made with git:
+
+```bash
+pnpm fotobogen update            # the latest release
+pnpm fotobogen update 1.2.0      # a particular one
+```
+
+Then restart Fotobogen.
+
+**Updating from the admin arrives with the release after 1.0.0.** Version
+1.0.0 does not contain it, so the first update from 1.0.0 is done by hand,
+as below. It also relies on releases being tagged and published on GitHub.
+
+### Updating by hand
+
+To update a Docker install: `git pull`, then
+`docker compose up -d --build`. To update a source install:
+`scripts/rebuild.sh` (with pm2), or `git pull`, `pnpm install`,
+`pnpm build`, and restart. Download a backup first. Database changes are
+applied automatically when the new version starts.
 
 ## For developers
 

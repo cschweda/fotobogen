@@ -54,7 +54,11 @@ export async function startServer(options: { env?: Record<string, string>, dataD
     printed = ''
     child = spawn(process.execPath, [resolve('.output/server/index.mjs')], {
       // SAMPLES_BASE_URL points nowhere by default, so no test reaches the real Lorem Picsum.
-      env: { ...baseEnv(), DATA_DIR: dataDir, PORT: String(port), HOST: '127.0.0.1', SAMPLES_BASE_URL: 'http://127.0.0.1:9', UPDATES_URL: 'http://127.0.0.1:9', ...options.env },
+      env: { ...baseEnv(), DATA_DIR: dataDir, PORT: String(port), HOST: '127.0.0.1', SAMPLES_BASE_URL: 'http://127.0.0.1:9', UPDATES_URL: 'http://127.0.0.1:9',
+        // The test servers run from this repository. Telling them they are in Docker means no test
+        // can ever start a real update of the repository itself; the update logic is tested on
+        // repositories made for the purpose (tests/unit/updater.test.ts).
+        FOTOBOGEN_IN_DOCKER: '1', ...options.env },
       stdio: ['ignore', 'pipe', 'pipe'],
     })
     child.stdout!.on('data', chunk => { printed += chunk })

@@ -11,7 +11,10 @@ is built from this file.
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+
+- **Update from the admin.** When a newer release is found, the System page can install it on a copy made with git: it saves a copy of the database, fetches the release, installs and builds it, and restarts (under pm2) or waits for a restart. If any step fails, the old version is put back and built again. A Docker copy is shown the commands to run instead. Only the logged-in owner can update.
+- `pnpm fotobogen update [version]` does the same from the command line.
 
 ## [1.0.0] - 2026-11-15
 

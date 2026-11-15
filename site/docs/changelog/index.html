@@ -50,11 +50,24 @@
       <li><a href="/docs/faq/">Questions</a></li>
       <li><a href="/docs/changelog/" aria-current="page">Releases</a></li>
     </ul>
+    <div class="pages__here">
+      <h2>On this page</h2>
+      <ul>
+        <li><a href="#unreleased">Not yet released</a></li>
+        <li><a href="#v1-0-0">Version 1.0.0, 15 November 2026</a></li>
+      </ul>
+    </div>
   </nav>
   <main id="main" class="doc">
 <h1>Releases</h1>
 <p class="lead">What is in each version of Fotobogen, newest first. This page is made from <a href="https://github.com/cschweda/fotobogen/blob/main/CHANGELOG.md">CHANGELOG.md</a> in the source, so the two always agree.</p>
 <p>Version numbers follow <a href="https://semver.org">semantic versioning</a>: a change in the first number means something you rely on changed, the second adds features, and the third only fixes. <a href="https://github.com/cschweda/fotobogen/blob/main/docs/UPGRADING.md">What a version number promises, and how to upgrade.</a></p>
+<h2 id="unreleased">Not yet released</h2>
+<h3>Added</h3>
+<ul>
+  <li><strong>Update from the admin.</strong> When a newer release is found, the System page can install it on a copy made with git: it saves a copy of the database, fetches the release, installs and builds it, and restarts (under pm2) or waits for a restart. If any step fails, the old version is put back and built again. A Docker copy is shown the commands to run instead. Only the logged-in owner can update.</li>
+  <li><code>pnpm fotobogen update [version]</code> does the same from the command line.</li>
+</ul>
 <h2 id="v1-0-0">Version 1.0.0, 15 November 2026</h2>
 <p>The first release. Fotobogen is a self-hosted publishing platform for photographs: install it on a computer of your own, answer a few questions in a browser, and get a public photo site with an admin behind a login.</p>
 <p>Being the first release, this entry describes everything in it, by area. Later entries list only what changed.</p>
