@@ -63,6 +63,7 @@ test('when the download fails, setup offers another try, and after two failures 
     await expect(page.getByText('No sample photos. You can download them from the admin whenever you like.')).toBeVisible()
     // Setup itself was never held up: the admin opens.
     await page.getByRole('link', { name: 'Open admin' }).click()
+    await page.getByRole('button', { name: 'I understand' }).click() // the one-time backup notice
     await expect(heading(page, 'Admin')).toBeVisible()
 
     // The admin can always download them later.

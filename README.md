@@ -471,6 +471,13 @@ Update with `scripts/rebuild.sh`.
 
 ## Backup and restore
 
+The first time you open the admin it shows one page before anything else:
+keeping a copy of your photographs is up to you, and Fotobogen, being free
+software provided as it is, takes no responsibility for lost photos. The
+rest of the admin opens when you press **I understand**; the page is not
+shown again. The same reminder stays on the System page, beside the backup
+button.
+
 A backup is one zip file holding everything that cannot be made again: the
 database (titles, albums, tags, settings, your login), your photos exactly
 as you uploaded them, and any skins and modules you installed. Resized
