@@ -41,20 +41,32 @@ function placeholder(thumbhash: string | null): string | null {
   }
 }
 
-export function publicTiles(page: number): { tiles: Tile[], total: number, pages: number } {
+/** Which photos a grid shows: all of them, one album's, or one tag's. */
+export type Scope = { album: string } | { tag: string } | undefined
+
+export function publicTiles(page: number, scope?: Scope): { tiles: Tile[], total: number, pages: number } {
   const { sqlite, storage } = getPipeline()
-  const { total } = sqlite.prepare(`select count(*) as total from photos p where ${VISIBLE}`).get() as { total: number }
+  // An album keeps its own order; everything else follows the library's.
+  const from = scope && 'album' in scope
+    ? `from photos p join album_photos ap on ap.photo_id = p.id and ap.album_id = ?`
+    : scope && 'tag' in scope
+      ? `from photos p join photo_tags pt on pt.photo_id = p.id and pt.tag_id = ?`
+      : `from photos p`
+  const order = scope && 'album' in scope ? `ap.position` : `p.sort_order desc`
+  const key = scope ? ['album' in scope ? scope.album : scope.tag] : []
+
+  const { total } = sqlite.prepare(`select count(*) as total ${from} where ${VISIBLE}`).get(...key) as { total: number }
   const rows = sqlite.prepare(`
     select p.slug, p.title, p.alt, p.thumbhash,
       t.path as thumbPath, t.width as thumbWidth, t.height as thumbHeight,
       s.path as squarePath, s.width as squareWidth, s.height as squareHeight
-    from photos p
+    ${from}
     join derivatives t on t.photo_id = p.id and t.kind = 'thumb'
     join derivatives s on s.photo_id = p.id and s.kind = 'square'
     where ${VISIBLE}
-    order by p.sort_order desc
+    order by ${order}
     limit ? offset ?
-  `).all(PAGE_SIZE, (page - 1) * PAGE_SIZE) as Row[]
+  `).all(...key, PAGE_SIZE, (page - 1) * PAGE_SIZE) as Row[]
   return {
     total,
     pages: Math.max(1, Math.ceil(total / PAGE_SIZE)),
@@ -71,6 +83,50 @@ export function publicTiles(page: number): { tiles: Tile[], total: number, pages
   }
 }
 
+export interface PublicAlbum {
+  id: string
+  slug: string
+  title: string
+  description: string | null
+  /** Public photos in it. */
+  count: number
+  cover: { url: string, width: number, height: number } | null
+}
+
+/** Public albums that have at least one photo a visitor may see. */
+export function publicAlbums(): PublicAlbum[] {
+  const { sqlite, storage } = getPipeline()
+  const albums = sqlite.prepare(`
+    select a.id, a.slug, a.title, a.description, a.cover_photo_id as coverId,
+      (select count(*) from album_photos ap join photos p on p.id = ap.photo_id where ap.album_id = a.id and ${VISIBLE}) as count
+    from albums a where a.visibility = 'public' order by a.sort_order desc
+  `).all() as { id: string, slug: string, title: string, description: string | null, coverId: string | null, count: number }[]
+  // The chosen cover if a visitor may see it, else the album's first visible photo.
+  const cover = sqlite.prepare(`
+    select d.path, d.width, d.height from album_photos ap
+    join photos p on p.id = ap.photo_id
+    join derivatives d on d.photo_id = p.id and d.kind = 'square'
+    where ap.album_id = ? and ${VISIBLE}
+    order by (p.id = ?) desc, ap.position limit 1
+  `)
+  return albums.filter(album => album.count > 0).map(({ coverId, ...album }) => {
+    const picture = cover.get(album.id, coverId ?? '') as { path: string, width: number, height: number } | undefined
+    return { ...album, cover: picture ? { url: storage.publicUrl(picture.path), width: picture.width, height: picture.height } : null }
+  })
+}
+
+export const publicAlbum = (slug: string): PublicAlbum | null => publicAlbums().find(album => album.slug === slug) ?? null
+
+/** A tag, if any photo a visitor may see carries it. */
+export function publicTag(slug: string): { id: string, slug: string, name: string } | null {
+  const { sqlite } = getPipeline()
+  const tag = sqlite.prepare(`
+    select t.id, t.slug, t.name from tags t
+    where t.slug = ? and exists (select 1 from photo_tags pt join photos p on p.id = pt.photo_id where pt.tag_id = t.id and ${VISIBLE})
+  `).get(slug) as { id: string, slug: string, name: string } | undefined
+  return tag ?? null
+}
+
 export interface PublicPhoto {
   slug: string
   title: string | null
@@ -83,6 +139,9 @@ export interface PublicPhoto {
   /** Where it was taken, only when the site shows locations. */
   location: { lat: number, lng: number } | null
   images: { url: string, width: number, height: number }[]
+  tags: { slug: string, name: string }[]
+  /** Public albums this photo is in. */
+  albums: { slug: string, title: string }[]
   previous: string | null
   next: string | null
 }
@@ -119,6 +178,8 @@ export function publicPhoto(slug: string): PublicPhoto | null {
       : null,
     location: getSetting('privacy.show_location', false) && photo.lat !== null && photo.lng !== null ? { lat: photo.lat, lng: photo.lng } : null,
     images: images.map(image => ({ url: storage.publicUrl(image.path), width: image.width, height: image.height })),
+    tags: sqlite.prepare(`select t.slug, t.name from tags t join photo_tags pt on pt.tag_id = t.id where pt.photo_id = ? order by t.name collate nocase`).all(photo.id) as { slug: string, name: string }[],
+    albums: sqlite.prepare(`select a.slug, a.title from albums a join album_photos ap on ap.album_id = a.id where ap.photo_id = ? and a.visibility = 'public' order by a.title collate nocase`).all(photo.id) as { slug: string, title: string }[],
     previous: neighbour('>', 'asc'),
     next: neighbour('<', 'desc'),
   }

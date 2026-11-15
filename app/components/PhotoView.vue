@@ -12,6 +12,8 @@ export interface PublicPhoto {
   exif: { camera: string | null, lens: string | null, focalLength: string | null, aperture: string | null, shutter: string | null, iso: number | null } | null
   location: { lat: number, lng: number } | null
   images: { url: string, width: number, height: number }[]
+  tags: { slug: string, name: string }[]
+  albums: { slug: string, title: string }[]
   previous: string | null
   next: string | null
 }
@@ -50,6 +52,12 @@ const settings = computed(() => {
         <div v-if="photo.exif?.lens" class="fb-photo__fact"><dt>Lens</dt><dd>{{ photo.exif.lens }}</dd></div>
         <div v-if="settings" class="fb-photo__fact"><dt>Settings</dt><dd>{{ settings }}</dd></div>
       </dl>
+      <p v-if="photo.albums.length" class="fb-photo__albums">
+        In <template v-for="(album, index) in photo.albums" :key="album.slug"><template v-if="index > 0">, </template><a :href="`/album/${album.slug}`">{{ album.title }}</a></template>
+      </p>
+      <ul v-if="photo.tags.length" class="fb-tags" aria-label="Tags">
+        <li v-for="tag in photo.tags" :key="tag.slug"><a class="fb-tag" :href="`/tag/${tag.slug}`" rel="tag">{{ tag.name }}</a></li>
+      </ul>
       <nav v-if="photo.previous || photo.next" class="fb-photo__nav" aria-label="Other photos">
         <a v-if="photo.previous" class="fb-photo__prev" :href="`/photo/${photo.previous}`" rel="prev" @click="emit('go', photo.previous, $event)">Previous</a>
         <a v-if="photo.next" class="fb-photo__next" :href="`/photo/${photo.next}`" rel="next" @click="emit('go', photo.next, $event)">Next</a>

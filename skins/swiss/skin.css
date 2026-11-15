@@ -41,6 +41,20 @@
 .fb-site-footer { padding: 1.25rem var(--fb-margin) 2rem; border-top: 1px solid var(--fb-line); color: var(--fb-muted); font-size: 0.8125rem; }
 .fb-empty { max-width: 34rem; margin: 3rem 0; padding: 1.25rem 0; border-top: 1px solid var(--fb-line); border-bottom: 1px solid var(--fb-line); color: var(--fb-muted); }
 
+/* Links between the parts of the site, and the heading of an album or tag page. */
+.fb-nav { display: flex; gap: 1.25rem; margin-left: auto; font-size: 0.875rem; }
+.fb-page-title { margin: 0.5rem 0 0.5rem; font-size: clamp(1.75rem, 1.2rem + 2vw, 2.75rem); font-weight: 700; line-height: 1.05; letter-spacing: -0.03em; }
+.fb-page-description { max-width: 38rem; margin: 0 0 2rem; color: var(--fb-muted); white-space: pre-line; }
+.fb-page-title + .fb-grid-wrap, .fb-page-title + div > .fb-grid-wrap { margin-top: 2rem; }
+
+/* The list of albums: square covers in a strict grid. */
+.fb-albums { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: 2rem 1.25rem; margin: 2rem 0 0; padding: 0; list-style: none; }
+.fb-album__link { display: grid; gap: 0.15rem; text-decoration: none; }
+.fb-album__cover { display: block; aspect-ratio: 1; margin-bottom: 0.5rem; background: var(--fb-line); overflow: hidden; }
+.fb-album__cover img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.fb-album__title { font-weight: 700; }
+.fb-album__count { color: var(--fb-muted); font-size: 0.875rem; }
+
 /*
   The grid. Columns step down on narrower screens. Both layouts are CSS
   grid, so the order photos are read in is the order they appear in.
@@ -94,6 +108,10 @@
 .fb-photo__fact { display: grid; grid-template-columns: 6rem 1fr; gap: 1rem; padding: 0.45rem 0; border-bottom: 1px solid var(--fb-line); }
 .fb-photo__fact dt { color: var(--fb-muted); }
 .fb-photo__fact dd { margin: 0; }
+.fb-photo__albums { margin: 1.25rem 0 0; font-size: 0.875rem; color: var(--fb-muted); }
+.fb-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 1rem 0 0; padding: 0; list-style: none; }
+.fb-tag { display: inline-block; padding: 0.1rem 0.5rem; border: 1px solid var(--fb-line); font-size: 0.8125rem; text-decoration: none; }
+.fb-tag:hover { border-color: var(--fb-accent); }
 .fb-photo__nav { display: flex; gap: 1.5rem; margin-top: 1.5rem; font-size: 0.9375rem; }
 .fb-photo__back { margin: 0 0 1.5rem; font-size: 0.875rem; }
 @media (max-width: 52rem) { .fb-photo { grid-template-columns: 1fr; } }

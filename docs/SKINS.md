@@ -81,6 +81,7 @@ These class names are stable. A skin may rely on them.
   <header class="fb-site-header">
     <p class="fb-site-title"><a>Site title</a></p>
     <p class="fb-site-tagline">Tagline</p>
+    <nav class="fb-nav"><a>Photos</a><a>Albums</a></nav>   <!-- only when there are albums -->
   </header>
   <main class="fb-main">
 
@@ -108,6 +109,25 @@ These class names are stable. A skin may rely on them.
         <nav class="fb-photo__nav"><a class="fb-photo__prev">Previous</a><a class="fb-photo__next">Next</a></nav>
       </div>
     </article>
+
+    <!-- An album or tag page: a heading, then the same grid -->
+    <h1 class="fb-page-title">Album name</h1>
+    <p class="fb-page-description">Description</p>
+
+    <!-- The list of albums -->
+    <ul class="fb-albums">
+      <li class="fb-album">
+        <a class="fb-album__link">
+          <span class="fb-album__cover"><img></span>
+          <span class="fb-album__title">Album name</span>
+          <span class="fb-album__count">12 photos</span>
+        </a>
+      </li>
+    </ul>
+
+    <!-- Inside .fb-photo__text, when the photo has them -->
+    <p class="fb-photo__albums">In <a>Album name</a></p>
+    <ul class="fb-tags"><li><a class="fb-tag">tag</a></li></ul>
 
     <dialog class="fb-modal">
       <button class="fb-modal__close">Close</button>

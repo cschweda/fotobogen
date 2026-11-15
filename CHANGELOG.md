@@ -52,6 +52,8 @@ uses [Semantic Versioning](https://semver.org/).
 - Editing a photo: title, description, alt text, web address, date taken, and visibility, with what the file recorded shown beside it.
 - A strip of look previews under each photo, built from the switched-on modules.
 - A settings page: site title and tagline, grid layout, photo view, and the privacy switches.
+- Albums: named sets of photos with their own public pages, managed from the admin, filled from the library or a photo's page.
+- Tags: labels on photos, each with a public page; added one photo at a time or to several at once.
 - Windows: CI installs, builds, and tests on Windows, including a PowerShell smoke test (`scripts/smoke-test.ps1`).
 
 ### Changed

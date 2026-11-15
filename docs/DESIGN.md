@@ -483,3 +483,4 @@ For running without Docker, and for development servers.
 - **Public site built (Phase 3).** Skin rules start from the class `fb-public` on `<html>`, so a skin and the admin stylesheet cannot interfere. The masonry grid uses container-query units: one row is a twentieth of a column's width and each tile spans the rows its shape needs. The Swiss skin uses the system sans-serif rather than shipping font files.
 - **Only setup, login, and the admin are `noindex`.** Public pages are indexable and listed in the sitemap.
 - **Feature roadmap** agreed 2026-11-15: `docs/ROADMAP.md`.
+- **Albums and tags (migration 0001).** Tables `albums`, `album_photos` (with a position per album), `tags`, and `photo_tags`. An album has its own order and visibility; a tag is dropped when no photo carries it. Public pages: `/albums`, `/album/<slug>`, `/tag/<slug>`. Only photos a visitor may see count toward an album or tag.

@@ -32,6 +32,7 @@ plan is in [docs/DESIGN.md](docs/DESIGN.md); changes are recorded in
 - [Skins](#skins)
 - [Uploading photos](#uploading-photos)
 - [Managing photos](#managing-photos)
+- [Albums and tags](#albums-and-tags)
 - [Sample photos](#sample-photos)
 - [Modules](#modules)
 - [Tests](#tests)
@@ -219,6 +220,8 @@ Visitors see two kinds of page:
   the left and right arrow keys. If the site is set to open photos over the
   grid, the same content appears in a modal; the address still changes, and
   Back, Escape, or Close returns to the grid where you were.
+- **Albums and tags**: `/albums`, `/album/<name>`, and `/tag/<name>` (see
+  [Albums and tags](#albums-and-tags)).
 
 Only photos that are processed and public are ever shown. Location is never
 shown unless you switch that on.
@@ -280,6 +283,22 @@ your site.
 **Admin, Settings** holds the site title and tagline, the grid layout,
 whether photos open over the grid or on their own page, and the two privacy
 switches: camera details (on by default) and location (off by default).
+
+## Albums and tags
+
+Two ways to group photos:
+
+- **Albums** are named sets you arrange yourself. Create them under
+  **Admin, Albums**; add photos from the library (tick photos, choose an
+  album, **Add to album**) or from a photo's own page. A photo can be in
+  several albums. Each public album gets a page at `/album/<name>`, listed
+  at `/albums`, with its photos in the order you added them. An album can
+  be hidden, and an album with no visible photos is not shown.
+- **Tags** are short labels typed on a photo's page, separated by commas,
+  or added to several photos at once from the library. Each tag gets a page
+  at `/tag/<name>`. A tag exists only while a photo carries it.
+
+Deleting an album never deletes its photos.
 
 ## Sample photos
 
