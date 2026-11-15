@@ -22,6 +22,13 @@
       "when": 1794758688968,
       "tag": "0002_scheduled_publishing",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1794759271432,
+      "tag": "0003_licence_and_download",
+      "breakpoints": true
     }
   ]
 }

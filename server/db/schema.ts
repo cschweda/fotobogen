@@ -52,6 +52,10 @@ export const photos = sqliteTable('photos', {
   // When a public photo goes live. Null means at once; a time in the future
   // keeps it off the site until then.
   publishAt: integer('publish_at'),
+  // The licence visitors are told the photo is under; null follows the site's.
+  license: text('license'),
+  // Whether visitors may download it; null follows the site's setting.
+  allowDownload: integer('allow_download', { mode: 'boolean' }),
   isSample: integer('is_sample', { mode: 'boolean' }).notNull().default(false),
   sortOrder: integer('sort_order').notNull().default(0),
   createdAt: integer('created_at').notNull(),

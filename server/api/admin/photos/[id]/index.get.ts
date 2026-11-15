@@ -9,7 +9,7 @@ export default defineEventHandler(async (event) => {
   await requireAdmin(event)
   const { sqlite, storage, modules } = getPipeline()
   const photo = sqlite.prepare(`
-    select p.id, p.slug, p.title, p.description, p.alt, p.visibility, p.publish_at as publishAt, p.taken_at as takenAt, p.bytes, p.mime,
+    select p.id, p.slug, p.title, p.description, p.alt, p.visibility, p.publish_at as publishAt, p.taken_at as takenAt, p.bytes, p.mime, p.license, p.allow_download as allowDownload,
       p.camera, p.lens, p.focal_length as focalLength, p.aperture, p.shutter, p.iso, p.lat, p.lng,
       p.original_filename as filename, p.status, p.width, p.height, p.recipe_json as recipe,
       d.path, d.width as mediumWidth, d.height as mediumHeight
@@ -17,7 +17,7 @@ export default defineEventHandler(async (event) => {
     where p.id = ?
   `).get(getRouterParam(event, 'id') ?? '') as {
     id: string, slug: string, title: string | null, filename: string, status: string, width: number, height: number
-    description: string | null, alt: string | null, visibility: 'public' | 'hidden', publishAt: number | null, takenAt: number | null, bytes: number, mime: string
+    description: string | null, alt: string | null, visibility: 'public' | 'hidden', publishAt: number | null, takenAt: number | null, bytes: number, mime: string, license: string | null, allowDownload: number | null
     camera: string | null, lens: string | null, focalLength: string | null, aperture: string | null, shutter: string | null, iso: number | null
     lat: number | null, lng: number | null
     recipe: string | null, path: string | null, mediumWidth: number | null, mediumHeight: number | null
@@ -35,6 +35,9 @@ export default defineEventHandler(async (event) => {
     alt: photo.alt,
     visibility: photo.visibility,
     publishAt: photo.publishAt,
+    // null: follows the site's setting.
+    license: photo.license,
+    allowDownload: photo.allowDownload === null ? null : photo.allowDownload === 1,
     takenAt: photo.takenAt,
     // Read from the file when it was uploaded. Shown to the admin only; the
     // public site follows the privacy settings.

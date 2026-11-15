@@ -5,6 +5,7 @@
      itself is never changed. -->
 <script setup lang="ts">
 import type { ModuleInfo, RecipeStep } from '~/components/ModuleControls.vue'
+import { LICENCES } from '~~/shared/licences'
 
 definePageMeta({ middleware: 'admin' })
 
@@ -13,7 +14,7 @@ interface Detail {
   visibility: 'public' | 'hidden', publishAt: number | null, takenAt: number | null, filename: string, status: 'processing' | 'ready' | 'failed'
   width: number, height: number
   details: { camera: string | null, lens: string | null, focalLength: string | null, aperture: string | null, shutter: string | null, iso: number | null, location: { lat: number, lng: number } | null, bytes: number, mime: string }
-  tags: string[], albums: string[]
+  tags: string[], albums: string[], license: string | null, allowDownload: boolean | null
   own: RecipeStep[] | null, site: RecipeStep[], recipe: RecipeStep[], skipped: string[]
   medium: { url: string, width: number, height: number } | null
 }
@@ -50,6 +51,9 @@ const form = reactive({
   publish: (photo.value.visibility === 'hidden' ? 'hidden' : photo.value.publishAt && photo.value.publishAt > Date.now() ? 'later' : 'now') as 'now' | 'later' | 'hidden',
   // The browser's date-and-time field works in local time.
   publishAt: toLocal(photo.value.publishAt),
+  // An empty choice means "the same as the site".
+  license: photo.value.license ?? '',
+  allowDownload: photo.value.allowDownload === null ? '' : photo.value.allowDownload ? 'yes' : 'no',
   // Typed as one line, separated by commas.
   tags: photo.value.tags.join(', '),
   albums: [...photo.value.albums],
@@ -71,6 +75,8 @@ async function saveDetails() {
         publishAt: form.publish === 'later' && form.publishAt ? new Date(form.publishAt).getTime() : null,
         takenAt: form.taken ? Date.parse(`${form.taken}T00:00:00Z`) : null,
         tags: form.tags.split(','), albums: form.albums,
+        license: form.license || null,
+        allowDownload: form.allowDownload === '' ? null : form.allowDownload === 'yes',
       },
     })
     form.slug = result.slug
@@ -284,6 +290,24 @@ onBeforeUnmount(() => {
           />
           <FbField id="slug" v-model="form.slug" label="Address" :maxlength="80" :error="errors.slug" hint="The end of the photo's web address: /photo/…" />
           <FbField id="taken" v-model="form.taken" label="Date taken" type="date" :error="errors.takenAt" />
+          <div class="pick">
+            <label class="pick__label" for="license">Licence</label>
+            <select id="license" v-model="form.license" class="pick__select">
+              <option value="">Same as the site</option>
+              <option v-for="licence in LICENCES" :key="licence.key" :value="licence.key">{{ licence.label }}</option>
+            </select>
+          </div>
+          <div class="pick">
+            <label class="pick__label" for="allowDownload">Downloads</label>
+            <select id="allowDownload" v-model="form.allowDownload" class="pick__select" aria-describedby="download-note">
+              <option value="">Same as the site</option>
+              <option value="yes">Visitors may download this photo</option>
+              <option value="no">No downloads for this photo</option>
+            </select>
+            <p id="download-note" class="pick__note">
+              A download is a large copy with all camera data removed, unless your site shows where photos were taken, in which case it is the file itself.
+            </p>
+          </div>
           <FbField id="tags" v-model="form.tags" label="Tags" plain-text hint="Short labels, separated by commas: street, night, Lisbon." />
           <fieldset v-if="albumList?.albums.length" class="scope">
             <legend class="scope__legend">Albums</legend>
@@ -367,6 +391,10 @@ onBeforeUnmount(() => {
 .scope__legend { padding: 0; margin-bottom: 0.5rem; font-weight: 700; }
 .scope__choice { display: flex; align-items: center; gap: 0.6rem; cursor: pointer; }
 .scope__choice input { width: 1.25rem; height: 1.25rem; margin: 0; accent-color: var(--fb-red); }
+.pick { margin-bottom: 1.75rem; max-width: 32rem; }
+.pick__label { display: block; font-weight: 700; }
+.pick__select { width: 100%; height: 2.75rem; margin-top: 0.5rem; padding: 0 0.6rem; border: 1px solid var(--fb-edge); background: var(--fb-panel); color: var(--fb-text); font: inherit; border-radius: 0; }
+.pick__note { margin: 0.5rem 0 0; color: var(--fb-muted); font-size: 0.875rem; }
 .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; margin-top: 1.5rem; }
 .delete__yes { background: var(--fb-error); border-color: var(--fb-error); color: var(--fb-ground); }
 .facts { margin: 0; border-top: 1px solid var(--fb-line); font-size: 0.9375rem; }

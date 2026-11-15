@@ -1,6 +1,7 @@
 // What the public pages and feeds may know about photos. Only photos that
 // are processed and public are ever returned from here.
 import { thumbHashToDataURL } from 'thumbhash'
+import { DEFAULT_LICENCE, licenceFor } from '../../shared/licences.ts'
 import { resolveSettings } from '../core/config.ts'
 import { getRequestHeader, getRequestURL, type RequestEvent } from 'nuxt/server'
 import { getPipeline } from './app.ts'
@@ -147,6 +148,9 @@ export interface PublicPhoto {
   tags: { slug: string, name: string }[]
   /** Public albums this photo is in. */
   albums: { slug: string, title: string }[]
+  licence: { label: string, url: string | null }
+  /** Present when visitors may download the photo. */
+  download: { url: string, original: boolean } | null
   previous: string | null
   next: string | null
 }
@@ -155,12 +159,14 @@ export function publicPhoto(slug: string): PublicPhoto | null {
   const { sqlite, storage } = getPipeline()
   const photo = sqlite.prepare(`
     select p.id, p.slug, p.title, p.description, p.alt, p.thumbhash, p.taken_at as takenAt, p.sort_order as sortOrder,
-      p.camera, p.lens, p.focal_length as focalLength, p.aperture, p.shutter, p.iso, p.lat, p.lng
+      p.camera, p.lens, p.focal_length as focalLength, p.aperture, p.shutter, p.iso, p.lat, p.lng,
+      p.license, p.allow_download as allowDownload
     from photos p where p.slug = ? and ${visible()}
   `).get(slug) as (Record<string, never> & {
     id: string, slug: string, title: string | null, description: string | null, alt: string | null, thumbhash: string | null
     takenAt: number | null, sortOrder: number, camera: string | null, lens: string | null, focalLength: string | null
     aperture: string | null, shutter: string | null, iso: number | null, lat: number | null, lng: number | null
+    license: string | null, allowDownload: number | null
   }) | undefined
   if (!photo) return null
 
@@ -185,6 +191,10 @@ export function publicPhoto(slug: string): PublicPhoto | null {
     images: images.map(image => ({ url: storage.publicUrl(image.path), width: image.width, height: image.height })),
     tags: sqlite.prepare(`select t.slug, t.name from tags t join photo_tags pt on pt.tag_id = t.id where pt.photo_id = ? order by t.name collate nocase`).all(photo.id) as { slug: string, name: string }[],
     albums: sqlite.prepare(`select a.slug, a.title from albums a join album_photos ap on ap.album_id = a.id where ap.photo_id = ? and a.visibility = 'public' order by a.title collate nocase`).all(photo.id) as { slug: string, title: string }[],
+    licence: (({ label, url }) => ({ label, url }))(licenceFor(photo.license ?? getSetting('site.license', DEFAULT_LICENCE))),
+    download: downloadAllowed(photo.allowDownload)
+      ? { url: `/api/photos/${encodeURIComponent(photo.slug)}/download`, original: originalIsServed() }
+      : null,
     previous: neighbour('>', 'asc'),
     next: neighbour('<', 'desc'),
   }
@@ -233,6 +243,33 @@ export function publicSlides(scope?: Scope): Slide[] {
       : null,
     images: (copies.all(row.id) as { path: string, width: number, height: number }[]).map(copy => ({ url: storage.publicUrl(copy.path), width: copy.width, height: copy.height })),
   })).filter(slide => slide.images.length > 0)
+}
+
+/** A photo's own choice wins; without one, the site's setting decides. */
+export const downloadAllowed = (own: number | null): boolean =>
+  own === null ? getSetting('privacy.allow_original_download', false) : own === 1
+
+/**
+ * The file as uploaded carries everything the camera recorded: place,
+ * serial numbers, sometimes the owner's name. It is handed out only on a
+ * site that has chosen to show where photos were taken. On any other site
+ * a download is the largest resized copy, which carries no metadata at
+ * all. This does not depend on what the app managed to read from the file,
+ * so a location it failed to recognise cannot leak.
+ */
+export const originalIsServed = (): boolean => getSetting('privacy.show_location', false)
+
+/** What a download of this photo serves, or null when it may not be downloaded. */
+export function publicDownload(slug: string): { area: 'originals' | 'derivatives', key: string, filename: string, mime: string } | null {
+  const { sqlite } = getPipeline()
+  const photo = sqlite.prepare(`
+    select p.id, p.slug, p.original_path as original, p.original_filename as filename, p.mime, p.allow_download as allowDownload
+    from photos p where p.slug = ? and ${visible()}
+  `).get(slug) as { id: string, slug: string, original: string, filename: string, mime: string, allowDownload: number | null } | undefined
+  if (!photo || !downloadAllowed(photo.allowDownload)) return null
+  if (originalIsServed()) return { area: 'originals', key: photo.original, filename: photo.filename, mime: photo.mime }
+  const copy = sqlite.prepare(`select path from derivatives where photo_id = ? and kind in ('medium', 'large') order by width desc limit 1`).get(photo.id) as { path: string } | undefined
+  return copy ? { area: 'derivatives', key: copy.path, filename: `${photo.slug}.webp`, mime: 'image/webp' } : null
 }
 
 /** The site's own address as visitors see it, for links in feeds and social cards. */

@@ -59,6 +59,10 @@ uses [Semantic Versioning](https://semver.org/).
 - Scheduled publishing: a photo can be set to go public at a date and time, and appears by itself when it comes.
 - Drafts: a setting makes new uploads start hidden until published.
 - Slideshow: a full-screen player for the whole site, an album, or a tag, with preloading, cross-fade, pause, keyboard control, and details on demand; timing and order are settings.
+- Licences: a site-wide licence (all rights reserved or Creative Commons), shown on each photo page, which a photo can override.
+- Downloads: visitors can download photos when the site or a photo allows it. A download is a large copy with no camera data; the file as uploaded is handed out only by a site that shows where photos were taken.
+- Watermark module: a line of text in a corner of each photo.
+- Modules can declare a `text` parameter.
 - Windows: CI installs, builds, and tests on Windows, including a PowerShell smoke test (`scripts/smoke-test.ps1`).
 
 ### Changed

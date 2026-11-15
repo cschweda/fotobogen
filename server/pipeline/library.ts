@@ -1,6 +1,7 @@
 // Changes the admin makes to photos already in the library: their words,
 // whether they are shown, and their order. Deleting is in remove.ts.
 import type { PipelineContext } from './context.ts'
+import { isLicence } from '../../shared/licences.ts'
 import { slugify } from './slug.ts'
 
 export interface PhotoEdit {
@@ -13,6 +14,10 @@ export interface PhotoEdit {
   visibility?: 'public' | 'hidden'
   /** When a public photo goes live, in milliseconds since 1970; null for at once. */
   publishAt?: number | null
+  /** A licence key from shared/licences.ts; null follows the site's. */
+  license?: string | null
+  /** Whether visitors may download it; null follows the site's setting. */
+  allowDownload?: boolean | null
 }
 
 export type EditResult
@@ -63,6 +68,17 @@ export function updatePhoto(ctx: PipelineContext, id: string, edit: Record<strin
     else if (typeof edit.publishAt === 'number' && Number.isFinite(edit.publishAt) && edit.publishAt > 0 && edit.publishAt < 8.64e15) publishAt = Math.round(edit.publishAt)
     else errors.publishAt = 'This is not a date and time.'
   }
+  let license: string | null | undefined
+  if (edit.license !== undefined) {
+    if (edit.license === null || isLicence(edit.license)) license = edit.license
+    else errors.license = 'Choose a licence from the list.'
+  }
+  let allowDownload: number | null | undefined
+  if (edit.allowDownload !== undefined) {
+    if (edit.allowDownload === null) allowDownload = null
+    else if (typeof edit.allowDownload === 'boolean') allowDownload = edit.allowDownload ? 1 : 0
+    else errors.allowDownload = 'Choose yes, no, or the same as the site.'
+  }
   if (Object.keys(errors).length > 0) return { ok: false, reason: 'invalid', errors }
 
   return sqlite.transaction((): EditResult => {
@@ -85,6 +101,8 @@ export function updatePhoto(ctx: PipelineContext, id: string, edit: Record<strin
     set('taken_at', takenAt)
     set('visibility', visibility)
     set('publish_at', publishAt)
+    set('license', license)
+    set('allow_download', allowDownload)
     if (sets.length > 0) sqlite.prepare(`update photos set ${sets.join(', ')}, updated_at = ? where id = ?`).run(...values, Date.now(), id)
     return { ok: true, slug: slug ?? current.slug }
   })()

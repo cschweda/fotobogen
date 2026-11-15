@@ -1,11 +1,13 @@
 <!-- Site settings: its name, how photos are shown, and what is revealed about them. -->
 <script setup lang="ts">
+import { LICENCES } from '~~/shared/licences'
+
 definePageMeta({ middleware: 'admin' })
 useHead({ title: 'Settings | Fotobogen' })
 
-interface Settings { siteTitle: string, tagline: string, grid: 'masonry' | 'square', photoView: 'modal' | 'page', showExif: boolean, showLocation: boolean, newUploads: 'public' | 'hidden', slideshowSeconds: number, slideshowOrder: 'sequence' | 'random' }
+interface Settings { siteTitle: string, tagline: string, grid: 'masonry' | 'square', photoView: 'modal' | 'page', showExif: boolean, showLocation: boolean, newUploads: 'public' | 'hidden', slideshowSeconds: number, slideshowOrder: 'sequence' | 'random', licence: string, allowDownload: boolean }
 const { data } = await useFetch<Settings>('/api/admin/settings')
-const form = reactive<Settings>({ siteTitle: '', tagline: '', grid: 'masonry', photoView: 'modal', showExif: true, showLocation: false, newUploads: 'public', slideshowSeconds: 8, slideshowOrder: 'sequence', ...data.value })
+const form = reactive<Settings>({ siteTitle: '', tagline: '', grid: 'masonry', photoView: 'modal', showExif: true, showLocation: false, newUploads: 'public', slideshowSeconds: 8, slideshowOrder: 'sequence', licence: 'arr', allowDownload: false, ...data.value })
 const errors = ref<Record<string, string>>({})
 const message = ref('')
 const problem = ref('')
@@ -82,6 +84,22 @@ async function save() {
         <label class="check uploads__second"><input v-model="form.slideshowOrder" type="radio" name="slideshowOrder" value="random"><span>Shuffled, and reshuffled each time round</span></label>
       </fieldset>
 
+      <h2 class="settings__heading">Licence and downloads</h2>
+      <div class="seconds">
+        <label class="seconds__label" for="licence">Licence</label>
+        <select id="licence" v-model="form.licence" class="licence" aria-describedby="licence-note">
+          <option v-for="licence in LICENCES" :key="licence.key" :value="licence.key">{{ licence.label }}</option>
+        </select>
+        <p id="licence-note" class="check__note licence__note">Shown beside each photo. A photo can be given its own on its page.</p>
+      </div>
+      <label class="check">
+        <input v-model="form.allowDownload" type="checkbox" aria-describedby="download-note">
+        <span>Let visitors download photos</span>
+      </label>
+      <p id="download-note" class="check__note">
+        Off by default. Visitors get a large copy (up to 2560 pixels) with all camera data removed. Only if "Show where photos were taken" is also on do they get the file exactly as you uploaded it, which includes everything the camera recorded.
+      </p>
+
       <h2 class="settings__heading">Privacy</h2>
       <label class="check">
         <input v-model="form.showExif" type="checkbox" aria-describedby="exif-note">
@@ -116,6 +134,8 @@ async function save() {
 .seconds__input { width: 7rem; height: 2.75rem; margin-top: 0.5rem; padding: 0 0.75rem; border: 1px solid var(--fb-edge); background: var(--fb-panel); color: var(--fb-text); font: inherit; border-radius: 0; }
 .seconds--invalid .seconds__input { border-color: var(--fb-error); border-width: 2px; }
 .seconds__error { margin: 0.5rem 0 0; color: var(--fb-error); }
+.licence { display: block; width: 100%; max-width: 24rem; height: 2.75rem; margin-top: 0.5rem; padding: 0 0.6rem; border: 1px solid var(--fb-edge); background: var(--fb-panel); color: var(--fb-text); font: inherit; border-radius: 0; }
+.licence__note { margin-left: 0; }
 .check__note { margin: 0.25rem 0 1.25rem 1.85rem; max-width: 34rem; color: var(--fb-muted); font-size: 0.875rem; }
 .actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 2.5rem; }
 .saved { margin-top: 0.75rem; }

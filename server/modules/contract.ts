@@ -12,6 +12,7 @@ export type ParamSpec
   = | { type: 'range', label?: string, min: number, max: number, step?: number, default: number }
     | { type: 'select', label?: string, options: string[], default: string }
     | { type: 'boolean', label?: string, default: boolean }
+    | { type: 'text', label?: string, default: string, maxLength?: number }
 
 export type ParamValue = number | string | boolean
 export type Params = Record<string, ParamValue>
@@ -64,6 +65,8 @@ export function defineModule(definition: ModuleDefinition): ModuleDefinition {
   return definition
 }
 
+/** The longest text a module may ask for. */
+const TEXT_LIMIT = 200
 const NAME = /^[a-z][a-z0-9-]{0,39}$/
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -101,7 +104,12 @@ function checkParam(key: string, spec: unknown): ParamSpec {
     if (typeof spec.default !== 'boolean') throw new Error(`Boolean parameter "${key}" needs a true or false default.`)
     return { type: 'boolean', label, default: spec.default }
   }
-  throw new Error(`Parameter "${key}" has an unknown type. Use "range", "select", or "boolean".`)
+  if (spec.type === 'text') {
+    if (typeof spec.default !== 'string') throw new Error(`Text parameter "${key}" needs a text default (it may be empty).`)
+    const maxLength = typeof spec.maxLength === 'number' && spec.maxLength > 0 ? Math.min(TEXT_LIMIT, Math.floor(spec.maxLength)) : 80
+    return { type: 'text', label, default: spec.default.slice(0, maxLength), maxLength }
+  }
+  throw new Error(`Parameter "${key}" has an unknown type. Use "range", "select", "boolean", or "text".`)
 }
 
 /** Checks what a module's entry point exported. Throws with a message for the admin. */
@@ -145,6 +153,11 @@ export function coerceParams(specs: Record<string, ParamSpec>, given: unknown): 
     }
     else if (spec.type === 'select') {
       params[key] = typeof value === 'string' && spec.options.includes(value) ? value : spec.default
+    }
+    else if (spec.type === 'text') {
+      // One line of plain text: control characters out, length capped.
+      // eslint-disable-next-line no-control-regex
+      params[key] = typeof value === 'string' ? value.replace(/[\u0000-\u001f\u007f]/g, ' ').slice(0, spec.maxLength ?? 80) : spec.default
     }
     else {
       params[key] = typeof value === 'boolean' ? value : spec.default

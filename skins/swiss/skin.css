@@ -27,7 +27,9 @@
 }
 .fb-public body { margin: 0; min-height: 100vh; background: var(--fb-ground); font-feature-settings: "tnum" 1; }
 .fb-public a { color: inherit; text-underline-offset: 0.2em; text-decoration-thickness: 1px; }
-.fb-public a:hover { color: var(--fb-accent); }
+/* The accent marks a hovered link by its underline. As a text colour, red on
+   near-black is 4.0:1, short of the 4.5:1 that text needs. */
+.fb-public a:hover { text-decoration-line: underline; text-decoration-color: var(--fb-accent); text-decoration-thickness: 2px; }
 .fb-public :focus-visible { outline: 2px solid var(--fb-text); outline-offset: 3px; }
 .fb-skip { position: absolute; left: -999rem; }
 .fb-skip:focus { left: var(--fb-margin); top: 0.75rem; z-index: 3; padding: 0.5rem 0.75rem; background: var(--fb-ground); }
@@ -113,6 +115,7 @@
 .fb-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 1rem 0 0; padding: 0; list-style: none; }
 .fb-tag { display: inline-block; padding: 0.1rem 0.5rem; border: 1px solid var(--fb-line); font-size: 0.8125rem; text-decoration: none; }
 .fb-tag:hover { border-color: var(--fb-accent); }
+.fb-photo__licence, .fb-photo__download { margin: 1rem 0 0; font-size: 0.875rem; color: var(--fb-muted); }
 .fb-photo__nav { display: flex; gap: 1.5rem; margin-top: 1.5rem; font-size: 0.9375rem; }
 .fb-photo__back { margin: 0 0 1.5rem; font-size: 0.875rem; }
 @media (max-width: 52rem) { .fb-photo { grid-template-columns: 1fr; } }

@@ -13,7 +13,7 @@ import { processPhoto } from '../../server/pipeline/render.ts'
 import { imageFile } from '../helpers/images.ts'
 import { rows, testContext } from '../helpers/pipeline.ts'
 
-const KNOWN = ['0000_initial', '0001_albums_and_tags', '0002_scheduled_publishing']
+const KNOWN = ['0000_initial', '0001_albums_and_tags', '0002_scheduled_publishing', '0003_licence_and_download']
 
 async function site() {
   const ctx = testContext()
