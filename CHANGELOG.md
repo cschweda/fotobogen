@@ -11,10 +11,18 @@ is built from this file.
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [1.1.0] - 2026-11-15
+
 ### Added
 
 - **Update from the admin.** When a newer release is found, the System page can install it on a copy made with git: it saves a copy of the database, fetches the release, installs and builds it, and restarts (under pm2) or waits for a restart. If any step fails, the old version is put back and built again. A Docker copy is shown the commands to run instead. Only the logged-in owner can update.
 - `pnpm fotobogen update [version]` does the same from the command line.
+
+### Upgrading from 1.0.0
+
+Version 1.0.0 cannot update itself, so this one step is done by hand: `git pull`, `pnpm install`, `pnpm build`, and restart (or `scripts/rebuild.sh` under pm2; `git pull` and `docker compose up -d --build` with Docker). From 1.1.0 on, later releases can be installed from the admin. Nothing in your data needs changing.
 
 ## [1.0.0] - 2026-11-15
 
@@ -112,4 +120,5 @@ Later entries list only what changed.
 - One admin account only. No comments, no shop, no storage outside the server's own disk.
 
 [Unreleased]: https://github.com/cschweda/fotobogen/commits/staging
-[1.0.0]: https://github.com/cschweda/fotobogen/tree/main
+[1.1.0]: https://github.com/cschweda/fotobogen/tree/main
+[1.0.0]: https://github.com/cschweda/fotobogen/blob/main/CHANGELOG.md
