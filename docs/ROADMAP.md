@@ -16,7 +16,7 @@ The feature list agreed on 2026-11-15, in the order it is being built. Each item
 | 8 | RSS, sitemap, and social cards per photo | Done |
 | 9 | A notice in the admin when a new version exists | Done |
 
-Visit counting is left to Plausible, which already tracks fotobogen.com; the placeholder site gets named goals instead.
+Visit counting is left to Plausible, which already tracks fotobogen.com. The page sends named events (`GitHub click`, `Author click`, `Theme switch`, `Section viewed`, `Screenshot viewed`) that can be added as goals there.
 
 ## For developers
 

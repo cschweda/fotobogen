@@ -51,7 +51,30 @@ plan is in [docs/DESIGN.md](docs/DESIGN.md); changes are recorded in
 
 ## Screenshots
 
-Taken from a local install at the current stage of development.
+Taken from a local install at the current stage of development. The
+photographs are the sample photos Fotobogen can download (Unsplash
+photographs, via Lorem Picsum).
+
+What visitors see: the grid, and a photo on its own page.
+
+![The public site: a dark page with a masonry grid of photographs of different shapes](docs/screenshots/gallery.jpg)
+
+![A photo page: the photograph with its title and description beside it, and Previous and Next links](docs/screenshots/photo.jpg)
+
+Editing a photo, with the strip of look previews under it and a film frame
+chosen:
+
+![The edit page previewing a photo inside a film border with sprocket holes, above a strip of small previews of different film looks](docs/screenshots/looks.jpg)
+
+The library:
+
+![The photo library: a grid of photo cards with checkboxes and Up, Down, and To top buttons](docs/screenshots/library.jpg)
+
+The notice shown once, before the admin opens:
+
+![A page titled Back up your photographs, with three points and an I understand button](docs/screenshots/notice.png)
+
+The rest are from the installer and the first run.
 
 The setup wizard opens on first visit and asks for the one-time token the
 server printed when it started:
@@ -602,7 +625,10 @@ Netlify, and each one costs build credits.
 ## The fotobogen.com placeholder page
 
 `site/` holds the single page shown at fotobogen.com: a visual guide to the
-software, with screens from the current build. `netlify.toml` tells Netlify
+software, with screens from the current build. It reports a few named
+events to Plausible (`GitHub click`, `Author click`, `Theme switch`,
+`Section viewed`, `Screenshot viewed`); add those names as goals in
+Plausible to see them counted. `netlify.toml` tells Netlify
 to publish only that folder. The application itself needs a persistent disk
 and never runs on Netlify. The social card is built from
 `docs/og/og.html` with `node docs/og/render.mjs`.
