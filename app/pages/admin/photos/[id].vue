@@ -304,8 +304,8 @@ onBeforeUnmount(() => {
               <option value="yes">Visitors may download this photo</option>
               <option value="no">No downloads for this photo</option>
             </select>
-            <p v-if="photo.details.location" id="download-note" class="pick__note">
-              This file records where it was taken. Unless your site shows locations, a download gives visitors a large copy without that, not the file itself.
+            <p id="download-note" class="pick__note">
+              A download is a large copy with all camera data removed, unless your site shows where photos were taken, in which case it is the file itself.
             </p>
           </div>
           <FbField id="tags" v-model="form.tags" label="Tags" plain-text hint="Short labels, separated by commas: street, night, Lisbon." />

@@ -1,6 +1,6 @@
-// Download a photo, when its owner allows that. Normally the file exactly
-// as uploaded; if that file records where it was taken and the site keeps
-// locations private, the largest resized copy instead (see public.ts).
+// Download a photo, when its owner allows that: the largest resized copy,
+// which carries no metadata. Only a site that has chosen to show where
+// photos were taken hands out the file exactly as uploaded (see public.ts).
 import { Readable } from 'node:stream'
 import { createError, defineEventHandler, getRouterParam } from 'nuxt/server'
 import { getPipeline } from '../../../utils/app.ts'

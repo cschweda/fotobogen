@@ -97,7 +97,7 @@ async function save() {
         <span>Let visitors download photos</span>
       </label>
       <p id="download-note" class="check__note">
-        Off by default. A download is the file exactly as you uploaded it, with everything the camera recorded. If a file records where it was taken and "Show where photos were taken" is off, visitors get a large copy without that instead.
+        Off by default. Visitors get a large copy (up to 2560 pixels) with all camera data removed. Only if "Show where photos were taken" is also on do they get the file exactly as you uploaded it, which includes everything the camera recorded.
       </p>
 
       <h2 class="settings__heading">Privacy</h2>

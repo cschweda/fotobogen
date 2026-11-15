@@ -193,7 +193,7 @@ export function publicPhoto(slug: string): PublicPhoto | null {
     albums: sqlite.prepare(`select a.slug, a.title from albums a join album_photos ap on ap.album_id = a.id where ap.photo_id = ? and a.visibility = 'public' order by a.title collate nocase`).all(photo.id) as { slug: string, title: string }[],
     licence: (({ label, url }) => ({ label, url }))(licenceFor(photo.license ?? getSetting('site.license', DEFAULT_LICENCE))),
     download: downloadAllowed(photo.allowDownload)
-      ? { url: `/api/photos/${encodeURIComponent(photo.slug)}/download`, original: originalIsSafe(photo.lat, photo.lng) }
+      ? { url: `/api/photos/${encodeURIComponent(photo.slug)}/download`, original: originalIsServed() }
       : null,
     previous: neighbour('>', 'asc'),
     next: neighbour('<', 'desc'),
@@ -250,22 +250,24 @@ export const downloadAllowed = (own: number | null): boolean =>
   own === null ? getSetting('privacy.allow_original_download', false) : own === 1
 
 /**
- * The file as uploaded carries everything the camera recorded. If that
- * includes where the photo was taken and the site does not show locations,
- * a download gives the largest resized copy instead, which has no metadata.
+ * The file as uploaded carries everything the camera recorded: place,
+ * serial numbers, sometimes the owner's name. It is handed out only on a
+ * site that has chosen to show where photos were taken. On any other site
+ * a download is the largest resized copy, which carries no metadata at
+ * all. This does not depend on what the app managed to read from the file,
+ * so a location it failed to recognise cannot leak.
  */
-export const originalIsSafe = (lat: number | null, lng: number | null): boolean =>
-  (lat === null && lng === null) || getSetting('privacy.show_location', false)
+export const originalIsServed = (): boolean => getSetting('privacy.show_location', false)
 
 /** What a download of this photo serves, or null when it may not be downloaded. */
 export function publicDownload(slug: string): { area: 'originals' | 'derivatives', key: string, filename: string, mime: string } | null {
   const { sqlite } = getPipeline()
   const photo = sqlite.prepare(`
-    select p.id, p.slug, p.original_path as original, p.original_filename as filename, p.mime, p.lat, p.lng, p.allow_download as allowDownload
+    select p.id, p.slug, p.original_path as original, p.original_filename as filename, p.mime, p.allow_download as allowDownload
     from photos p where p.slug = ? and ${visible()}
-  `).get(slug) as { id: string, slug: string, original: string, filename: string, mime: string, lat: number | null, lng: number | null, allowDownload: number | null } | undefined
+  `).get(slug) as { id: string, slug: string, original: string, filename: string, mime: string, allowDownload: number | null } | undefined
   if (!photo || !downloadAllowed(photo.allowDownload)) return null
-  if (originalIsSafe(photo.lat, photo.lng)) return { area: 'originals', key: photo.original, filename: photo.filename, mime: photo.mime }
+  if (originalIsServed()) return { area: 'originals', key: photo.original, filename: photo.filename, mime: photo.mime }
   const copy = sqlite.prepare(`select path from derivatives where photo_id = ? and kind in ('medium', 'large') order by width desc limit 1`).get(photo.id) as { path: string } | undefined
   return copy ? { area: 'derivatives', key: copy.path, filename: `${photo.slug}.webp`, mime: 'image/webp' } : null
 }
