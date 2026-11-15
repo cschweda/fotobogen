@@ -48,7 +48,7 @@ test('one photo can be given a frame, with a preview before saving and controls 
   await page.getByRole('link', { name: 'Photos', exact: true }).click()
   await expect(heading(page, 'Photos')).toBeVisible()
   await expectNoAxeViolations(page)
-  await page.getByRole('link', { name: 'pier.jpg' }).click()
+  await page.getByRole('link', { name: 'Edit pier.jpg' }).click()
   await expect(heading(page, 'pier.jpg')).toBeVisible()
   await expect(page.getByRole('radio', { name: 'Same as all photos' })).toBeChecked()
 
@@ -70,7 +70,7 @@ test('one photo can be given a frame, with a preview before saving and controls 
   await expect(page.getByLabel('Frame thickness')).toHaveValue('6.5')
   await page.getByRole('checkbox', { name: 'Film edge markings' }).uncheck()
 
-  await page.getByRole('button', { name: 'Save' }).click()
+  await page.getByRole('button', { name: 'Save look' }).click()
   await expect(page.getByText('As it is now.')).toBeVisible({ timeout: 30_000 })
   // Only this photo changed: 900 px plus a border and paper on each side.
   expect(mediumWidths()).toEqual([900, 900 + 2 * (39 + 20)])

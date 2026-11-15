@@ -11,6 +11,8 @@ const props = defineProps<{
   autocomplete?: string
   maxlength?: number
   plainText?: boolean
+  /** A text area of this many rows instead of a one-line input. */
+  rows?: number
 }>()
 const model = defineModel<string>({ required: true })
 
@@ -23,7 +25,19 @@ const describedBy = computed(() =>
     <label :for="id" class="field__label">{{ label }}</label>
     <p v-if="hint" :id="`${id}-hint`" class="field__hint">{{ hint }}</p>
     <div class="field__control">
+      <textarea
+        v-if="rows"
+        :id="id"
+        v-model="model"
+        class="field__input field__input--multiline"
+        :name="id"
+        :rows="rows"
+        :maxlength="maxlength"
+        :aria-invalid="error ? 'true' : undefined"
+        :aria-describedby="describedBy"
+      />
       <input
+        v-else
         :id="id"
         v-model="model"
         class="field__input"
@@ -60,6 +74,7 @@ const describedBy = computed(() =>
   font: inherit;
 }
 .field__input:hover { border-color: var(--fb-text); }
+.field__input--multiline { height: auto; padding-top: 0.6rem; padding-bottom: 0.6rem; line-height: 1.45; resize: vertical; }
 .field--invalid .field__input { border-color: var(--fb-error); border-width: 2px; }
 .field__error { margin: 0.5rem 0 0; color: var(--fb-error); font-size: 0.9375rem; }
 </style>

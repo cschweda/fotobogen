@@ -98,10 +98,11 @@ const PREVIEW_EDGE = config.internals.derivatives.previewEdge
  * What a photo would look like with a recipe, as a WebP, without saving
  * anything. Made at a small size so the edit screen can show it at once.
  */
-export async function renderPreview(ctx: PipelineContext, photoId: string, recipe: unknown): Promise<Buffer | null> {
+export async function renderPreview(ctx: PipelineContext, photoId: string, recipe: unknown, edge = PREVIEW_EDGE): Promise<Buffer | null> {
   const photo = ctx.sqlite.prepare(`select original_path from photos where id = ?`).get(photoId) as { original_path: string } | undefined
   if (!photo || !ctx.modules) return null
-  const decoded = await workingRaster(ctx, ctx.storage.localPath('originals', photo.original_path), PREVIEW_EDGE)
+  const size = Math.max(120, Math.min(PREVIEW_EDGE, Math.round(edge) || PREVIEW_EDGE))
+  const decoded = await workingRaster(ctx, ctx.storage.localPath('originals', photo.original_path), size)
   const result = await ctx.modules.apply(decoded, ctx.modules.cleanRecipe(recipe))
   return sharp(result.data, { raw: { width: result.width, height: result.height, channels: result.channels } }).webp({ quality: 80 }).toBuffer()
 }

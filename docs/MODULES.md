@@ -130,6 +130,7 @@ They cannot add screens or controls to the admin, read or change a photo's title
 - **Admin, Modules** lists every module, each switched off until you switch it on. Under "For all photos" you choose transforms for the whole site, including photos uploaded later.
 - **Admin, Photos**, then a photo, lets that one photo use the site's setting or have its own. A preview shows the change before it is saved.
 - Transforms run in the order the modules are listed: looks first, then the frame, so grain is not printed on the border.
+- Under the photo on its edit page is a strip of small previews, one per look: each transform with its default settings. **If a transform's first parameter is a `select`, the strip shows one preview for every option in it**, which is how the film looks appear side by side. Put the menu that defines the look first if you want that.
 
 ## When something goes wrong
 

@@ -31,6 +31,7 @@ plan is in [docs/DESIGN.md](docs/DESIGN.md); changes are recorded in
 - [The public site](#the-public-site)
 - [Skins](#skins)
 - [Uploading photos](#uploading-photos)
+- [Managing photos](#managing-photos)
 - [Sample photos](#sample-photos)
 - [Modules](#modules)
 - [Tests](#tests)
@@ -257,6 +258,28 @@ them on the page; each one shows its progress and result.
   tries is marked failed, with the reason and a **Try again** button.
 
 Once processed, a photo appears on the public site.
+
+## Managing photos
+
+**Admin, Photos** is the library. The first photo there is the first on
+your site.
+
+- **Order:** drag a photo onto another to put it in front, or use each
+  photo's Up, Down, and To top buttons, which do the same from the keyboard.
+- **Several at once:** tick photos, then Hide, Show, or Delete. Deleting
+  asks first, and removes the uploaded file and every resized copy.
+- **Find:** show only hidden photos, photos without alt text, or photos
+  that could not be processed. Each is also flagged on its card.
+- **One photo:** open it to edit its title, description, alt text, web
+  address, date taken, and whether it is public or hidden; to see what the
+  file recorded (camera, lens, exposure, location); or to delete it.
+- **Looks:** under the photo is a strip of small previews, one for each look
+  the switched-on modules offer. Choosing one sets it up for that photo,
+  with a larger preview, and nothing changes until you save.
+
+**Admin, Settings** holds the site title and tagline, the grid layout,
+whether photos open over the grid or on their own page, and the two privacy
+switches: camera details (on by default) and location (off by default).
 
 ## Sample photos
 
