@@ -12,6 +12,7 @@ interface Answer {
   settings: SeoSettings
   patterns: TitlePattern[]
   photos: { slug: string, title: string | null }[]
+  serverSiteUrl: string
   preview: { siteTitle: string, tagline: string, origin: string, card: Card | null }
 }
 const { data } = await useFetch<Answer>('/api/admin/seo')
@@ -23,12 +24,13 @@ const problem = ref('')
 const busy = ref(false)
 
 const siteName = computed(() => data.value!.preview.siteTitle || UNNAMED_SITE)
-const address = computed(() => (form.siteUrl.trim() || data.value!.preview.origin).replace(/^https?:\/\//, '').replace(/\/$/, ''))
+const address = computed(() => (data.value!.serverSiteUrl || form.siteUrl.trim() || data.value!.preview.origin).replace(/^https?:\/\//, '').replace(/\/$/, ''))
 const homeTitle = computed(() => pageTitle(form, siteName.value))
 const description = computed(() => form.description.trim() || data.value!.preview.tagline)
 /** The patterns in words, with this site's name, so each choice shows what it would produce. */
 const patternExample = (pattern: TitlePattern) => pageTitle({ homeTitle: '', titlePattern: pattern }, siteName.value, 'Harbour at dawn')
 // The site's proper address matters most when the site is reached by more than one.
+const local = computed(() => !form.siteUrl.trim() && /\/\/(localhost|127\.|\[::1\])/.test(data.value!.preview.origin))
 const insecure = computed(() => form.siteUrl.trim().startsWith('http://'))
 
 async function save() {
@@ -118,6 +120,8 @@ async function save() {
 
       <h2 class="seo__heading">The site's address</h2>
       <FbField id="siteUrl" v-model="form.siteUrl" label="Your site's proper address (optional)" :maxlength="200" plain-text :hint="`For example https://photos.example.com. Used in links that search engines and feed readers are given, so they all point to one address even if the site can be reached by several. Left empty, the address each visitor used is given; right now that is ${data!.preview.origin}.`" :error="errors.siteUrl" />
+      <p v-if="data!.serverSiteUrl" class="field__set">The server is set to use <strong>{{ data!.serverSiteUrl }}</strong> (<code>SITE_URL</code> in its <code>.env</code> file). That is used whatever is written here.</p>
+      <p v-else-if="local" class="field__set">No address is set, and you are using this admin at <strong>{{ data!.preview.origin }}</strong>, so links copied from a photo's page begin with that. Set your site's address here, or as <code>SITE_URL</code> on the server, to get links that work for other people.</p>
       <p v-if="insecure" class="field__warning">That address begins with http, not https. Search engines prefer https, and logging in to this admin needs it.</p>
 
       <h2 class="seo__heading">Proving the site is yours</h2>
@@ -154,6 +158,7 @@ async function save() {
 .field__label { display: block; font-weight: 700; }
 .field__select { display: block; width: 100%; max-width: 30rem; height: 2.75rem; margin-top: 0.5rem; padding: 0 0.6rem; border: 1px solid var(--fb-edge); border-radius: 0; background: var(--fb-panel); color: var(--fb-text); font: inherit; }
 .field__hint { margin: 0.4rem 0 0; color: var(--fb-muted); font-size: 0.875rem; }
+.field__set { margin: -0.5rem 0 1.25rem; padding: 0.75rem 1rem; border-left: 4px solid var(--fb-text); background: var(--fb-panel); }
 .field__error, .field__warning { margin: 0.4rem 0 1.25rem; color: var(--fb-error); }
 .check { display: flex; align-items: center; gap: 0.6rem; font-weight: 700; cursor: pointer; }
 .check input { width: 1.25rem; height: 1.25rem; margin: 0; accent-color: var(--fb-red); }

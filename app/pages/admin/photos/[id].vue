@@ -63,6 +63,7 @@ const form = reactive({
 const SIZE_NAMES: Record<string, string> = { thumb: 'Small picture', square: 'Square picture', medium: 'Medium picture', large: 'Large picture' }
 const linkImages = computed(() => photo.value!.links.images.map(image => ({ ...image, name: SIZE_NAMES[image.kind] ?? image.kind })))
 const live = computed(() => photo.value!.status === 'ready' && photo.value!.visibility === 'public' && !(photo.value!.publishAt && photo.value!.publishAt > Date.now()))
+const localLinks = computed(() => /\/\/(localhost|127\.|\[::1\])/.test(photo.value!.links.origin))
 const attribute = (text: string) => text.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 /** A picture that links to the photo's page, with its alt text, for pasting into a web page. */
 const embed = computed(() => {
@@ -370,6 +371,10 @@ onBeforeUnmount(() => {
             Full addresses, to paste into an email, a post, or another site.
             <template v-if="!live">This photo is not public yet, so they will not work for visitors until it is.</template>
           </p>
+          <p v-if="localLinks" class="links__local">
+            These begin with <strong>{{ photo.links.origin }}</strong>, which only works on this computer. Set your site's address under
+            <NuxtLink class="fb-link" to="/admin/seo">Search and sharing</NuxtLink> (or as <code>SITE_URL</code> on the server) and the links will use it.
+          </p>
           <CopyField id="link-page" label="This photo's page" :value="photo.links.page" />
           <CopyField v-for="image in linkImages" :id="`link-${image.kind}`" :key="image.kind" :label="`${image.name}, ${image.width} × ${image.height} pixels`" :value="image.url" />
           <CopyField v-if="embed" id="link-embed" label="HTML that shows the photo and links to its page" :value="embed" :rows="4" />
@@ -411,6 +416,7 @@ onBeforeUnmount(() => {
 .edit__view figcaption { margin-top: 0.5rem; }
 .edit__heading { margin: 0 0 1.25rem; font-size: 1.25rem; font-weight: 700; letter-spacing: -0.015em; }
 .edit__skipped { margin: 0 0 1rem; padding: 0.75rem 1rem; border-left: 4px solid var(--fb-error); background: var(--fb-panel); }
+.links__local { max-width: 40rem; margin: 0 0 1.25rem; padding: 0.75rem 1rem; border-left: 4px solid var(--fb-text); background: var(--fb-panel); }
 .links__note { max-width: 40rem; margin: 0 0 1rem; color: var(--fb-muted); font-size: 0.9375rem; }
 .section { margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--fb-line); }
 .scope { display: grid; gap: 0.5rem; margin: 0 0 1rem; padding: 0; border: 0; }

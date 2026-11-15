@@ -185,6 +185,7 @@ docker compose logs app</code></pre>
   <tbody>
     <tr><td><code>PORT</code></td><td><code>5150</code></td><td>The port. Left unset, a busy 5150 moves up to the next free port. Set, it is used exactly, and Fotobogen stops if it is taken.</td></tr>
     <tr><td><code>DATA_DIR</code></td><td><code>./data</code></td><td>Where the site keeps everything.</td></tr>
+    <tr><td><code>SITE_URL</code></td><td>none</td><td>Your site's proper address, such as <code>https://photos.example.com</code>. Used wherever a full address is written out: a photo's links in the admin, the feed, the sitemap, and what search engines are told. Without it, links made on your own machine begin with <code>http://localhost:5150</code>. It can also be set in the admin, under <strong>Search and sharing</strong>.</td></tr>
     <tr><td><code>DOMAIN</code></td><td>none</td><td>Docker quick start only: the domain Caddy gets a certificate for.</td></tr>
     <tr><td><code>PUID</code>, <code>PGID</code></td><td><code>1000</code></td><td>Docker only: the user and group that own the files in <code>data</code>.</td></tr>
     <tr><td><code>MAX_UPLOAD_MB</code></td><td><code>50</code></td><td>The largest file that can be uploaded. If you raise it, raise the limit in Caddy or nginx as well.</td></tr>

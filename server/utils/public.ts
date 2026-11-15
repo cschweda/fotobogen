@@ -275,8 +275,8 @@ export function publicDownload(slug: string): { area: 'originals' | 'derivatives
 
 /** The site's own address as visitors see it, for links in feeds and social cards. */
 export function siteOrigin(event: RequestEvent): string {
-  // The address the owner gave as the site's proper one wins over the one the visitor used.
-  const fixed = cleanSeo(getSetting<unknown>('seo.settings', {})).settings.siteUrl
+  // The site's proper address, if one was given: on the server (SITE_URL) first, then in the admin.
+  const fixed = resolveSettings(process.env).siteUrl || cleanSeo(getSetting<unknown>('seo.settings', {})).settings.siteUrl
   if (fixed) return fixed
   const url = getRequestURL(event)
   // Behind our own proxy, the visitor's scheme is in X-Forwarded-Proto.

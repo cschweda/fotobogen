@@ -203,3 +203,36 @@ describe('a site in its owner\'s own words', () => {
     })
   })
 })
+
+describe('a site whose address is set on the server', () => {
+  it('uses SITE_URL for every full address, whatever the admin field says', async () => {
+    const server = await startServer({ env: { SITE_URL: 'https://photos.example.com/' } })
+    try {
+      const cookie = await completeSetup(server, { photoView: 'page' })
+      const response = await upload(server, cookie, await imageBuffer({ width: 600, height: 400, seed: 31 }), 'pier.jpg')
+      const id = (await response.json() as { photo: { id: string } }).photo.id
+      await whenProcessed(server, cookie)
+
+      const detail = await (await get(server, `/api/admin/photos/${id}`, { cookie })).json() as { links: { origin: string, page: string, images: { url: string }[] } }
+      expect(detail.links.page).toBe('https://photos.example.com/photo/pier')
+      expect(detail.links.images.every(image => image.url.startsWith('https://photos.example.com/media/'))).toBe(true)
+      expect(await (await get(server, '/sitemap.xml')).text()).toContain('<loc>https://photos.example.com/photo/pier</loc>')
+      expect(await (await get(server, '/')).text()).toMatch(/rel="canonical" href="https:\/\/photos\.example\.com\/"/)
+
+      // The admin is told, and its own field does not override the server's.
+      await fetch(server.url + '/api/admin/seo', { method: 'PUT', headers: { origin: server.url, cookie, 'content-type': 'application/json' }, body: JSON.stringify({ siteUrl: 'https://other.example.org' }) })
+      expect((await (await get(server, '/api/admin/seo', { cookie })).json() as { serverSiteUrl: string }).serverSiteUrl).toBe('https://photos.example.com')
+      expect(await (await get(server, '/robots.txt')).text()).toContain('Sitemap: https://photos.example.com/sitemap.xml')
+    }
+    finally { await server.stop() }
+  })
+
+  it('ignores a SITE_URL that is not a web address', async () => {
+    const server = await startServer({ env: { SITE_URL: 'photos.example.com' } })
+    try {
+      await completeSetup(server)
+      expect(await (await get(server, '/robots.txt')).text()).toContain(`Sitemap: ${server.url}/sitemap.xml`)
+    }
+    finally { await server.stop() }
+  })
+})

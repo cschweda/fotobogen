@@ -399,11 +399,15 @@ request the well-known ones honour; it does not make the site private.
 
 **Admin, Skins** changes how it looks ([Skins](#skins)).
 
-**Links to a photo.** Each photo's page in the library has a **Links**
-panel: the full address of the photo's page and of each size of the picture,
+**Links to a photo.** The resized copies of every public photo are served
+at `/media/…` with no login, so they can be linked to from anywhere. Each
+photo's page in the library has a **Links** panel: the full address of the photo's page and of each size of the picture,
 and a line of HTML that shows the photo linked to its page, each with a Copy
 button. Together with the title, description, and alt text above it, that
-page is the photo's entry in the library.
+page is the photo's entry in the library. The links begin with your site's
+address; set it under **Search and sharing** or as `SITE_URL` (see
+[Settings](#settings)), or on your own machine they begin with
+`http://localhost:5150` and work only there.
 
 ## Albums and tags
 
@@ -691,6 +695,7 @@ read by `docker compose`.
 | `DATA_DIR` | `./data` | Where the site keeps its data |
 | `PORT` | `5150` | Port the server listens on. Unset, a busy 5150 moves up to the next free port; set, it is used exactly |
 | `HOST` | all interfaces | Address the server listens on |
+| `SITE_URL` | none | The site's proper address, such as `https://photos.example.com`. Used wherever a full address is written out: a photo's links in the admin, the feed, the sitemap, and what search engines are told. Without it, the address each visitor used is given, which on your own machine is `http://localhost:5150`. It can also be set under **Admin, Search and sharing**; a value here wins |
 | `MAX_UPLOAD_MB` | `50` | Largest upload, in megabytes. If you raise it, raise the proxy's limit too (`max_size` in `deploy/Caddyfile`, `client_max_body_size` in nginx) |
 | `MAX_MEGAPIXELS` | `100` | Largest image, in megapixels (width times height) |
 | `FOTOBOGEN_SKIP_PREFLIGHT` | off | Set to `1` to start even when the preflight check fails. At your own risk |

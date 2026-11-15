@@ -40,6 +40,15 @@ export default {
     // from X-Forwarded-For. The shipped Docker and pm2 files turn it on.
     //                                                    .env: TRUST_PROXY=1
     trustProxy: false,
+
+    // The site's proper address, such as 'https://photos.example.com'.
+    // Used wherever a full address is written out: a photo's links in the
+    // admin, the feed, the sitemap, and what search engines are told.
+    // Left empty, the address each visitor used is given, which on your own
+    // machine is http://localhost:5150. It can also be set in the admin,
+    // under Search and sharing; a value here or in .env wins over that one.
+    //                                    .env: SITE_URL=https://photos.example.com
+    siteUrl: '',
   },
 
   // Where the site keeps everything it owns: database, photos, modules.

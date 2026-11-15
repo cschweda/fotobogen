@@ -1,4 +1,5 @@
 // The public facts about the site, for the public pages.
+import { resolveSettings } from '../core/config.ts'
 import { defineEventHandler } from 'nuxt/server'
 import { publicAlbums } from '../utils/public.ts'
 import { getSetting } from '../utils/settings.ts'
@@ -29,7 +30,8 @@ export default defineEventHandler(() => {
     titlePattern: seo.titlePattern,
     description: seo.description,
     indexing: seo.indexing,
-    siteUrl: seo.siteUrl,
+    // The address set on the server (SITE_URL) wins over the one set in the admin.
+    siteUrl: resolveSettings(process.env).siteUrl || seo.siteUrl,
     author: seo.author,
     twitter: seo.twitter,
     googleVerification: seo.googleVerification,

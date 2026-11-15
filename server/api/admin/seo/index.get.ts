@@ -1,4 +1,5 @@
 // Search and sharing settings, with what is needed to preview them.
+import { resolveSettings } from '../../../core/config.ts'
 import { defineEventHandler } from 'nuxt/server'
 import { TITLE_PATTERNS } from '../../../../shared/seo.ts'
 import { getPipeline } from '../../../utils/app.ts'
@@ -20,6 +21,8 @@ export default defineEventHandler(async (event) => {
     settings,
     patterns: TITLE_PATTERNS,
     photos,
+    // Set on the server with SITE_URL: it is used whatever the field here says.
+    serverSiteUrl: resolveSettings(process.env).siteUrl,
     preview: { siteTitle: getSetting('site.title', ''), tagline: getSetting('site.tagline', ''), origin: siteOrigin(event), card: sharingCard(settings) },
   }
 })
