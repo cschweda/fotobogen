@@ -1,0 +1,51 @@
+<!doctype html>
+<!-- Source for site/og.png (1200 x 630). Rebuild with: node docs/og/render.mjs -->
+<html lang="en">
+<meta charset="utf-8">
+<title>Fotobogen social card</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1200px; height: 630px; overflow: hidden; }
+  body {
+    background: #0a0a0b; color: #f5f5f2; position: relative;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .rule { position: absolute; left: 72px; top: 70px; width: 456px; height: 1px; background: #333336; }
+  .kind { position: absolute; left: 72px; top: 91px; font-size: 15px; letter-spacing: 2.2px; color: #9a9a96; text-transform: uppercase; }
+  .meaning { position: absolute; left: 72px; top: 300px; font-size: 19px; color: #9a9a96; }
+  .meaning i { font-style: italic; color: #c9c9c5; }
+  h1 { position: absolute; left: 68px; top: 326px; font-size: 98px; line-height: 1.2; font-weight: 700; letter-spacing: -3.5px; }
+  .line { position: absolute; left: 72px; top: 458px; font-size: 25px; line-height: 34px; color: #c9c9c5; }
+  .facts { position: absolute; left: 72px; top: 543px; font-size: 15px; color: #8a8a86; }
+  .facts span { margin: 0 6px; color: #5c5c5a; }
+  .sheet { position: absolute; left: 600px; top: 70px; display: grid; grid-template-columns: repeat(4, 150px); column-gap: 14px; row-gap: 34px; }
+  .frame { height: 100px; position: relative; }
+  .frame b { position: absolute; left: 0; top: 111px; font-size: 11px; font-weight: 400; letter-spacing: 1px; color: #55555a; }
+  .frame.red { background: #e30613 !important; }
+  .frame.red b { color: #e30613; }
+  .fade { position: absolute; right: 0; top: 0; width: 120px; height: 630px; background: linear-gradient(90deg, rgba(10,10,11,0), #0a0a0b 85%); }
+</style>
+<div class="rule"></div>
+<p class="kind">Photo publishing platform</p>
+<p class="meaning">German for <i>photo sheet</i>, as in a contact sheet</p>
+<h1>Fotobogen</h1>
+<p class="line">Publish your photographs<br>on a website of your own.</p>
+<p class="facts">Free and open source<span>·</span>Skins and modules</p>
+<div class="sheet" id="sheet"></div>
+<div class="fade"></div>
+<script>
+  // Sixteen numbered frames; greys stand in for photographs, frame 07 is the accent.
+  const tones = [
+    ['#1d1d20', '#222226'], ['#3a3a40', '#44444a'], ['#202023', '#26262a'], ['#2a2a2e', '#1c1c1f'],
+    ['#232327', '#2e2e33'], ['#1f1f22', '#2a2a2f'], null,                  ['#1c1c1f', '#222226'],
+    ['#4a4a51', '#2f2f34'], ['#1e1e21', '#27272b'], ['#1d1d20', '#232327'], ['#34343a', '#222226'],
+    ['#1c1c1f', '#26262a'], ['#202024', '#2a2a2f'], ['#2c2c31', '#55555d'], ['#1c1c1f', '#202023'],
+  ]
+  document.getElementById('sheet').innerHTML = tones.map((tone, index) => {
+    const number = String(index + 1).padStart(2, '0')
+    const style = tone ? `style="background:linear-gradient(110deg, ${tone[0]}, ${tone[1]})"` : ''
+    return `<div class="frame${tone ? '' : ' red'}" ${style}><b>${number}</b></div>`
+  }).join('')
+</script>
+</html>

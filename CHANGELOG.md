@@ -25,3 +25,4 @@ uses [Semantic Versioning](https://semver.org/).
 - Sessions renew for another 30 days each time they are used.
 - `pnpm typecheck`, run in CI.
 - Screenshots of the setup wizard, login, and admin placeholder in the README.
+- The social card (`site/og.png`) now says what the name means: German for "photo sheet", as in a contact sheet. Its source is `docs/og/og.html`.
