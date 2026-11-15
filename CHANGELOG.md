@@ -72,6 +72,10 @@ uses [Semantic Versioning](https://semver.org/).
 - Rangefinder Dreams: a fourth skin, black and white throughout, which shows every photo in black and white.
 - A sharpening slider on every bundled module. Film looks sharpens normally by default; the frame and the watermark leave the photo alone unless asked.
 - The bundled skins are tested in both modes at phone and desktop widths against WCAG 2.1 AA, including a measured contrast check on every heading and link.
+- `pnpm fotobogen module new <name>` starts a module from a working example, and `pnpm fotobogen module test <name>` runs it on a test picture and reports what is wrong.
+- A documented public API (`docs/API.md`): read-only JSON for photos, albums, tags, and the slideshow, readable from other sites, with a version header.
+- `docs/UPGRADING.md`: how to upgrade, what a version number promises, and how to go back.
+- Webhooks: signed JSON messages when a photo is uploaded, goes live (including on a schedule), or is deleted; managed under **Admin, Webhooks**, with retries and a test button. Private-network addresses are refused unless `WEBHOOKS_ALLOW_PRIVATE=1`.
 - Windows: CI installs, builds, and tests on Windows, including a PowerShell smoke test (`scripts/smoke-test.ps1`).
 
 ### Changed

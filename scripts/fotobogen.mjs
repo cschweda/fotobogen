@@ -22,6 +22,9 @@ Commands:
   preflight                         Check that this machine can run Fotobogen
   backup [file]                     Write a backup zip (default: fotobogen-backup-<date>.zip)
   restore <file>                    Replace this site's data with a backup. Stop Fotobogen first
+  module new <name>                 Start a new module in data/modules/<name>
+  module test <name or folder>      Try a module on a test picture (or --image <file>) and
+                                    write the results to ./module-test (or --out <dir>)
   seed-fetch                        Download the 25 sample photos into the library
                                     (needs a source checkout; in a running site,
                                     use Admin > Download sample photos instead)
@@ -193,6 +196,45 @@ async function restore(args) {
   console.log('Start Fotobogen; it will make the resized copies again.')
 }
 
+const option = (args, name) => {
+  const at = args.indexOf(name)
+  return at >= 0 ? args[at + 1] : undefined
+}
+
+/** `module new` and `module test`, for people writing modules. Needs a source checkout. */
+async function moduleTools(args) {
+  const [action, target] = args
+  const { existsSync: exists } = await import('node:fs')
+  const { join } = await import('node:path')
+  const { scaffoldModule, testModule } = await import('../server/modules/devtools.ts')
+  const paths = dataPaths(resolveDataDir(process.env, process.cwd()))
+  if (action === 'new') {
+    if (!target) throw new CliError('Give the module a name: fotobogen module new my-module')
+    try {
+      const folder = scaffoldModule(paths.modules, target)
+      console.log(`Created ${folder}`)
+      console.log(`Edit index.mjs there, then try it:  pnpm fotobogen module test ${target}`)
+    }
+    catch (error) {
+      throw new CliError(error.message)
+    }
+  }
+  else if (action === 'test') {
+    if (!target) throw new CliError('Say which module: fotobogen module test my-module')
+    // A name means the one in data/modules; anything else is taken as a folder.
+    const folder = exists(join(paths.modules, target, 'module.json')) ? join(paths.modules, target) : target
+    if (!exists(join(folder, 'module.json'))) throw new CliError(`There is no module at ${folder} (no module.json there).`)
+    const result = await testModule(folder, { image: option(args, '--image'), outDir: option(args, '--out') ?? 'module-test' })
+    for (const line of result.lines) console.log(`${line.ok ? '  ok  ' : ' FAIL '} ${line.text}`)
+    if (result.written.length > 0) console.log(`\nLook at the results:\n${result.written.map(file => `  ${file}`).join('\n')}`)
+    if (!result.ok) throw new CliError('\nThe module is not ready. Fix what is marked FAIL above.')
+    console.log('\nThe module works. Copy its folder into data/modules/ on a site and restart to install it.')
+  }
+  else {
+    throw new CliError('Use "fotobogen module new <name>" or "fotobogen module test <name or folder>".')
+  }
+}
+
 /** The same check the server runs before it starts, with every line shown. */
 async function preflight() {
   const { existsSync: exists } = await import('node:fs')
@@ -214,6 +256,9 @@ try {
   }
   else if (command === 'preflight') {
     await preflight()
+  }
+  else if (command === 'module') {
+    await moduleTools(args)
   }
   else if (command === 'backup') {
     await backup(args)

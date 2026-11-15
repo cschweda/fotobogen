@@ -7,6 +7,7 @@ import { addTag, addToAlbum, removeFromAlbum } from '../../../pipeline/collectio
 import { setVisibility } from '../../../pipeline/library.ts'
 import { deletePhotos } from '../../../pipeline/remove.ts'
 import { getPipeline } from '../../../utils/app.ts'
+import { beforeDelete, isLive, photoPublished, photosDeleted } from '../../../utils/photo-events.ts'
 import { fail } from '../../../utils/respond.ts'
 import { requireAdmin } from '../../../utils/session.ts'
 
@@ -19,8 +20,18 @@ export default defineEventHandler(async (event) => {
   if (ids.length === 0) return fail(event, 422, 'Choose at least one photo.')
   const ctx = getPipeline()
   if (body?.action === 'hide') return { changed: setVisibility(ctx, ids, 'hidden') }
-  if (body?.action === 'show') return { changed: setVisibility(ctx, ids, 'public') }
-  if (body?.action === 'delete') return { changed: (await deletePhotos(ctx, { ids })).count }
+  if (body?.action === 'show') {
+    const hidden = ids.filter(id => !isLive(id))
+    const changed = setVisibility(ctx, ids, 'public')
+    for (const id of hidden) photoPublished(id)
+    return { changed }
+  }
+  if (body?.action === 'delete') {
+    const gone = beforeDelete(ids)
+    const { count } = await deletePhotos(ctx, { ids })
+    photosDeleted(gone)
+    return { changed: count }
+  }
   if (body?.action === 'add-to-album' || body?.action === 'remove-from-album') {
     const album = typeof body.album === 'string' ? body.album : ''
     const changed = body.action === 'add-to-album' ? addToAlbum(ctx, album, ids) : removeFromAlbum(ctx, album, ids)

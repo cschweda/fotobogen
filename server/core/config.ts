@@ -21,6 +21,8 @@ export interface Settings {
   trustProxy: boolean
   maxUploadMb: number
   maxMegapixels: number
+  /** Whether webhooks may call private and loopback addresses. */
+  webhooksAllowPrivate: boolean
 }
 
 /** The settings in force: environment first, then fotobogen.config.js. */
@@ -34,5 +36,6 @@ export function resolveSettings(env: Env): Settings {
     trustProxy: env.TRUST_PROXY !== undefined ? env.TRUST_PROXY === '1' : config.server.trustProxy,
     maxUploadMb: positive(env.MAX_UPLOAD_MB) ?? config.uploads.maxUploadMb,
     maxMegapixels: positive(env.MAX_MEGAPIXELS) ?? config.uploads.maxMegapixels,
+    webhooksAllowPrivate: env.WEBHOOKS_ALLOW_PRIVATE !== undefined ? env.WEBHOOKS_ALLOW_PRIVATE === '1' : config.webhooks.allowPrivate,
   }
 }

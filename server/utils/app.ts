@@ -94,6 +94,8 @@ async function boot(loadMigrations: () => Promise<Migration[]>, loadSkins: () =>
     if (module.error) console.warn(`Module "${module.manifest.name}" could not be loaded: ${module.error}`)
   }
   const queue = createQueue(pipeline, {
+    // A photo that has just been processed for the first time may now be live.
+    onDone: (job) => { if (job.type === 'ingest') void import('./photo-events.ts').then(events => events.photoPublished(job.photoId)) },
     onError: (job, error) => console.error(`Photo ${job.photoId} could not be processed (attempt ${job.attempts}): ${error instanceof Error ? error.message : error}`),
   })
   queue.recover()
@@ -103,6 +105,7 @@ async function boot(loadMigrations: () => Promise<Migration[]>, loadSkins: () =>
   }
   state = { paths, secret, sqlite, db, setupComplete, pipeline, queue, skins }
   queue.kick()
+  void import('./photo-events.ts').then(events => events.watchSchedule())
 
   const { users } = sqlite.prepare(`select count(*) as users from users`).get() as { users: number }
   if (users === 0) {
