@@ -86,15 +86,14 @@ test('the whole wizard can be completed with the keyboard alone', async ({ page 
   await tabTo(page, page.getByRole('button', { name: 'Continue' }))
   await page.keyboard.press('Enter')
 
-  // Step 5: a choice is required
+  // Step 5: starting empty is the default; downloading samples is the option
   await expect(heading(page, 'Start with sample photos?')).toBeFocused()
   await expectNoAxeViolations(page)
-  await tabTo(page, page.getByRole('button', { name: 'Finish setup' }))
-  await page.keyboard.press('Enter')
-  await expect(page.getByRole('alert')).toContainText('Choose whether to download the sample photos.')
-  // The error moves focus into the group; arrow keys pick an option.
-  await expect(page.getByRole('radio', { name: /Download 25 sample photos/ })).toBeFocused()
+  await expect(page.getByRole('radio', { name: /Start empty/ })).toBeChecked()
+  await tabTo(page, page.getByRole('radio', { name: /Start empty/ }))
   await page.keyboard.press('ArrowRight')
+  await expect(page.getByRole('radio', { name: /Download 25 sample photos/ })).toBeChecked()
+  await page.keyboard.press('ArrowLeft')
   await expect(page.getByRole('radio', { name: /Start empty/ })).toBeChecked()
   await tabTo(page, page.getByRole('button', { name: 'Finish setup' }))
   await page.keyboard.press('Enter')
