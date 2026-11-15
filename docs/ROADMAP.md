@@ -32,6 +32,8 @@ Visit counting is left to Plausible, which already tracks fotobogen.com. The pag
 | Cropping a photo in the admin | Later |
 | An admin menu down the side, and an Overview page | Done |
 | A site icon and a logo, uploaded in the admin | Done |
+| API tokens for uploading from a script or another program | Done |
+| A picture-quality setting for the web copies | Done |
 
 ## For developers
 

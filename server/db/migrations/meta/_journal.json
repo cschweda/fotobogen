@@ -29,6 +29,13 @@
       "when": 1794759271432,
       "tag": "0003_licence_and_download",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1794765964222,
+      "tag": "0004_api_tokens",
+      "breakpoints": true
     }
   ]
 }

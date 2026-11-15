@@ -7,6 +7,7 @@
 // 100-megapixel original peaks at a few hundred MB. AVIF, WebP, and
 // interlaced PNG are held whole while decoding, which is why acceptUpload
 // gives them lower pixel limits (see limits.ts).
+import { DEFAULT_QUALITY, isQualityPreset, QUALITY_PRESETS } from '../../shared/media.ts'
 import { createHash } from 'node:crypto'
 import { readFile, rm } from 'node:fs/promises'
 import { join } from 'node:path'
@@ -21,7 +22,14 @@ import { exifColumns, exifForStorage } from './exif.ts'
 import sharp from './image.ts'
 import { planDerivatives, WORKING_EDGE, type PlannedDerivative } from './plan.ts'
 
-const WEBP_QUALITY: Record<PlannedDerivative['kind'], number> = config.internals.derivatives.webpQuality
+/** The quality the owner chose under Settings; "standard" (fotobogen.config.js) unless they chose another. */
+function webpQuality(ctx: PipelineContext): Record<PlannedDerivative['kind'], number> {
+  const row = ctx.sqlite.prepare(`select value from settings where key = 'media.quality'`).get() as { value: string } | undefined
+  let chosen: unknown
+  try { chosen = row ? JSON.parse(row.value) : undefined }
+  catch { /* not a setting we wrote: use the standard */ }
+  return QUALITY_PRESETS[isQualityPreset(chosen) ? chosen : DEFAULT_QUALITY].quality
+}
 const THUMBHASH_EDGE = 100
 
 interface PhotoRow { id: string, original_path: string, width: number, height: number, recipe_json: string | null }
@@ -89,6 +97,11 @@ export function setSiteRecipe(ctx: PipelineContext, recipe: unknown): { recipe: 
   return { recipe: clean, queued }
 }
 
+/** Queue every photo to have its copies made again, after a setting that affects all of them changes. Returns how many. */
+export function rerenderAll(ctx: PipelineContext): number {
+  return ctx.sqlite.transaction(() => queueRerender(ctx, '1 = 1'))()
+}
+
 /** Queue every photo that uses a module, after it is switched on or off. */
 export function rerenderForModule(ctx: PipelineContext, name: string): number {
   // cleanRecipe keeps the steps of a module that is switched off, so this sees it either way.
@@ -147,6 +160,7 @@ export async function processPhoto(ctx: PipelineContext, photoId: string, option
   const exif = options.readMetadata === false ? undefined : await readExif(original)
 
   const recipe = effectiveRecipe(ctx, photo.recipe_json)
+  const quality = webpQuality(ctx)
   const decoded = await workingRaster(ctx, original, WORKING_EDGE)
   // The recipe is applied to the working copy; the original file is never changed.
   const working = recipe.length > 0 && ctx.modules ? await ctx.modules.apply(decoded, recipe) : decoded
@@ -168,7 +182,7 @@ export async function processPhoto(ctx: PipelineContext, photoId: string, option
       scratch.push(tmp)
       const info = await raster()
         .resize(item.width, item.height, item.kind === 'square' ? { fit: 'cover', position: 'attention' } : { fit: 'fill' })
-        .webp({ quality: WEBP_QUALITY[item.kind] })
+        .webp({ quality: quality[item.kind] })
         .toFile(tmp)
       // The name carries a hash of the contents, so the file can be cached
       // forever and a re-render with different pixels gets a new address.

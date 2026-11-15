@@ -175,3 +175,33 @@ A photo, album, or tag that does not exist, or that a visitor may not see, is a 
 ```json
 { "status": 404, "message": "There is no such photo." }
 ```
+
+## The admin API, with a token
+
+Everything above is public and read-only. The admin's own API, under `/api/admin/`, needs a login, or an **API token** made under **Admin, API tokens**. A token is sent in a header:
+
+```
+Authorization: Bearer fb_…
+```
+
+A request with a token needs no cookie and no `Origin` header, and is judged by the token alone. There are two kinds:
+
+| Kind | Allowed |
+|---|---|
+| `upload` | `POST /api/admin/photos` (upload), `GET /api/admin/photos` (list), `GET /api/admin/photos/<id>`, `POST /api/admin/photos/<id>/retry` |
+| `manage` | Everything under `/api/admin/photos` and `/api/admin/albums`, and `GET /api/admin/overview` |
+
+Anything else answers `403`. No token can reach settings, skins, site text, backups, restore, or the tokens themselves. A wrong or revoked token answers `401`.
+
+Uploading:
+
+```bash
+curl -H "Authorization: Bearer fb_YOUR_TOKEN" -F "file=@photo.jpg" https://photos.example.com/api/admin/photos
+```
+
+```json
+{ "result": "accepted", "photo": { "id": "V1StGXR8_Z5j", "slug": "photo" } }
+```
+
+The photo is processed in the background; `GET /api/admin/photos/<id>` shows `"status": "ready"` when it is done, or `"failed"` with the reason. A duplicate or a file that is not an accepted photo answers `409` or `422` with a `message` saying why. Unlike the public API, the admin API is not covered by the version promise in [UPGRADING.md](UPGRADING.md) until 1.0.
+

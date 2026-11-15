@@ -2,11 +2,12 @@
 // Nuxt's built-in session is used with the secret from data/secret passed
 // explicitly, so no environment variable is needed (DESIGN.md section 6).
 import { eq } from 'drizzle-orm'
-import { createError, getRequestHeader, useSession, type RequestEvent } from 'nuxt/server'
+import { createError, getRequestHeader, getRequestURL, useSession, type RequestEvent } from 'nuxt/server'
 import { config } from '../core/config.ts'
 import { isLoopbackHost } from '../core/request.ts'
 import { users } from '../db/schema.ts'
 import { getDb, getSecret } from './app.ts'
+import { bearerToken, findToken, tokenAllows } from './tokens.ts'
 
 interface SessionData extends Record<string, unknown> {
   uid?: string
@@ -17,6 +18,8 @@ interface SessionData extends Record<string, unknown> {
 export interface AdminUser {
   id: string
   username: string
+  /** Set when the request came with an API token instead of a login. */
+  token?: { id: string, name: string, scope: string }
 }
 
 const THIRTY_DAYS = 60 * 60 * 24 * config.internals.auth.sessionDays
@@ -60,7 +63,24 @@ export async function currentAdmin(event: RequestEvent): Promise<AdminUser | nul
   return event.context.admin as AdminUser | null
 }
 
+/**
+ * A request that presents an API token is judged by the token alone: a
+ * login cookie sent with it is ignored. Tokens work only on the admin's API,
+ * never on its pages, and only for what the token's scope names.
+ */
+function lookUpToken(event: RequestEvent, token: string): AdminUser {
+  const url = getRequestURL(event)
+  const found = url.pathname.startsWith('/api/admin/') ? findToken(token) : null
+  if (!found) throw createError({ status: 401, message: 'This token is not valid. It may have been revoked.' })
+  if (!tokenAllows(found.scope, event.req.method, url.pathname)) {
+    throw createError({ status: 403, message: `The token "${found.name}" is not allowed to do this. See what each kind of token can do under Admin, API tokens.` })
+  }
+  return { id: `token:${found.id}`, username: `token: ${found.name}`, token: { id: found.id, name: found.name, scope: found.scope } }
+}
+
 async function lookUpAdmin(event: RequestEvent): Promise<AdminUser | null> {
+  const token = bearerToken(getRequestHeader(event, 'authorization'))
+  if (token) return lookUpToken(event, token)
   if (!getRequestHeader(event, 'cookie')?.includes('fotobogen=')) return null
   const session = await adminSession(event)
   const { uid, sv } = session.data
