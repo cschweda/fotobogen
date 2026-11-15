@@ -16,7 +16,7 @@
 		}
 		handle {
 			rewrite * /media{uri}
-			reverse_proxy app:3000
+			reverse_proxy app:5150
 		}
 	}
 
@@ -25,7 +25,7 @@
 		request_body {
 			max_size 50MB
 		}
-		reverse_proxy app:3000
+		reverse_proxy app:5150
 	}
 
 	@https protocol https

@@ -398,7 +398,7 @@ For a fresh server with nothing installed but Docker.
 For a Forge-provisioned server where nginx already owns ports 80 and 443 and Forge manages certificates.
 
 - One service: `app`. No proxy container.
-- Publishes the app on `127.0.0.1:${PORT:-3000}` only, never on a public interface. Sets `TRUST_PROXY=1`.
+- Publishes the app on `127.0.0.1:${PORT:-5150}` only, never on a public interface. Sets `TRUST_PROXY=1`.
 - `data/` is bind-mounted from the Forge site directory, and the container runs as the `forge` user's UID and GID so host nginx can read derivatives directly.
 - `deploy/forge-nginx.conf` is a ready-made server-block snippet: proxy to the local port passing `Host`, `X-Forwarded-For`, and `X-Forwarded-Proto`, serve `/media/` from the site's `data/derivatives/` with immutable caching, set `client_max_body_size` to match the upload limit.
 - `deploy/forge-deploy.sh` is the Forge deploy script: `git pull`, `docker compose -f docker-compose.forge.yml pull`, `up -d`.
@@ -475,3 +475,8 @@ For running without Docker, and for development servers.
 - **All modules start switched off.** A site-wide recipe (`modules.site_recipe`) applies to every photo without its own; a photo's own recipe, even an empty one, wins.
 - **The top-level `modules/` folder** is Fotobogen's, so Nuxt's own build-module folder is renamed (`dir.modules`).
 - **Admin is not rebuilt for a module.** Controls come from each module's declared parameters; `docs/MODULES.md` is the author's guide.
+- **One configuration file.** `fotobogen.config.js` holds every app-wide value, split into "okay to change" and "do not touch". Precedence: environment, then `.env`, then the file. `.env` is not committed; `.env.sample` is. Requested 2026-11-15.
+- **Port 5150** by default, everywhere. An unset port moves up when busy; a set port is exact.
+- **Launcher and preflight.** `scripts/start.mjs` (run by `pnpm start`, the Docker image, and pm2) reads `.env`, runs the preflight check, deals with copies already running, picks the port, and loads the server. A failed check stops the start. Tested platforms: Ubuntu and Debian, macOS, Windows.
+- **Running copies** are recorded in `~/.fotobogen/instances/`. Two copies may not share a data directory.
+- **`/api/health`** answers `GET` and `HEAD` with `status`, `version`, `database`, `queue.depth`, and `uptime`.

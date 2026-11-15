@@ -21,6 +21,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
       - run: pnpm build
+      # The same check the app runs before it starts.
+      - run: pnpm preflight
       # Unit tests, then tests against the built server.
       - run: pnpm test
         env:
@@ -53,6 +55,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
+      - run: pnpm preflight
       - run: pnpm test
         env:
           FB_SKIP_BUILD: "1"

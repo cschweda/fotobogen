@@ -15,7 +15,7 @@ FROM node:24-bookworm-slim
 ENV NODE_ENV=production \
     DATA_DIR=/data \
     HOST=0.0.0.0 \
-    PORT=3000
+    PORT=5150
 WORKDIR /app
 
 # The server build is self-contained. The CLI (scripts/) shares the plain
@@ -26,6 +26,7 @@ COPY --from=build /app/scripts ./scripts
 COPY --from=build /app/server/core ./server/core
 COPY --from=build /app/shared ./shared
 COPY --from=build /app/package.json ./package.json
+COPY --from=build /app/fotobogen.config.js ./fotobogen.config.js
 RUN ln -s /app/.output/server/node_modules /app/node_modules \
  && mkdir /data && chown 1000:1000 /data
 
@@ -33,9 +34,10 @@ RUN ln -s /app/.output/server/node_modules /app/node_modules \
 # bind-mounted data directory belong to that user.
 USER 1000:1000
 VOLUME /data
-EXPOSE 3000
+EXPOSE 5150
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --start-interval=2s --retries=3 \
-  CMD node -e "fetch('http://127.0.0.1:' + (process.env.PORT || 3000) + '/api/health').then(r => process.exit(r.ok ? 0 : 1), () => process.exit(1))"
+  CMD node -e "fetch('http://127.0.0.1:' + (process.env.PORT || 5150) + '/api/health').then(r => process.exit(r.ok ? 0 : 1), () => process.exit(1))"
 
-CMD ["node", ".output/server/index.mjs"]
+# The launcher runs the preflight check, then the server.
+CMD ["node", "scripts/start.mjs"]

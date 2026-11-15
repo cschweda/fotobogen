@@ -2,6 +2,7 @@
 // copying this one directory (DESIGN.md section 3).
 import { accessSync, constants, mkdirSync } from 'node:fs'
 import { isAbsolute, join, resolve } from 'node:path'
+import { resolveSettings } from './config.ts'
 
 export interface DataPaths {
   root: string
@@ -16,9 +17,9 @@ export interface DataPaths {
   tmp: string
 }
 
+/** DATA_DIR from the environment, else the dataDir in fotobogen.config.js. */
 export function resolveDataDir(env: Record<string, string | undefined>, cwd: string): string {
-  const configured = env.DATA_DIR?.trim()
-  if (!configured) return join(cwd, 'data')
+  const configured = resolveSettings(env).dataDir
   return isAbsolute(configured) ? configured : resolve(cwd, configured)
 }
 

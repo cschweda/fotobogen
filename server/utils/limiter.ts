@@ -1,15 +1,17 @@
 // One failure limiter shared by login and setup-token attempts:
 // 5 failures per 15 minutes per address (DESIGN.md section 6).
 import { getRequestHeader, getRequestIP, type RequestEvent } from 'nuxt/server'
+import { config, resolveSettings } from '../core/config.ts'
 import { createFailureLimiter } from '../core/rate-limit.ts'
 import { clientIpFrom, rateLimitKey } from '../core/request.ts'
 import { fail } from './respond.ts'
 
-export const failureLimiter = createFailureLimiter({ max: 5, windowMs: 15 * 60_000 })
+const { maxFailures, failureWindowMinutes } = config.internals.auth
+export const failureLimiter = createFailureLimiter({ max: maxFailures, windowMs: failureWindowMinutes * 60_000 })
 
 /** The key failures are counted against for this request's visitor. */
 export function limiterKey(event: RequestEvent): string {
-  const trustProxy = process.env.TRUST_PROXY === '1'
+  const { trustProxy } = resolveSettings(process.env)
   const ip = clientIpFrom(getRequestIP(event), getRequestHeader(event, 'x-forwarded-for'), trustProxy)
   return rateLimitKey(ip)
 }

@@ -6,7 +6,7 @@ import { dataPaths, ensureDataDirs, resolveDataDir } from '../../server/core/pat
 
 describe('resolveDataDir', () => {
   it('defaults to ./data under the working directory', () => {
-    expect(resolveDataDir({}, '/x')).toBe(join('/x', 'data'))
+    expect(resolveDataDir({}, '/x')).toBe(resolve('/x', 'data'))
   })
   it('uses an absolute DATA_DIR as given', () => {
     expect(resolveDataDir({ DATA_DIR: '/srv/d' }, '/x')).toBe('/srv/d')

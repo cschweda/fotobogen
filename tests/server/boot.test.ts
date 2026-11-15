@@ -33,7 +33,10 @@ describe('first boot', () => {
     const response = await get(server, '/api/health')
     expect(response.status).toBe(200)
     const pkg = JSON.parse(readFileSync('package.json', 'utf8'))
-    expect(await response.json()).toEqual({ version: pkg.version, database: 'ok', queue: { depth: 0 } })
+    expect(await response.json()).toEqual({ status: 'ok', version: pkg.version, database: 'ok', queue: { depth: 0 }, uptime: expect.any(Number) })
+    // Monitors often ask with HEAD.
+    const head = await fetch(server.url + '/api/health', { method: 'HEAD' })
+    expect(head.status).toBe(200)
   })
 
   it('keeps the same token and secret across a restart', async () => {
