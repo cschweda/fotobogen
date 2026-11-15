@@ -33,6 +33,11 @@ uses [Semantic Versioning](https://semver.org/).
 - `/media/` serves the resized copies, so a proxy serving them from disk is optional.
 - Storage adapter interface with a local-disk adapter.
 - Sample photos: 25 placeholders from Lorem Picsum, downloaded only on request, from the setup wizard (default is to start empty), the dashboard, or `pnpm seed:fetch`. A counter shows progress; a failed download can be retried, cancelled, or skipped; samples can be removed in one click.
+- Modules: transforms that change how photos look, loaded at startup from `modules/` (bundled) and `data/modules/` (installed), with no rebuild. Each declares its parameters and the admin builds the controls. All modules start switched off.
+- Film frame module: a contact-print look with the negative's border, sprocket holes, a ragged or straight edge, and made-up film-stock markings.
+- Film looks module: tone and grain in the manner of classic and pushed black-and-white film, a colour slide, and a soft colour negative.
+- Transforms can be set for all photos or for one photo, with a live preview; the uploaded file is never changed.
+- `docs/MODULES.md`: how to write and install a module.
 - Windows: CI installs, builds, and tests on Windows, including a PowerShell smoke test (`scripts/smoke-test.ps1`).
 
 ### Fixed

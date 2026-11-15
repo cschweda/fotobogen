@@ -11,6 +11,8 @@ import * as schema from '../db/schema.ts'
 import type { PipelineContext } from '../pipeline/context.ts'
 import { readLimits } from '../pipeline/limits.ts'
 import { createQueue, type Queue } from '../pipeline/queue.ts'
+import { bundledModules } from '../modules/bundled.ts'
+import { createRegistry } from '../modules/registry.ts'
 import { createLocalStorage } from '../storage/local.ts'
 
 export type Db = BetterSQLite3Database<typeof schema>
@@ -57,6 +59,11 @@ async function boot(loadMigrations: () => Promise<Migration[]>): Promise<void> {
     storage: createLocalStorage({ originals: paths.originals, derivatives: paths.derivatives }),
     limits: readLimits(process.env),
     tmpDir: paths.tmp,
+    // Bundled modules, plus any the owner has put in data/modules.
+    modules: await createRegistry({ bundled: bundledModules, installedDir: paths.modules, sqlite }),
+  }
+  for (const module of pipeline.modules!.list()) {
+    if (module.error) console.warn(`Module "${module.manifest.name}" could not be loaded: ${module.error}`)
   }
   const queue = createQueue(pipeline, {
     onError: (job, error) => console.error(`Photo ${job.photoId} could not be processed (attempt ${job.attempts}): ${error instanceof Error ? error.message : error}`),

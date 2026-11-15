@@ -470,3 +470,8 @@ For running without Docker, and for development servers.
 - **`pnpm seed:fetch` is a development command.** It needs a source checkout and is not in the Docker image; a running site uses the dashboard.
 - **Upload limits** are `MAX_UPLOAD_MB` and `MAX_MEGAPIXELS`.
 - **Windows is a tested platform** for the Node install path: CI installs, builds, and tests there. `better-sqlite3` is no longer compiled at install time on any platform.
+- **Modules brought forward from Phase 5.** The loader, the recipe model, preview, and the admin pages for them ship now, with two bundled modules: `filmframe` and `filmlooks` (in place of `mono` and `tone`). Requested 2026-11-15.
+- **Module contract.** `apply(image, params, context)` may be asynchronous and may change the picture's size; `context` carries the picture's dimensions and the `sharp` function, so an installed module needs no dependencies. A transform's output is capped at 40 megapixels.
+- **All modules start switched off.** A site-wide recipe (`modules.site_recipe`) applies to every photo without its own; a photo's own recipe, even an empty one, wins.
+- **The top-level `modules/` folder** is Fotobogen's, so Nuxt's own build-module folder is renamed (`dir.modules`).
+- **Admin is not rebuilt for a module.** Controls come from each module's declared parameters; `docs/MODULES.md` is the author's guide.
