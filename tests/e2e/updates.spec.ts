@@ -72,7 +72,8 @@ test('the admin checks for updates on request, and the dashboard says when there
 
   // A new session: logging in again brings the note back.
   await page.getByRole('button', { name: 'Log out' }).click()
-  await page.goto(server.url + '/login')
+  // Logging out leads to the login page by itself; going there before it has finished would cut it short.
+  await page.waitForURL(/\/login/)
   await page.getByLabel('Username').fill(ADMIN.username)
   await page.getByLabel('Password', { exact: true }).fill(ADMIN.password)
   await page.getByRole('button', { name: 'Log in' }).click()
