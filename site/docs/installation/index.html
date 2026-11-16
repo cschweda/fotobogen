@@ -183,7 +183,7 @@ cp .env.sample .env</code></pre>
   <li><strong>Edit <code>.env</code></strong> (<code>nano .env</code>) and set your domain by removing the <code>#</code> from this line and changing the name:
 <pre tabindex="0"><code>DOMAIN=photos.example.com</code></pre>
   If <code>id -u</code> prints something other than <code>1000</code>, also set <code>PUID</code> and <code>PGID</code> to what <code>id -u</code> and <code>id -g</code> print.</li>
-  <li><strong>Build and start.</strong> No Docker image has been published yet for version 1.0.0, so the image is built on your server. Open <code>docker-compose.yml</code>, find the line <code># build: .</code> under <code>app:</code>, and remove the <code>#</code> and the space after it. Then:
+  <li><strong>Build and start.</strong> No Docker image has been published yet, so the image is built on your server. Open <code>docker-compose.yml</code>, find the line <code># build: .</code> under <code>app:</code>, and remove the <code>#</code> and the space after it. Then:
 <pre tabindex="0"><code>docker compose up -d --build</code></pre>
   The first build takes several minutes.</li>
   <li><strong>Read the setup token:</strong>
@@ -350,7 +350,7 @@ docker compose logs app</code></pre>
 <p>Download a backup first (<a href="/docs/faq/#backups">how</a>). Under <strong>Admin, System</strong>, <strong>Check for updates</strong> asks GitHub whether a newer release exists; it does not check by itself unless you tick <strong>Check once a day</strong>.</p>
 
 <h3>From the admin</h3>
-<p>When a newer release is found, the System page offers to install it. This arrives with the release after 1.0.0; version 1.0.0 is updated by hand, below.</p>
+<p>When a newer release is found, the System page offers to install it. This arrived in version 1.1.0; a site on 1.0.0 is brought to 1.1.0 by hand, below, and can use it from then on.</p>
 <div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
   <thead><tr><th>Installed with</th><th>What the System page does</th></tr></thead>
   <tbody>

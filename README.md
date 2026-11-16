@@ -9,10 +9,11 @@ A self-hosted publishing platform for photographs: install it on a small
 server, answer a few first-run questions, and get a public photo site with an
 admin backend. Think "WordPress for photos".
 
-**Version 1.0.0**, the first release (15 November 2026). It installs on
-macOS, Windows, and Linux; takes your photographs, resizes them for every
-screen, and publishes them on a site you can restyle, reword, and put under
-your own name, with an admin behind a login.
+**Version 1.1.0** (15 November 2026). It installs on macOS, Windows, and
+Linux; takes your photographs, resizes them for every screen, and publishes
+them on a site you can restyle, reword, and put under your own name, with an
+admin behind a login. Version 1.0.0, the first release, came out the same
+day; 1.1.0 adds updating from the admin.
 
 - **What is in it:** [CHANGELOG.md](CHANGELOG.md), also published as
   [Releases](https://fotobogen.com/docs/changelog/).
@@ -21,7 +22,7 @@ your own name, with an admin behind a login.
 - **What comes next:** [docs/ROADMAP.md](docs/ROADMAP.md).
 - **How it was designed:** [docs/DESIGN.md](docs/DESIGN.md).
 
-Two things to know about this release. No Docker image has been published
+Two things to know. No Docker image has been published
 yet, so a Docker install builds the image on your own machine (the
 instructions say how). And it has not yet been tried on a Laravel Forge
 server or on a real 1 GB server; a 1 GB memory limit was tested in Docker.
@@ -349,7 +350,7 @@ distributions may well work, but are reported as untested.
 `/api/health` needs no login and answers `GET` and `HEAD`:
 
 ```json
-{ "status": "ok", "version": "1.0.0", "database": "ok", "queue": { "depth": 0 }, "uptime": 86400 }
+{ "status": "ok", "version": "1.1.0", "database": "ok", "queue": { "depth": 0 }, "uptime": 86400 }
 ```
 
 It returns `200` when the app and its database are working and `503` when
@@ -702,7 +703,7 @@ For a server with nothing on it but Docker. This runs Fotobogen behind
 [Caddy](https://caddyserver.com), which obtains an HTTPS certificate for your
 domain automatically.
 
-> No Docker image has been published yet for 1.0.0. Until one is, uncomment the
+> No Docker image has been published yet. Until one is, uncomment the
 > `build: .` line in `docker-compose.yml` to build the image locally.
 
 ```bash
@@ -1020,9 +1021,11 @@ pnpm fotobogen update 1.2.0      # a particular one
 
 Then restart Fotobogen.
 
-**Updating from the admin arrives with the release after 1.0.0.** Version
-1.0.0 does not contain it, so the first update from 1.0.0 is done by hand,
-as below. It also relies on releases being tagged and published on GitHub.
+**Updating from the admin arrived in version 1.1.0.** Version 1.0.0 does not
+contain it, so a site on 1.0.0 is brought to 1.1.0 by hand, as below; from
+then on the button works. It relies on releases being tagged and published
+on GitHub, and none has been yet, so there is nothing for the button to
+offer until one is.
 
 ### Updating by hand
 
@@ -1155,7 +1158,7 @@ is added there. Switching demo mode off ends every demo session at once.
   merge commit (never squashed), when a batch is ready. A fix made directly on
   `main` is merged back into `staging`.
 - Version tags (`v1.2.3`), which publish the Docker image, are made on `main`.
-  Version 1.0.0 is recorded in the changelog and has not been tagged yet.
+  Versions 1.0.0 and 1.1.0 are recorded in the changelog and have not been tagged yet.
 
 The batching matters because a push to `main` that changes `site/` or
 `netlify.toml` triggers a production deploy of the placeholder page on
