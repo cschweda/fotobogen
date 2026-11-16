@@ -11,7 +11,8 @@ interface State { state: 'idle' | 'running' | 'done' | 'failed', version: string
 interface Status { support: Support, current: string, available: string | null, releaseUrl: string | null, state: State, running: boolean, waitingForRestart: boolean }
 
 // A demo visitor is not shown this at all (the server refuses), and the page carries on without it.
-const { data: status, refresh } = await useFetch<Status>('/api/admin/update', { onResponseError: () => {} })
+// The key lets the update check above this panel refresh it: a newer version found there is offered here at once.
+const { data: status, refresh } = await useFetch<Status>('/api/admin/update', { key: 'admin-self-update', onResponseError: () => {} })
 const STARTED = 'The update has started.'
 const confirming = ref(false)
 const problem = ref('')
