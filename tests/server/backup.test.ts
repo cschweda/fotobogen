@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process'
-import { existsSync, mkdtempSync, readdirSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
@@ -86,6 +86,40 @@ describe('backup and restore', () => {
     }
   })
 
+  it('does not install a module from a backup uploaded in the admin: a module is code', async () => {
+    const { mkdirSync } = await import('node:fs')
+    // A module in the source site's data folder, whose code leaves a mark wherever it is run.
+    const folder = join(source.dataDir, 'modules', 'planted')
+    mkdirSync(folder, { recursive: true })
+    writeFileSync(join(folder, 'module.json'), JSON.stringify({ name: 'planted', version: '1.0.0', label: 'Planted', entry: 'index.mjs' }))
+    writeFileSync(join(folder, 'index.mjs'), `import { writeFileSync } from 'node:fs'\nimport { join } from 'node:path'\nwriteFileSync(join(process.env.DATA_DIR, 'the-code-ran.txt'), 'yes')\nexport default { transforms: [] }\n`)
+    const withModule = Buffer.from(await (await get(source, '/api/admin/backup', { cookie })).arrayBuffer())
+    expect(withModule.includes('modules/planted/index.mjs')).toBe(true)
+
+    const target = await startServer()
+    try {
+      const targetCookie = await completeSetup(target)
+      const staged = await fetch(`${target.url}/api/admin/restore`, { method: 'PUT', headers: { origin: target.url, cookie: targetCookie, 'content-type': 'application/zip' }, body: new Uint8Array(withModule) })
+      expect(staged.status).toBe(200)
+      expect(await staged.json()).toMatchObject({ modulesLeftOut: ['planted'] })
+      expect(await (await get(target, '/api/admin/system', { cookie: targetCookie })).json()).toMatchObject({ restorePending: true })
+
+      await target.restart()
+      expect(target.output()).toContain('Restored a backup with 2 photos.')
+      expect(target.output()).toContain('planted')
+      expect(existsSync(join(target.dataDir, 'modules', 'planted'))).toBe(false)
+      expect(existsSync(join(target.dataDir, 'the-code-ran.txt'))).toBe(false)
+      // Restored on the server itself, by someone who can already run code there, it is installed.
+      await target.stop()
+      expect(cli(target.dataDir, ['restore', (() => { const file = join(temp(), 'b.zip'); writeFileSync(file, withModule); return file })()]).code).toBe(0)
+      expect(existsSync(join(target.dataDir, 'modules', 'planted', 'index.mjs'))).toBe(true)
+    }
+    finally {
+      await target.stop()
+      rmSync(folder, { recursive: true, force: true })
+    }
+  })
+
   it('backs up and restores from the command line', async () => {
     const file = join(temp(), 'site.zip')
     const made = cli(source.dataDir, ['backup', file])
@@ -118,6 +152,32 @@ describe('backup and restore', () => {
     expect(cli(data, ['restore'])).toMatchObject({ code: 1, out: expect.stringContaining('Say which backup') })
     expect(existsSync(join(data, 'fotobogen.db'))).toBe(false)
     expect(cli(data, ['backup'])).toMatchObject({ code: 1, out: expect.stringContaining('No Fotobogen database') })
+  })
+
+  it('refuses a staged backup made by a newer version, and says so', async () => {
+    const yazl = (await import('yazl')).default
+    const { createWriteStream } = await import('node:fs')
+    const server = await startServer()
+    try {
+      await completeSetup(server, { siteTitle: 'Still Here' })
+      await server.stop()
+      const manifest = { format: 1, app: 'fotobogen', appVersion: '99.0.0', createdAt: 'x', migrations: ['0000_initial', '9999_from_the_future'], photos: 0, originalsBytes: 0 }
+      const zip = new yazl.ZipFile()
+      zip.addBuffer(Buffer.from(JSON.stringify(manifest)), 'manifest.json')
+      zip.addBuffer(backup, 'fotobogen.db')
+      zip.end()
+      await new Promise(done => zip.outputStream.pipe(createWriteStream(join(server.dataDir, 'restore-pending.zip'))).on('close', done))
+
+      await server.restart()
+      expect(server.output()).toContain('made by a newer version of Fotobogen (99.0.0)')
+      expect(await (await get(server, '/api/site')).json()).toMatchObject({ title: 'Still Here' })
+      const left = readdirSync(server.dataDir)
+      expect(left.some(name => name.startsWith('restore-failed-'))).toBe(true)
+      expect(left.some(name => name.startsWith('before-restore-'))).toBe(false)
+    }
+    finally {
+      await server.stop()
+    }
   })
 
   it('still starts, with its own data, when a staged restore turns out to be unusable', async () => {

@@ -9,7 +9,7 @@
 // update carries on even if the server is restarted part-way. Also what
 // `pnpm fotobogen update` runs. Progress is written to
 // data/update-status.json, which the admin reads.
-import { existsSync } from 'node:fs'
+import { chmodSync, existsSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import Database from 'better-sqlite3'
@@ -36,6 +36,8 @@ function snapshot() {
   db.pragma('busy_timeout = 5000')
   try {
     db.prepare('VACUUM INTO ?').run(file)
+    // It holds the login's password hash: for this user only.
+    chmodSync(file, 0o600)
   }
   finally {
     db.close()

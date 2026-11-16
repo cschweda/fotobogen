@@ -3,7 +3,7 @@
 // so switching skins needs no rebuild. Bundled skins ship in the build;
 // the site owner's go in data/skins/<name>/.
 import { createHash } from 'node:crypto'
-import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import { existsSync, lstatSync, readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 export type Mode = 'light' | 'dark'
@@ -140,13 +140,21 @@ export function parseSkin(files: SkinFiles, source: Skin['source']): Skin {
   }
 }
 
+/** Far more than any stylesheet needs; stops a huge file being read into memory and sent to every visitor. */
+const MAX_SKIN_FILE_BYTES = 2 * 1024 * 1024
+
 /** The skins in a directory such as data/skins: one folder each. */
 export function readSkinFolders(dir: string): SkinFiles[] {
   if (!existsSync(dir)) return []
   return readdirSync(dir, { withFileTypes: true }).filter(entry => entry.isDirectory()).map((entry) => {
     const read = (file: string) => {
       try {
-        return readFileSync(join(dir, entry.name, file), 'utf8')
+        // A real file in the skin's own folder, and not a link to one elsewhere:
+        // skin.css is sent to every visitor, so a link could publish any file.
+        const path = join(dir, entry.name, file)
+        const stat = lstatSync(path)
+        if (!stat.isFile() || stat.size > MAX_SKIN_FILE_BYTES) return ''
+        return readFileSync(path, 'utf8')
       }
       catch {
         return ''

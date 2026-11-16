@@ -17,6 +17,14 @@ import type { DataPaths } from './paths.ts'
 
 export const BACKUP_FORMAT = 1
 export const PENDING_RESTORE = 'restore-pending.zip'
+/**
+ * A backup uploaded through the admin waits under this name instead. It is
+ * restored without the modules in it: a module is code that runs on the
+ * server, and a login to the admin must not be enough to put code there.
+ * A file under PENDING_RESTORE was put on the disk by someone who can
+ * already run code on the server, so its modules are restored.
+ */
+export const PENDING_ADMIN_RESTORE = 'restore-pending-from-admin.zip'
 
 export interface BackupManifest {
   format: number
@@ -116,7 +124,7 @@ async function eachEntry(file: string, visit: (entry: yauzl.Entry, zip: yauzl.Zi
 }
 
 export type Inspection
-  = | { ok: true, manifest: BackupManifest }
+  = | { ok: true, manifest: BackupManifest, /** The modules in the backup, by folder name. */ modules: string[] }
     | { ok: false, message: string }
 
 /**
@@ -126,9 +134,12 @@ export type Inspection
 export async function inspectBackup(file: string, known: string[]): Promise<Inspection> {
   let manifestText: string | undefined
   let hasDatabase = false
+  const modules = new Set<string>()
   try {
     await eachEntry(file, async (entry, zip) => {
       if (entry.fileName === 'fotobogen.db') hasDatabase = true
+      const module = /^modules\/([a-z][a-z0-9-]*)\//.exec(entry.fileName)
+      if (module) modules.add(module[1]!)
       if (entry.fileName === 'manifest.json' && entry.uncompressedSize < 1_000_000) {
         const chunks: Buffer[] = []
         for await (const chunk of await entryStream(zip, entry)) chunks.push(chunk as Buffer)
@@ -155,16 +166,17 @@ export async function inspectBackup(file: string, known: string[]): Promise<Insp
   if (unknown.length > 0) {
     return { ok: false, message: `This backup was made by a newer version of Fotobogen (${manifest.appVersion}). Update Fotobogen, then restore it.` }
   }
-  return { ok: true, manifest }
+  return { ok: true, manifest, modules: [...modules].sort() }
 }
 
 const RESTORED = /^(fotobogen\.db|originals\/[A-Za-z0-9_-][A-Za-z0-9._-]*|(skins|modules)\/[a-z][a-z0-9-]*\/[A-Za-z0-9._/-]+)$/
 
 /** Unpacks a backup into `target`. Only the files a backup is supposed to contain are written. */
-async function extractBackup(file: string, target: string): Promise<void> {
+async function extractBackup(file: string, target: string, withModules: boolean): Promise<void> {
   const root = resolve(target)
   await eachEntry(file, async (entry, zip) => {
     if (!RESTORED.test(entry.fileName) || entry.fileName.includes('..')) return
+    if (!withModules && entry.fileName.startsWith('modules/')) return
     const destination = resolve(root, entry.fileName)
     if (!destination.startsWith(root + sep)) return
     mkdirSync(dirname(destination), { recursive: true })
@@ -177,15 +189,18 @@ async function extractBackup(file: string, target: string): Promise<void> {
  * database open. What was there before is moved to `before-restore-<time>/`
  * inside the data directory, not deleted. Afterwards every photo is queued
  * to have its resized copies made again.
+ *
+ * With `modules: false` the backup's modules are left out and the site's own
+ * stay as they are.
  */
-export async function applyRestore(paths: DataPaths, file: string): Promise<{ photos: number, keptIn: string }> {
+export async function applyRestore(paths: DataPaths, file: string, options: { modules: boolean } = { modules: true }): Promise<{ photos: number, keptIn: string }> {
   const staging = join(paths.root, `restore-${newId()}`)
   let photos: number
   // Everything that can fail happens here, in a staging folder, before any
   // of the site's own data is moved. A backup that turns out to be unusable
   // leaves the site exactly as it was.
   try {
-    await extractBackup(file, staging)
+    await extractBackup(file, staging, options.modules)
     if (!existsSync(join(staging, 'fotobogen.db'))) throw new Error('The backup has no database in it.')
 
     let db: Database.Database | undefined
@@ -210,6 +225,8 @@ export async function applyRestore(paths: DataPaths, file: string): Promise<{ ph
       photos = db.transaction(() => {
         db.prepare(`delete from derivatives`).run()
         db.prepare(`delete from jobs`).run()
+        // Every login from before is ended: a backup must not bring a signed-out session back to life.
+        db.prepare(`update users set session_version = session_version + 1`).run()
         const ids = (db.prepare(`select id from photos`).all() as { id: string }[]).map(row => row.id)
         for (const id of ids) {
           db.prepare(`update photos set status = 'processing' where id = ?`).run(id)
@@ -232,10 +249,11 @@ export async function applyRestore(paths: DataPaths, file: string): Promise<{ ph
   const move = (from: string, to: string) => {
     if (existsSync(from)) renameSync(from, to)
   }
-  for (const name of ['fotobogen.db', 'fotobogen.db-wal', 'fotobogen.db-shm', 'originals', 'derivatives', 'skins', 'modules']) {
+  const replaced = ['fotobogen.db', 'originals', 'skins', ...(options.modules ? ['modules'] : [])]
+  for (const name of [...replaced, 'fotobogen.db-wal', 'fotobogen.db-shm', 'derivatives']) {
     move(join(paths.root, name), join(keptIn, name))
   }
-  for (const name of ['fotobogen.db', 'originals', 'skins', 'modules']) move(join(staging, name), join(paths.root, name))
+  for (const name of replaced) move(join(staging, name), join(paths.root, name))
   rmSync(staging, { recursive: true, force: true })
   for (const dir of [paths.originals, paths.derivatives, paths.skins, paths.modules]) mkdirSync(dir, { recursive: true })
   return { photos, keptIn }

@@ -26,7 +26,7 @@ Download a backup: **Admin, System, Download a backup**, or `pnpm fotobogen back
 
 Updating from the admin saves a copy of the database first, and puts the old version back if the new one will not install or build; the [README](../README.md#updating-from-the-admin) says exactly what it does. It arrived in version 1.1.0; a site on 1.0.0 is brought to 1.1.0 with one of the others.
 
-Nothing else is needed. When the new version starts it brings the database up to date by itself, and prints what it did.
+Nothing else is needed. When the new version starts it brings the database up to date by itself.
 
 The admin tells you when a newer version exists, if you have said it may check: a note on every admin page, and **Admin, System, Check for updates**. [fotobogen.com/docs/updating](https://fotobogen.com/docs/updating/) walks through each kind of install.
 
@@ -64,14 +64,14 @@ Migrations only move forward. There are no "down" migrations.
 
 ## Going back
 
-Because migrations only move forward, an older version cannot open a database a newer one has changed. To go back to an earlier version, restore the backup you made before upgrading:
+Because migrations only move forward, an older version refuses to start on a database a newer one has changed, and says why. (Versions before 1.3.3 did not check.) To go back to an earlier version, restore the backup you made before upgrading:
 
 ```bash
 # with the old version installed and Fotobogen stopped
 pnpm fotobogen restore fotobogen-backup-2026-11-15.zip
 ```
 
-A backup made by a newer version is refused by an older one, with a message saying so, rather than half-restored.
+A backup made by a newer version is refused by an older one, with a message saying so, rather than half-restored. That holds for every way of restoring: the admin, the command, and a file left in the data folder as `restore-pending.zip` (which versions before 1.3.3 did not check).
 
 ## For contributors
 
@@ -79,4 +79,4 @@ A backup made by a newer version is refused by an older one, with a message sayi
 - A change to anything in the list above needs a line in `CHANGELOG.md` under **Changed** or **Removed**, and, if it needs action from someone, a major version.
 - New API fields, skin classes, module parameter types, and settings are additions: note them under **Added**.
 - Releases are tagged on `main` (`v1.2.3`); the tag publishes the Docker image.
-- To make a release: move what is under **Unreleased** in `CHANGELOG.md` to a new heading `## [1.2.3] - YYYY-MM-DD`, set the same number in `package.json`, and run `node docs/site/build.mjs`, which rebuilds the Releases page of the website from the changelog. A test fails if the three disagree.
+- To make a release: move what is under **Unreleased** in `CHANGELOG.md` to a new heading `## [1.2.3] - YYYY-MM-DD`, set the same number in `package.json`, and run `node docs/site/build.mjs`, which rebuilds the Releases page of the website from the changelog. A test fails if the three disagree. `site/index.html` (the front page of the website) is written by hand: bring its version, date, and release notes up to date too.

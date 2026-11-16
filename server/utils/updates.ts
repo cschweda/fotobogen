@@ -30,12 +30,25 @@ interface Stored { latest: string | null, url: string | null, checkedAt: number,
 
 const current = (): string => String(useRuntimeConfig().appVersion)
 
+/** The address if it is one of the project's own pages on GitHub once resolved (no "../" out of it); otherwise the releases page. */
+function projectPage(address: unknown): string {
+  const releases = 'https://github.com/cschweda/fotobogen/releases'
+  if (typeof address !== 'string') return releases
+  try {
+    const url = new URL(address)
+    return url.origin === 'https://github.com' && url.pathname.startsWith('/cschweda/fotobogen/') && !url.username && !url.password ? url.href : releases
+  }
+  catch {
+    return releases
+  }
+}
+
 export function updateStatus(): UpdateStatus {
   const stored = getSetting<Stored | null>('updates.last', null)
   return {
     current: current(),
     latest: stored?.latest ?? null,
-    url: stored?.url ?? null,
+    url: stored?.url ? projectPage(stored.url) : null,
     newer: isNewer(stored?.latest, current()),
     checkedAt: stored?.checkedAt ?? null,
     problem: stored?.problem ?? null,
@@ -66,7 +79,7 @@ export async function checkForUpdate(fetcher: typeof fetch = fetch): Promise<Upd
       else {
         stored.latest = version.join('.')
         // Only ever link to the project's own release pages.
-        stored.url = typeof release.html_url === 'string' && release.html_url.startsWith('https://github.com/cschweda/fotobogen/') ? release.html_url : 'https://github.com/cschweda/fotobogen/releases'
+        stored.url = projectPage(release.html_url)
       }
     }
   }

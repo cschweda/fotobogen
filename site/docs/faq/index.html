@@ -49,6 +49,7 @@
       <li><a href="/docs/modules/">Modules</a></li>
       <li><a href="/docs/writing-a-module/">Writing a module</a></li>
       <li><a href="/docs/faq/" aria-current="page">Questions</a></li>
+      <li><a href="/docs/security-audits/">Security audits</a></li>
       <li><a href="/docs/changelog/">Releases</a></li>
     </ul>
     <div class="pages__here">
@@ -72,13 +73,16 @@
 </div>
 
 <h3>What is in a backup?</h3>
-<p>One zip file holding everything that cannot be made again: the database (titles, albums, tags, settings, your login), your photographs exactly as you uploaded them, and any skins and modules you installed. The resized copies are left out, because they are rebuilt from the originals. The secret key that seals logins is left out too, so a backup file by itself does not open your site.</p>
+<p>One zip file holding everything that cannot be made again: the database (titles, albums, tags, settings, your login), your photographs exactly as you uploaded them, and any skins and modules you installed. The resized copies are left out, because they are rebuilt from the originals. The secret key that seals logins is left out too, so a backup file cannot be used to log in as it stands.</p>
+<p><strong>Keep a backup as private as the server.</strong> It holds every photo, hidden ones included, your settings, your webhooks' secrets, and your password in scrambled form. And <strong>only restore a backup you made yourself</strong>: it replaces the login and the API tokens with its own, and its modules are code. For that reason a backup uploaded through the admin is restored without its modules; restored on the server it installs them.</p>
 
 <h3>How do I make one?</h3>
 <p><strong>In the admin:</strong> <strong>Admin, System, Download a backup</strong>. The site stays running. This works however Fotobogen was installed.</p>
 <p><strong>On the server</strong>, for an install without Docker:</p>
 <pre tabindex="0"><code>pnpm fotobogen backup                      # writes fotobogen-backup-&lt;date&gt;.zip here
 pnpm fotobogen backup /mnt/disk/site.zip   # or to a place you name</code></pre>
+<p>With Docker, run it in the container, where the data folder is <code>/data</code>; the file appears in your <code>data</code> folder:</p>
+<pre tabindex="0"><code>docker compose exec app node scripts/fotobogen.mjs backup /data/site.zip</code></pre>
 <p><strong>Or copy the <code>data</code> folder.</strong> Everything a site owns is in it. Stop Fotobogen first, so the database is not copied half-written, then copy the whole folder.</p>
 
 <h3>How often?</h3>
@@ -90,11 +94,11 @@ pnpm fotobogen backup /mnt/disk/site.zip   # or to a place you name</code></pre>
   <li><strong>In the admin:</strong> <strong>Admin, System</strong>, choose the zip, and <strong>Upload and prepare restore</strong>. The file is checked and set aside. The restore happens the next time Fotobogen starts; until then nothing changes and it can be cancelled. Then restart Fotobogen.</li>
   <li><strong>On the server, without Docker,</strong> with Fotobogen stopped:
 <pre tabindex="0"><code>pnpm fotobogen restore site.zip</code></pre></li>
-  <li><strong>On the server, with Docker or without:</strong> copy the zip into the data folder under the name <code>restore-pending.zip</code> and restart. Fotobogen finds it, checks it, and restores from it as it starts.
+  <li><strong>On the server, with Docker or without:</strong> copy the zip into the data folder under the name <code>restore-pending.zip</code> and restart. Fotobogen finds it, checks it, and restores from it as it starts. With Docker, restart with <code>docker compose restart app</code>.
 <pre tabindex="0"><code>cp site.zip data/restore-pending.zip
 docker compose restart app</code></pre></li>
 </ul>
-<p>Use one of the server methods for a large backup: the web server in front of Fotobogen limits how large an upload can be.</p>
+<p>Use one of the server methods for any backup bigger than the upload limit (50 MB unless you raised it), which is most of them: the web server in front of Fotobogen refuses a bigger upload.</p>
 <p><strong>What was there is not deleted.</strong> It is moved into a folder named <code>before-restore-&lt;time&gt;</code> inside the data folder, so a mistaken restore can be undone by hand. Delete that folder when you are sure. After a restore the resized copies are made again in the background, and photos reappear on the site as each one finishes.</p>
 <p>A backup that turns out to be damaged is refused and set aside as <code>restore-failed-&lt;time&gt;.zip</code>, and the site starts as it was. A backup made by a newer version of Fotobogen is refused until you update.</p>
 
@@ -133,7 +137,7 @@ docker compose logs app   # the new setup token</code></pre>
 <p>The software and the site are separate. Updating, rebuilding, or cloning the source again does not touch <code>data</code>. To move to a fresh copy of the software, install it as new, stop it, and put your <code>data</code> folder in place of its empty one.</p>
 
 <h3>Remove Fotobogen completely</h3>
-<p>Take a backup if you want one. Stop Fotobogen (<code>docker compose down</code>, or <code>pm2 delete fotobogen</code>, or <kbd>Control</kbd> + <kbd>C</kbd>), then delete its folder. Nothing is installed anywhere else, apart from a small record of running copies in a folder named <code>.fotobogen</code> in your home folder, which can be deleted too.</p>
+<p>Take a backup if you want one. Stop Fotobogen (<code>docker compose down</code>, or <code>pm2 delete fotobogen</code>, or <kbd>Control</kbd> + <kbd>C</kbd>), then delete its folder. Nothing is installed anywhere else, apart from Docker's own images and volumes (<code>docker compose down --volumes --rmi all</code> removes those too) and a small record of running copies in a folder named <code>.fotobogen</code> in your home folder, which can be deleted too.</p>
 
 <h2 id="access">Getting in</h2>
 
@@ -150,7 +154,7 @@ docker compose exec app node scripts/fotobogen.mjs reset-admin    # with Docker<
 <p>The login is kept in a cookie that browsers accept only over https, or at an address that means "this computer": <code>localhost</code>, <code>127.0.0.1</code>, or <code>0.0.0.0</code>. Opened over plain http at any other address, such as <code>http://192.168.1.20:5150</code> or <code>http://my-mac.local:5150</code>, the browser would throw the login away, so the login page refuses and says why. Use <code>http://localhost:5150</code> on the machine itself, borrow it from another machine with <code>ssh -L 5150:localhost:5150 you@that-machine</code>, or put the site behind https.</p>
 
 <h3>It says too many attempts</h3>
-<p>Five wrong passwords in 15 minutes from one address locks that address out until the 15 minutes pass. Wait, or reset the password as above.</p>
+<p>Five wrong passwords in 15 minutes from one address locks that address out until the 15 minutes pass. Wait, or restart Fotobogen, which forgets the count. Resetting the password does not lift the lock.</p>
 
 <h2 id="running">Running it</h2>
 
@@ -170,7 +174,7 @@ docker compose exec app node scripts/fotobogen.mjs reset-admin    # with Docker<
 <p>It is different enough from the ports everything else uses (3000, 8000, 8080) to be free on most machines. It is also a Van Halen album.</p>
 
 <h3>A photo says "failed"</h3>
-<p>Open it in the library to see why, and press <strong>Try again</strong>. The usual causes are a damaged file, or a server with too little free memory at that moment. The file you uploaded is still there.</p>
+<p>Open it in the library (<strong>Library</strong>, filtered to <strong>Could not be processed</strong>). Its page says why and has a <strong>Try again</strong> button. The usual causes are a damaged file, or a server with too little free memory at that moment. The file you uploaded is still there.</p>
 
 <h3>An upload is refused as too large</h3>
 <p>The limit is 50 MB and 100 megapixels. Raise <code>MAX_UPLOAD_MB</code> or <code>MAX_MEGAPIXELS</code> in <code>.env</code>, and raise the limit of the web server in front of Fotobogen to match (<code>max_size</code> in <code>deploy/Caddyfile</code>, <code>client_max_body_size</code> in nginx). Larger photos need more memory.</p>
@@ -182,16 +186,16 @@ docker compose exec app node scripts/fotobogen.mjs reset-admin    # with Docker<
 <p>Yes: demo mode. Put <code>DEMO_MODE=1</code> in <code>.env</code> and restart. The login page then offers the username <code>demo</code> and the password <code>demo</code>. A demo visitor can open every admin page, but every attempt to save, upload, or delete is refused, and they cannot reach backups, API tokens, or webhooks. Your own login still has full control. <a href="/docs/configuration/#demo-mode">What a demo visitor can and cannot see.</a></p>
 
 <h3>Can I update from the admin?</h3>
-<p>Yes, from version 1.1.0, if Fotobogen was installed with git (<a href="/docs/updating/">Updating</a> has every case). When <strong>Admin, System</strong> finds a newer release it offers <strong>Update to version X</strong>: it saves a copy of the database, fetches and builds the new version, and restarts (under pm2) or asks you to restart. If anything fails, the old version is put back. A Docker install is shown the commands to run on the server instead. <a href="/docs/installation/#updating">More about updating.</a></p>
+<p>Yes, from version 1.1.0, if Fotobogen was installed with git (<a href="/docs/updating/">Updating</a> has every case). When <strong>Admin, System</strong> finds a newer release it offers <strong>Update to version X</strong>: it saves a copy of the database, fetches and builds the new version, and restarts (under pm2) or asks you to restart. If anything fails, the old version is put back and built again. A Docker install is shown the commands to run on the server instead. <a href="/docs/installation/#updating">More about updating.</a></p>
 
 <h3>An update failed. Is my site broken?</h3>
-<p>No. When an update cannot be fetched, installed, or built, Fotobogen puts the old version back and builds it again, and the System page says what went wrong and keeps the output. The usual cause is too little memory for the build: it needs about 2 GB, counting swap. Add swap (<a href="/docs/installation/#swap">how</a>) and try again. The copy of the database made before the update is in the data folder, named <code>before-update-…</code>.</p>
+<p>Usually not. An update that cannot be fetched changes nothing. When the new version cannot be installed or built, Fotobogen puts the old version back and builds it again, and the System page says what went wrong and keeps the output. Meanwhile the site that is running carries on. The exception: if building the old version fails as well, the page says so, and the site may not start after a restart until it is built by hand on the server (<code>pnpm install</code>, <code>pnpm build</code>). The usual cause of both is too little memory for the build: it needs about 2 GB, counting swap. Add swap (<a href="/docs/installation/#swap">how</a>) and try again. The copy of the database made before the update is in the data folder, named <code>before-update-…</code>.</p>
 
 <h3>How do I move to another server?</h3>
 <p>Install Fotobogen on the new server, stop it, copy your <code>data</code> folder over its empty one, and start. Or download a backup from the old site and restore it on the new one; you will log in with the old site's account. Then point your domain at the new server.</p>
 
 <h3>Can I run two sites on one server?</h3>
-<p>Yes: two copies of Fotobogen, each in its own folder with its own <code>data</code>, on different ports. Two copies cannot share a data folder, and Fotobogen refuses to try.</p>
+<p>Yes: two copies of Fotobogen, each in its own folder with its own <code>data</code>, on different ports. Two copies must not share a data folder. <code>pnpm start</code> refuses a folder that another copy you started is using; it cannot see a copy run by another user, or two Docker containers given the same folder, so that part is up to you. Under pm2, give the second site its own <code>PORT</code> in its <code>.env</code> and its own <code>name</code> in its <code>ecosystem.config.cjs</code>.</p>
 
 <h2 id="about">What it does and does not do</h2>
 
@@ -199,13 +203,13 @@ docker compose exec app node scripts/fotobogen.mjs reset-admin    # with Docker<
 <p>No. It makes three kinds of outside request, each only if you ask: downloading the sample photos, asking GitHub whether a newer version exists, and sending webhooks to addresses you enter. None of them carries your photographs or anything about your visitors.</p>
 
 <h3>Can I show my photos on another website? Do I need to set up CORS?</h3>
-<p>Yes, and no. Each photo's page in the admin has a <strong>Links</strong> panel with the address of every size of the picture and a line of HTML to paste. Showing a picture from another site never needs CORS, and for the stricter case of a script on another site reading the picture, Fotobogen already sends <code>Access-Control-Allow-Origin: *</code> with photos and with its public API. Set your site's address first (<strong>Search and sharing</strong>, or <code>SITE_URL</code>), so the links do not begin with <code>localhost</code>.</p>
+<p>Yes, and no. Each photo's page in the admin has a <strong>Links</strong> panel with the address of every size of the picture and a line of HTML to paste. Showing a picture from another site never needs CORS, and for the stricter case of a script on another site reading the picture, Fotobogen sends <code>Access-Control-Allow-Origin: *</code> with photos and with its public API. Set your site's address first (<strong>Search and sharing</strong>, or <code>SITE_URL</code>), so the links do not begin with <code>localhost</code>.</p>
 
 <h3>Does it track visitors or set cookies?</h3>
-<p>It has no analytics and loads nothing from any other site. A visitor gets one cookie, and only if they press the light and dark switch: the word <code>light</code> or <code>dark</code>. The admin's login is a second cookie, for you alone.</p>
+<p>It has no analytics and loads nothing from any other site. A visitor gets one cookie, and only if they press the light and dark switch: the word <code>light</code> or <code>dark</code>. The admin's login is a second cookie, for you alone, and closing the note about a new version in the admin sets a third, also only for you.</p>
 
 <h3>Is where my photos were taken shown?</h3>
-<p>Not unless you switch it on in Settings. The copies visitors see and download carry no camera data at all.</p>
+<p>Not unless you switch it on in Settings. The copies visitors see carry no camera data at all, and with location off the copy they download carries none either. With location on, the download is the file exactly as you uploaded it, with everything the camera wrote into it.</p>
 
 <h3>Can several people have accounts?</h3>
 <p>No. There is one admin account.</p>
@@ -229,7 +233,7 @@ docker compose exec app node scripts/fotobogen.mjs reset-admin    # with Docker<
 <p>On GitHub, under <a href="https://github.com/cschweda/fotobogen/issues" data-goal="GitHub click" data-where="docs-issue">Issues</a>.</p>
     <p class="next">
       <a href="/docs/writing-a-module/">Back: Writing a module</a>
-      <a href="/docs/changelog/">Next: Releases</a>
+      <a href="/docs/security-audits/">Next: Security audits</a>
     </p>
   </main>
 </div>

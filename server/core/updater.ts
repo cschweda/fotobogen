@@ -93,7 +93,7 @@ export function readUpdateState(dataDir: string): UpdateState {
 
 function writeState(dataDir: string, state: UpdateState): void {
   mkdirSync(dataDir, { recursive: true })
-  writeFileSync(join(dataDir, STATUS_FILE), `${JSON.stringify(state, null, 2)}\n`)
+  writeFileSync(join(dataDir, STATUS_FILE), `${JSON.stringify(state, null, 2)}\n`, { mode: 0o600 })
 }
 
 /**
@@ -151,7 +151,8 @@ const versionAt = (root: string): string | null => {
  * built again, so the site keeps working on the old version.
  */
 export async function runUpdate(options: UpdateOptions): Promise<UpdateState> {
-  const { root, dataDir, version } = options
+  const { root, dataDir } = options
+  let { version } = options
   const exec = options.exec ?? realExec
   const now = options.now ?? Date.now
   const install = options.install ?? ['pnpm', ['install', '--frozen-lockfile']]
@@ -187,6 +188,8 @@ export async function runUpdate(options: UpdateOptions): Promise<UpdateState> {
   let switched = false
   try {
     if (!parseVersion(version)) throw new UpdateError(`"${version}" is not a version number.`)
+    // One spelling from here on: "v1.4.0" and "1.4.00" both mean 1.4.0.
+    version = parseVersion(version)!.join('.')
     if (!from || !isNewer(version, from)) throw new UpdateError(`Version ${version} is not newer than the one installed (${from ?? 'unknown'}).`)
     const tag = `v${parseVersion(version)!.join('.')}`
 

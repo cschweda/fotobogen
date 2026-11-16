@@ -1,6 +1,6 @@
 # Writing and installing a skin
 
-A skin changes how the public site looks. It is a stylesheet and a short description file; it does not change the pages' markup, so switching skins needs no rebuild. The skin that comes with Fotobogen, [`skins/swiss`](../skins/swiss/skin.css), is the worked example.
+A skin changes how the public site looks. It is a stylesheet and a short description file; it does not change the pages' markup, so switching skins needs no rebuild. Four come with Fotobogen; [`skins/swiss`](../skins/swiss/skin.css) is the worked example.
 
 > **New to this?** The step-by-step guide is at [fotobogen.com/docs/writing-a-skin](https://fotobogen.com/docs/writing-a-skin/). This file is the reference.
 
@@ -71,7 +71,7 @@ What happens when the owner chooses such a skin:
 
 After that the look is an ordinary site-wide look:
 
-- **Change it or switch it off for all photos** under **Admin, Modules**. From then on it is the owner's own, and changing skins leaves it alone.
+- **Change it or switch it off for all photos** under **Admin, Modules**. From then on it is the owner's own: choosing a skin that has no look leaves it alone. Choosing a skin that has a look of its own replaces it, unless **Use this look for all photos** is unticked first (it is ticked to begin with).
 - **Give one photo a different look, or none,** on that photo's page in the library. A photo with its own choice ignores the site-wide look.
 - **Choosing another skin** removes a look that a skin set, and applies the new skin's look if it has one.
 

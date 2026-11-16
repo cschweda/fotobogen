@@ -36,6 +36,10 @@ export default defineEventHandler(async (event) => {
     description: photo.description,
     alt: photo.alt,
     visibility: photo.visibility,
+    // Why it could not be processed, when it could not; null otherwise.
+    error: photo.status === 'failed'
+      ? ((sqlite.prepare(`select error from jobs where photo_id = ? and status = 'failed' order by created_at desc, rowid desc limit 1`).get(photo.id) as { error: string | null } | undefined)?.error ?? null)
+      : null,
     publishAt: photo.publishAt,
     // null: follows the site's setting.
     license: photo.license,

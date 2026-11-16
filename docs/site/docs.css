@@ -117,3 +117,9 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 8px 32px; padding-top: 24px;
   .layout { display: block; }
   .doc pre { white-space: pre-wrap; }
 }
+
+/* A record that grows: the newest entry open, older ones folded. */
+details.audit { margin-top: 1.5rem; border-top: 1px solid var(--rule); padding-top: 1rem; }
+details.audit > summary { cursor: pointer; font-size: 1.05rem; }
+details.audit > summary:focus-visible { outline: 2px solid var(--red); outline-offset: 3px; }
+details.audit h2 { margin-top: 1.25rem; }

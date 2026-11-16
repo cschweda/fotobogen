@@ -14,6 +14,8 @@ interface SessionData extends Record<string, unknown> {
   uid?: string
   /** The user's session_version at login. A mismatch means signed out. */
   sv?: number
+  /** When this login was made. A login ends after MAX_LOGIN_AGE however much it is used. */
+  at?: number
   /** A demo visitor: no account, and read-only. Only honoured while demo mode is on. */
   demo?: boolean
 }
@@ -48,11 +50,14 @@ function adminSession(event: RequestEvent) {
  * The note about a new version can be closed for a session; the browser keeps
  * that in this cookie. A new login starts a new session, so the note is shown again.
  */
+/** The longest one login lasts, however much it is used: 90 days. Then the password is asked for again. */
+const MAX_LOGIN_AGE = 90 * 24 * 60 * 60 * 1000
+
 export const UPDATE_NOTE_COOKIE = 'fb-update-note'
 
 export async function signIn(event: RequestEvent, user: { id: string, sessionVersion: number }): Promise<void> {
   const session = await adminSession(event)
-  await session.update({ uid: user.id, sv: user.sessionVersion })
+  await session.update({ uid: user.id, sv: user.sessionVersion, at: Date.now() })
   deleteCookie(event, UPDATE_NOTE_COOKIE, { path: '/' })
   event.context.admin = undefined
 }
@@ -103,13 +108,17 @@ async function lookUpAdmin(event: RequestEvent): Promise<AdminUser | null> {
   if (token) return lookUpToken(event, token)
   if (!getRequestHeader(event, 'cookie')?.includes('fotobogen=')) return null
   const session = await adminSession(event)
-  const { uid, sv, demo } = session.data
+  const { uid, sv, demo, at } = session.data
   // A demo session lasts only while the server has demo mode switched on.
   if (demo && !uid) return demoModeOn() ? { id: 'demo', username: 'demo', demo: true } : null
   if (!uid) return null
   const user = getDb().select().from(users).where(eq(users.id, uid)).get()
   if (!user || user.sessionVersion !== sv) return null
-  await session.update({ uid, sv })
+  // Using a session renews its cookie, but not for ever: a cookie that was
+  // copied from a browser stops working when the login it came from is this old.
+  const started = typeof at === 'number' ? at : Date.now()
+  if (Date.now() - started > MAX_LOGIN_AGE) return null
+  await session.update({ uid, sv, at: started })
   return { id: user.id, username: user.username }
 }
 

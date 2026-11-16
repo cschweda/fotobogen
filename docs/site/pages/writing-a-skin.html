@@ -11,7 +11,7 @@
   <li><strong>Switching skins takes effect at once.</strong> Nothing is rebuilt and no photograph is touched.</li>
   <li><strong>Every skin has a light and a dark mode.</strong> You give the colours for each; Fotobogen writes them into the page and handles the visitor's switch. You never write a mode selector.</li>
   <li><strong>Your options become controls in the admin</strong> without any interface code: a colour picker, a menu, or a slider for each.</li>
-  <li><strong>A skin with a mistake in it is listed with the reason and cannot be chosen.</strong> The site carries on with the skin it had.</li>
+  <li><strong>A skin with a mistake in it is listed with the reason and cannot be chosen.</strong> The site carries on with the skin it had; if the broken one is the skin in use, the site shows Swiss until it is mended.</li>
 </ul>
 
 <h3>What a skin cannot do</h3>
@@ -127,7 +127,7 @@ cp -R skins/swiss data/skins/harbour</code></pre>
 <pre><code>:root.fb-public { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; line-height: 1.5; }
 .fb-public body { margin: 0; background: var(--fb-ground); color: var(--fb-text); }
 .fb-public a { color: inherit; }</code></pre>
-<p>Class names that begin <code>fb-</code> (such as <code>.fb-site-header</code>) are only ever on public pages, so they need no prefix.</p>
+<p>Class names that begin <code>fb-</code> (such as <code>.fb-site-header</code>) need no prefix: the admin uses a few of them too, but your stylesheet is only ever loaded on public pages.</p>
 
 <h3>Set the text colour on the body</h3>
 <p>Keep the line <code>.fb-public body { color: var(--fb-text); }</code>. The admin's stylesheet gives the body a pale colour of its own, and without this line the headings and links of a light skin are nearly invisible.</p>
@@ -258,7 +258,7 @@ cp -R skins/swiss data/skins/harbour</code></pre>
 .fb-grid--masonry .fb-tile { grid-row: span var(--fb-span); }</code></pre>
   Put the space between rows inside the tile, as a border or padding, never in <code>row-gap</code>, or the arithmetic drifts and photos are cut off.</li>
   <li>Each tile's inline <code>background-image</code> is a tiny blurred version of the photo, shown until the real one loads. Keep <code>background-size: cover</code> on <code>.fb-tile</code>.</li>
-  <li>Swiss sets the number of columns in steps as the screen narrows, down to one on a phone. Keep that, or write your own steps.</li>
+  <li>Swiss sets the number of columns in steps as the screen narrows, down to two on a phone. Keep that, or write your own steps.</li>
 </ul>
 
 <h2 id="look">A look for every photo</h2>
@@ -320,6 +320,7 @@ cp -R skins/swiss data/skins/harbour</code></pre>
   <thead><tr><th>Message</th><th>What to fix</th></tr></thead>
   <tbody>
     <tr><td>The folder is called "x" but skin.json names the skin "y". They must match.</td><td>Rename the folder, or change <code>name</code>.</td></tr>
+    <tr><td>skin.json must be a JSON object. / Option "x" must be an object.</td><td>Something that should be written in braces, <code>{ … }</code>, is a list, a string, or a number.</td></tr>
     <tr><td>skin.json needs a "name" of lowercase letters, digits, and hyphens.</td><td>No capitals, spaces, or underscores; start with a letter.</td></tr>
     <tr><td>skin.json needs a "version". / a "label".</td><td>Add the missing field.</td></tr>
     <tr><td>skin.css is missing or empty.</td><td>The stylesheet must be in the same folder, with that name.</td></tr>

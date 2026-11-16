@@ -49,6 +49,7 @@
       <li><a href="/docs/modules/">Modules</a></li>
       <li><a href="/docs/writing-a-module/">Writing a module</a></li>
       <li><a href="/docs/faq/">Questions</a></li>
+      <li><a href="/docs/security-audits/">Security audits</a></li>
       <li><a href="/docs/changelog/">Releases</a></li>
     </ul>
     <div class="pages__here">
@@ -67,12 +68,13 @@
 <ul class="cards">
   <li><a href="/docs/installation/">Installation</a><p>On a Mac, a Windows PC, or a Linux server, with Docker or without. What size of server to rent.</p></li>
   <li><a href="/docs/configuration/">Configuration</a><p>Every setting in <code>fotobogen.config.js</code>: what it does, and which are safe to change.</p></li>
-  <li><a href="/docs/usage/">Using Fotobogen</a><p>The first run, uploading, the library, albums and tags, publishing, the slideshow, and settings.</p></li>
+  <li><a href="/docs/usage/">Using Fotobogen</a><p>Uploading, the library, albums and tags, publishing, the slideshow, and settings.</p></li>
   <li><a href="/docs/customization/">Customization</a><p>Everything that can be made your own, where each setting is, and how to change it.</p></li>
   <li><a href="/docs/skins/">Skins</a><p>The four looks that come with it, each in light and dark, and how to make your own.</p></li>
   <li><a href="/docs/writing-a-skin/">Writing a skin</a><p>Step by step: the two files, colours for light and dark, options, the HTML you are styling, and every error message.</p></li>
   <li><a href="/docs/modules/">Modules</a><p>Film looks, a film frame, a watermark, and sharpening. How to write a module.</p></li>
   <li><a href="/docs/writing-a-module/">Writing a module</a><p>Step by step: the two files, the four kinds of setting, five worked examples, testing from the command line, and every error message.</p></li>
+  <li><a href="/docs/security-audits/">Security audits</a><p>Every audit, its date, what it found, and what was fixed.</p></li>
   <li><a href="/docs/faq/">Questions</a><p>Backups, restoring, starting over, a forgotten password, and what Fotobogen does and does not do.</p></li>
   <li><a href="/docs/changelog/">Releases</a><p>What is in each version, newest first.</p></li>
 </ul>
@@ -80,14 +82,14 @@
 <h2 id="how-it-runs">How it runs</h2>
 <p>Fotobogen is a server application, like WordPress. It runs on one machine and you use it from any web browser. That machine can be a small rented Linux server, which is how a public site is run, or your own Mac or PC, which is the quickest way to try it.</p>
 <ul>
-  <li>The machine needs <strong>either Node.js 24 or Docker</strong>. Nothing is compiled during installation.</li>
+  <li>The machine needs <strong>either Node.js 24 or Docker</strong>. With Docker, nothing is built on your server; with Node.js, one build command is run.</li>
   <li>Everything a site owns is kept in <strong>one folder</strong>, called <code>data</code>: the database, your photographs as you uploaded them, and the resized copies.</li>
   <li>There is <strong>one admin account</strong>, created in a short setup wizard the first time you open the site.</li>
   <li>It makes <strong>no outside requests</strong> unless you ask: downloading sample photos, checking for a new version, and sending webhooks are each switched on by you.</li>
 </ul>
 
 <h2 id="state">Where it stands</h2>
-<p>The current version is <strong>1.3.2</strong>, of 16 November 2026. It follows 1.3.1, 1.3.0, 1.2.0, 1.1.0, which added updating from the admin, and 1.0.0, the first release. <a href="/docs/changelog/">What is in each.</a></p>
+<p>The current version is <strong>1.3.3</strong>, of 16 November 2026. It follows 1.3.2, 1.3.1, 1.3.0, 1.2.0, 1.1.0, which added updating from the admin, and 1.0.0, the first release. <a href="/docs/changelog/">What is in each.</a></p>
 <p>Every change is installed, built, and tested on Linux (Ubuntu) and on Windows, and it is developed on macOS. A ready-made Docker image is published for each release.</p>
 <p>One thing to know: it has not yet been tried on a Laravel Forge server or on a real 1 GB server. A 1 GB memory limit was tested in Docker.</p>
 <div class="note">

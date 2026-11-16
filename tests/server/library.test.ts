@@ -117,3 +117,33 @@ describe('the photo library', () => {
     expect((await sharp(Buffer.from(await clamped.arrayBuffer())).metadata()).width).toBe(300) // never larger than the photo
   })
 })
+
+describe('a photo that could not be processed', () => {
+  it('says why on its own page, and can be tried again from there', async () => {
+    const Database = (await import('better-sqlite3')).default
+    const server = await startServer()
+    try {
+      const cookie = await completeSetup(server)
+      const response = await upload(server, cookie, await imageBuffer({ seed: 9, width: 300, height: 200 }), 'pier.jpg')
+      const { id } = (await response.json() as { photo: { id: string } }).photo
+      await whenProcessed(server, cookie)
+      // As the queue leaves a photo after its last failed try.
+      const db = new Database(join(server.dataDir, 'fotobogen.db'))
+      db.pragma('busy_timeout = 5000')
+      db.prepare(`update photos set status = 'failed' where id = ?`).run(id)
+      db.prepare(`insert into jobs (id, type, photo_id, status, attempts, error, created_at) values ('j-failed', 'ingest', ?, 'failed', 3, 'the disk is full', ?)`).run(id, Date.now())
+      db.close()
+
+      const failed = await (await get(server, `/api/admin/photos/${id}`, { cookie })).json()
+      expect(failed).toMatchObject({ status: 'failed', error: 'the disk is full' })
+
+      const retried = await fetch(`${server.url}/api/admin/photos/${id}/retry`, { method: 'POST', headers: { origin: server.url, cookie } })
+      expect(retried.status).toBe(200)
+      await whenProcessed(server, cookie)
+      expect(await (await get(server, `/api/admin/photos/${id}`, { cookie })).json()).toMatchObject({ status: 'ready', error: null })
+    }
+    finally {
+      await server.stop()
+    }
+  })
+})

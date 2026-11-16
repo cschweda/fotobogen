@@ -25,6 +25,13 @@ export function applyMigrations(sqlite: Database, migrations: Migration[]): stri
   const done = new Set(
     (sqlite.prepare(`select name from __migrations`).all() as { name: string }[]).map(row => row.name),
   )
+  // Changes this version has never heard of were made by a newer one. Its
+  // tables may not be what this code expects, so the database is left alone.
+  const known = new Set(migrations.map(m => m.name))
+  const fromNewer = [...done].filter(name => !known.has(name)).sort()
+  if (fromNewer.length > 0) {
+    throw new Error(`this database was last used by a newer version of Fotobogen (it has the change "${fromNewer.at(-1)}", which this version does not know). Nothing was changed. Update Fotobogen to that version or a later one; or, to stay on this version, restore a backup made with it.`)
+  }
   const record = sqlite.prepare(`insert into __migrations (name, applied_at) values (?, ?)`)
   const applied: string[] = []
 

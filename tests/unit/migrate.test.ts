@@ -7,6 +7,9 @@ const migrationsDir = fileURLToPath(new URL('../../server/db/migrations', import
 const tableNames = (db: Database.Database) =>
   (db.prepare(`select name from sqlite_master where type = 'table'`).all() as { name: string }[]).map(row => row.name)
 
+// A version always carries its earlier migrations; this one is already applied, so it is not run again.
+const APPLIED = { name: '0001_tables', sql: '' }
+
 describe('applyMigrations', () => {
   it('creates every table in the design on an empty database', () => {
     const db = new Database(':memory:')
@@ -29,6 +32,15 @@ describe('applyMigrations', () => {
     const bad = [{ name: '0001_bad', sql: 'create table a (id text);\n--> statement-breakpoint\ncreate table a (id text);' }]
     expect(() => applyMigrations(db, bad)).toThrow(/0001_bad/)
     expect(tableNames(db)).not.toContain('a')
+  })
+
+  it('refuses a database that a newer version of Fotobogen has changed, and leaves it alone', () => {
+    const db = new Database(':memory:')
+    const migrations = readMigrationsFromDir(migrationsDir)
+    applyMigrations(db, migrations)
+    db.prepare(`insert into __migrations (name, applied_at) values ('9999_from_the_future', 1)`).run()
+    expect(() => applyMigrations(db, migrations)).toThrow(/newer version of Fotobogen/)
+    expect(() => applyMigrations(db, migrations)).toThrow(/9999_from_the_future/)
   })
 
   it('applies migrations in name order', () => {
@@ -67,7 +79,7 @@ insert into parent values ('p');
 insert into child values ('c', 'p');`,
     }])
     // The shape drizzle-kit generates for a column change in SQLite.
-    applyMigrations(db, [{
+    applyMigrations(db, [APPLIED, {
       name: '0002_rebuild_parent',
       sql: `PRAGMA foreign_keys=OFF;
 --> statement-breakpoint
@@ -98,7 +110,7 @@ insert into parent values ('p');
 --> statement-breakpoint
 insert into child values ('c', 'p');`,
     }])
-    expect(() => applyMigrations(db, [{ name: '0002_orphan', sql: `delete from parent;` }])).toThrow(/0002_orphan/)
+    expect(() => applyMigrations(db, [APPLIED, { name: '0002_orphan', sql: `delete from parent;` }])).toThrow(/0002_orphan/)
     expect(db.prepare('select count(*) as n from parent').get()).toEqual({ n: 1 })
     expect(db.pragma('foreign_keys', { simple: true })).toBe(1)
   })

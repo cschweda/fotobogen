@@ -22,6 +22,9 @@ export default defineEventHandler(async (event) => {
       'content-length': String(file.length),
       'cache-control': 'public, max-age=31536000, immutable',
       'x-content-type-options': 'nosniff',
+      // Public pictures with no login: a script on any site may read them,
+      // as it may read the public API (the proxies' own rules say the same).
+      'access-control-allow-origin': '*',
     },
   })
 })

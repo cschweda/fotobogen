@@ -49,6 +49,7 @@
       <li><a href="/docs/modules/">Modules</a></li>
       <li><a href="/docs/writing-a-module/">Writing a module</a></li>
       <li><a href="/docs/faq/">Questions</a></li>
+      <li><a href="/docs/security-audits/">Security audits</a></li>
       <li><a href="/docs/changelog/">Releases</a></li>
     </ul>
     <div class="pages__here">
@@ -93,7 +94,7 @@
 </table></div>
 
 <h2 id="requirements">What the machine needs</h2>
-<p>Fotobogen checks the machine every time it starts and refuses to run on one that cannot run it properly, saying what to fix. The figures below are what that check enforces.</p>
+<p>Fotobogen checks the machine every time it starts and refuses to run on one that cannot run it properly, saying what to fix. The memory figures below are what that check enforces; for disk it insists only on 500 MB free, and it does not count processors.</p>
 <div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
   <thead><tr><th></th><th>Minimum</th><th>Recommended</th></tr></thead>
   <tbody>
@@ -106,7 +107,7 @@
 </table></div>
 <ul>
   <li><strong>Memory.</strong> Fotobogen will not start with less than 900 MB available to it, and warns below 2 GB when there is no swap. It resizes one photo at a time to stay small: a 40-megapixel photo was processed inside a container limited to 1 GB, using about 250 MB at its peak.</li>
-  <li><strong>Building needs more than running.</strong> Installing from source takes more memory than the running site. On a 1 GB server add swap first (the commands are <a href="#swap">below</a>). A 2 GB server needs none, and neither does a Docker install, which downloads an image that is already built.</li>
+  <li><strong>Building needs more than running.</strong> Installing from source takes more memory than the running site. On a 1 GB server add swap first (the commands are <a href="#swap">below</a>). A server with a full 2 GB needs none (many sold as 2 GB report a little less; the check at the start says if swap is needed), and neither does a Docker install, which downloads an image that is already built.</li>
   <li><strong>Disk.</strong> It will not start with less than 500 MB free and warns below 2 GB. Most of the space goes to your photographs as uploaded; the resized copies are smaller. A backup zip is about the size of your originals, so leave room for one.</li>
   <li><strong>Other Linux distributions</strong> may well work but are reported as untested.</li>
 </ul>
@@ -209,7 +210,7 @@ sudo usermod -aG docker forge</code></pre>
 <pre tabindex="0"><code>mkdir -p data
 PUID=$(id -u) PGID=$(id -g) docker compose -f docker-compose.forge.yml up -d</code></pre>
   This downloads the published image; nothing is built on your server.</li>
-  <li><strong>Point nginx at it.</strong> In Forge, open the site's nginx configuration and paste in the blocks from <a href="https://github.com/cschweda/fotobogen/blob/main/deploy/forge-nginx.conf"><code>deploy/forge-nginx.conf</code></a>, changing the two marked paths to your site's folder.</li>
+  <li><strong>Point nginx at it.</strong> In Forge, open the site's nginx configuration and paste in the blocks from <a href="https://github.com/cschweda/fotobogen/blob/main/deploy/forge-nginx.conf"><code>deploy/forge-nginx.conf</code></a>, changing the two marked lines (a path and the port).</li>
   <li><strong>Issue the certificate</strong> in Forge (Let's Encrypt).</li>
   <li><strong>Read the setup token:</strong>
 <pre tabindex="0"><code>docker compose -f docker-compose.forge.yml logs app</code></pre></li>
@@ -232,14 +233,14 @@ pnpm build
 pnpm fotobogen init
 pm2 start ecosystem.config.cjs
 pm2 logs fotobogen</code></pre>
-  <code>pnpm fotobogen init</code> is optional: it asks for the port, the site's address, and demo mode, and writes <code>.env</code>. There is nothing to edit in <code>ecosystem.config.cjs</code>, which takes the port from <code>.env</code>. The last command shows the setup token.</li>
+  <code>pnpm fotobogen init</code> is optional: it asks for the port, the site's address, and demo mode, and writes <code>.env</code>. For one site there is nothing to edit in <code>ecosystem.config.cjs</code>, which takes the port from <code>.env</code>. (It sets the data folder itself; to move that under pm2, change it in the file.) The last command shows the setup token.</li>
   <li><strong>Start it at boot:</strong> run <code>pm2 save</code>, then <code>pm2 startup</code>, and run the line that prints.</li>
   <li><strong>Put nginx in front of it</strong>, as in the next section.</li>
 </ol>
 <p>To update: <code>scripts/rebuild.sh</code>, which pulls the new code, builds it, and reloads.</p>
 
 <h2 id="nginx">nginx in front of the app</h2>
-<p>Without Docker, Fotobogen listens on <code>127.0.0.1:5150</code>, which only the server itself can reach. nginx answers the public and passes each request on. Save this as <code>/etc/nginx/sites-available/photos.example.com</code>, with your own domain:</p>
+<p>Under pm2, Fotobogen listens on <code>127.0.0.1:5150</code>, which only the server itself can reach. nginx answers the public and passes each request on. Save this as <code>/etc/nginx/sites-available/photos.example.com</code>, with your own domain:</p>
 <pre tabindex="0"><code>server {
     listen 80;
     listen [::]:80;
@@ -247,6 +248,9 @@ pm2 logs fotobogen</code></pre>
 
     # The largest upload nginx lets through. Keep it equal to MAX_UPLOAD_MB.
     client_max_body_size 50m;
+
+    # Once the site has its certificate: browsers that have visited use https from then on.
+    add_header Strict-Transport-Security &quot;max-age=31536000&quot; always;
 
     location / {
         # Where Fotobogen is listening.
@@ -334,6 +338,7 @@ pm2 reload ecosystem.config.cjs --update-env</code></pre>
 <p>Leave everything else as it is: the <code>listen</code> lines, <code>server_name</code>, the certificate lines, and on Forge every <code>include forge-conf/...</code> line. The <code>root</code> line can stay; it is no longer used.</p>
 <p>Changes 1 to 5, ready to paste:</p>
 <pre tabindex="0"><code>client_max_body_size 50m;
+add_header Strict-Transport-Security &quot;max-age=31536000&quot; always;
 
 location / {
     proxy_pass http://127.0.0.1:5150;
@@ -345,7 +350,7 @@ location / {
 }</code></pre>
 <p><a href="https://github.com/cschweda/fotobogen/blob/main/deploy/forge-nginx.conf"><code>deploy/forge-nginx.conf</code></a> is the same with one addition: nginx serves the resized photos from disk itself. Forge checks the file and reloads nginx when you save. By hand: <code>sudo nginx -t</code>, then <code>sudo systemctl reload nginx</code>.</p>
 <h3>On the app's side</h3>
-<p>Two settings go with the proxy. Both are already set in <code>ecosystem.config.cjs</code> and the Docker compose files.</p>
+<p>Two settings go with the proxy. Both are already set in <code>ecosystem.config.cjs</code>, and the Docker files have the same effect.</p>
 <ul>
   <li><code>HOST=127.0.0.1</code>, so only nginx can reach the app.</li>
   <li><code>TRUST_PROXY=1</code>, so the app believes the headers in change 4. Set it only when the app really is reachable through nginx alone.</li>
@@ -386,7 +391,7 @@ docker compose logs app</code></pre>
 </table></div>
 <p>The answers are saved to <code>.env</code> in Fotobogen's folder, and it does not ask again. To change them, edit that file, or run <code>pnpm fotobogen init</code> to be asked again; your other settings in <code>.env</code> are kept. Then restart.</p>
 <p>On a server, the first start is usually under pm2, where nothing is asked. Run <code>pnpm fotobogen init</code> there before <code>pm2 start</code> to answer the same questions.</p>
-<p><strong>Nothing is asked when nobody is at the keyboard</strong>: under pm2, in Docker, on Laravel Forge, or from a script. Nor when <code>.env</code> already exists, or <code>PORT</code>, <code>SITE_URL</code>, or <code>DEMO_MODE</code> is already set. A server never waits for an answer. To switch the questions off in a terminal too, set <code>FOTOBOGEN_NO_QUESTIONS=1</code>.</p>
+<p><strong>Nothing is asked when nobody is at the keyboard</strong>: under pm2, in Docker, on Laravel Forge, or from a script. Nor when <code>.env</code> already exists, or <code>PORT</code>, <code>SITE_URL</code>, or <code>DEMO_MODE</code> is already set. A server never waits for an answer. Nor when the <code>CI</code> variable is set. To switch the questions off in a terminal too, start with <code>FOTOBOGEN_NO_QUESTIONS=1 pnpm start</code>.</p>
 <p>Whether to start with sample photos is asked in the browser, next.</p>
 <p>In a terminal, the machine check and these questions are in colour: green for what is good, yellow for a warning, red for what stops the start. The words <code>ok</code>, <code>WARN</code>, and <code>FAIL</code> are always printed too. Colour is left out of log files, and <code>NO_COLOR=1</code> switches it off.</p>
 
@@ -404,11 +409,11 @@ docker compose logs app</code></pre>
 <p>The token is printed at every start until setup is finished, and is also in the file <code>data/setup-token</code>. If you lose it, restart Fotobogen or read that file.</p>
 
 <h2 id="settings">Settings on the server</h2>
-<p>Nothing has to be configured. Settings for one machine live in <code>.env</code> in Fotobogen's folder: the <a href="#questions">questions at the first start</a> write it, or copy <code>.env.sample</code> to <code>.env</code> yourself. Edit it and restart. Docker reads the same file.</p>
+<p>Nothing has to be configured. Settings for one machine live in <code>.env</code> in Fotobogen's folder: the <a href="#questions">questions at the first start</a> write it, or copy <code>.env.sample</code> to <code>.env</code> yourself. Edit it and restart. Docker reads the same file, but passes on only some of the settings (<a href="/docs/configuration/">Configuration</a> lists them).</p>
 <div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
   <thead><tr><th>Setting</th><th>Default</th><th>What it does</th></tr></thead>
   <tbody>
-    <tr><td><code>PORT</code></td><td><code>5150</code></td><td>The port. Left unset, a busy 5150 moves up to the next free port. Set, it is used exactly, and Fotobogen stops if it is taken.</td></tr>
+    <tr><td><code>PORT</code></td><td><code>5150</code></td><td>The port. Left unset, a busy 5150 moves up to the next free port. Set, it is used exactly, and Fotobogen stops if it is taken. Under pm2 it is always set.</td></tr>
     <tr><td><code>DATA_DIR</code></td><td><code>./data</code></td><td>Where the site keeps everything.</td></tr>
     <tr><td><code>SITE_URL</code></td><td>none</td><td>Your site's proper address, such as <code>https://photos.example.com</code>. Used wherever a full address is written out: a photo's links in the admin, the feed, the sitemap, and what search engines are told. Without it, links made on your own machine begin with <code>http://localhost:5150</code>. It can also be set in the admin, under <strong>Search and sharing</strong>.</td></tr>
     <tr><td><code>DOMAIN</code></td><td>none</td><td>Docker quick start only: the domain Caddy gets a certificate for.</td></tr>
@@ -418,7 +423,7 @@ docker compose logs app</code></pre>
   </tbody>
 </table></div>
 <p>Every other value is listed and explained on the <a href="/docs/configuration/">configuration page</a>.</p>
-<p><strong>Two copies on one machine.</strong> If Fotobogen is already running when you start it in a terminal, it asks whether to run both (the new one gets its own port), stop the running one, or cancel. Two copies never share a data folder.</p>
+<p><strong>Two copies on one machine.</strong> If Fotobogen is already running when you start it in a terminal, it asks whether to run both (the new one gets its own port), stop what is running, or cancel. Two copies must never share a data folder; <code>pnpm start</code> refuses when it can see the other copy (<a href="/docs/faq/">more in Questions</a>).</p>
 
 <h2 id="monitoring">Watching that it is up</h2>
 <p>The address <code>/api/health</code> needs no login and answers <code>200</code> when the site and its database are working, and <code>503</code> when they are not. Point <a href="https://uptimerobot.com">UptimeRobot</a> or a similar monitor at <code>https://your-site.example/api/health</code>.</p>

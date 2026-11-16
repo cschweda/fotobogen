@@ -8,7 +8,7 @@ import { join } from 'node:path'
 import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import { defineEventHandler } from 'nuxt/server'
-import { inspectBackup, PENDING_RESTORE } from '../../../core/backup.ts'
+import { inspectBackup, PENDING_ADMIN_RESTORE } from '../../../core/backup.ts'
 import { newId } from '../../../core/ids.ts'
 import { getPaths, getSqlite } from '../../../utils/app.ts'
 import { fail } from '../../../utils/respond.ts'
@@ -24,8 +24,9 @@ export default defineEventHandler(async (event) => {
     const known = (getSqlite().prepare(`select name from __migrations`).all() as { name: string }[]).map(row => row.name)
     const inspected = await inspectBackup(incoming, known)
     if (!inspected.ok) return fail(event, 422, inspected.message)
-    await rename(incoming, join(paths.root, PENDING_RESTORE))
-    return { manifest: inspected.manifest }
+    await rename(incoming, join(paths.root, PENDING_ADMIN_RESTORE))
+    // Modules are code. A backup uploaded here is restored without them.
+    return { manifest: inspected.manifest, modulesLeftOut: inspected.modules }
   }
   catch {
     return fail(event, 400, 'The upload was interrupted. Try again; for a large backup, copy the file to the server and use `pnpm fotobogen restore` instead.')
