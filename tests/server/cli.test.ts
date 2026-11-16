@@ -1,4 +1,6 @@
 import { spawnSync } from 'node:child_process'
+import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { baseEnv, get, post, startServer, type TestServer } from '../helpers/server.ts'
@@ -85,3 +87,29 @@ describe('fotobogen CLI', () => {
     expect(result.out).toContain('No Fotobogen database found at ' + join('/nonexistent-fotobogen-data', 'fotobogen.db') + '')
   })
 })
+
+describe('fotobogen init', () => {
+  const init = (cwd: string, input: string, env: Record<string, string | undefined> = {}) => spawnSync(process.execPath, [join(process.cwd(), 'scripts/fotobogen.mjs'), 'init'], {
+    cwd, input, encoding: 'utf8', env: { ...process.env, CI: undefined, ...env },
+  })
+
+  it('needs a terminal, and says how to do it by hand without one', () => {
+    const cwd = mkdtempSync(join(tmpdir(), 'fb-init-'))
+    const result = init(cwd, '')
+    expect(result.status).toBe(1)
+    expect(result.stderr).toContain('needs a terminal')
+    expect(existsSync(join(cwd, '.env'))).toBe(false)
+  })
+
+  it('asks again and changes only its own settings in an existing .env', () => {
+    const cwd = mkdtempSync(join(tmpdir(), 'fb-init-'))
+    writeFileSync(join(cwd, '.env'), '# mine\nMAX_UPLOAD_MB=80\nPORT=5150\n')
+    // All three answers at once: the questions are read a line at a time.
+    const result = init(cwd, '\nphotos.example.com\ny\n', { FOTOBOGEN_ASSUME_TERMINAL: '1' })
+    expect(result.status).toBe(0)
+    expect(result.stdout).toContain('Your other settings in .env are kept.')
+    expect(result.stdout).toContain('Restart Fotobogen')
+    expect(readFileSync(join(cwd, '.env'), 'utf8')).toBe('# mine\nMAX_UPLOAD_MB=80\n# PORT=5150\nSITE_URL=https://photos.example.com\nDEMO_MODE=1\n')
+  })
+})
+

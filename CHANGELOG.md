@@ -13,6 +13,28 @@ is built from this file.
 
 Nothing yet.
 
+## [1.3.0] - 2026-11-16
+
+### Added
+
+- **Questions at the first start.** The first time `pnpm start` is run in a terminal, after the machine has been checked, it asks for the port, the site's address, and whether to switch demo mode on, and saves the answers to `.env`. Enter accepts what is suggested. It asks once, and never when nobody is at the keyboard (pm2, Docker, a script), so a server does not wait for an answer.
+- `pnpm fotobogen init` asks the same questions again and keeps the rest of `.env`.
+- The preflight check says whether pm2 is installed. It is never a warning: pm2 is only needed to keep a site running on a server.
+- **Colour in the terminal**: green for what is good, yellow for warnings, red for what stops the start, in the preflight check, the questions, and the start-up messages. The words `ok`, `WARN`, and `FAIL` are still printed. Colour is left out of log files and anything that is not a terminal, and `NO_COLOR=1` switches it off.
+
+### Changed
+
+- **The pm2 file follows `.env`.** `ecosystem.config.cjs` takes the port from `PORT` in `.env` (5150 if it is not set) instead of fixing it at 5150, so there is nothing to edit in it and a port answered at the first start is the one pm2 runs on. If you changed the port in that file by hand, put it in `.env` instead.
+
+### Fixed
+
+- After an update finished building, the System page went on saying "The update has started."
+
+### Upgrading from 1.2.0
+
+A copy installed with git: the note in the admin, or **Admin, System, Update to version 1.3.0**. Docker: `docker compose pull`, then `docker compose up -d`. If you edited `ecosystem.config.cjs` (to change the port, say), the update from the admin will stop and say that file is in the way: move the port to `PORT` in `.env`, run `git checkout ecosystem.config.cjs`, and update again.
+- Documentation: what to change in nginx on a droplet that already runs it, in the README and on the installation page.
+
 ## [1.2.0] - 2026-11-16
 
 ### Added
@@ -141,6 +163,7 @@ Later entries list only what changed.
 - One admin account only. No comments, no shop, no storage outside the server's own disk.
 
 [Unreleased]: https://github.com/cschweda/fotobogen/commits/staging
+[1.3.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.3.0
 [1.2.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.2.0
 [1.1.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.1.0
 [1.0.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.0.0
