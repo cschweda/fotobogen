@@ -12,6 +12,7 @@
     <tr><td>A server set up by Laravel Forge</td><td><a href="#docker-forge">Docker on a Forge server</a></td><td>A public site behind Forge's nginx</td></tr>
     <tr><td>A server set up by Laravel Forge, and you prefer no Docker</td><td><a href="#forge-pm2">Forge with pm2</a></td><td>A public site behind Forge's nginx</td></tr>
     <tr><td>A Linux server, and you prefer no Docker</td><td><a href="#linux">Linux without Docker</a>, then <a href="#nginx">nginx</a></td><td>A public site behind nginx</td></tr>
+    <tr><td>A droplet that already runs nginx and other sites</td><td>Either Forge route, with <a href="#existing-nginx">what to change in nginx</a></td><td>One more site beside the others</td></tr>
     <tr><td>Docker on your own computer</td><td><a href="#docker-local">Docker on your own computer</a></td><td><code>http://localhost</code></td></tr>
   </tbody>
 </table></div>
@@ -153,9 +154,10 @@ npm install -g pnpm@10 pm2</code></pre></li>
 cd fotobogen
 pnpm install --frozen-lockfile
 pnpm build
+pnpm fotobogen init
 pm2 start ecosystem.config.cjs
 pm2 logs fotobogen</code></pre>
-  The last command shows the setup token.</li>
+  <code>pnpm fotobogen init</code> is optional: it asks for the port, the site's address, and demo mode, and writes <code>.env</code>. There is nothing to edit in <code>ecosystem.config.cjs</code>, which takes the port from <code>.env</code>. The last command shows the setup token.</li>
   <li><strong>Start it at boot:</strong> run <code>pm2 save</code>, then <code>pm2 startup</code>, and run the line that prints.</li>
   <li><strong>Put nginx in front of it</strong>, as in the next section.</li>
 </ol>
@@ -214,9 +216,10 @@ npm install -g pnpm@10 pm2</code></pre>
 <pre><code>cd /home/forge/photos.example.com
 pnpm install --frozen-lockfile
 pnpm build
+pnpm fotobogen init
 pm2 start ecosystem.config.cjs
 pm2 logs fotobogen</code></pre>
-  The last command shows the setup token.</li>
+  <code>pnpm fotobogen init</code> asks for the port, the site's address (<code>https://photos.example.com</code>), and demo mode, and writes <code>.env</code>; the pm2 file takes the port from there. The last command shows the setup token.</li>
   <li><strong>Make it start after a reboot:</strong> <code>pm2 save</code>, then <code>pm2 startup</code>, and run the <code>sudo</code> command it prints.</li>
   <li><strong>Point nginx at it.</strong> In Forge, open the site's nginx configuration. Inside the <code>server</code> block, replace the <code>location /</code> block with the blocks from <a href="https://github.com/cschweda/fotobogen/blob/main/deploy/forge-nginx.conf"><code>deploy/forge-nginx.conf</code></a>, changing the two marked lines. Leave the rest of what Forge wrote as it is.</li>
   <li><strong>Issue the certificate</strong> in Forge.</li>
@@ -230,6 +233,61 @@ pm2 reload ecosystem.config.cjs --update-env</code></pre>
   The <code>source</code> line matters: Forge runs the script without your login shell's setup, so Node.js would not be found without it.</li>
 </ol>
 
+<h2 id="existing-nginx">An existing droplet with nginx: what to change</h2>
+<p>For a DigitalOcean droplet, or any server, that already runs nginx and other sites, managed by Laravel Forge or by hand. Fotobogen does not replace nginx or touch your other sites. It runs as one more program on a port of its own, reachable only from the server itself, and one site's nginx file is changed to pass requests to it.</p>
+<div class="table"><table>
+  <thead><tr><th>Part of the server</th><th>What changes</th></tr></thead>
+  <tbody>
+    <tr><td>nginx itself, its main file, your other sites</td><td>Nothing</td></tr>
+    <tr><td>The firewall</td><td>Nothing. Fotobogen listens on <code>127.0.0.1</code>, so its port is not opened to the internet.</td></tr>
+    <tr><td>The certificate</td><td>Issued the usual way: Forge's <strong>SSL</strong> tab, or Certbot</td></tr>
+    <tr><td>One site's nginx file</td><td>The six changes below</td></tr>
+  </tbody>
+</table></div>
+<p>The changes go in that site's <code>server { ... }</code> block. On Forge: the site, <strong>Edit Files, Edit Nginx Configuration</strong>. By hand: <code>/etc/nginx/sites-available/photos.example.com</code>.</p>
+<div class="table"><table>
+  <thead><tr><th>Change</th><th>Why</th></tr></thead>
+  <tbody>
+    <tr><td>1. Add <code>client_max_body_size 50m;</code></td><td>nginx's own limit is 1 MB, which refuses nearly every photo with <code>413</code>. Keep it equal to <code>MAX_UPLOAD_MB</code> (50 unless you changed it). Set here, it applies to this site only and wins over any server-wide value.</td></tr>
+    <tr><td>2. Replace the <code>location / { ... }</code> block with one that has <code>proxy_pass http://127.0.0.1:5150;</code></td><td>This is the pointer to the app. Use the port Fotobogen runs on: <code>PORT</code> in its <code>.env</code>, or 5150 if that is not set. A second Fotobogen site on the same droplet needs a different one.</td></tr>
+    <tr><td>3. In that block: <code>proxy_set_header Host $http_host;</code></td><td>Without it, saving anything in the admin answers "This request did not come from this site".</td></tr>
+    <tr><td>4. In that block: <code>proxy_set_header X-Forwarded-Proto $scheme;</code> and <code>proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</code></td><td>So Fotobogen knows the visitor used https, and counts wrong passwords by visitor and not all against nginx.</td></tr>
+    <tr><td>5. In that block: <code>proxy_http_version 1.1;</code> and <code>proxy_read_timeout 120s;</code></td><td>A large upload takes longer to arrive and be checked than nginx's 60 seconds.</td></tr>
+    <tr><td>6. Remove the <code>location ~ \.php$ { ... }</code> block, if the site has one</td><td>Fotobogen has no PHP. Harmless if left, but nothing uses it.</td></tr>
+  </tbody>
+</table></div>
+<p>Leave everything else as it is: the <code>listen</code> lines, <code>server_name</code>, the certificate lines, and on Forge every <code>include forge-conf/...</code> line. The <code>root</code> line can stay; it is no longer used.</p>
+<p>Changes 1 to 5, ready to paste:</p>
+<pre><code>client_max_body_size 50m;
+
+location / {
+    proxy_pass http://127.0.0.1:5150;
+    proxy_http_version 1.1;
+    proxy_set_header Host $http_host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_read_timeout 120s;
+}</code></pre>
+<p><a href="https://github.com/cschweda/fotobogen/blob/main/deploy/forge-nginx.conf"><code>deploy/forge-nginx.conf</code></a> is the same with one addition: nginx serves the resized photos from disk itself. Forge checks the file and reloads nginx when you save. By hand: <code>sudo nginx -t</code>, then <code>sudo systemctl reload nginx</code>.</p>
+<h3>On the app's side</h3>
+<p>Two settings go with the proxy. Both are already set in <code>ecosystem.config.cjs</code> and the Docker compose files.</p>
+<ul>
+  <li><code>HOST=127.0.0.1</code>, so only nginx can reach the app.</li>
+  <li><code>TRUST_PROXY=1</code>, so the app believes the headers in change 4. Set it only when the app really is reachable through nginx alone.</li>
+</ul>
+<p>Also set the site's address, as <code>SITE_URL=https://photos.example.com</code> in <code>.env</code> or under <strong>Search and sharing</strong> in the admin, so links to your photos begin with your domain.</p>
+<h3>When you change something later</h3>
+<div class="table"><table>
+  <thead><tr><th>You change</th><th>Also change</th></tr></thead>
+  <tbody>
+    <tr><td>The app's port (<code>PORT</code> in <code>.env</code>)</td><td><code>proxy_pass</code> in the nginx file; reload nginx, then <code>pm2 reload ecosystem.config.cjs --update-env</code></td></tr>
+    <tr><td><code>MAX_UPLOAD_MB</code></td><td><code>client_max_body_size</code>, to the same number</td></tr>
+    <tr><td>The domain</td><td>The site and certificate in Forge (or <code>server_name</code> and Certbot), and <code>SITE_URL</code></td></tr>
+    <tr><td>Fotobogen's version (<a href="/docs/updating/">an update</a>)</td><td>Nothing in nginx</td></tr>
+  </tbody>
+</table></div>
+<p><strong>Room on the droplet.</strong> Running, Fotobogen used about 130 MB of memory when measured idle, and uses more while it resizes photos (the pm2 file restarts it at 600 MB). Building it (an install or update without Docker) needs about 2 GB counting swap, for a few minutes; on a small droplet, <a href="#swap">add swap</a> first, or use the Docker image, which is already built.</p>
+
 <h2 id="docker-local">Docker on your own computer</h2>
 <p>If you already use Docker Desktop, OrbStack, or Colima and would rather not install Node.js:</p>
 <pre><code>git clone https://github.com/cschweda/fotobogen.git
@@ -240,6 +298,21 @@ cp .env.sample .env</code></pre>
 <pre><code>docker compose up -d
 docker compose logs app</code></pre>
 <p>The site is at <code>http://localhost</code>. The image has been built and run on macOS. On Windows this needs Docker Desktop or WSL and has not been tested.</p>
+
+<h2 id="questions">Questions at the first start</h2>
+<p>The very first time you run <code>pnpm start</code> in a terminal, after the machine has been checked, Fotobogen asks three things the server has to know before it starts. Press Enter to accept what is suggested.</p>
+<div class="table"><table>
+  <thead><tr><th>Question</th><th>Enter means</th><th>What it sets</th></tr></thead>
+  <tbody>
+    <tr><td>Port to run on?</td><td>5150, or the next free port above it</td><td><code>PORT</code>. A port you type is used exactly; one that is in use is refused, and you are asked again.</td></tr>
+    <tr><td>Site address?</td><td>Not set</td><td><code>SITE_URL</code>, your site's address if it has a domain name. It can also be set in the admin.</td></tr>
+    <tr><td>Switch demo mode on?</td><td>No</td><td><code>DEMO_MODE</code>. Only for a site meant to show Fotobogen off.</td></tr>
+  </tbody>
+</table></div>
+<p>The answers are saved to <code>.env</code> in Fotobogen's folder, and it does not ask again. To change them, edit that file, or run <code>pnpm fotobogen init</code> to be asked again; your other settings in <code>.env</code> are kept. Then restart.</p>
+<p>On a server, the first start is usually under pm2, where nothing is asked. Run <code>pnpm fotobogen init</code> there before <code>pm2 start</code> to answer the same questions.</p>
+<p><strong>Nothing is asked when nobody is at the keyboard</strong>: under pm2, in Docker, on Laravel Forge, or from a script. Nor when <code>.env</code> already exists, or <code>PORT</code>, <code>SITE_URL</code>, or <code>DEMO_MODE</code> is already set. A server never waits for an answer. To switch the questions off in a terminal too, set <code>FOTOBOGEN_NO_QUESTIONS=1</code>.</p>
+<p>Whether to start with sample photos is asked in the browser, next.</p>
 
 <h2 id="first-run">The first run</h2>
 <p>However you installed it, you now have an address and a <strong>setup token</strong>: 32 letters and digits that Fotobogen printed when it started. The token proves that the person setting up the site is the person who can see the server.</p>
@@ -255,7 +328,7 @@ docker compose logs app</code></pre>
 <p>The token is printed at every start until setup is finished, and is also in the file <code>data/setup-token</code>. If you lose it, restart Fotobogen or read that file.</p>
 
 <h2 id="settings">Settings on the server</h2>
-<p>Nothing has to be configured. To change something on one machine, copy <code>.env.sample</code> to <code>.env</code> in Fotobogen's folder and edit the copy. Docker reads the same file.</p>
+<p>Nothing has to be configured. Settings for one machine live in <code>.env</code> in Fotobogen's folder: the <a href="#questions">questions at the first start</a> write it, or copy <code>.env.sample</code> to <code>.env</code> yourself. Edit it and restart. Docker reads the same file.</p>
 <div class="table"><table>
   <thead><tr><th>Setting</th><th>Default</th><th>What it does</th></tr></thead>
   <tbody>

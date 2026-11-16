@@ -4,7 +4,7 @@
 // machine that is too small or missing something.
 import { accessSync, constants, existsSync, mkdirSync, readFileSync, statfsSync } from 'node:fs'
 import { arch, platform, totalmem } from 'node:os'
-import { dirname } from 'node:path'
+import { dirname, join } from 'node:path'
 import { config } from './config.ts'
 
 export interface Facts {
@@ -26,13 +26,19 @@ export interface Facts {
   imageProblem: string | null
   /** Null when the database library loads, else why not. */
   databaseProblem: string | null
+  /**
+   * pm2, which keeps Fotobogen running on a server: running under it,
+   * installed, or missing. Null or left out where it does not apply (Docker).
+   */
+  pm2?: 'running' | 'installed' | 'missing' | null
 }
 
 export interface Check {
-  level: 'ok' | 'warn' | 'fail'
+  /** A note is worth knowing but is not a problem: shown with the first, full report only. */
+  level: 'ok' | 'note' | 'warn' | 'fail'
   title: string
   detail: string
-  /** What to do about it. Present for warnings and failures. */
+  /** What to do about it. Present for notes, warnings, and failures. */
   fix?: string
 }
 
@@ -94,6 +100,11 @@ export function evaluate(facts: Facts): Check[] {
 
   if (facts.databaseProblem) add('fail', 'Database library', facts.databaseProblem, 'Run `pnpm install` again in the Fotobogen folder. If that does not help, delete the node_modules folder and install once more.')
   else add('ok', 'Database library', 'loads')
+
+  // Optional, so never a warning: a site on your own computer does not need it.
+  if (facts.pm2 === 'running') add('ok', 'pm2', 'Fotobogen is running under it')
+  else if (facts.pm2 === 'installed') add('ok', 'pm2', 'installed. To keep Fotobogen running on a server: pm2 start ecosystem.config.cjs')
+  else if (facts.pm2 === 'missing') add('note', 'pm2', 'not installed', 'Only needed on a server, to keep Fotobogen running and start it again after a reboot: npm install -g pm2. Not needed on your own computer, or with Docker.')
 
   return checks
 }
@@ -167,6 +178,19 @@ async function checkDatabase(): Promise<string | null> {
   }
 }
 
+/**
+ * Whether pm2 is there. It is looked for on the PATH and never run: running
+ * it would start its background process on a machine that may not want one.
+ */
+export function pm2State(env: Record<string, string | undefined>, exists: (path: string) => boolean = existsSync): 'running' | 'installed' | 'missing' | null {
+  if (env.FOTOBOGEN_IN_DOCKER === '1' || exists('/.dockerenv')) return null
+  if (env.pm_id !== undefined) return 'running'
+  const windows = platform() === 'win32'
+  const folders = (env.PATH ?? env.Path ?? '').split(windows ? ';' : ':').filter(Boolean)
+  const names = windows ? ['pm2.cmd', 'pm2.exe', 'pm2'] : ['pm2']
+  return folders.some(folder => names.some(name => existsSync(join(folder, name)))) ? 'installed' : 'missing'
+}
+
 /** Looks at the machine. `dataDir` is where the site will keep its data. */
 export async function gatherFacts(dataDir: string): Promise<Facts> {
   // In a container, the memory limit is what matters, not the host's memory.
@@ -185,6 +209,7 @@ export async function gatherFacts(dataDir: string): Promise<Facts> {
     dataDirProblem: data.problem,
     imageProblem: await checkImages(),
     databaseProblem: await checkDatabase(),
+    pm2: pm2State(process.env),
   }
 }
 
@@ -192,10 +217,10 @@ export const passed = (checks: Check[]): boolean => checks.every(check => check.
 
 /** The report as plain text. With `all` false, only warnings and failures are listed. */
 export function formatReport(checks: Check[], all: boolean): string {
-  const marks = { ok: '  ok  ', warn: ' WARN ', fail: ' FAIL ' }
+  const marks = { ok: '  ok  ', note: '  --  ', warn: ' WARN ', fail: ' FAIL ' }
   const lines: string[] = []
   for (const check of checks) {
-    if (!all && check.level === 'ok') continue
+    if (!all && (check.level === 'ok' || check.level === 'note')) continue
     lines.push(`${marks[check.level]} ${check.title}: ${check.detail}`)
     if (check.fix) lines.push(`        ${check.fix}`)
   }

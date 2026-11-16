@@ -20,6 +20,8 @@ const USAGE = `Usage: fotobogen <command>
 Commands:
   reset-admin [--username <name>]   Set a new admin password and sign out all sessions
   preflight                         Check that this machine can run Fotobogen
+  init                              Ask for the port, the site's address, and demo mode,
+                                    and save the answers to .env. Restart afterwards.
   backup [file]                     Write a backup zip (default: fotobogen-backup-<date>.zip)
   restore <file>                    Replace this site's data with a backup. Stop Fotobogen first
   update [version]                  Install the latest release (or the one named) over this
@@ -34,6 +36,15 @@ Commands:
 The data directory is read from DATA_DIR (default: ./data).`
 
 class CliError extends Error {}
+
+/** Asks the first-run questions again and saves the answers, keeping the rest of .env as it is. */
+async function init() {
+  const { askAndSave, atTerminal, summary } = await import('./questions.mjs')
+  if (!atTerminal()) throw new CliError('`fotobogen init` asks questions, so it needs a terminal. Without one, set PORT, SITE_URL, and DEMO_MODE in .env by hand; .env.sample explains each.')
+  console.log(`\nSettings for this server. Press Enter to accept what is suggested.\n${existsSync('.env') ? 'Your other settings in .env are kept.\n' : ''}`)
+  const answers = await askAndSave('.env')
+  console.log(`\nSaved to .env:\n${summary(answers)}\nRestart Fotobogen for this to take effect.`)
+}
 
 /** Ask for a line without echoing what is typed. */
 function askHidden(question) {
@@ -287,6 +298,9 @@ try {
   }
   else if (command === 'seed-fetch') {
     await seedFetch()
+  }
+  else if (command === 'init') {
+    await init()
   }
   else if (command === 'preflight') {
     await preflight()

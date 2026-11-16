@@ -11,7 +11,16 @@ is built from this file.
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+
+- **Questions at the first start.** The first time `pnpm start` is run in a terminal, after the machine has been checked, it asks for the port, the site's address, and whether to switch demo mode on, and saves the answers to `.env`. Enter accepts what is suggested. It asks once, and never when nobody is at the keyboard (pm2, Docker, a script), so a server does not wait for an answer.
+- `pnpm fotobogen init` asks the same questions again and keeps the rest of `.env`.
+- The preflight check says whether pm2 is installed. It is never a warning: pm2 is only needed to keep a site running on a server.
+
+### Changed
+
+- **The pm2 file follows `.env`.** `ecosystem.config.cjs` takes the port from `PORT` in `.env` (5150 if it is not set) instead of fixing it at 5150, so there is nothing to edit in it and a port answered at the first start is the one pm2 runs on. If you changed the port in that file by hand, put it in `.env` instead.
+- Documentation: what to change in nginx on a droplet that already runs it, in the README and on the installation page.
 
 ## [1.2.0] - 2026-11-16
 

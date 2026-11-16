@@ -54,6 +54,7 @@
     <div class="pages__here">
       <h2>On this page</h2>
       <ul>
+        <li><a href="#unreleased">Not yet released</a></li>
         <li><a href="#v1-2-0">Version 1.2.0, 16 November 2026</a></li>
         <li><a href="#v1-1-0">Version 1.1.0, 15 November 2026</a></li>
         <li><a href="#v1-0-0">Version 1.0.0, 15 November 2026</a></li>
@@ -64,6 +65,18 @@
 <h1>Releases</h1>
 <p class="lead">What is in each version of Fotobogen, newest first. This page is made from <a href="https://github.com/cschweda/fotobogen/blob/main/CHANGELOG.md">CHANGELOG.md</a> in the source, so the two always agree.</p>
 <p>Version numbers follow <a href="https://semver.org">semantic versioning</a>: a change in the first number means something you rely on changed, the second adds features, and the third only fixes. <a href="https://github.com/cschweda/fotobogen/blob/main/docs/UPGRADING.md">What a version number promises, and how to upgrade.</a></p>
+<h2 id="unreleased">Not yet released</h2>
+<h3>Added</h3>
+<ul>
+  <li><strong>Questions at the first start.</strong> The first time <code>pnpm start</code> is run in a terminal, after the machine has been checked, it asks for the port, the site's address, and whether to switch demo mode on, and saves the answers to <code>.env</code>. Enter accepts what is suggested. It asks once, and never when nobody is at the keyboard (pm2, Docker, a script), so a server does not wait for an answer.</li>
+  <li><code>pnpm fotobogen init</code> asks the same questions again and keeps the rest of <code>.env</code>.</li>
+  <li>The preflight check says whether pm2 is installed. It is never a warning: pm2 is only needed to keep a site running on a server.</li>
+</ul>
+<h3>Changed</h3>
+<ul>
+  <li><strong>The pm2 file follows <code>.env</code>.</strong> <code>ecosystem.config.cjs</code> takes the port from <code>PORT</code> in <code>.env</code> (5150 if it is not set) instead of fixing it at 5150, so there is nothing to edit in it and a port answered at the first start is the one pm2 runs on. If you changed the port in that file by hand, put it in <code>.env</code> instead.</li>
+  <li>Documentation: what to change in nginx on a droplet that already runs it, in the README and on the installation page.</li>
+</ul>
 <h2 id="v1-2-0">Version 1.2.0, 16 November 2026</h2>
 <h3>Added</h3>
 <ul>
