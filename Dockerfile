@@ -12,7 +12,9 @@ COPY . .
 RUN pnpm build
 
 FROM node:24-bookworm-slim
+# FOTOBOGEN_IN_DOCKER tells the app it cannot replace itself: a container is updated from the server.
 ENV NODE_ENV=production \
+    FOTOBOGEN_IN_DOCKER=1 \
     DATA_DIR=/data \
     HOST=0.0.0.0 \
     PORT=5150

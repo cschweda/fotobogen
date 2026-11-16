@@ -60,6 +60,7 @@ async function cancel() {
     </dl>
 
     <UpdateNotice full />
+    <UpdateInstall />
 
     <section class="block" aria-labelledby="backup-heading">
       <h2 id="backup-heading" class="heading">Back up</h2>

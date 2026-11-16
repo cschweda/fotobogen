@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Releases | Fotobogen documentation</title>
-<meta name="description" content="What is in each version of Fotobogen. The current version is 1.0.0.">
+<meta name="description" content="What is in each version of Fotobogen. The current version is 1.1.0.">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#f5f5f2" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0a0a0b" media="(prefers-color-scheme: dark)">
@@ -12,7 +12,7 @@
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://fotobogen.com/docs/changelog/">
 <meta property="og:title" content="Releases | Fotobogen documentation">
-<meta property="og:description" content="What is in each version of Fotobogen. The current version is 1.0.0.">
+<meta property="og:description" content="What is in each version of Fotobogen. The current version is 1.1.0.">
 <meta property="og:image" content="https://fotobogen.com/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -50,11 +50,26 @@
       <li><a href="/docs/faq/">Questions</a></li>
       <li><a href="/docs/changelog/" aria-current="page">Releases</a></li>
     </ul>
+    <div class="pages__here">
+      <h2>On this page</h2>
+      <ul>
+        <li><a href="#v1-1-0">Version 1.1.0, 15 November 2026</a></li>
+        <li><a href="#v1-0-0">Version 1.0.0, 15 November 2026</a></li>
+      </ul>
+    </div>
   </nav>
   <main id="main" class="doc">
 <h1>Releases</h1>
 <p class="lead">What is in each version of Fotobogen, newest first. This page is made from <a href="https://github.com/cschweda/fotobogen/blob/main/CHANGELOG.md">CHANGELOG.md</a> in the source, so the two always agree.</p>
 <p>Version numbers follow <a href="https://semver.org">semantic versioning</a>: a change in the first number means something you rely on changed, the second adds features, and the third only fixes. <a href="https://github.com/cschweda/fotobogen/blob/main/docs/UPGRADING.md">What a version number promises, and how to upgrade.</a></p>
+<h2 id="v1-1-0">Version 1.1.0, 15 November 2026</h2>
+<h3>Added</h3>
+<ul>
+  <li><strong>Update from the admin.</strong> When a newer release is found, the System page can install it on a copy made with git: it saves a copy of the database, fetches the release, installs and builds it, and restarts (under pm2) or waits for a restart. If any step fails, the old version is put back and built again. A Docker copy is shown the commands to run instead. Only the logged-in owner can update.</li>
+  <li><code>pnpm fotobogen update [version]</code> does the same from the command line.</li>
+</ul>
+<h3>Upgrading from 1.0.0</h3>
+<p>Version 1.0.0 cannot update itself, so this one step is done by hand: <code>git pull</code>, <code>pnpm install</code>, <code>pnpm build</code>, and restart (or <code>scripts/rebuild.sh</code> under pm2; <code>git pull</code> and <code>docker compose up -d --build</code> with Docker). From 1.1.0 on, later releases can be installed from the admin. Nothing in your data needs changing.</p>
 <h2 id="v1-0-0">Version 1.0.0, 15 November 2026</h2>
 <p>The first release. Fotobogen is a self-hosted publishing platform for photographs: install it on a computer of your own, answer a few questions in a browser, and get a public photo site with an admin behind a login.</p>
 <p>Being the first release, this entry describes everything in it, by area. Later entries list only what changed.</p>

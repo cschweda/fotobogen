@@ -9,10 +9,11 @@ A self-hosted publishing platform for photographs: install it on a small
 server, answer a few first-run questions, and get a public photo site with an
 admin backend. Think "WordPress for photos".
 
-**Version 1.0.0**, the first release (15 November 2026). It installs on
-macOS, Windows, and Linux; takes your photographs, resizes them for every
-screen, and publishes them on a site you can restyle, reword, and put under
-your own name, with an admin behind a login.
+**Version 1.1.0** (15 November 2026). It installs on macOS, Windows, and
+Linux; takes your photographs, resizes them for every screen, and publishes
+them on a site you can restyle, reword, and put under your own name, with an
+admin behind a login. Version 1.0.0, the first release, came out the same
+day; 1.1.0 adds updating from the admin.
 
 - **What is in it:** [CHANGELOG.md](CHANGELOG.md), also published as
   [Releases](https://fotobogen.com/docs/changelog/).
@@ -21,7 +22,7 @@ your own name, with an admin behind a login.
 - **What comes next:** [docs/ROADMAP.md](docs/ROADMAP.md).
 - **How it was designed:** [docs/DESIGN.md](docs/DESIGN.md).
 
-Two things to know about this release. No Docker image has been published
+Two things to know. No Docker image has been published
 yet, so a Docker install builds the image on your own machine (the
 instructions say how). And it has not yet been tried on a Laravel Forge
 server or on a real 1 GB server; a 1 GB memory limit was tested in Docker.
@@ -349,7 +350,7 @@ distributions may well work, but are reported as untested.
 `/api/health` needs no login and answers `GET` and `HEAD`:
 
 ```json
-{ "status": "ok", "version": "1.0.0", "database": "ok", "queue": { "depth": 0 }, "uptime": 86400 }
+{ "status": "ok", "version": "1.1.0", "database": "ok", "queue": { "depth": 0 }, "uptime": 86400 }
 ```
 
 It returns `200` when the app and its database are working and `503` when
@@ -702,7 +703,7 @@ For a server with nothing on it but Docker. This runs Fotobogen behind
 [Caddy](https://caddyserver.com), which obtains an HTTPS certificate for your
 domain automatically.
 
-> No Docker image has been published yet for 1.0.0. Until one is, uncomment the
+> No Docker image has been published yet. Until one is, uncomment the
 > `build: .` line in `docker-compose.yml` to build the image locally.
 
 ```bash
@@ -973,12 +974,66 @@ day**. The check is a plain request for the latest release; nothing about
 your site is sent.
 
 [docs/UPGRADING.md](docs/UPGRADING.md) says what a version number promises
-and how to go back.
+and how to go back. What is in each release is in
+[CHANGELOG.md](CHANGELOG.md).
 
-To update a Docker install: `docker compose pull && docker compose up -d`.
-To update a source install: `scripts/rebuild.sh`, or `git pull`, `pnpm
-install`, `pnpm build`, and restart. Download a backup first. Database
-changes are applied automatically when the new version starts.
+### Updating from the admin
+
+When a newer release is found, the System page offers to install it. What it
+can do depends on how Fotobogen was installed:
+
+| Installed with | What the System page does |
+|---|---|
+| git and pm2 | **Update to version X**: fetches, builds, and restarts by itself |
+| git, started with `pnpm start` | **Update to version X**: fetches and builds; you then restart it on the server |
+| Docker | Shows the two commands to run on the server; a container cannot replace itself |
+
+Pressing **Update** does this, in order, and shows each step as it happens:
+
+1. Saves a copy of the database in the data folder
+   (`before-update-<time>.db`). Changes to the database only go forward, so
+   this copy is the way back.
+2. Fetches the release from where the copy was cloned from, and checks that
+   it is a real, later release that follows on from the one installed.
+3. Switches to it and installs its packages.
+4. Builds it. This takes a few minutes and needs about 2 GB of memory,
+   counting swap. The site may be slow or show an error for a minute or two.
+5. Restarts (under pm2), or waits for you to restart it.
+
+**If any step fails, the old version is put back and built again**, and the
+site carries on as it was; the page says what went wrong and keeps the
+output. Photographs are never touched. Files you changed on the server (a
+port in `ecosystem.config.cjs`, say) are left as they are; if one of them
+stands in the way of the new version, nothing is changed and the page says
+so. Download a backup first all the same.
+
+Only the logged-in owner can update: an API token or a demo visitor cannot.
+The version installed is always the one the check found, never one sent by
+the page. A copy with commits of its own that the release does not contain
+is left alone.
+
+The same from the command line, for an install made with git:
+
+```bash
+pnpm fotobogen update            # the latest release
+pnpm fotobogen update 1.2.0      # a particular one
+```
+
+Then restart Fotobogen.
+
+**Updating from the admin arrived in version 1.1.0.** Version 1.0.0 does not
+contain it, so a site on 1.0.0 is brought to 1.1.0 by hand, as below; from
+then on the button works. It relies on releases being tagged and published
+on GitHub, and none has been yet, so there is nothing for the button to
+offer until one is.
+
+### Updating by hand
+
+To update a Docker install: `git pull`, then
+`docker compose up -d --build`. To update a source install:
+`scripts/rebuild.sh` (with pm2), or `git pull`, `pnpm install`,
+`pnpm build`, and restart. Download a backup first. Database changes are
+applied automatically when the new version starts.
 
 ## For developers
 
@@ -1103,7 +1158,7 @@ is added there. Switching demo mode off ends every demo session at once.
   merge commit (never squashed), when a batch is ready. A fix made directly on
   `main` is merged back into `staging`.
 - Version tags (`v1.2.3`), which publish the Docker image, are made on `main`.
-  Version 1.0.0 is recorded in the changelog and has not been tagged yet.
+  Versions 1.0.0 and 1.1.0 are recorded in the changelog and have not been tagged yet.
 
 The batching matters because a push to `main` that changes `site/` or
 `netlify.toml` triggers a production deploy of the placeholder page on

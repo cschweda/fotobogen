@@ -111,7 +111,7 @@ cp .env.sample .env</code></pre>
   <li><strong>Edit <code>.env</code></strong> (<code>nano .env</code>) and set your domain by removing the <code>#</code> from this line and changing the name:
 <pre><code>DOMAIN=photos.example.com</code></pre>
   If <code>id -u</code> prints something other than <code>1000</code>, also set <code>PUID</code> and <code>PGID</code> to what <code>id -u</code> and <code>id -g</code> print.</li>
-  <li><strong>Build and start.</strong> No Docker image has been published yet for version 1.0.0, so the image is built on your server. Open <code>docker-compose.yml</code>, find the line <code># build: .</code> under <code>app:</code>, and remove the <code>#</code> and the space after it. Then:
+  <li><strong>Build and start.</strong> No Docker image has been published yet, so the image is built on your server. Open <code>docker-compose.yml</code>, find the line <code># build: .</code> under <code>app:</code>, and remove the <code>#</code> and the space after it. Then:
 <pre><code>docker compose up -d --build</code></pre>
   The first build takes several minutes.</li>
   <li><strong>Read the setup token:</strong>
@@ -275,7 +275,22 @@ docker compose logs app</code></pre>
 <p>The address <code>/api/health</code> needs no login and answers <code>200</code> when the site and its database are working, and <code>503</code> when they are not. Point <a href="https://uptimerobot.com">UptimeRobot</a> or a similar monitor at <code>https://your-site.example/api/health</code>.</p>
 
 <h2 id="updating">Updating</h2>
-<p>Download a backup first (<a href="/docs/faq/#backups">how</a>). Then:</p>
+<p>Download a backup first (<a href="/docs/faq/#backups">how</a>). Under <strong>Admin, System</strong>, <strong>Check for updates</strong> asks GitHub whether a newer release exists; it does not check by itself unless you tick <strong>Check once a day</strong>.</p>
+
+<h3>From the admin</h3>
+<p>When a newer release is found, the System page offers to install it. This arrived in version 1.1.0; a site on 1.0.0 is brought to 1.1.0 by hand, below, and can use it from then on.</p>
+<div class="table"><table>
+  <thead><tr><th>Installed with</th><th>What the System page does</th></tr></thead>
+  <tbody>
+    <tr><td>git and pm2</td><td><strong>Update to version X</strong>: fetches, builds, and restarts by itself</td></tr>
+    <tr><td>git, started with <code>pnpm start</code></td><td><strong>Update to version X</strong>: fetches and builds; you then restart it on the server</td></tr>
+    <tr><td>Docker</td><td>Shows the commands to run on the server. A container cannot replace itself.</td></tr>
+  </tbody>
+</table></div>
+<p>It saves a copy of the database, fetches the release, installs its packages, and builds it, showing each step. The build takes a few minutes and needs about 2 GB of memory, counting swap; the site may be slow for a minute or two. <strong>If any step fails, the old version is put back</strong> and the site carries on as it was. Photographs are never touched.</p>
+<p>From a terminal, the same is <code>pnpm fotobogen update</code>, followed by a restart.</p>
+
+<h3>By hand</h3>
 <div class="table"><table>
   <thead><tr><th>Installed with</th><th>Update with</th></tr></thead>
   <tbody>
@@ -284,4 +299,4 @@ docker compose logs app</code></pre>
     <tr><td>Docker</td><td><code>git pull</code>, then the same <code>docker compose … up -d --build</code> you installed with</td></tr>
   </tbody>
 </table></div>
-<p>Changes to the database are applied by themselves when the new version starts. Under <strong>Admin, System</strong>, <strong>Check for updates</strong> asks GitHub whether a newer release exists; it does not check by itself unless you tick <strong>Check once a day</strong>.</p>
+<p>Changes to the database are applied by themselves when the new version starts.</p>

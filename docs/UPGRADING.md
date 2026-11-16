@@ -18,10 +18,13 @@ Download a backup: **Admin, System, Download a backup**, or `pnpm fotobogen back
 
 | Install | Command |
 |---|---|
+| Source, from the admin (1.1.0 and later) | **Admin, System, Update to version X**, or `pnpm fotobogen update` |
 | Docker | `docker compose pull && docker compose up -d` |
 | Docker on Forge | the deploy script (`deploy/forge-deploy.sh`) |
 | Source, with pm2 | `scripts/rebuild.sh` |
 | Source, by hand | `git pull`, `pnpm install --frozen-lockfile`, `pnpm build`, then restart |
+
+Updating from the admin saves a copy of the database first, and puts the old version back if the new one will not install or build; the [README](../README.md#updating-from-the-admin) says exactly what it does. It arrived in version 1.1.0; a site on 1.0.0 is brought to 1.1.0 with one of the others.
 
 Nothing else is needed. When the new version starts it brings the database up to date by itself, and prints what it did.
 
