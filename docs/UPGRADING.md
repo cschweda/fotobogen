@@ -28,7 +28,7 @@ Updating from the admin saves a copy of the database first, and puts the old ver
 
 Nothing else is needed. When the new version starts it brings the database up to date by itself, and prints what it did.
 
-**Admin, System, Check for updates** tells you when a newer version exists.
+The admin tells you when a newer version exists, if you have said it may check: a note on every admin page, and **Admin, System, Check for updates**. [fotobogen.com/docs/updating](https://fotobogen.com/docs/updating/) walks through each kind of install.
 
 ## Version numbers
 

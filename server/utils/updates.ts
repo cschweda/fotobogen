@@ -1,7 +1,8 @@
 // Finds out whether a newer version of Fotobogen has been released, by
 // asking GitHub for the latest release. This is an outside request, so it
 // happens only when the admin presses "Check for updates", or once a day if
-// the admin has switched automatic checks on (they are off by default).
+// the admin has switched automatic checks on. They are off until the owner
+// says yes: the admin asks once, and remembers either answer.
 // Nothing about the site is sent: it is a plain, anonymous GET.
 import { useRuntimeConfig } from 'nuxt/server'
 import { isNewer, parseVersion } from '../core/version.ts'
@@ -19,6 +20,8 @@ export interface UpdateStatus {
   /** Why the last check did not work, when it did not. */
   problem: string | null
   automatic: boolean
+  /** Whether the owner has said yes or no to checking once a day. Until then the admin asks. */
+  decided: boolean
 }
 
 const RELEASES = 'https://api.github.com/repos/cschweda/fotobogen/releases/latest'
@@ -36,7 +39,8 @@ export function updateStatus(): UpdateStatus {
     newer: isNewer(stored?.latest, current()),
     checkedAt: stored?.checkedAt ?? null,
     problem: stored?.problem ?? null,
-    automatic: getSetting('updates.automatic', false),
+    automatic: getSetting<boolean | null>('updates.automatic', null) === true,
+    decided: getSetting<boolean | null>('updates.automatic', null) !== null,
   }
 }
 
@@ -74,14 +78,17 @@ export async function checkForUpdate(fetcher: typeof fetch = fetch): Promise<Upd
 }
 
 let checking = false
+const due = (status: UpdateStatus): boolean => status.automatic && !checking && (status.checkedAt === null || Date.now() - status.checkedAt >= DAY)
+
 /** With automatic checks on, asks at most once a day, in the background. */
 export function checkDailyIfWanted(): void {
-  const status = updateStatus()
-  if (!status.automatic || checking || (status.checkedAt !== null && Date.now() - status.checkedAt < DAY)) return
+  if (!due(updateStatus())) return
   checking = true
   void checkForUpdate().finally(() => { checking = false })
 }
 
-export function setAutomatic(on: boolean): void {
+/** Records the owner's answer. A yes checks straight away, unless it checked within the day. */
+export async function setAutomatic(on: boolean): Promise<UpdateStatus> {
   setSettings({ 'updates.automatic': on })
+  return due(updateStatus()) ? await checkForUpdate() : updateStatus()
 }
