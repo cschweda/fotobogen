@@ -32,7 +32,16 @@ function launch(options: { home: string, cwd?: string, dataDir: string, env?: Re
 async function runningPort(launched: Launched): Promise<number> {
   for (let tries = 0; tries < 300; tries++) {
     const match = launched.output().match(/Fotobogen is running\. Open it in a browser on this computer:\s+http:\/\/localhost:(\d+)/)
-    if (match) return Number(match[1])
+    if (match) {
+      // The address is printed a moment before the server accepts connections; wait until it does.
+      const port = Number(match[1])
+      for (let waits = 0; waits < 100; waits++) {
+        if (await fetch(`http://127.0.0.1:${port}/api/health`).then(response => response.ok, () => false)) return port
+        if (launched.child.exitCode !== null) break
+        await new Promise(wait => setTimeout(wait, 100))
+      }
+      throw new Error(`The launcher said it was running on port ${port}, but the server did not answer:\n${launched.output()}`)
+    }
     if (launched.child.exitCode !== null) break
     await new Promise(wait => setTimeout(wait, 100))
   }
