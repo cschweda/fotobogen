@@ -53,6 +53,7 @@
     <div class="pages__here">
       <h2>On this page</h2>
       <ul>
+        <li><a href="#unreleased">Not yet released</a></li>
         <li><a href="#v1-1-0">Version 1.1.0, 15 November 2026</a></li>
         <li><a href="#v1-0-0">Version 1.0.0, 15 November 2026</a></li>
       </ul>
@@ -62,6 +63,15 @@
 <h1>Releases</h1>
 <p class="lead">What is in each version of Fotobogen, newest first. This page is made from <a href="https://github.com/cschweda/fotobogen/blob/main/CHANGELOG.md">CHANGELOG.md</a> in the source, so the two always agree.</p>
 <p>Version numbers follow <a href="https://semver.org">semantic versioning</a>: a change in the first number means something you rely on changed, the second adds features, and the third only fixes. <a href="https://github.com/cschweda/fotobogen/blob/main/docs/UPGRADING.md">What a version number promises, and how to upgrade.</a></p>
+<h2 id="unreleased">Not yet released</h2>
+<h3>Fixed</h3>
+<ul>
+  <li>The System page told a Docker install to update with <code>git pull</code> and <code>docker compose up -d --build</code>. With the published image that does not fetch the new version. It now says <code>docker compose pull</code>, then <code>docker compose up -d</code>.</li>
+</ul>
+<h3>Changed</h3>
+<ul>
+  <li>The Docker instructions download the published image (<code>ghcr.io/cschweda/fotobogen</code>) instead of building one on the server, now that releases are tagged and their images published.</li>
+</ul>
 <h2 id="v1-1-0">Version 1.1.0, 15 November 2026</h2>
 <h3>Added</h3>
 <ul>
@@ -155,7 +165,7 @@
 </ul>
 <h3>Known limits of this release</h3>
 <ul>
-  <li><strong>No Docker image has been published yet.</strong> The Docker instructions build the image on your own machine.</li>
+  <li>When this was released no Docker image had been published, and the Docker instructions built the image on your own machine. The image for 1.0.0 was published the next day, when the release was tagged.</li>
   <li><strong>Not yet tried:</strong> a Laravel Forge server, a real 1 GB server (a 1 GB memory limit was tested in Docker), Docker on Windows, and the Docker quick start with Caddy from end to end.</li>
   <li>One admin account only. No comments, no shop, no storage outside the server's own disk.</li>
 </ul>

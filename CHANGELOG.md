@@ -11,7 +11,13 @@ is built from this file.
 
 ## [Unreleased]
 
-Nothing yet.
+### Fixed
+
+- The System page told a Docker install to update with `git pull` and `docker compose up -d --build`. With the published image that does not fetch the new version. It now says `docker compose pull`, then `docker compose up -d`.
+
+### Changed
+
+- The Docker instructions download the published image (`ghcr.io/cschweda/fotobogen`) instead of building one on the server, now that releases are tagged and their images published.
 
 ## [1.1.0] - 2026-11-15
 
@@ -115,7 +121,7 @@ Later entries list only what changed.
 
 ### Known limits of this release
 
-- **No Docker image has been published yet.** The Docker instructions build the image on your own machine.
+- When this was released no Docker image had been published, and the Docker instructions built the image on your own machine. The image for 1.0.0 was published the next day, when the release was tagged.
 - **Not yet tried:** a Laravel Forge server, a real 1 GB server (a 1 GB memory limit was tested in Docker), Docker on Windows, and the Docker quick start with Caddy from end to end.
 - One admin account only. No comments, no shop, no storage outside the server's own disk.
 

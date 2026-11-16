@@ -22,12 +22,12 @@ day; 1.1.0 adds updating from the admin.
 - **What comes next:** [docs/ROADMAP.md](docs/ROADMAP.md).
 - **How it was designed:** [docs/DESIGN.md](docs/DESIGN.md).
 
-Two things to know. No Docker image has been published
-yet, so a Docker install builds the image on your own machine (the
-instructions say how). And it has not yet been tried on a Laravel Forge
-server or on a real 1 GB server; a 1 GB memory limit was tested in Docker.
-Fotobogen is free software with no warranty: keep backups of your
-photographs.
+A ready-made Docker image is published for each release, at
+`ghcr.io/cschweda/fotobogen`, for Intel and ARM machines.
+
+One thing to know: it has not yet been tried on a Laravel Forge server or on
+a real 1 GB server; a 1 GB memory limit was tested in Docker. Fotobogen is
+free software with no warranty: keep backups of your photographs.
 
 ## Contents
 
@@ -703,8 +703,9 @@ For a server with nothing on it but Docker. This runs Fotobogen behind
 [Caddy](https://caddyserver.com), which obtains an HTTPS certificate for your
 domain automatically.
 
-> No Docker image has been published yet. Until one is, uncomment the
-> `build: .` line in `docker-compose.yml` to build the image locally.
+The image is downloaded from `ghcr.io/cschweda/fotobogen`; nothing is built
+on your server. (To build it yourself instead, uncomment the `build: .` line
+in `docker-compose.yml` and add `--build` to the command.)
 
 ```bash
 git clone https://github.com/cschweda/fotobogen.git
@@ -1023,14 +1024,14 @@ Then restart Fotobogen.
 
 **Updating from the admin arrived in version 1.1.0.** Version 1.0.0 does not
 contain it, so a site on 1.0.0 is brought to 1.1.0 by hand, as below; from
-then on the button works. It relies on releases being tagged and published
-on GitHub, and none has been yet, so there is nothing for the button to
-offer until one is.
+then on the button works. It finds releases on GitHub, where each numbered
+release is tagged and published.
 
 ### Updating by hand
 
-To update a Docker install: `git pull`, then
-`docker compose up -d --build`. To update a source install:
+To update a Docker install: `docker compose pull`, then
+`docker compose up -d` (or `git pull` and `docker compose up -d --build` if
+you build the image yourself). To update a source install:
 `scripts/rebuild.sh` (with pm2), or `git pull`, `pnpm install`,
 `pnpm build`, and restart. Download a backup first. Database changes are
 applied automatically when the new version starts.
@@ -1158,7 +1159,7 @@ is added there. Switching demo mode off ends every demo session at once.
   merge commit (never squashed), when a batch is ready. A fix made directly on
   `main` is merged back into `staging`.
 - Version tags (`v1.2.3`), which publish the Docker image, are made on `main`.
-  Versions 1.0.0 and 1.1.0 are recorded in the changelog and have not been tagged yet.
+  Every numbered release is tagged, and has a release on GitHub with its notes.
 
 The batching matters because a push to `main` that changes `site/` or
 `netlify.toml` triggers a production deploy of the placeholder page on
