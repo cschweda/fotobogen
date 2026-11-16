@@ -2,7 +2,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { evaluate, formatReport, gatherFacts, passed, type Facts } from '../../server/core/preflight.ts'
+import { evaluate, formatReport, gatherFacts, passed, pm2State, type Facts } from '../../server/core/preflight.ts'
 
 const good: Facts = {
   nodeVersion: '24.22.3', platform: 'linux', arch: 'x64',
@@ -68,6 +68,35 @@ describe('the preflight check', () => {
     expect(find({ dataDirProblem: 'EACCES: permission denied' }, 'Data directory')).toMatchObject({ level: 'fail' })
     expect(find({ imageProblem: 'the image library (sharp) did not load: boom' }, 'Image library').fix).toContain('pnpm install')
     expect(find({ databaseProblem: 'nope' }, 'Database library').level).toBe('fail')
+  })
+
+  it('says whether pm2 is there, without ever stopping or warning over it', () => {
+    // Not looked for (Docker): no line at all.
+    expect(find({ pm2: null }, 'pm2')).toBeUndefined()
+    expect(find({ pm2: 'running' }, 'pm2')).toMatchObject({ level: 'ok', detail: 'Fotobogen is running under it' })
+    expect(find({ pm2: 'installed' }, 'pm2')).toMatchObject({ level: 'ok' })
+    expect(find({ pm2: 'installed' }, 'pm2').detail).toContain('pm2 start ecosystem.config.cjs')
+    const missing = find({ pm2: 'missing' }, 'pm2')
+    expect(missing).toMatchObject({ level: 'note', detail: 'not installed' })
+    expect(missing.fix).toContain('npm install -g pm2')
+    expect(missing.fix).toContain('Not needed on your own computer')
+    const checks = evaluate({ ...good, pm2: 'missing' })
+    expect(passed(checks)).toBe(true)
+    // A note is part of the first, full report and is not repeated at later starts.
+    expect(formatReport(checks, true)).toContain('  --   pm2: not installed')
+    expect(formatReport(checks, false)).toBe('')
+  })
+
+  it('finds pm2 on the PATH without running it', () => {
+    const bin = mkdtempSync(join(tmpdir(), 'fb-bin-'))
+    const empty = mkdtempSync(join(tmpdir(), 'fb-bin-'))
+    const separator = process.platform === 'win32' ? ';' : ':'
+    expect(pm2State({ PATH: empty }, () => false)).toBe('missing')
+    writeFileSync(join(bin, process.platform === 'win32' ? 'pm2.cmd' : 'pm2'), '')
+    expect(pm2State({ PATH: `${empty}${separator}${bin}` }, () => false)).toBe('installed')
+    expect(pm2State({ PATH: empty, pm_id: '0' }, () => false)).toBe('running')
+    expect(pm2State({ PATH: bin, FOTOBOGEN_IN_DOCKER: '1' }, () => false)).toBeNull()
+    expect(pm2State({ PATH: bin }, path => path === '/.dockerenv')).toBeNull()
   })
 
   it('prints every line the first time, and only problems after that', () => {

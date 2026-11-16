@@ -1,6 +1,6 @@
 # Roadmap
 
-**Version 1.2.0 is the current release** (16 November 2026), following 1.1.0 and 1.0.0, the first: see [CHANGELOG.md](../CHANGELOG.md). Everything marked Done below is in it. What is marked Planned or Later comes after.
+**Version 1.3.0 is the current release** (16 November 2026), following 1.2.0, 1.1.0 and 1.0.0, the first: see [CHANGELOG.md](../CHANGELOG.md). Everything marked Done below is in it. What is marked Planned or Later comes after.
 
 The feature list agreed on 2026-11-15, in the order it is being built. Each item lands as one pull request against `staging`.
 
@@ -39,6 +39,7 @@ Visit counting is left to Plausible, which already tracks fotobogen.com. The pag
 | Demo mode: a read-only login for a site that shows Fotobogen off | Done |
 | Update from the admin, for a copy installed with git | Done, in 1.1.0 |
 | A note in the admin when a new version is out, after asking once whether it may check | Done, in 1.2.0 |
+| Questions at the first start (port, address, demo mode), `fotobogen init`, colour in the terminal | Done, in 1.3.0 |
 
 ## For developers
 

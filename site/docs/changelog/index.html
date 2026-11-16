@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Releases | Fotobogen documentation</title>
-<meta name="description" content="What is in each version of Fotobogen. The current version is 1.2.0.">
+<meta name="description" content="What is in each version of Fotobogen. The current version is 1.3.0.">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#f5f5f2" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0a0a0b" media="(prefers-color-scheme: dark)">
@@ -12,7 +12,7 @@
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://fotobogen.com/docs/changelog/">
 <meta property="og:title" content="Releases | Fotobogen documentation">
-<meta property="og:description" content="What is in each version of Fotobogen. The current version is 1.2.0.">
+<meta property="og:description" content="What is in each version of Fotobogen. The current version is 1.3.0.">
 <meta property="og:image" content="https://fotobogen.com/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -54,6 +54,7 @@
     <div class="pages__here">
       <h2>On this page</h2>
       <ul>
+        <li><a href="#v1-3-0">Version 1.3.0, 16 November 2026</a></li>
         <li><a href="#v1-2-0">Version 1.2.0, 16 November 2026</a></li>
         <li><a href="#v1-1-0">Version 1.1.0, 15 November 2026</a></li>
         <li><a href="#v1-0-0">Version 1.0.0, 15 November 2026</a></li>
@@ -64,6 +65,27 @@
 <h1>Releases</h1>
 <p class="lead">What is in each version of Fotobogen, newest first. This page is made from <a href="https://github.com/cschweda/fotobogen/blob/main/CHANGELOG.md">CHANGELOG.md</a> in the source, so the two always agree.</p>
 <p>Version numbers follow <a href="https://semver.org">semantic versioning</a>: a change in the first number means something you rely on changed, the second adds features, and the third only fixes. <a href="https://github.com/cschweda/fotobogen/blob/main/docs/UPGRADING.md">What a version number promises, and how to upgrade.</a></p>
+<h2 id="v1-3-0">Version 1.3.0, 16 November 2026</h2>
+<h3>Added</h3>
+<ul>
+  <li><strong>Questions at the first start.</strong> The first time <code>pnpm start</code> is run in a terminal, after the machine has been checked, it asks for the port, the site's address, and whether to switch demo mode on, and saves the answers to <code>.env</code>. Enter accepts what is suggested. It asks once, and never when nobody is at the keyboard (pm2, Docker, a script), so a server does not wait for an answer.</li>
+  <li><code>pnpm fotobogen init</code> asks the same questions again and keeps the rest of <code>.env</code>.</li>
+  <li>The preflight check says whether pm2 is installed. It is never a warning: pm2 is only needed to keep a site running on a server.</li>
+  <li><strong>Colour in the terminal</strong>: green for what is good, yellow for warnings, red for what stops the start, in the preflight check, the questions, and the start-up messages. The words <code>ok</code>, <code>WARN</code>, and <code>FAIL</code> are still printed. Colour is left out of log files and anything that is not a terminal, and <code>NO_COLOR=1</code> switches it off.</li>
+</ul>
+<h3>Changed</h3>
+<ul>
+  <li><strong>The pm2 file follows <code>.env</code>.</strong> <code>ecosystem.config.cjs</code> takes the port from <code>PORT</code> in <code>.env</code> (5150 if it is not set) instead of fixing it at 5150, so there is nothing to edit in it and a port answered at the first start is the one pm2 runs on. If you changed the port in that file by hand, put it in <code>.env</code> instead.</li>
+</ul>
+<h3>Fixed</h3>
+<ul>
+  <li>After an update finished building, the System page went on saying &quot;The update has started.&quot;</li>
+</ul>
+<h3>Upgrading from 1.2.0</h3>
+<p>A copy installed with git: the note in the admin, or <strong>Admin, System, Update to version 1.3.0</strong>. Docker: <code>docker compose pull</code>, then <code>docker compose up -d</code>. If you edited <code>ecosystem.config.cjs</code> (to change the port, say), the update from the admin will stop and say that file is in the way: move the port to <code>PORT</code> in <code>.env</code>, run <code>git checkout ecosystem.config.cjs</code>, and update again.</p>
+<ul>
+  <li>Documentation: what to change in nginx on a droplet that already runs it, in the README and on the installation page.</li>
+</ul>
 <h2 id="v1-2-0">Version 1.2.0, 16 November 2026</h2>
 <h3>Added</h3>
 <ul>

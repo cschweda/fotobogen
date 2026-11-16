@@ -9,12 +9,12 @@ A self-hosted publishing platform for photographs: install it on a small
 server, answer a few first-run questions, and get a public photo site with an
 admin backend. Think "WordPress for photos".
 
-**Version 1.2.0** (16 November 2026). It installs on macOS, Windows, and
+**Version 1.3.0** (16 November 2026). It installs on macOS, Windows, and
 Linux; takes your photographs, resizes them for every screen, and publishes
 them on a site you can restyle, reword, and put under your own name, with an
 admin behind a login. Version 1.0.0 was the first release; 1.1.0 added
 updating from the admin; 1.2.0 tells you in the admin when a new version
-is out.
+is out; 1.3.0 asks a few questions at the first start.
 
 - **What is in it:** [CHANGELOG.md](CHANGELOG.md), also published as
   [Releases](https://fotobogen.com/docs/changelog/).
@@ -55,6 +55,7 @@ free software with no warranty: keep backups of your photographs.
 - [Without Docker (pm2)](#without-docker-pm2)
 - [nginx in front of the app](#nginx-in-front-of-the-app)
 - [Laravel Forge with pm2 (no Docker)](#laravel-forge-with-pm2-no-docker)
+- [An existing droplet with nginx: what to change](#an-existing-droplet-with-nginx-what-to-change)
 - [Backup and restore](#backup-and-restore)
 - [Updates](#updates)
 - [For developers](#for-developers)
@@ -280,8 +281,25 @@ pnpm build
 pnpm start
 ```
 
-`pnpm start` checks the machine (see below), then starts the server and
-prints its address:
+`pnpm start` checks the machine (see below). **The very first time**, in a
+terminal, it then asks three questions; press Enter to accept what is
+suggested each time:
+
+```
+Port to run on? Press Enter for 5150, or the next free one above it:
+Site address? Press Enter to skip:
+Switch demo mode on? [y/N]
+```
+
+The answers are saved to `.env` in Fotobogen's folder, and it does not ask
+again. To change them, edit `.env`, or run `pnpm fotobogen init` to be asked
+again (your other settings in `.env` are kept); then restart. Nothing is
+asked when nobody is at the keyboard: under pm2, in Docker, from a script,
+or when `.env` already exists or `PORT`, `SITE_URL`, or `DEMO_MODE` is set.
+Whether to start with sample photos is asked in the browser, with the rest
+of setup.
+
+It then starts the server and prints its address:
 
 ```
 Fotobogen is running. Open it in a browser on this computer:
@@ -326,11 +344,22 @@ Fotobogen preflight check
   ok   Disk space: 21.4 GB free
   ok   Image library: reads JPEG, PNG, WebP, TIFF, and AVIF
   ok   Database library: loads
+  --   pm2: not installed
+        Only needed on a server, to keep Fotobogen running and start it again after a reboot: npm install -g pm2. Not needed on your own computer, or with Docker.
 ```
 
 Anything marked `FAIL` stops the start, with a line saying what to fix.
-A `WARN` lets it run and says what to improve. After the first run only
-warnings and failures are shown. Run it on its own at any time with
+A `WARN` lets it run and says what to improve. A line marked `--` is a note,
+not a problem: the pm2 line says whether [pm2](#without-docker-pm2) is
+installed (it is looked for, never run), and reads `ok` when it is. It is
+left out in Docker. After the first run only warnings and failures are
+shown.
+
+In a terminal the report is in colour: `ok` in green, `WARN` in yellow,
+`FAIL` and anything that stops the start in red. The words are always there
+too, so nothing depends on telling the colours apart. Colour is left out
+when the output is not a terminal (a log file, pm2, Docker), and can be
+switched off with `NO_COLOR=1`. Run it on its own at any time with
 `pnpm preflight`.
 
 | Check | Stops the start when | Warns when |
@@ -351,7 +380,7 @@ distributions may well work, but are reported as untested.
 `/api/health` needs no login and answers `GET` and `HEAD`:
 
 ```json
-{ "status": "ok", "version": "1.2.0", "database": "ok", "queue": { "depth": 0 }, "uptime": 86400 }
+{ "status": "ok", "version": "1.3.0", "database": "ok", "queue": { "depth": 0 }, "uptime": 86400 }
 ```
 
 It returns `200` when the app and its database are working and `503` when
@@ -750,9 +779,15 @@ git clone https://github.com/cschweda/fotobogen.git
 cd fotobogen
 pnpm install --frozen-lockfile
 pnpm build
+pnpm fotobogen init          # optional: asks for the port, the site's address, and demo mode
 pm2 start ecosystem.config.cjs
 pm2 logs fotobogen           # shows the setup token
 ```
+
+**There is nothing to edit in `ecosystem.config.cjs`**, and no pm2 file to
+write yourself. It takes the port from `PORT` in `.env`, and Fotobogen reads
+every other setting from `.env` when it starts. `pnpm fotobogen init` writes
+`.env` from your answers; you can also write it by hand.
 
 `ecosystem.config.cjs` starts Fotobogen through its launcher (so the
 preflight check runs), names the process `fotobogen`, and sets:
@@ -760,7 +795,7 @@ preflight check runs), names the process `fotobogen`, and sets:
 | Setting | Value | Why |
 |---|---|---|
 | `HOST` | `127.0.0.1` | Only this machine can reach the app; visitors come through nginx |
-| `PORT` | `5150` | The port nginx forwards to. To use another, change it in this file **and** in nginx |
+| `PORT` | `PORT` in `.env`, or `5150` | The port nginx forwards to. To use another, set `PORT` in `.env`, change it in nginx to match, and run `pm2 reload ecosystem.config.cjs --update-env` |
 | `DATA_DIR` | `data` beside the app | Where the site keeps everything |
 | `TRUST_PROXY` | `1` | nginx is the only client, so the visitor's address is taken from its headers |
 
@@ -886,6 +921,7 @@ same standing.
    cd /home/forge/photos.example.com
    pnpm install --frozen-lockfile
    pnpm build
+   pnpm fotobogen init            # the port, the site's address (https://photos.example.com), demo mode
    pm2 start ecosystem.config.cjs
    pm2 logs fotobogen             # shows the setup token; Control + C to leave
    ```
@@ -922,6 +958,88 @@ same standing.
    shell's setup, so Node would not be found without it.
 
 Open `https://photos.example.com` and enter the setup token.
+
+## An existing droplet with nginx: what to change
+
+For a DigitalOcean droplet (or any server) that already runs nginx and other
+sites, managed by Laravel Forge or by hand. Fotobogen does not replace
+nginx or touch your other sites: it runs as one more program on a port of
+its own, reachable only from the server itself, and one site's nginx file is
+changed to pass requests to it.
+
+**What changes, and what does not:**
+
+| | |
+|---|---|
+| nginx itself, its main file, your other sites | Nothing |
+| The firewall | Nothing. Fotobogen listens on `127.0.0.1`, so its port is not opened to the internet |
+| The certificate | Issued the usual way: Forge's **SSL** tab, or Certbot |
+| One site's nginx file | The six changes below |
+
+**In that site's `server { ... }` block.** On Forge: the site, **Edit
+Files, Edit Nginx Configuration**. By hand:
+`/etc/nginx/sites-available/photos.example.com`.
+
+| # | Change | Why |
+|---|---|---|
+| 1 | Add `client_max_body_size 50m;` | nginx's own limit is 1 MB, which refuses nearly every photo with `413`. Keep it equal to `MAX_UPLOAD_MB` (50 unless you changed it). Set here, it applies to this site only and wins over any server-wide value |
+| 2 | Replace the `location / { ... }` block with one that has `proxy_pass http://127.0.0.1:5150;` | This is the pointer to the app. Use the port Fotobogen runs on: `PORT` in its `.env`, or 5150 if that is not set. A second Fotobogen site on the same droplet needs a different one |
+| 3 | In that block: `proxy_set_header Host $http_host;` | Without it, saving anything in the admin answers "This request did not come from this site" |
+| 4 | In that block: `proxy_set_header X-Forwarded-Proto $scheme;` and `proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;` | So Fotobogen knows the visitor used https, and counts wrong passwords by visitor and not all against nginx |
+| 5 | In that block: `proxy_http_version 1.1;` and `proxy_read_timeout 120s;` | A large upload takes longer to arrive and be checked than nginx's 60 seconds |
+| 6 | Remove the `location ~ \.php$ { ... }` block, if the site has one | Fotobogen has no PHP. Harmless if left, but nothing uses it |
+
+Leave everything else as it is: the `listen` lines, `server_name`, the
+certificate lines, and on Forge every `include forge-conf/...` line. The
+`root` line can stay; it is no longer used.
+
+The block for changes 2 to 5, ready to paste:
+
+```nginx
+client_max_body_size 50m;
+
+location / {
+    proxy_pass http://127.0.0.1:5150;
+    proxy_http_version 1.1;
+    proxy_set_header Host $http_host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_read_timeout 120s;
+}
+```
+
+[deploy/forge-nginx.conf](deploy/forge-nginx.conf) is the same with one
+addition: nginx serves the resized photos from disk itself.
+
+Forge checks the file and reloads nginx when you save. By hand:
+`sudo nginx -t`, then `sudo systemctl reload nginx`.
+
+**On the app's side**, two settings go with the proxy. Both are already set
+in `ecosystem.config.cjs` and the Docker compose files:
+
+- `HOST=127.0.0.1`, so only nginx can reach the app.
+- `TRUST_PROXY=1`, so the app believes the headers in change 4. Set it only
+  when the app really is reachable through nginx alone.
+
+Also set the site's address, as `SITE_URL=https://photos.example.com` in
+`.env` or under **Search and sharing** in the admin, so links to your photos
+begin with your domain.
+
+**When you change something later:**
+
+| You change | Also change |
+|---|---|
+| The app's port (`PORT` in `.env`) | `proxy_pass` in the nginx file; reload nginx, then `pm2 reload ecosystem.config.cjs --update-env` |
+| `MAX_UPLOAD_MB` | `client_max_body_size`, to the same number |
+| The domain | The site and certificate in Forge (or `server_name` and Certbot), and `SITE_URL` |
+| Fotobogen's version (an update) | Nothing in nginx |
+
+**Room on the droplet.** Running, Fotobogen used about 130 MB of memory when
+measured idle, and uses more while it resizes photos (the pm2 file restarts
+it at 600 MB). Building it (an install or update
+without Docker) needs about 2 GB counting swap, for a few minutes; on a
+small droplet, [add swap](https://fotobogen.com/docs/installation/#swap)
+first, or use the Docker image, which is already built.
 
 ## Backup and restore
 
@@ -1117,15 +1235,19 @@ read by `docker compose`.
 | `DEMO_MODE` | off | Set to `1` on a site meant to show Fotobogen off. Anyone can then log in as `demo` / `demo` and look round the admin, read-only (see [Demo mode](#demo-mode)) |
 | `MAX_UPLOAD_MB` | `50` | Largest upload, in megabytes. If you raise it, raise the proxy's limit too (`max_size` in `deploy/Caddyfile`, `client_max_body_size` in nginx) |
 | `MAX_MEGAPIXELS` | `100` | Largest image, in megapixels (width times height) |
+| `FOTOBOGEN_NO_QUESTIONS` | off | Set to `1` so the first start in a terminal asks nothing and uses the defaults |
+| `NO_COLOR` | off | Set to `1` for plain text with no colour in the terminal |
 | `FOTOBOGEN_SKIP_PREFLIGHT` | off | Set to `1` to start even when the preflight check fails. At your own risk |
 | `WEBHOOKS_ALLOW_PRIVATE` | off | Set to `1` to let webhooks call this machine or a private network |
 | `TRUST_PROXY` | off | Set to `1` only when the app is reachable solely through your own reverse proxy. It makes the login limit use the visitor's address from `X-Forwarded-For`. The shipped Docker and pm2 files set it |
 
 **After changing `.env`, restart; never rebuild.** `.env` is read each time
 the app starts: run `pnpm start` again, `pm2 restart fotobogen`, or
-`docker compose up -d`. Under pm2, `ecosystem.config.cjs` sets `PORT`,
-`HOST`, and `DATA_DIR` itself, and those win over `.env`; change them in
-that file and run `pm2 restart fotobogen --update-env`. A rebuild
+`docker compose up -d`. Under pm2, one setting is different: after changing
+`PORT`, run `pm2 reload ecosystem.config.cjs --update-env`, because pm2
+remembers the port it was started with (and change the port in nginx to
+match). `HOST` and `DATA_DIR` are set in `ecosystem.config.cjs` and win over
+`.env`. A rebuild
 (`pnpm build`) is needed only after updating the software or editing
 `fotobogen.config.js`.
 

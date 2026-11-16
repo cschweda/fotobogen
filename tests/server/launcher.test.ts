@@ -1,5 +1,5 @@
 import { spawn, type ChildProcess } from 'node:child_process'
-import { mkdtempSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { createServer, type Server } from 'node:net'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -15,12 +15,12 @@ afterEach(async () => {
 })
 
 /** Runs `node scripts/start.mjs` the way `pnpm start` does, with its own home and working directory. */
-function launch(options: { home: string, cwd?: string, dataDir: string, env?: Record<string, string> }): Launched {
+function launch(options: { home: string, cwd?: string, dataDir: string, env?: Record<string, string | undefined>, stdin?: 'pipe' }): Launched {
   const child = spawn(process.execPath, [join(process.cwd(), 'scripts/start.mjs')], {
     cwd: options.cwd ?? process.cwd(),
     // HOME and USERPROFILE: where the record of running copies is kept.
     env: { ...baseEnv(), HOME: options.home, USERPROFILE: options.home, DATA_DIR: options.dataDir, HOST: '127.0.0.1', SAMPLES_BASE_URL: 'http://127.0.0.1:9', ...options.env },
-    stdio: ['ignore', 'pipe', 'pipe'],
+    stdio: [options.stdin ?? 'ignore', 'pipe', 'pipe'],
   })
   started.push(child)
   let printed = ''
@@ -115,3 +115,72 @@ describe('pnpm start', () => {
     expect(launched.output()).not.toContain('Fotobogen is running')
   })
 })
+
+describe('the first-run questions', () => {
+  // The test suite has no terminal, so it says there is one; CI is unset because a CI run is never asked.
+  const asTerminal = { FOTOBOGEN_ASSUME_TERMINAL: '1', CI: undefined }
+  /** Types an answer each time the launcher asks for one. */
+  function answer(launched: Launched, answers: [RegExp, string][]) {
+    let seen = 0
+    const timer = setInterval(() => {
+      const next = answers[0]
+      if (!next || launched.child.exitCode !== null) return clearInterval(timer)
+      const output = launched.output().slice(seen)
+      const match = output.match(next[0])
+      if (!match) return
+      seen += match.index! + match[0].length
+      answers.shift()
+      launched.child.stdin!.write(`${next[1]}\n`)
+    }, 50)
+    started.push({ kill: () => clearInterval(timer) } as unknown as ChildProcess)
+  }
+  const freePort = async () => await new Promise<number>((found) => {
+    const probe = createServer().listen(0, '127.0.0.1', () => {
+      const { port } = probe.address() as { port: number }
+      probe.close(() => found(port))
+    })
+  })
+
+  it('asks nothing when nobody is at the keyboard, and writes no .env', async () => {
+    const cwd = temp('cwd')
+    const launched = launch({ home: temp('home'), cwd, dataDir: join(temp('data'), 'data') })
+    await runningPort(launched)
+    expect(launched.output()).not.toContain('A few questions')
+    expect(existsSync(join(cwd, '.env'))).toBe(false)
+  })
+
+  it('asks after the preflight on a first start at a terminal, saves the answers to .env, and uses them', async () => {
+    const cwd = temp('cwd')
+    const port = await freePort()
+    const launched = launch({ home: temp('home'), cwd, dataDir: join(temp('data'), 'data'), env: asTerminal, stdin: 'pipe' })
+    answer(launched, [[/Port to run on\?[^\n]*: /, 'eighty'], [/Port to run on\?[^\n]*: /, String(port)], [/Site address\?[^\n]*: /, 'photos.example.com'], [/demo mode on\? \[y\/N\] /, 'y']])
+    expect(await runningPort(launched)).toBe(port)
+    const output = launched.output()
+    expect(output.indexOf('Fotobogen preflight check')).toBeLessThan(output.indexOf('A few questions before the first start'))
+    expect(output).toContain('A port is a whole number')
+    expect(output).toContain('Saved to .env')
+    const env = readFileSync(join(cwd, '.env'), 'utf8')
+    expect(env).toContain(`PORT=${port}\n`)
+    expect(env).toContain('SITE_URL=https://photos.example.com\n')
+    expect(env).toContain('DEMO_MODE=1\n')
+    expect((await fetch(`http://127.0.0.1:${port}/api/health`)).ok).toBe(true)
+  })
+
+  it('does not ask a second time: the .env it wrote is the answer', async () => {
+    const cwd = temp('cwd')
+    const dataDir = join(temp('data'), 'data')
+    const home = temp('home')
+    const first = launch({ home, cwd, dataDir, env: asTerminal, stdin: 'pipe' })
+    answer(first, [[/Port to run on\?[^\n]*: /, ''], [/Site address\?[^\n]*: /, ''], [/demo mode on\? \[y\/N\] /, '']])
+    await runningPort(first)
+    const written = readFileSync(join(cwd, '.env'), 'utf8')
+    expect(written).not.toMatch(/^[A-Z_]+=/m) // three Enters: nothing is set
+    first.child.kill()
+    await first.exited
+    const second = launch({ home, cwd, dataDir, env: asTerminal, stdin: 'pipe' })
+    await runningPort(second)
+    expect(second.output()).not.toContain('A few questions')
+    expect(readFileSync(join(cwd, '.env'), 'utf8')).toBe(written)
+  })
+})
+
