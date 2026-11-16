@@ -108,7 +108,7 @@ export function cleanText(given: unknown): TextOverrides {
 /** One piece of text, with {names} filled in. A name with no value is left as it is. */
 export function siteText(overrides: TextOverrides | null | undefined, key: TextKey, values: Record<string, string | number> = {}): string {
   const text = overrides?.[key] ?? SITE_TEXT[key].default
-  return text.replace(/\{(\w+)\}/g, (whole, name: string) => name in values ? String(values[name]) : whole)
+  return text.replace(/\{(\w+)\}/g, (whole, name: string) => Object.hasOwn(values, name) ? String(values[name]) : whole)
 }
 
 /** Languages are named by a short code: "en", "de", "pt-BR". */

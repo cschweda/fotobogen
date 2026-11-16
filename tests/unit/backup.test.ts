@@ -53,7 +53,7 @@ describe('a backup', () => {
     const { file, manifest } = await backupOf(ctx, paths)
     expect(manifest).toMatchObject({ format: 1, app: 'fotobogen', appVersion: '0.1.0', photos: 2, migrations: KNOWN })
     expect(manifest.originalsBytes).toBeGreaterThan(0)
-    expect(await inspectBackup(file, KNOWN)).toEqual({ ok: true, manifest })
+    expect(await inspectBackup(file, KNOWN)).toEqual({ ok: true, manifest, modules: [] })
     expect(readdirSync(ctx.tmpDir)).toEqual([]) // the database snapshot is cleaned up
   })
 

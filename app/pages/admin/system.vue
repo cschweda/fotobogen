@@ -25,8 +25,8 @@ async function restore() {
   }
   busy.value = true
   try {
-    const result = await $fetch<{ manifest: { photos: number, createdAt: string } }>('/api/admin/restore', { method: 'PUT', body: zip, headers: { 'content-type': 'application/zip' } })
-    message.value = `The backup (${result.manifest.photos} photos, made ${result.manifest.createdAt.slice(0, 10)}) is ready. Restart Fotobogen to restore it.`
+    const result = await $fetch<{ manifest: { photos: number, createdAt: string }, modulesLeftOut: string[] }>('/api/admin/restore', { method: 'PUT', body: zip, headers: { 'content-type': 'application/zip' } })
+    message.value = `The backup (${result.manifest.photos} photos, made ${result.manifest.createdAt.slice(0, 10)}) is ready. Restart Fotobogen to restore it.${result.modulesLeftOut.length ? ` Its modules (${result.modulesLeftOut.join(', ')}) will not be installed: a module is code, so it is only restored on the server itself, with "pnpm fotobogen restore".` : ''}`
     await refresh()
   }
   catch (error) {
@@ -65,7 +65,7 @@ async function cancel() {
     <section class="block" aria-labelledby="backup-heading">
       <h2 id="backup-heading" class="heading">Back up</h2>
       <p class="about">
-        One zip file with everything that cannot be made again: your photos exactly as you uploaded them, their titles, albums, and tags, your settings, and any skins and modules you installed. Resized copies are left out and rebuilt after a restore. Your login's secret key is left out too, so the file does not open your site.
+        One zip file with everything that cannot be made again: your photos exactly as you uploaded them, their titles, albums, and tags, your settings, and any skins and modules you installed. Resized copies are left out and rebuilt after a restore. Your login's secret key is left out, so the file cannot be used to log in to your site as it stands. It does hold every photo, hidden ones included, your settings, and your password in scrambled form: keep it as private as the server.
       </p>
       <p class="about reminder">
         Keeping a copy is up to you. Fotobogen is provided as it is, with no warranty; neither the software nor its author is responsible for lost photographs. Download a backup regularly and keep it somewhere other than this server.
@@ -82,7 +82,7 @@ async function cancel() {
       </div>
       <template v-else>
         <p class="about">
-          Restoring replaces everything on this site with what is in the backup, including the login. What is here now is not deleted: it is moved to a folder called <code>before-restore</code> in the data directory. The restore happens the next time Fotobogen starts.
+          Restoring replaces everything on this site with what is in the backup, including the login, API tokens, and webhooks, so only restore a backup you made yourself. Modules in the backup are not installed from here, because a module is code; restore on the server with <code>pnpm fotobogen restore</code> to bring them back. What is here now is not deleted: it is moved to a folder called <code>before-restore</code> in the data directory. The restore happens the next time Fotobogen starts.
         </p>
         <form class="restore" @submit.prevent="restore">
           <label class="fb-button fb-button--quiet restore__pick" for="backup-file">Choose a backup file</label>

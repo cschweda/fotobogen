@@ -1,10 +1,10 @@
 // The running app's shared state: where its data lives, the session secret,
 // and the open database. Filled in once by the boot plugin.
 import Database from 'better-sqlite3'
-import { existsSync, mkdirSync, renameSync, rmSync } from 'node:fs'
+import { chmodSync, existsSync, mkdirSync, renameSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { drizzle, type BetterSQLite3Database } from 'drizzle-orm/better-sqlite3'
-import { applyRestore, inspectBackup, PENDING_RESTORE } from '../core/backup.ts'
+import { applyRestore, inspectBackup, PENDING_ADMIN_RESTORE, PENDING_RESTORE } from '../core/backup.ts'
 import { applyMigrations, type Migration } from '../core/migrate.ts'
 import { dataPaths, ensureDataDirs, resolveDataDir, type DataPaths } from '../core/paths.ts'
 import { loadOrCreateSecret } from '../core/secret.ts'
@@ -45,17 +45,23 @@ async function boot(loadMigrations: () => Promise<Migration[]>, loadSkins: () =>
   ensureDataDirs(paths)
   const secret = loadOrCreateSecret(paths.secret)
 
-  // A restore the admin asked for is done now, before the database is opened.
-  const pending = join(paths.root, PENDING_RESTORE)
-  if (existsSync(pending)) {
+  // A restore that is waiting is done now, before the database is opened: a
+  // backup uploaded in the admin (restored without its modules, which are
+  // code), or one put in the data folder by hand.
+  for (const [name, withModules] of [[PENDING_ADMIN_RESTORE, false], [PENDING_RESTORE, true]] as const) {
+    const pending = join(paths.root, name)
+    if (!existsSync(pending)) continue
     try {
-      // The same check as a backup uploaded in the admin or restored from the
-      // command line gets: one made by a newer version is not restored.
+      // The same check as a backup restored from the command line gets:
+      // one made by a newer version is not restored.
       const inspected = await inspectBackup(pending, (await loadMigrations()).map(migration => migration.name))
       if (!inspected.ok) throw new Error(inspected.message)
-      const restored = await applyRestore(paths, pending)
+      const restored = await applyRestore(paths, pending, { modules: withModules })
       rmSync(pending, { force: true })
       console.log(`\nRestored a backup with ${restored.photos} photos. What was here before is kept in ${restored.keptIn}.`)
+      if (!withModules && inspected.modules.length > 0) {
+        console.log(`The backup's modules were not installed (${inspected.modules.join(', ')}): a module is code, and one uploaded through the admin is never run. To install them, restore the backup on the server with "pnpm fotobogen restore", or copy them into the modules folder.`)
+      }
       console.log('Resized copies are being made again; photos appear on the site as each one finishes.\n')
     }
     catch (error) {
@@ -78,6 +84,16 @@ async function boot(loadMigrations: () => Promise<Migration[]>, loadSkins: () =>
   sqlite.pragma('foreign_keys = ON')
   sqlite.pragma('busy_timeout = 5000')
   applyMigrations(sqlite, await loadMigrations())
+  // The database holds the login's password hash and the webhooks' secrets:
+  // for the user running Fotobogen only. (Windows has no such file modes.)
+  if (process.platform !== 'win32') {
+    for (const file of [paths.db, `${paths.db}-wal`, `${paths.db}-shm`, paths.originals]) {
+      try {
+        chmodSync(file, file === paths.originals ? 0o700 : 0o600)
+      }
+      catch { /* a file that is not there yet, or a filesystem without modes */ }
+    }
+  }
 
   const db = drizzle(sqlite, { schema })
   const row = sqlite.prepare(`select value from settings where key = 'site.setup_complete'`).get() as { value: string } | undefined

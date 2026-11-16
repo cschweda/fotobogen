@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { clientIpFrom, isLoopbackHost, loginCanStick, originMatchesHost, rateLimitKey } from '../../server/core/request.ts'
+import { clientIpFrom, isLoopbackHost, isPlainGuardedPath, isValidHost, loginCanStick, originMatchesHost, rateLimitKey } from '../../server/core/request.ts'
 import { newId } from '../../server/core/ids.ts'
 
 describe('originMatchesHost', () => {
@@ -14,6 +14,29 @@ describe('originMatchesHost', () => {
     ['https://a.com', undefined, false],
   ])('%s against %s is %s', (origin, host, expected) => {
     expect(originMatchesHost(origin, host)).toBe(expected)
+  })
+})
+
+describe('originMatchesHost, by scheme', () => {
+  it('accepts only the origin of a web page', () => {
+    for (const origin of ['ftp://a.com', 'file://a.com', 'chrome-extension://a.com', 'javascript://a.com/x']) expect(originMatchesHost(origin, 'a.com'), origin).toBe(false)
+  })
+  it('does not let a page loaded over http change a site known to be reached over https', () => {
+    expect(originMatchesHost('http://a.com', 'a.com', true)).toBe(false)
+    expect(originMatchesHost('https://a.com', 'a.com', true)).toBe(true)
+    // With nothing known about the scheme (no trusted proxy), http is still this site: local use.
+    expect(originMatchesHost('http://localhost:5150', 'localhost:5150')).toBe(true)
+  })
+})
+
+describe('the first checks on a request', () => {
+  it('takes a Host header only when it is a name or an address', () => {
+    for (const host of ['photos.example.com', 'localhost:5150', '127.0.0.1:5150', '[::1]:5150', 'a']) expect(isValidHost(host), host).toBe(true)
+    for (const host of ['a"<b>', 'evil.example/x?"><script>', 'a b', '', 'a.com:port', '-a.com']) expect(isValidHost(host), host).toBe(false)
+  })
+  it('refuses a percent-encoded spelling of the admin, its API, setup, and login', () => {
+    for (const path of ['/api/%61dmin/settings', '/%61pi/admin/settings', '/api/%73etup/verify', '/%73etup', '/%6cogin', '/ADMIN%2fphotos', '/api/photos/%zz', '//api/%61dmin/x']) expect(isPlainGuardedPath(path), path).toBe(false)
+    for (const path of ['/api/admin/settings', '/tag/caf%C3%A9', '/photo/a-b', '/']) expect(isPlainGuardedPath(path), path).toBe(true)
   })
 })
 

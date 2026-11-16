@@ -54,7 +54,8 @@ export async function askAndSave(envPath, host = config.server.host) {
       warn: text => console.log(paint.red(text)),
       portIsFree: async port => !('error' in await choosePort(port, true, host, 1)),
     })
-    writeFileSync(envPath, envWith(existsSync(envPath) ? readFileSync(envPath, 'utf8') : null, answers))
+    // Settings for this user only; a new file is made private to them.
+    writeFileSync(envPath, envWith(existsSync(envPath) ? readFileSync(envPath, 'utf8') : null, answers), { mode: 0o600 })
     return answers
   }
   finally {

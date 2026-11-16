@@ -2,7 +2,7 @@
 import { existsSync, readdirSync, statfsSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { defineEventHandler, useRuntimeConfig } from 'nuxt/server'
-import { PENDING_RESTORE } from '../../core/backup.ts'
+import { PENDING_ADMIN_RESTORE, PENDING_RESTORE } from '../../core/backup.ts'
 import { getPaths, getQueue, getSqlite } from '../../utils/app.ts'
 import { requireAdmin } from '../../utils/session.ts'
 
@@ -35,6 +35,6 @@ export default defineEventHandler(async (event) => {
     derivativesBytes: folderBytes(paths.derivatives),
     databaseBytes: existsSync(paths.db) ? statSync(paths.db).size : 0,
     freeBytes,
-    restorePending: existsSync(join(paths.root, PENDING_RESTORE)),
+    restorePending: existsSync(join(paths.root, PENDING_ADMIN_RESTORE)) || existsSync(join(paths.root, PENDING_RESTORE)),
   }
 })

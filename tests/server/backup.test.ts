@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process'
-import { existsSync, mkdtempSync, readdirSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
@@ -83,6 +83,40 @@ describe('backup and restore', () => {
     }
     finally {
       await target.stop()
+    }
+  })
+
+  it('does not install a module from a backup uploaded in the admin: a module is code', async () => {
+    const { mkdirSync } = await import('node:fs')
+    // A module in the source site's data folder, whose code leaves a mark wherever it is run.
+    const folder = join(source.dataDir, 'modules', 'planted')
+    mkdirSync(folder, { recursive: true })
+    writeFileSync(join(folder, 'module.json'), JSON.stringify({ name: 'planted', version: '1.0.0', label: 'Planted', entry: 'index.mjs' }))
+    writeFileSync(join(folder, 'index.mjs'), `import { writeFileSync } from 'node:fs'\nimport { join } from 'node:path'\nwriteFileSync(join(process.env.DATA_DIR, 'the-code-ran.txt'), 'yes')\nexport default { transforms: [] }\n`)
+    const withModule = Buffer.from(await (await get(source, '/api/admin/backup', { cookie })).arrayBuffer())
+    expect(withModule.includes('modules/planted/index.mjs')).toBe(true)
+
+    const target = await startServer()
+    try {
+      const targetCookie = await completeSetup(target)
+      const staged = await fetch(`${target.url}/api/admin/restore`, { method: 'PUT', headers: { origin: target.url, cookie: targetCookie, 'content-type': 'application/zip' }, body: new Uint8Array(withModule) })
+      expect(staged.status).toBe(200)
+      expect(await staged.json()).toMatchObject({ modulesLeftOut: ['planted'] })
+      expect(await (await get(target, '/api/admin/system', { cookie: targetCookie })).json()).toMatchObject({ restorePending: true })
+
+      await target.restart()
+      expect(target.output()).toContain('Restored a backup with 2 photos.')
+      expect(target.output()).toContain('planted')
+      expect(existsSync(join(target.dataDir, 'modules', 'planted'))).toBe(false)
+      expect(existsSync(join(target.dataDir, 'the-code-ran.txt'))).toBe(false)
+      // Restored on the server itself, by someone who can already run code there, it is installed.
+      await target.stop()
+      expect(cli(target.dataDir, ['restore', (() => { const file = join(temp(), 'b.zip'); writeFileSync(file, withModule); return file })()]).code).toBe(0)
+      expect(existsSync(join(target.dataDir, 'modules', 'planted', 'index.mjs'))).toBe(true)
+    }
+    finally {
+      await target.stop()
+      rmSync(folder, { recursive: true, force: true })
     }
   })
 

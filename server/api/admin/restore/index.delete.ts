@@ -2,12 +2,12 @@
 import { rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import { defineEventHandler } from 'nuxt/server'
-import { PENDING_RESTORE } from '../../../core/backup.ts'
+import { PENDING_ADMIN_RESTORE, PENDING_RESTORE } from '../../../core/backup.ts'
 import { getPaths } from '../../../utils/app.ts'
 import { requireAdmin } from '../../../utils/session.ts'
 
 export default defineEventHandler(async (event) => {
   await requireAdmin(event)
-  await rm(join(getPaths().root, PENDING_RESTORE), { force: true })
+  for (const name of [PENDING_ADMIN_RESTORE, PENDING_RESTORE]) await rm(join(getPaths().root, name), { force: true })
   return { ok: true }
 })

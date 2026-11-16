@@ -289,7 +289,9 @@ export function siteOrigin(event: RequestEvent): string {
 }
 
 export const escapeXml = (text: string): string =>
-  text.replace(/[<>&'"]/g, character => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '\'': '&apos;', '"': '&quot;' })[character]!)
+  // Characters XML does not allow at all are dropped; one of them makes the whole feed unreadable.
+  // eslint-disable-next-line no-control-regex
+  text.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f\ufffe\uffff]|[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/g, '').replace(/[<>&'"]/g, character => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '\'': '&apos;', '"': '&quot;' })[character]!)
 
 /** The newest public photos, for the feed and the sitemap. */
 export function recentPhotos(limit: number): { slug: string, title: string | null, description: string | null, createdAt: number, updatedAt: number, image: string | null }[] {

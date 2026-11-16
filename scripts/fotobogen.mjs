@@ -177,11 +177,15 @@ async function backup(args) {
   const paths = dataPaths(resolveDataDir(process.env, process.cwd()))
   if (!existsSync(paths.db)) throw new CliError(`No Fotobogen database found at ${paths.db}. Check DATA_DIR.`)
   const file = args[0] ?? `fotobogen-backup-${new Date().toISOString().slice(0, 10)}.zip`
+  // Never write through a link to some other file.
+  const { lstatSync } = await import('node:fs')
+  if (existsSync(file) && lstatSync(file).isSymbolicLink()) throw new CliError(`${file} is a link to another file. Give the backup a name of its own.`)
   const version = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version
   const db = new Database(paths.db, { fileMustExist: true })
   db.pragma('busy_timeout = 5000')
   try {
-    const manifest = await writeBackup(db, paths, version, createWriteStream(file))
+    // It holds every photo and the login's password hash: readable by this user only.
+    const manifest = await writeBackup(db, paths, version, createWriteStream(file, { mode: 0o600 }))
     console.log(`Backup written to ${file}: ${manifest.photos} photos, ${(manifest.originalsBytes / 1024 / 1024).toFixed(1)} MB of uploaded files.`)
   }
   finally {
