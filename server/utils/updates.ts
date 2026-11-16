@@ -87,8 +87,11 @@ export function checkDailyIfWanted(): void {
   void checkForUpdate().finally(() => { checking = false })
 }
 
-/** Records the owner's answer. A yes checks straight away, unless it checked within the day. */
+/**
+ * Records the owner's answer. A yes checks straight away, however lately it
+ * last checked, so that what the owner is then told is true at that moment.
+ */
 export async function setAutomatic(on: boolean): Promise<UpdateStatus> {
   setSettings({ 'updates.automatic': on })
-  return due(updateStatus()) ? await checkForUpdate() : updateStatus()
+  return on ? await checkForUpdate() : updateStatus()
 }

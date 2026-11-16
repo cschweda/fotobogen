@@ -69,7 +69,9 @@ async function install() {
 }
 
 const show = computed(() => status.value && (status.value.available || status.value.running || status.value.waitingForRestart || status.value.state.state === 'failed'))
-const justFinished = computed(() => status.value?.state.state === 'done' && status.value.state.version === status.value.current)
+// The last update is only worth mentioning until there is a newer version to offer:
+// its record stays on disk, and must not stand in the way of the next update.
+const justFinished = computed(() => status.value?.state.state === 'done' && status.value.state.version === status.value.current && !status.value.available)
 </script>
 
 <template>
