@@ -5,7 +5,7 @@ Every Fotobogen site answers a small read-only JSON API: the same data its own p
 - **Read-only.** There is nothing to log in to and nothing can be changed through it.
 - **Public only.** It returns exactly what a visitor can see: processed, public photos whose publication time has come. Hidden photos, drafts, scheduled photos, and hidden albums never appear. Camera details and location follow the site's privacy settings.
 - **Open to browsers on other sites.** Responses carry `Access-Control-Allow-Origin: *`.
-- **Versioned.** Every response carries `X-Fotobogen-API: 1`. Fields may be added at any time; a field is removed or changes meaning only with a new number, noted in the [changelog](../CHANGELOG.md).
+- **Versioned.** Every answer from an address under `/api/photos`, `/api/albums`, `/api/tags`, `/api/slideshow`, and `/api/site` carries `X-Fotobogen-API: 1` (the health check and the feeds do not, nor does the `503` before setup). Fields may be added at any time; a field is removed or changes meaning only with a new number, noted in the [changelog](../CHANGELOG.md).
 
 The admin's own endpoints under `/api/admin/` are not part of this; they need a login and may change between versions.
 
@@ -177,6 +177,8 @@ A photo, album, or tag that does not exist, or that a visitor may not see, is a 
 { "status": 404, "message": "There is no such photo." }
 ```
 
+Go by the HTTP status. `message` is for people, is not on every error (the `503` has one; a missing download has none), and its wording may change.
+
 ## The admin API, with a token
 
 Everything above is public and read-only. The admin's own API, under `/api/admin/`, needs a login, or an **API token** made under **Admin, API tokens**. A token is sent in a header:
@@ -192,7 +194,7 @@ A request with a token needs no cookie and no `Origin` header, and is judged by 
 | `upload` | `POST /api/admin/photos` (upload), `GET /api/admin/photos` (list), `GET /api/admin/photos/<id>`, `POST /api/admin/photos/<id>/retry` |
 | `manage` | Everything under `/api/admin/photos` and `/api/admin/albums`, and `GET /api/admin/overview` |
 
-Anything else answers `403`. No token can reach settings, skins, site text, backups, restore, or the tokens themselves. A wrong or revoked token answers `401`.
+Anything else answers `403`. No token can reach settings, skins, site text, backups, restore, or the tokens themselves. A wrong or revoked token answers `401`. A header that is not in the form `Bearer fb_…` is not taken for a token at all: a request that changes something then answers `403`, and one that reads answers `401` asking for a login.
 
 Uploading:
 
@@ -204,5 +206,5 @@ curl -H "Authorization: Bearer fb_YOUR_TOKEN" -F "file=@photo.jpg" https://photo
 { "result": "accepted", "photo": { "id": "V1StGXR8_Z5j", "slug": "photo" } }
 ```
 
-The photo is processed in the background; `GET /api/admin/photos/<id>` shows `"status": "ready"` when it is done, or `"failed"` with the reason. A duplicate or a file that is not an accepted photo answers `409` or `422` with a `message` saying why. Unlike the public API, the admin API is not covered by the version promise in [UPGRADING.md](UPGRADING.md): it may change in a minor release, and the changelog will say so.
+The photo is processed in the background; `GET /api/admin/photos/<id>` shows `"status": "ready"` when it is done, or `"failed"` with the reason in `error` (from version 1.3.3; before that the reason was only in the list, `GET /api/admin/photos`). A duplicate or a file that is not an accepted photo answers `409` or `422` with a `message` saying why; one that is too large answers `413`, and a request with no file in it `400`. Unlike the public API, the admin API is not covered by the version promise in [UPGRADING.md](UPGRADING.md): it may change in a minor release, and the changelog will say so.
 

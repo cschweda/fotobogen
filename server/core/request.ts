@@ -31,13 +31,17 @@ export function loginCanStick(host: string | undefined, protocol: string, forwar
 
 /**
  * A mutating request must come from a page on this site: its Origin header's
- * host (and port) must equal the Host header. The scheme is ignored because
- * a TLS-terminating proxy hides it from the app.
+ * host (and port) must equal the Host header, and it must be a web page's
+ * origin (http or https). A TLS-terminating proxy hides the request's own
+ * scheme from the app; when the app does know the request came over https
+ * (`secure`), a page loaded over plain http is not this site either.
  */
-export function originMatchesHost(origin: string | undefined, host: string | undefined): boolean {
+export function originMatchesHost(origin: string | undefined, host: string | undefined, secure = false): boolean {
   if (!origin || !host) return false
   try {
-    return new URL(origin).host.toLowerCase() === host.toLowerCase()
+    const url = new URL(origin)
+    if (url.protocol !== 'https:' && !(url.protocol === 'http:' && !secure)) return false
+    return url.host.toLowerCase() === host.toLowerCase()
   }
   catch {
     return false
@@ -76,4 +80,27 @@ export function rateLimitKey(ip: string): string {
     : [...headParts, ...Array(Math.max(0, 8 - headParts.length - tailParts.length)).fill('0'), ...tailParts]
   if (groups.length !== 8) return address
   return groups.slice(0, 4).map(group => group.replace(/^0+(?=.)/, '')).join(':') + '::/64'
+}
+
+/** A Host header is a name or an address, with or without a port, and nothing else. */
+export function isValidHost(host: string): boolean {
+  return /^(\[[0-9a-f:.]+\]|[a-z0-9]([a-z0-9.-]*[a-z0-9])?)(:\d{1,5})?$/i.test(host) && host.length <= 255
+}
+
+/**
+ * The admin, its API, setup, and login are found by their paths, so those
+ * paths are only accepted spelled plainly. A percent-encoded spelling
+ * (/api/%61dmin/...) reaches the same handler but would slip past a check
+ * made on the text of the path. Returns false for a path to refuse.
+ */
+export function isPlainGuardedPath(pathname: string): boolean {
+  if (!pathname.includes('%')) return true
+  let decoded: string
+  try {
+    decoded = decodeURIComponent(pathname)
+  }
+  catch {
+    return false
+  }
+  return !/^\/+(api|admin|setup|login)(\/|$)/i.test(decoded)
 }

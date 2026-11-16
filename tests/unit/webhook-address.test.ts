@@ -15,6 +15,10 @@ describe('webhook addresses', () => {
     }
   })
 
+  it('counts an IPv4 address carried in the "translated" IPv6 range as what it is', () => {
+    expect(isPrivateAddress('::ffff:0:7f00:1')).toBe(true)
+    expect(isPrivateAddress('::ffff:0:a9fe:a9fe')).toBe(true)
+  })
   it('accepts only http and https addresses with no login in them', () => {
     expect(parseWebhookUrl('https://example.com/hooks/fotobogen')).toMatchObject({ ok: true })
     expect(parseWebhookUrl(' http://example.com:8080/x ')).toMatchObject({ ok: true })

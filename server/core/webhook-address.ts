@@ -28,7 +28,7 @@ for (const [network, prefix] of [
 // the ranges that carry an IPv4 address inside them (IPv4-compatible,
 // NAT64, 6to4, Teredo), which could otherwise smuggle a private one.
 for (const [network, prefix] of [
-  ['::', 96], ['64:ff9b::', 96], ['64:ff9b:1::', 48], ['2002::', 16], ['2001::', 32], ['fc00::', 7], ['fe80::', 10], ['fec0::', 10], ['ff00::', 8],
+  ['::', 96], ['::ffff:0:0:0', 96], ['64:ff9b::', 96], ['64:ff9b:1::', 48], ['2002::', 16], ['2001::', 32], ['fc00::', 7], ['fe80::', 10], ['fec0::', 10], ['ff00::', 8],
 ] as const) blocked.addSubnet(network, prefix, 'ipv6')
 
 /** True for loopback, private, link-local, and other addresses that are not on the public internet. */

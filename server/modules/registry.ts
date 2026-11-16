@@ -4,7 +4,7 @@
 // live in data/modules/<name>/ and are loaded when the server starts; no
 // rebuild is involved. A module that fails to load is reported and left
 // out; the site still starts.
-import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import { existsSync, lstatSync, readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import type { Database } from 'better-sqlite3'
@@ -64,6 +64,8 @@ async function loadInstalled(dir: string, folder: string, sqliteGiven: boolean):
     if (manifest.name !== folder) throw new Error(`The folder is called "${folder}" but module.json names the module "${manifest.name}". They must match.`)
     const entry = join(dir, folder, manifest.entry)
     if (!existsSync(entry)) throw new Error(`The entry file ${manifest.entry} is missing.`)
+    // The module's own file, not a link to code somewhere else on the server.
+    if (!lstatSync(entry).isFile()) throw new Error(`The entry file ${manifest.entry} must be a file in the module's folder, not a link.`)
     const imported = await import(/* @vite-ignore */ pathToFileURL(entry).href) as { default?: unknown }
     const definition: ModuleDefinition = checkDefinition(imported.default)
     return { manifest, source: 'installed', transforms: definition.transforms, enabled: sqliteGiven === false, error: null }

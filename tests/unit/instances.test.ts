@@ -62,6 +62,8 @@ describe('the record of running copies', () => {
     const write = (name: string, instance: unknown) => writeFileSync(join(dir, '.fotobogen', 'instances', name), JSON.stringify(instance))
     write('alive.json', { pid: process.ppid, port: 5150, dataDir: '/srv/a/data', startedAt: 5 }) // the test runner: certainly alive
     write('dead.json', { pid: 2 ** 22 + 12345, port: 5151, dataDir: '/srv/b/data', startedAt: 6 })
+    // Process ids that are never a copy of Fotobogen; "stopping" one would signal far more than one process.
+    for (const pid of [0, 1, -1]) write(`odd${pid}.json`, { pid, port: 5152, dataDir: '/srv/c/data', startedAt: 7 })
     writeFileSync(join(dir, '.fotobogen', 'instances', 'junk.json'), '{ not json')
     expect(runningInstances(dir)).toEqual([{ pid: process.ppid, port: 5150, dataDir: '/srv/a/data', startedAt: 5 }])
     expect(readdirSync(join(dir, '.fotobogen', 'instances'))).toEqual(['alive.json'])

@@ -113,3 +113,24 @@ describe('fotobogen init', () => {
   })
 })
 
+
+describe('the data folder named in .env', () => {
+  it('is used by the command-line tool, as it is by the server', async () => {
+    const server = await startServer()
+    try {
+      await completeSetup(server)
+      // A folder with only a .env in it, as an installed copy has, naming where the data is.
+      const home = mkdtempSync(join(tmpdir(), 'fb-cli-env-'))
+      writeFileSync(join(home, '.env'), `DATA_DIR=${server.dataDir}\n`)
+      const env = { ...baseEnv(), HOME: home, USERPROFILE: home }
+      delete env.DATA_DIR
+      const result = spawnSync(process.execPath, [join(process.cwd(), 'scripts/fotobogen.mjs'), 'backup', join(home, 'out.zip')], { cwd: home, env, encoding: 'utf8' })
+      expect(result.stdout + result.stderr).not.toContain('No Fotobogen database')
+      expect(result.status).toBe(0)
+      expect(existsSync(join(home, 'out.zip'))).toBe(true)
+    }
+    finally {
+      await server.stop()
+    }
+  })
+})

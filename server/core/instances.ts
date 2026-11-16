@@ -21,7 +21,9 @@ function isAlive(pid: number): boolean {
     return true
   }
   catch (error) {
-    return (error as NodeJS.ErrnoException).code === 'EPERM' // exists, but belongs to someone else
+    // EPERM: it exists but belongs to someone else, so it is not a copy this user started.
+    void error
+    return false
   }
 }
 
@@ -39,7 +41,8 @@ export function runningInstances(home?: string): Instance[] {
   for (const file of files) {
     try {
       const instance = JSON.parse(readFileSync(join(dir, file), 'utf8')) as Instance
-      if (Number.isInteger(instance.pid) && instance.pid !== process.pid && isAlive(instance.pid)) running.push(instance)
+      // A process id below 2 is never a copy of Fotobogen, and signalling one reaches far more than one process.
+      if (Number.isInteger(instance.pid) && instance.pid > 1 && instance.pid !== process.pid && isAlive(instance.pid)) running.push(instance)
       else if (instance.pid !== process.pid) rmSync(join(dir, file), { force: true })
     }
     catch {
@@ -67,6 +70,7 @@ export function registerInstance(instance: Omit<Instance, 'pid' | 'startedAt'>, 
 
 /** Asks a running copy to stop and waits for it to go. False if it is still there after ten seconds. */
 export async function stopInstance(instance: Instance): Promise<boolean> {
+  if (!Number.isInteger(instance.pid) || instance.pid <= 1) return true
   try {
     process.kill(instance.pid)
   }

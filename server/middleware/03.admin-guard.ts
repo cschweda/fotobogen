@@ -11,6 +11,10 @@ export default defineEventHandler(async (event) => {
   if (!isSetupComplete()) return
   // Lowercased because the page router matches paths without regard to case.
   const path = getRequestURL(event).pathname.toLowerCase()
+  // What the admin and the login answer is for one person, now: never kept by a browser or a proxy.
+  if (path.startsWith('/api/admin/') || path.startsWith('/api/auth/') || path === '/admin' || path.startsWith('/admin/')) {
+    event.res.headers.set('cache-control', 'no-store')
+  }
 
   if (path.startsWith('/api/admin/')) {
     const admin = await requireAdmin(event)

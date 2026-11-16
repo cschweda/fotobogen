@@ -27,6 +27,7 @@ export const PAGES = [
   { slug: 'modules', file: 'modules', nav: 'Modules' },
   { slug: 'writing-a-module', file: 'writing-a-module', nav: 'Writing a module' },
   { slug: 'faq', file: 'faq', nav: 'Questions' },
+  { slug: 'security-audits', file: 'security-audits', nav: 'Security audits' },
   // Not written by hand: built from CHANGELOG.md, so the site and the repository always say the same.
   { slug: 'changelog', file: null, nav: 'Releases' },
 ]

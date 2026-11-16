@@ -12,6 +12,8 @@ definePageMeta({ middleware: 'admin' })
 interface Detail {
   id: string, slug: string, title: string | null, description: string | null, alt: string | null
   visibility: 'public' | 'hidden', publishAt: number | null, takenAt: number | null, filename: string, status: 'processing' | 'ready' | 'failed'
+  /** Why it could not be processed, when it could not. */
+  error: string | null
   width: number, height: number
   links: { origin: string, page: string, images: { kind: string, url: string, width: number, height: number }[] }
   details: { camera: string | null, lens: string | null, focalLength: string | null, aperture: string | null, shutter: string | null, iso: number | null, location: { lat: number, lng: number } | null, bytes: number, mime: string }
@@ -167,11 +169,35 @@ watch(chosen, () => {
   debounce = setTimeout(renderPreview, 250)
 }, { deep: true })
 
+/** What to say when the processing being watched has finished. */
+let whenDone = 'Saved. The photo has been rendered again.'
 async function watchProcessing() {
   clearTimeout(poll)
   await refresh()
   if (photo.value?.status === 'processing') poll = setTimeout(watchProcessing, 1000)
-  else if (photo.value?.status === 'ready') message.value = 'Saved. The photo has been rendered again.'
+  else if (photo.value?.status === 'ready') message.value = whenDone
+  else if (photo.value?.status === 'failed') message.value = 'The photo could not be processed.'
+}
+
+// A photo that failed is given another try here, where the reason is shown.
+const retrying = ref(false)
+async function tryAgain() {
+  if (retrying.value) return
+  retrying.value = true
+  problem.value = ''
+  try {
+    await $fetch(`/api/admin/photos/${id}/retry`, { method: 'POST' })
+    message.value = 'Trying again.'
+    whenDone = 'The photo has been processed.'
+    if (photo.value) photo.value.status = 'processing'
+    await watchProcessing()
+  }
+  catch (caught) {
+    problem.value = failure(caught, 'It could not be tried again.')
+  }
+  finally {
+    retrying.value = false
+  }
 }
 
 async function saveLook() {
@@ -180,6 +206,7 @@ async function saveLook() {
   problem.value = ''
   try {
     const result = await $fetch<{ recipe: RecipeStep[] | null }>(`/api/admin/photos/${id}/recipe`, { method: 'PUT', body: { recipe: chosen.value } })
+    whenDone = 'Saved. The photo has been rendered again.'
     saved.value = JSON.stringify(result.recipe)
     if (result.recipe) own.value = result.recipe
     latest++
@@ -263,6 +290,12 @@ onBeforeUnmount(() => {
     <h1 class="fb-h1 title">{{ name }}</h1>
     <p class="fb-visually-hidden" role="status">{{ message }}</p>
     <div class="fb-alert" role="alert">{{ problem }}</div>
+
+    <div v-if="photo?.status === 'failed'" class="failed">
+      <p><strong>This photo could not be processed</strong>, so it is not on your site.<template v-if="photo.error"> The reason given: {{ photo.error }}</template></p>
+      <p>The file you uploaded is kept. If the reason has been dealt with (a full disk, too little memory), try again; if the file itself is damaged, delete the photo and upload it again.</p>
+      <button type="button" class="fb-button" :aria-disabled="retrying" @click="tryAgain">Try again</button>
+    </div>
 
     <div v-if="photo" class="edit">
       <div class="edit__left">
@@ -415,6 +448,8 @@ onBeforeUnmount(() => {
 .edit__view img { display: block; max-width: 100%; height: auto; max-height: 70vh; width: auto; background: var(--fb-frame); }
 .edit__view figcaption { margin-top: 0.5rem; }
 .edit__heading { margin: 0 0 1.25rem; font-size: 1.25rem; font-weight: 700; letter-spacing: -0.015em; }
+.failed { max-width: 44rem; margin: 0 0 1.5rem; padding: 1rem 1.25rem; border-left: 4px solid var(--fb-error); background: var(--fb-panel); }
+.failed p { margin: 0 0 0.75rem; }
 .edit__skipped { margin: 0 0 1rem; padding: 0.75rem 1rem; border-left: 4px solid var(--fb-error); background: var(--fb-panel); }
 .links__local { max-width: 40rem; margin: 0 0 1.25rem; padding: 0.75rem 1rem; border-left: 4px solid var(--fb-text); background: var(--fb-panel); }
 .links__note { max-width: 40rem; margin: 0 0 1rem; color: var(--fb-muted); font-size: 0.9375rem; }

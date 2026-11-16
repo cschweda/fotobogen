@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, symlinkSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
@@ -98,6 +98,14 @@ describe('reading skins', () => {
     const registry = createSkinRegistry([swissFiles], readSkinFolders(dir))
     expect(registry.list().map(skin => [skin.name, skin.source, skin.error === null])).toEqual([['swiss', 'bundled', true], ['empty', 'installed', false], ['paper', 'installed', true]])
     expect(readSkinFolders(join(dir, 'missing'))).toEqual([])
+  })
+  it.skipIf(process.platform === 'win32')('does not read a skin file that is a link to a file somewhere else', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'fb-skins-'))
+    writeFileSync(join(dir, 'private.txt'), 'the session secret')
+    mkdirSync(join(dir, 'leaky'))
+    writeFileSync(join(dir, 'leaky', 'skin.json'), JSON.stringify({ name: 'leaky', version: '0.1.0', label: 'Leaky', modes: { light: {}, dark: {} } }))
+    symlinkSync(join(dir, 'private.txt'), join(dir, 'leaky', 'skin.css'))
+    expect(readSkinFolders(dir).find(skin => skin.name === 'leaky')?.css).toBe('')
   })
   it('does not let an installed folder replace a bundled skin', () => {
     const registry = createSkinRegistry([swissFiles], [files('swiss', {}, 'body { display: none }')])

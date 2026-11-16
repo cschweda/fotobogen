@@ -32,7 +32,7 @@ pnpm fotobogen module new my-module     # writes data/modules/my-module/ with a 
 pnpm fotobogen module test my-module    # runs it on a test picture and reports
 ```
 
-`module new` writes a `module.json` and an `index.mjs` holding one small transform with one slider, ready to edit.
+`module new` writes a `module.json` and an `index.mjs` holding one small transform with three settings (two sliders and a checkbox), ready to edit.
 
 `module test` loads the module the way the server does and runs each transform with its default settings, at a large size (2560 pixels) and a small one (240), twice each. It writes each result as a WebP into `./module-test` so you can look at it, prints a line for each check, and marks anything wrong with FAIL: a mistake in `module.json`, a transform that throws or returns an empty picture, or one that gives a different result the second time (randomness must be seeded from the photo's size, or the picture would change on every render). Use `--image photo.jpg` to try it on a photo of your own and `--out <folder>` to write somewhere else. A name means the module in `data/modules`; anything else is read as a folder, so a module kept elsewhere can be tested too.
 
@@ -125,7 +125,7 @@ All four take an optional `label`. Text is drawn by your module, and the server 
 apply(image, params, context)
 ```
 
-- `image`: the photo as a sharp pipeline, upright, in sRGB, at most 2560 px on its long side.
+- `image`: the photo as a sharp pipeline, upright, in sRGB, at most 2560 px on its long side when yours is the first step. A later step receives what the one before it produced, which may be larger (a frame adds a border).
 - `params`: the values for this photo, already checked.
 - `context.width`, `context.height`: the size of `image` in pixels.
 - `context.sharp`: the sharp function itself, for building a new picture. A module that only adjusts the photo does not need it. One that draws around the photo does: the film frame builds its border as an SVG, opens it with `context.sharp`, and lays the photo on top.
@@ -135,7 +135,7 @@ Return a sharp pipeline, or a promise of one. The result may be a different size
 Two things to keep in mind:
 
 - **Use proportions, not pixels.** The same recipe is run on a small copy for the preview and on a large one for the real thing. The film frame's border is a percentage of the photo's shorter side, so it looks the same at both sizes.
-- **Give the same input the same output.** If you need randomness, seed it from the photo's size, as both bundled modules do. Otherwise the picture changes every time it is rendered.
+- **Give the same input the same output.** If you need randomness, seed it from the photo's size, as the film looks and the film frame do. Otherwise the picture changes every time it is rendered.
 
 ## What modules can and cannot do
 
@@ -143,13 +143,13 @@ They can change the picture, in any way sharp allows, and change its size (up to
 
 They cannot add screens or controls to the admin, read or change a photo's title or other details, or change the uploaded file: Fotobogen keeps the original untouched and builds every copy from it plus the list of transforms, so switching a transform off always gets the photo back exactly.
 
-**A module is trusted code.** It runs inside the server with the server's permissions, like a WordPress plugin. Install only modules you have read or trust. There is no way to install one through the admin; it has to be put on the server's disk.
+**A module is trusted code.** It runs inside the server with the server's permissions, like a WordPress plugin. Install only modules you have read or trust. There is no way to install one through the admin; it has to be put on the server's disk. A backup carries the modules a site has installed, so a backup file deserves the same care as code: restored on the server (`pnpm fotobogen restore`, or left in the data folder as `restore-pending.zip`) it installs them; uploaded through the admin it is restored without them.
 
 ## How the admin uses a module
 
 - **Admin, Modules** lists every module, each switched off until you switch it on. Under "For all photos" you choose transforms for the whole site, including photos uploaded later.
 - **Admin, Photos**, then a photo, lets that one photo use the site's setting or have its own. A preview shows the change before it is saved.
-- Transforms run in the order the modules are listed: looks first, then the frame, so grain is not printed on the border.
+- A look made in the admin runs in the order the modules are listed: looks first, then the frame, so grain is not printed on the border. The server itself runs the steps in the order they are stored, so a look saved through the API or named by a skin runs as written.
 - Under the photo on its edit page is a strip of small previews, one per look: each transform with its default settings. **If a transform's first parameter is a `select`, the strip shows one preview for every option in it**, which is how the film looks appear side by side. Put the menu that defines the look first if you want that.
 
 ## When something goes wrong

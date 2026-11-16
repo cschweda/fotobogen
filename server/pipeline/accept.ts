@@ -6,6 +6,7 @@ import { createReadStream } from 'node:fs'
 import { open, rm } from 'node:fs/promises'
 import { basename, extname } from 'node:path'
 import { newId } from '../core/ids.ts'
+import { serial } from '../core/serial.ts'
 import type { PipelineContext } from './context.ts'
 import sharp from './image.ts'
 import { pixelLimitFor } from './limits.ts'
@@ -80,10 +81,31 @@ function sha256(path: string): Promise<string> {
   })
 }
 
+/**
+ * The size a WebP file says it is, read from its first bytes. Asking the
+ * image library decodes the whole picture first, so a few kilobytes that
+ * claim to be enormous are refused here, before any of that memory is used.
+ * Null when the header is not one of the three WebP kinds.
+ */
+export function webpHeaderSize(head: Buffer): { width: number, height: number } | null {
+  if (head.length < 30 || head.toString('latin1', 0, 4) !== 'RIFF' || head.toString('latin1', 8, 12) !== 'WEBP') return null
+  const kind = head.toString('latin1', 12, 16)
+  if (kind === 'VP8 ') return { width: head.readUInt16LE(26) & 0x3fff, height: head.readUInt16LE(28) & 0x3fff }
+  if (kind === 'VP8L') {
+    const bits = head.readUInt32LE(21)
+    return { width: (bits & 0x3fff) + 1, height: ((bits >>> 14) & 0x3fff) + 1 }
+  }
+  if (kind === 'VP8X') return { width: head.readUIntLE(24, 3) + 1, height: head.readUIntLE(27, 3) + 1 }
+  return null
+}
+
+/** Reading a picture's size can take as much memory as the picture; one at a time. */
+const oneAtATime = serial()
+
 /** Pixel dimensions as the photo is viewed, after EXIF rotation; null when unreadable. */
 async function readDimensions(path: string, format: ImageFormat): Promise<{ width: number, height: number, interlaced: boolean } | null> {
   try {
-    const meta = await sharp(path).metadata()
+    const meta = await oneAtATime(() => sharp(path).metadata())
     const read = meta.format === 'heif' ? (meta.compression === 'av1' ? 'avif' : null) : meta.format
     if (read !== format || !meta.width || !meta.height) return null
     const turned = (meta.orientation ?? 1) >= 5 // orientations 5 to 8 swap the sides
@@ -109,8 +131,16 @@ export async function acceptUpload(ctx: PipelineContext, input: UploadInput): Pr
   const { sqlite, storage } = ctx
   let stored: string | undefined
   try {
-    const format = sniffFormat(await readHead(input.tmpPath))
+    const head = await readHead(input.tmpPath)
+    const format = sniffFormat(head)
     if (!format) return { result: 'rejected', reason: 'not-an-image', message: NOT_AN_IMAGE }
+    if (format === 'webp') {
+      const declared = webpHeaderSize(head)
+      const most = pixelLimitFor(format, false, ctx.limits).maxPixels
+      if (declared && declared.width * declared.height > most) {
+        return { result: 'rejected', reason: 'too-many-pixels', message: `This photo is ${megapixels(declared.width * declared.height)}; the limit for WebP files is ${megapixels(most)}, because they take much more memory to open. Save it as a JPEG and upload that.` }
+      }
+    }
 
     const checksum = await sha256(input.tmpPath)
     const findExisting = () => sqlite
