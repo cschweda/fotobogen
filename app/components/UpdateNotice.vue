@@ -16,6 +16,8 @@ async function send(body?: { automatic: boolean }) {
     status.value = await $fetch<Status>('/api/admin/updates', { method: 'POST', body: body ?? {} })
     if (body) message.value = body.automatic ? 'Fotobogen will check once a day.' : 'Fotobogen will not check by itself.'
     else message.value = status.value.problem ?? (status.value.newer ? `Version ${status.value.latest} is available.` : 'This is the latest version.')
+    // The panel below that installs an update asked before this check; have it ask again.
+    await refreshNuxtData('admin-self-update')
   }
   catch {
     message.value = 'The check did not go through. Try again.'

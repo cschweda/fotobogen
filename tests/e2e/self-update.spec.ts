@@ -112,3 +112,23 @@ test('a site that has already updated itself once is offered the next version, n
   await expect(panel.getByRole('button', { name: 'Update to version 9.9.9' })).toBeVisible()
   await expect(page.getByRole('heading', { name: /Updated to version/ })).toHaveCount(0)
 })
+
+test('pressing Check for updates offers the update at once, without reloading the page', async ({ page }) => {
+  const server = await startServer({ env: { UPDATES_URL: `http://127.0.0.1:${(github.address() as { port: number }).port}/latest`, FOTOBOGEN_IN_DOCKER: '0' } })
+  servers.push(server)
+  const cookie = await completeSetup(server)
+  // A site that updated itself before, and has not checked since.
+  const health = await (await fetch(server.url + '/api/health')).json() as { version: string }
+  writeFileSync(join(server.dataDir, 'update-status.json'), JSON.stringify({
+    state: 'done', version: health.version, from: '0.9.0', step: null, startedAt: 1, finishedAt: 2, error: null, pid: null, log: [],
+  }))
+  await page.context().addCookies(cookie.split('; ').map((pair) => {
+    const [name, ...rest] = pair.split('=')
+    return { name: name!, value: rest.join('='), url: server.url }
+  }))
+  await page.goto(server.url + '/admin/system')
+  await expect(page.getByRole('heading', { name: `Updated to version ${health.version}` })).toBeVisible()
+  await page.getByRole('button', { name: 'Check for updates' }).click()
+  await expect(page.getByRole('region', { name: 'Install version 9.9.9' }).getByRole('button', { name: 'Update to version 9.9.9' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Updated to version/ })).toHaveCount(0)
+})
