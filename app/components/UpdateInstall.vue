@@ -135,12 +135,13 @@ const justFinished = computed(() => status.value?.state.state === 'done' && stat
       <!-- This copy cannot replace itself: say why, and what to run instead. -->
       <template v-else-if="status.available">
         <p class="install__text">{{ status.support.reason }} On the server, in Fotobogen's folder:</p>
-        <pre v-if="status.support.method === 'docker'" class="install__code" tabindex="0"><code>git pull
-docker compose up -d --build</code></pre>
+        <pre v-if="status.support.method === 'docker'" class="install__code" tabindex="0"><code>docker compose pull
+docker compose up -d</code></pre>
         <pre v-else class="install__code" tabindex="0"><code>git pull
 pnpm install
 pnpm build
 pnpm start</code></pre>
+        <p v-if="status.support.method === 'docker'" class="install__text">That downloads the new version's image and starts it. On Laravel Forge, add <code>-f docker-compose.forge.yml</code> after <code>docker compose</code> in both. If you build the image yourself, use <code>git pull</code> and <code>docker compose up -d --build</code> instead.</p>
         <p class="install__text">Download a backup first, above. <a v-if="status.releaseUrl" class="fb-link" :href="status.releaseUrl">Read what changed.</a></p>
       </template>
     </template>
@@ -158,7 +159,7 @@ pnpm start</code></pre>
 .install__steps { color: var(--fb-muted); }
 .install__step--now { color: var(--fb-text); font-weight: 700; }
 .install__code { margin: 0.75rem 0 0; padding: 0.8rem 1rem; border-left: 3px solid var(--fb-text); background: var(--fb-ground); overflow-x: auto; }
-.install__code code, .install__plan code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.875rem; color: var(--fb-text); }
+.install__code code, .install__plan code, .install__text code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.875rem; color: var(--fb-text); }
 .install__failed { margin-top: 0.75rem; padding: 0.75rem 1rem; border-left: 4px solid var(--fb-error); background: var(--fb-ground); }
 .install__failed p { margin: 0; }
 .install__failed summary { margin-top: 0.5rem; cursor: pointer; }

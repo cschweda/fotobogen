@@ -40,7 +40,9 @@ test('a copy in Docker is told the commands to run on the server', async ({ page
   await systemPage(page, { FOTOBOGEN_IN_DOCKER: '1' })
   const panel = page.getByRole('region', { name: 'Install version 9.9.9' })
   await expect(panel).toContainText('This copy runs in Docker. A container cannot replace itself')
-  await expect(panel).toContainText('docker compose up -d --build')
+  // The published image is downloaded, not built.
+  await expect(panel).toContainText('docker compose pull')
+  await expect(panel).toContainText('docker compose up -d')
   await expect(panel.getByRole('button', { name: /Update to version/ })).toHaveCount(0)
   await expectNoAxeViolations(page)
 })
