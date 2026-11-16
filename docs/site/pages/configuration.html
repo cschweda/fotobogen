@@ -252,6 +252,8 @@
 <div class="table"><table>
   <thead><tr><th>Setting</th><th>What it does</th></tr></thead>
   <tbody>
+    <tr><td><code>FOTOBOGEN_NO_QUESTIONS=1</code></td><td>The first start in a terminal asks nothing and uses the defaults. (Nothing is ever asked under pm2, in Docker, or from a script.)</td></tr>
+    <tr><td><code>NO_COLOR=1</code></td><td>Plain text with no colour in the terminal.</td></tr>
     <tr><td><code>FOTOBOGEN_SKIP_PREFLIGHT=1</code></td><td>Starts even when the preflight check fails. At your own risk: the check failed for a reason, and the usual result is a site that runs out of memory or disk while processing a photo.</td></tr>
     <tr><td><code>DOMAIN</code></td><td>Docker quick start only. The domain name Caddy gets an HTTPS certificate for. Left unset, the site is plain HTTP on <code>localhost</code>.</td></tr>
     <tr><td><code>PUID</code>, <code>PGID</code></td><td>Docker only. The user and group that own the files in <code>data</code>. Use what <code>id -u</code> and <code>id -g</code> print; 1000 is the usual first user on Linux.</td></tr>

@@ -12,6 +12,7 @@ interface Status { support: Support, current: string, available: string | null, 
 
 // A demo visitor is not shown this at all (the server refuses), and the page carries on without it.
 const { data: status, refresh } = await useFetch<Status>('/api/admin/update', { onResponseError: () => {} })
+const STARTED = 'The update has started.'
 const confirming = ref(false)
 const problem = ref('')
 const message = ref('')
@@ -29,6 +30,8 @@ async function poll() {
       restarting.value = false
       message.value = `Fotobogen is now version ${status.value.current}.`
     }
+    // "The update has started" is only true while it is under way.
+    if (!status.value.running && message.value === STARTED) message.value = ''
     if (!status.value.running && !status.value.waitingForRestart) stopPolling()
   }
   catch {
@@ -54,7 +57,7 @@ async function install() {
   try {
     status.value = await $fetch<Status>('/api/admin/update', { method: 'POST' })
     confirming.value = false
-    message.value = 'The update has started.'
+    message.value = STARTED
     startPolling()
   }
   catch (error) {

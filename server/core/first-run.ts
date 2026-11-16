@@ -69,6 +69,8 @@ export function readYesNo(answer: string): Read<boolean> {
 export interface AskIo {
   question: (text: string) => Promise<string>
   say: (text: string) => void
+  /** Says that an answer could not be used. Left out, it is said like anything else. */
+  warn?: (text: string) => void
   /** Whether a port can be used right now. Left out, the port is not tried. */
   portIsFree?: (port: number) => Promise<boolean>
 }
@@ -78,7 +80,7 @@ async function until<T>(io: AskIo, text: string, read: (answer: string) => Read<
   for (;;) {
     const result = await read(await io.question(text))
     if (result.problem === undefined) return result.value as T
-    io.say(`  ${result.problem}`)
+    ;(io.warn ?? io.say)(`  ${result.problem}`)
   }
 }
 

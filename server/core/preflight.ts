@@ -5,6 +5,7 @@
 import { accessSync, constants, existsSync, mkdirSync, readFileSync, statfsSync } from 'node:fs'
 import { arch, platform, totalmem } from 'node:os'
 import { dirname, join } from 'node:path'
+import { painter, type Painter } from './colour.ts'
 import { config } from './config.ts'
 
 export interface Facts {
@@ -215,9 +216,12 @@ export async function gatherFacts(dataDir: string): Promise<Facts> {
 
 export const passed = (checks: Check[]): boolean => checks.every(check => check.level !== 'fail')
 
-/** The report as plain text. With `all` false, only warnings and failures are listed. */
-export function formatReport(checks: Check[], all: boolean): string {
-  const marks = { ok: '  ok  ', note: '  --  ', warn: ' WARN ', fail: ' FAIL ' }
+/**
+ * The report as text. With `all` false, only warnings and failures are
+ * listed. Given a painter, each mark is coloured: green, dim, yellow, red.
+ */
+export function formatReport(checks: Check[], all: boolean, paint: Painter = painter(false)): string {
+  const marks = { ok: paint.green('  ok  '), note: paint.dim('  --  '), warn: paint.yellow(' WARN '), fail: paint.red(' FAIL ') }
   const lines: string[] = []
   for (const check of checks) {
     if (!all && (check.level === 'ok' || check.level === 'note')) continue

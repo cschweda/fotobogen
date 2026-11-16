@@ -313,6 +313,7 @@ docker compose logs app</code></pre>
 <p>On a server, the first start is usually under pm2, where nothing is asked. Run <code>pnpm fotobogen init</code> there before <code>pm2 start</code> to answer the same questions.</p>
 <p><strong>Nothing is asked when nobody is at the keyboard</strong>: under pm2, in Docker, on Laravel Forge, or from a script. Nor when <code>.env</code> already exists, or <code>PORT</code>, <code>SITE_URL</code>, or <code>DEMO_MODE</code> is already set. A server never waits for an answer. To switch the questions off in a terminal too, set <code>FOTOBOGEN_NO_QUESTIONS=1</code>.</p>
 <p>Whether to start with sample photos is asked in the browser, next.</p>
+<p>In a terminal, the machine check and these questions are in colour: green for what is good, yellow for a warning, red for what stops the start. The words <code>ok</code>, <code>WARN</code>, and <code>FAIL</code> are always printed too. Colour is left out of log files, and <code>NO_COLOR=1</code> switches it off.</p>
 
 <h2 id="first-run">The first run</h2>
 <p>However you installed it, you now have an address and a <strong>setup token</strong>: 32 letters and digits that Fotobogen printed when it started. The token proves that the person setting up the site is the person who can see the server.</p>

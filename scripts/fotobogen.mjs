@@ -43,7 +43,8 @@ async function init() {
   if (!atTerminal()) throw new CliError('`fotobogen init` asks questions, so it needs a terminal. Without one, set PORT, SITE_URL, and DEMO_MODE in .env by hand; .env.sample explains each.')
   console.log(`\nSettings for this server. Press Enter to accept what is suggested.\n${existsSync('.env') ? 'Your other settings in .env are kept.\n' : ''}`)
   const answers = await askAndSave('.env')
-  console.log(`\nSaved to .env:\n${summary(answers)}\nRestart Fotobogen for this to take effect.`)
+  const { paint } = await import('./questions.mjs')
+  console.log(`\n${paint.green('Saved to .env:')}\n${summary(answers)}\nRestart Fotobogen for this to take effect.`)
 }
 
 /** Ask for a line without echoing what is typed. */
@@ -253,10 +254,13 @@ async function preflight() {
   const { existsSync: exists } = await import('node:fs')
   if (exists('.env')) process.loadEnvFile('.env')
   const { evaluate, formatReport, gatherFacts, passed } = await import('../server/core/preflight.ts')
+  const { paint } = await import('./questions.mjs')
   const checks = evaluate(await gatherFacts(resolveDataDir(process.env, process.cwd())))
-  console.log(`Fotobogen preflight check\n${formatReport(checks, true)}`)
+  console.log(`${paint.bold('Fotobogen preflight check')}\n${formatReport(checks, true, paint)}`)
   if (!passed(checks)) throw new CliError('\nThis machine is not ready to run Fotobogen. Fix what is marked FAIL above.')
-  console.log('\nThis machine can run Fotobogen.')
+  console.log(checks.some(check => check.level === 'warn')
+    ? paint.yellow('\nThis machine can run Fotobogen. See what is marked WARN above.')
+    : paint.green('\nThis machine can run Fotobogen.'))
 }
 
 /** Installs a released version over this copy. Fotobogen may be running; restart it afterwards. */
@@ -327,6 +331,8 @@ try {
 }
 catch (error) {
   if (!(error instanceof CliError)) throw error
-  console.error(error.message)
+  // Red at a terminal; plain in a log or a pipe.
+  const { colourWanted, painter } = await import('../server/core/colour.ts')
+  console.error(painter(colourWanted(process.env, process.stderr.isTTY === true)).red(error.message))
   process.exitCode = 1
 }

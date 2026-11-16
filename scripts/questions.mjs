@@ -5,9 +5,13 @@
 // What is asked, and when, is decided in server/core/first-run.ts.
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { createInterface } from 'node:readline'
+import { colourWanted, painter } from '../server/core/colour.ts'
 import { config } from '../server/core/config.ts'
 import { askFirstRun, envWith } from '../server/core/first-run.ts'
 import { choosePort } from '../server/core/instances.ts'
+
+/** Colour for what is printed, when it is going to a terminal. */
+export const paint = painter(colourWanted(process.env, process.stdout.isTTY === true))
 
 /** True when someone is at the keyboard. FOTOBOGEN_ASSUME_TERMINAL exists for the test suite, which has no terminal. */
 export const atTerminal = () => (process.stdin.isTTY === true && process.stdout.isTTY === true) || process.env.FOTOBOGEN_ASSUME_TERMINAL === '1'
@@ -33,7 +37,7 @@ export async function askAndSave(envPath, host = config.server.host) {
     if (waiting) waiting('')
   })
   const question = async (text) => {
-    process.stdout.write(text)
+    process.stdout.write(paint.bold(text))
     if (typed.length > 0) return typed.shift()
     if (closed) return ''
     return await new Promise((answered) => {
@@ -47,6 +51,7 @@ export async function askAndSave(envPath, host = config.server.host) {
     const answers = await askFirstRun({
       question,
       say: text => console.log(text),
+      warn: text => console.log(paint.red(text)),
       portIsFree: async port => !('error' in await choosePort(port, true, host, 1)),
     })
     writeFileSync(envPath, envWith(existsSync(envPath) ? readFileSync(envPath, 'utf8') : null, answers))
@@ -62,6 +67,6 @@ export function summary(answers) {
   return [
     `  Port:        ${answers.port ?? '5150, or the next free one'}`,
     `  Address:     ${answers.siteUrl ?? 'not set'}`,
-    `  Demo mode:   ${answers.demoMode ? 'on' : 'off'}`,
+    `  Demo mode:   ${answers.demoMode ? paint.yellow('on') : 'off'}`,
   ].join('\n')
 }

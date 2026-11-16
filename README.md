@@ -9,12 +9,12 @@ A self-hosted publishing platform for photographs: install it on a small
 server, answer a few first-run questions, and get a public photo site with an
 admin backend. Think "WordPress for photos".
 
-**Version 1.2.0** (16 November 2026). It installs on macOS, Windows, and
+**Version 1.3.0** (16 November 2026). It installs on macOS, Windows, and
 Linux; takes your photographs, resizes them for every screen, and publishes
 them on a site you can restyle, reword, and put under your own name, with an
 admin behind a login. Version 1.0.0 was the first release; 1.1.0 added
 updating from the admin; 1.2.0 tells you in the admin when a new version
-is out.
+is out; 1.3.0 asks a few questions at the first start.
 
 - **What is in it:** [CHANGELOG.md](CHANGELOG.md), also published as
   [Releases](https://fotobogen.com/docs/changelog/).
@@ -353,7 +353,13 @@ A `WARN` lets it run and says what to improve. A line marked `--` is a note,
 not a problem: the pm2 line says whether [pm2](#without-docker-pm2) is
 installed (it is looked for, never run), and reads `ok` when it is. It is
 left out in Docker. After the first run only warnings and failures are
-shown. Run it on its own at any time with
+shown.
+
+In a terminal the report is in colour: `ok` in green, `WARN` in yellow,
+`FAIL` and anything that stops the start in red. The words are always there
+too, so nothing depends on telling the colours apart. Colour is left out
+when the output is not a terminal (a log file, pm2, Docker), and can be
+switched off with `NO_COLOR=1`. Run it on its own at any time with
 `pnpm preflight`.
 
 | Check | Stops the start when | Warns when |
@@ -374,7 +380,7 @@ distributions may well work, but are reported as untested.
 `/api/health` needs no login and answers `GET` and `HEAD`:
 
 ```json
-{ "status": "ok", "version": "1.2.0", "database": "ok", "queue": { "depth": 0 }, "uptime": 86400 }
+{ "status": "ok", "version": "1.3.0", "database": "ok", "queue": { "depth": 0 }, "uptime": 86400 }
 ```
 
 It returns `200` when the app and its database are working and `503` when
@@ -1229,6 +1235,8 @@ read by `docker compose`.
 | `DEMO_MODE` | off | Set to `1` on a site meant to show Fotobogen off. Anyone can then log in as `demo` / `demo` and look round the admin, read-only (see [Demo mode](#demo-mode)) |
 | `MAX_UPLOAD_MB` | `50` | Largest upload, in megabytes. If you raise it, raise the proxy's limit too (`max_size` in `deploy/Caddyfile`, `client_max_body_size` in nginx) |
 | `MAX_MEGAPIXELS` | `100` | Largest image, in megapixels (width times height) |
+| `FOTOBOGEN_NO_QUESTIONS` | off | Set to `1` so the first start in a terminal asks nothing and uses the defaults |
+| `NO_COLOR` | off | Set to `1` for plain text with no colour in the terminal |
 | `FOTOBOGEN_SKIP_PREFLIGHT` | off | Set to `1` to start even when the preflight check fails. At your own risk |
 | `WEBHOOKS_ALLOW_PRIVATE` | off | Set to `1` to let webhooks call this machine or a private network |
 | `TRUST_PROXY` | off | Set to `1` only when the app is reachable solely through your own reverse proxy. It makes the login limit use the visitor's address from `X-Forwarded-For`. The shipped Docker and pm2 files set it |
