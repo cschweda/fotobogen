@@ -120,6 +120,32 @@ describe('backup and restore', () => {
     expect(cli(data, ['backup'])).toMatchObject({ code: 1, out: expect.stringContaining('No Fotobogen database') })
   })
 
+  it('refuses a staged backup made by a newer version, and says so', async () => {
+    const yazl = (await import('yazl')).default
+    const { createWriteStream } = await import('node:fs')
+    const server = await startServer()
+    try {
+      await completeSetup(server, { siteTitle: 'Still Here' })
+      await server.stop()
+      const manifest = { format: 1, app: 'fotobogen', appVersion: '99.0.0', createdAt: 'x', migrations: ['0000_initial', '9999_from_the_future'], photos: 0, originalsBytes: 0 }
+      const zip = new yazl.ZipFile()
+      zip.addBuffer(Buffer.from(JSON.stringify(manifest)), 'manifest.json')
+      zip.addBuffer(backup, 'fotobogen.db')
+      zip.end()
+      await new Promise(done => zip.outputStream.pipe(createWriteStream(join(server.dataDir, 'restore-pending.zip'))).on('close', done))
+
+      await server.restart()
+      expect(server.output()).toContain('made by a newer version of Fotobogen (99.0.0)')
+      expect(await (await get(server, '/api/site')).json()).toMatchObject({ title: 'Still Here' })
+      const left = readdirSync(server.dataDir)
+      expect(left.some(name => name.startsWith('restore-failed-'))).toBe(true)
+      expect(left.some(name => name.startsWith('before-restore-'))).toBe(false)
+    }
+    finally {
+      await server.stop()
+    }
+  })
+
   it('still starts, with its own data, when a staged restore turns out to be unusable', async () => {
     const yazl = (await import('yazl')).default
     const { createWriteStream } = await import('node:fs')

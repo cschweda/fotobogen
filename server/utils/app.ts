@@ -4,7 +4,7 @@ import Database from 'better-sqlite3'
 import { existsSync, mkdirSync, renameSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { drizzle, type BetterSQLite3Database } from 'drizzle-orm/better-sqlite3'
-import { applyRestore, PENDING_RESTORE } from '../core/backup.ts'
+import { applyRestore, inspectBackup, PENDING_RESTORE } from '../core/backup.ts'
 import { applyMigrations, type Migration } from '../core/migrate.ts'
 import { dataPaths, ensureDataDirs, resolveDataDir, type DataPaths } from '../core/paths.ts'
 import { loadOrCreateSecret } from '../core/secret.ts'
@@ -49,6 +49,10 @@ async function boot(loadMigrations: () => Promise<Migration[]>, loadSkins: () =>
   const pending = join(paths.root, PENDING_RESTORE)
   if (existsSync(pending)) {
     try {
+      // The same check as a backup uploaded in the admin or restored from the
+      // command line gets: one made by a newer version is not restored.
+      const inspected = await inspectBackup(pending, (await loadMigrations()).map(migration => migration.name))
+      if (!inspected.ok) throw new Error(inspected.message)
       const restored = await applyRestore(paths, pending)
       rmSync(pending, { force: true })
       console.log(`\nRestored a backup with ${restored.photos} photos. What was here before is kept in ${restored.keptIn}.`)

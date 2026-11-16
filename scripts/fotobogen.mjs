@@ -218,7 +218,6 @@ const option = (args, name) => {
 /** `module new` and `module test`, for people writing modules. Needs a source checkout. */
 async function moduleTools(args) {
   const [action, target] = args
-  const { existsSync: exists } = await import('node:fs')
   const { join } = await import('node:path')
   const { scaffoldModule, testModule } = await import('../server/modules/devtools.ts')
   const paths = dataPaths(resolveDataDir(process.env, process.cwd()))
@@ -251,8 +250,6 @@ async function moduleTools(args) {
 
 /** The same check the server runs before it starts, with every line shown. */
 async function preflight() {
-  const { existsSync: exists } = await import('node:fs')
-  if (exists('.env')) process.loadEnvFile('.env')
   const { evaluate, formatReport, gatherFacts, passed } = await import('../server/core/preflight.ts')
   const { paint } = await import('./questions.mjs')
   const checks = evaluate(await gatherFacts(resolveDataDir(process.env, process.cwd())))
@@ -296,6 +293,10 @@ async function update(args) {
 }
 
 const [command, ...args] = process.argv.slice(2)
+// The settings the server uses, DATA_DIR above all: a backup, a restore, or a
+// new password must go to the same data folder the site is running on.
+// What is set in the environment still comes first.
+if (existsSync('.env')) process.loadEnvFile('.env')
 try {
   if (command === 'reset-admin') {
     await resetAdmin(args)

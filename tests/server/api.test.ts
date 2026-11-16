@@ -17,6 +17,13 @@ describe('the public API', () => {
 
   const PUBLIC = ['/api/site', '/api/photos', '/api/photos/harbour', '/api/albums', '/api/slideshow']
 
+  it('lets a script on another site read a photo\'s picture', async () => {
+    const { tiles } = await (await get(server, '/api/photos')).json() as { tiles: { thumb: { url: string } }[] }
+    const response = await get(server, tiles[0]!.thumb.url, { origin: 'https://elsewhere.example' })
+    expect(response.status).toBe(200)
+    expect(response.headers.get('access-control-allow-origin')).toBe('*')
+  })
+
   it('can be read from a browser on any other site, and says which version of itself it is', async () => {
     for (const path of PUBLIC) {
       const response = await get(server, path, { origin: 'https://elsewhere.example' })
