@@ -7,14 +7,22 @@
 # emulating ARM, and the emulated build of 1.1.0 hung for six hours until
 # GitHub cancelled it. A build that takes longer than 30 minutes now stops.
 #
-# "Run workflow" (workflow_dispatch) builds both without publishing
-# anything, to check that the image still builds.
+# Run by hand ("Run workflow", or `gh workflow run release.yml`):
+#   - with no tag: builds both without publishing anything, to check that
+#     the image still builds;
+#   - with a tag (`-f tag=v1.1.0`): builds that tag and publishes it, for a
+#     release whose own run failed.
 name: Release image
 
 on:
   push:
     tags: ["v*"]
   workflow_dispatch:
+    inputs:
+      tag:
+        description: "A version tag to build and publish (v1.2.3). Leave empty to build without publishing."
+        required: false
+        default: ""
 
 permissions:
   contents: read
@@ -22,6 +30,8 @@ permissions:
 
 env:
   IMAGE: ghcr.io/${{ github.repository }}
+  # The tag being released: the one pushed, or the one named when run by hand. Empty means "build only".
+  RELEASE_TAG: ${{ github.event_name == 'push' && github.ref_name || inputs.tag }}
 
 jobs:
   build:
@@ -37,7 +47,14 @@ jobs:
           - arch: arm64
             runner: ubuntu-24.04-arm
     steps:
+      - name: Check the tag is a version
+        if: env.RELEASE_TAG != ''
+        run: |
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]] || { echo "\"$RELEASE_TAG\" is not a version tag like v1.2.3"; exit 1; }
       - uses: actions/checkout@v4
+        with:
+          # The tag's own files, whichever way the run was started.
+          ref: ${{ env.RELEASE_TAG != '' && format('refs/tags/{0}', env.RELEASE_TAG) || github.ref }}
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
@@ -52,7 +69,7 @@ jobs:
       # A tag: build and push this platform's image by its digest; the "publish"
       # job below gathers the two under the version's names.
       - id: build
-        if: github.event_name == 'push'
+        if: env.RELEASE_TAG != ''
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -62,8 +79,8 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.arch }}
           cache-to: type=gha,scope=${{ matrix.arch }},mode=max
 
-      # Run by hand: build only, publish nothing.
-      - if: github.event_name != 'push'
+      # Run by hand with no tag: build only, publish nothing.
+      - if: env.RELEASE_TAG == ''
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -73,12 +90,12 @@ jobs:
           cache-to: type=gha,scope=${{ matrix.arch }},mode=max
 
       - name: Note this platform's digest
-        if: github.event_name == 'push'
+        if: env.RELEASE_TAG != ''
         run: |
           mkdir -p "$RUNNER_TEMP/digests"
           digest="${{ steps.build.outputs.digest }}"
           touch "$RUNNER_TEMP/digests/${digest#sha256:}"
-      - if: github.event_name == 'push'
+      - if: env.RELEASE_TAG != ''
         uses: actions/upload-artifact@v4
         with:
           name: digest-${{ matrix.arch }}
@@ -88,7 +105,7 @@ jobs:
 
   publish:
     name: publish
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' || inputs.tag != ''
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -109,10 +126,10 @@ jobs:
         with:
           images: ${{ env.IMAGE }}
           tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{version}},value=${{ env.RELEASE_TAG }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ env.RELEASE_TAG }}
             # `latest` moves only on full releases, not on tags like v1.0.0-rc.1
-            type=raw,value=latest,enable=${{ !contains(github.ref_name, '-') }}
+            type=raw,value=latest,enable=${{ !contains(env.RELEASE_TAG, '-') }}
       - name: Publish both platforms under the version's names
         working-directory: ${{ runner.temp }}/digests
         run: |
