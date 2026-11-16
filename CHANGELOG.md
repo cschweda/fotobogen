@@ -11,9 +11,17 @@ is built from this file.
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [1.3.2] - 2026-11-16
+
 ### Fixed
 
 - After **Check for updates** found a newer version, the System page said so but did not offer to install it until the page was reloaded. The offer now appears at once.
+
+### Upgrading from 1.3.1
+
+**Admin, System, Update to version 1.3.2** (reload the page if the button is not there after checking), or `pnpm fotobogen update`. Docker: `docker compose pull`, then `docker compose up -d`.
 
 ## [1.3.1] - 2026-11-16
 
@@ -176,6 +184,7 @@ Later entries list only what changed.
 - One admin account only. No comments, no shop, no storage outside the server's own disk.
 
 [Unreleased]: https://github.com/cschweda/fotobogen/commits/staging
+[1.3.2]: https://github.com/cschweda/fotobogen/releases/tag/v1.3.2
 [1.3.1]: https://github.com/cschweda/fotobogen/releases/tag/v1.3.1
 [1.3.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.3.0
 [1.2.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.2.0
