@@ -60,6 +60,7 @@
         <li><a href="#hand">Updating by hand</a></li>
         <li><a href="#check">Checking that it worked</a></li>
         <li><a href="#back">Going back</a></li>
+        <li><a href="#no-button">If the System page shows no Update button</a></li>
         <li><a href="#first">From version 1.0.0</a></li>
       </ul>
     </div>
@@ -150,6 +151,11 @@ docker compose up -d</code></pre>
 
 <h2 id="back">Going back</h2>
 <p>Changes to the database only go forward, so an older version cannot open a database that a newer one has changed. To go back, install the older version and restore the backup you made before updating. The steps are in the <a href="https://github.com/cschweda/fotobogen/blob/main/docs/UPGRADING.md#going-back">upgrade policy</a>, which also says what a version number promises.</p>
+
+<h2 id="no-button">If the System page shows no Update button</h2>
+<p>Versions 1.1.0 to 1.3.0 had a fault: a site that had updated itself from the admin once went on showing <strong>Updated to version X</strong> and did not offer the next update there. The note and the check still worked. If that is your site, update once from a terminal, in Fotobogen's folder on the server, then restart it:</p>
+<pre tabindex="0"><code>pnpm fotobogen update</code></pre>
+<p>From version 1.3.1 on, the button is back.</p>
 
 <h2 id="first">From version 1.0.0</h2>
 <p>Version 1.0.0 cannot update itself, and its System page links to the release instead of offering a button. Update it once <a href="#hand">by hand</a>; from then on the admin can do it.</p>

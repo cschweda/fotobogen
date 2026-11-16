@@ -143,9 +143,14 @@ describe('telling the owner about an update', () => {
   it('checks straight away when the owner says yes, and reports what it finds', async () => {
     expect(await (await send({ automatic: true })).json()).toMatchObject({ decided: true, automatic: true, latest: '9.2.0', newer: true })
     expect(asked).toBe(1)
-    // Saying yes again a moment later does not ask GitHub again.
-    await send({ automatic: true })
-    expect(asked).toBe(1)
+    // A yes always asks, however lately it last checked: "this is the latest version" must be true when it is said.
+    release = { tag_name: 'v9.2.1', html_url: 'https://github.com/cschweda/fotobogen/releases/tag/v9.2.1' }
+    expect(await (await send({ automatic: true })).json()).toMatchObject({ latest: '9.2.1', newer: true })
+    expect(asked).toBe(2)
+    // Opening the admin afterwards does not ask again that day.
+    await known()
+    await new Promise(wait => setTimeout(wait, 300))
+    expect(asked).toBe(2)
   })
 
   it('forgets, at every login, that the note about a new version was closed', async () => {
