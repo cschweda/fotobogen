@@ -13,6 +13,17 @@ is built from this file.
 
 Nothing yet.
 
+## [1.3.1] - 2026-11-16
+
+### Fixed
+
+- **A site that had updated itself from the admin once could not do it again from there.** The System page went on showing "Updated to version X" for the last update and hid the button for the next one. The note and the check still worked, and so did `pnpm fotobogen update`. Found by updating a real 1.2.0 site to 1.3.0.
+- Answering yes to **Hear about new versions?** (or ticking **Check once a day**) now always checks at that moment. If the site had checked within the day, it could answer "This is the latest version" from what it knew then.
+
+### Upgrading from 1.1.0, 1.2.0, or 1.3.0
+
+A site that has never updated itself from the admin: **Admin, System, Update to version 1.3.1**, as usual. A site that has, and so shows no button: run `pnpm fotobogen update` in Fotobogen's folder on the server, then restart it. From 1.3.1 on the button is back. Docker is not affected: `docker compose pull`, then `docker compose up -d`.
+
 ## [1.3.0] - 2026-11-16
 
 ### Added
@@ -163,6 +174,7 @@ Later entries list only what changed.
 - One admin account only. No comments, no shop, no storage outside the server's own disk.
 
 [Unreleased]: https://github.com/cschweda/fotobogen/commits/staging
+[1.3.1]: https://github.com/cschweda/fotobogen/releases/tag/v1.3.1
 [1.3.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.3.0
 [1.2.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.2.0
 [1.1.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.1.0

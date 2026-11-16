@@ -98,3 +98,17 @@ test('a copy installed with git is told exactly what updating does, and asked be
   await expect(failed.getByRole('button', { name: 'Update to version 9.9.9' })).toBeVisible()
   await expectNoAxeViolations(page)
 })
+
+test('a site that has already updated itself once is offered the next version, not told again about the last', async ({ page }) => {
+  const server = await systemPage(page, { FOTOBOGEN_IN_DOCKER: '0' })
+  const health = await (await fetch(server.url + '/api/health')).json() as { version: string }
+  // What an earlier update from the admin leaves behind: "done", for the version now running.
+  writeFileSync(join(server.dataDir, 'update-status.json'), JSON.stringify({
+    state: 'done', version: health.version, from: '0.9.0', step: `Version ${health.version} is built and ready`, startedAt: Date.now() - 86_400_000, finishedAt: Date.now() - 86_400_000, error: null, pid: null,
+    log: ['Saving a copy of the database', `Version ${health.version} is built and ready`],
+  }))
+  await page.reload()
+  const panel = page.getByRole('region', { name: 'Install version 9.9.9' })
+  await expect(panel.getByRole('button', { name: 'Update to version 9.9.9' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Updated to version/ })).toHaveCount(0)
+})
