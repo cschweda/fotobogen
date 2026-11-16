@@ -1,7 +1,7 @@
 import { createServer, type Server } from 'node:http'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { get, startServer, type TestServer } from '../helpers/server.ts'
-import { completeSetup, query } from '../helpers/setup.ts'
+import { ADMIN, completeSetup, query } from '../helpers/setup.ts'
 
 interface Status { current: string, latest: string | null, url: string | null, newer: boolean, checkedAt: number | null, problem: string | null, automatic: boolean }
 
@@ -100,5 +100,77 @@ describe('checking for updates', () => {
     await known()
     await expect.poll(() => asked.length, { timeout: 5_000 }).toBe(before + 1)
     expect(await check({ automatic: false })).toMatchObject({ automatic: false })
+  })
+})
+
+interface Announced extends Status { decided: boolean }
+
+describe('telling the owner about an update', () => {
+  let github: Server
+  let release: unknown = { tag_name: 'v9.2.0', html_url: 'https://github.com/cschweda/fotobogen/releases/tag/v9.2.0' }
+  let asked = 0
+  let server: TestServer
+  let cookie: string
+  const send = async (body: unknown) => await fetch(server.url + '/api/admin/updates', {
+    method: 'POST', headers: { origin: server.url, cookie, 'content-type': 'application/json' }, body: JSON.stringify(body),
+  })
+  const known = async () => await (await get(server, '/api/admin/updates', { cookie })).json() as Announced
+
+  beforeAll(async () => {
+    github = createServer((_request, response) => {
+      asked++
+      response.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify(release))
+    })
+    await new Promise<void>(listening => github.listen(0, '127.0.0.1', listening))
+    server = await startServer({ env: { UPDATES_URL: `http://127.0.0.1:${(github.address() as { port: number }).port}/latest` } })
+    cookie = await completeSetup(server)
+  })
+  afterAll(async () => {
+    await server.stop()
+    await new Promise(closed => github.close(closed))
+  })
+
+  it('knows the owner has not yet said whether it may check, and asks nobody until they do', async () => {
+    expect(await known()).toMatchObject({ decided: false, automatic: false, newer: false })
+    expect(asked).toBe(0)
+  })
+
+  it('remembers a "no" as an answer, and still asks nobody', async () => {
+    expect(await (await send({ automatic: false })).json()).toMatchObject({ decided: true, automatic: false, newer: false })
+    expect(asked).toBe(0)
+  })
+
+  it('checks straight away when the owner says yes, and reports what it finds', async () => {
+    expect(await (await send({ automatic: true })).json()).toMatchObject({ decided: true, automatic: true, latest: '9.2.0', newer: true })
+    expect(asked).toBe(1)
+    // Saying yes again a moment later does not ask GitHub again.
+    await send({ automatic: true })
+    expect(asked).toBe(1)
+  })
+
+  it('forgets, at every login, that the note about a new version was closed', async () => {
+    // Closing the note is kept in the browser, in a cookie that lasts until the browser is closed. Logging in clears it.
+    const login = await fetch(server.url + '/api/auth/login', { method: 'POST', headers: { origin: server.url, 'content-type': 'application/json', 'cookie': 'fb-update-note=9.2.0' }, body: JSON.stringify(ADMIN) })
+    expect(login.status).toBe(200)
+    const cleared = login.headers.getSetCookie().find(value => value.startsWith('fb-update-note='))
+    expect(cleared).toMatch(/^fb-update-note=;/)
+    expect(cleared).toMatch(/Max-Age=0|Expires=Thu, 01 Jan 1970/)
+  })
+
+  it('lets a demo visitor see the announcement but not answer for the owner', async () => {
+    const demo = await startServer({ env: { DEMO_MODE: '1' } })
+    try {
+      await completeSetup(demo)
+      const login = await fetch(demo.url + '/api/auth/login', { method: 'POST', headers: { origin: demo.url, 'content-type': 'application/json' }, body: JSON.stringify({ username: 'demo', password: 'demo' }) })
+      const demoCookie = login.headers.getSetCookie().map(value => value.split(';')[0]).join('; ')
+      expect((await get(demo, '/api/admin/updates', { cookie: demoCookie })).status).toBe(200)
+      for (const body of [{ automatic: true }, { automatic: false }]) {
+        const refused = await fetch(demo.url + '/api/admin/updates', { method: 'POST', headers: { origin: demo.url, cookie: demoCookie, 'content-type': 'application/json' }, body: JSON.stringify(body) })
+        expect(refused.status).toBe(403)
+      }
+    }
+    finally {
+      await demo.stop()
+    }
   })
 })

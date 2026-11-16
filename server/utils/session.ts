@@ -2,7 +2,7 @@
 // Nuxt's built-in session is used with the secret from data/secret passed
 // explicitly, so no environment variable is needed (DESIGN.md section 6).
 import { eq } from 'drizzle-orm'
-import { createError, getRequestHeader, getRequestURL, useSession, type RequestEvent } from 'nuxt/server'
+import { createError, deleteCookie, getRequestHeader, getRequestURL, useSession, type RequestEvent } from 'nuxt/server'
 import { config } from '../core/config.ts'
 import { isLoopbackHost } from '../core/request.ts'
 import { users } from '../db/schema.ts'
@@ -44,9 +44,16 @@ function adminSession(event: RequestEvent) {
   })
 }
 
+/**
+ * The note about a new version can be closed for a session; the browser keeps
+ * that in this cookie. A new login starts a new session, so the note is shown again.
+ */
+export const UPDATE_NOTE_COOKIE = 'fb-update-note'
+
 export async function signIn(event: RequestEvent, user: { id: string, sessionVersion: number }): Promise<void> {
   const session = await adminSession(event)
   await session.update({ uid: user.id, sv: user.sessionVersion })
+  deleteCookie(event, UPDATE_NOTE_COOKIE, { path: '/' })
   event.context.admin = undefined
 }
 
@@ -54,6 +61,7 @@ export async function signIn(event: RequestEvent, user: { id: string, sessionVer
 export async function signInDemo(event: RequestEvent): Promise<void> {
   const session = await adminSession(event)
   await session.update({ uid: undefined, sv: undefined, demo: true })
+  deleteCookie(event, UPDATE_NOTE_COOKIE, { path: '/' })
   event.context.admin = undefined
 }
 

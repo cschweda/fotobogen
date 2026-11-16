@@ -20,6 +20,7 @@ export const PAGES = [
   { slug: 'installation', file: 'installation', nav: 'Installation' },
   { slug: 'configuration', file: 'configuration', nav: 'Configuration' },
   { slug: 'usage', file: 'usage', nav: 'Using Fotobogen' },
+  { slug: 'updating', file: 'updating', nav: 'Updating' },
   { slug: 'customization', file: 'customization', nav: 'Customization' },
   { slug: 'skins', file: 'skins', nav: 'Skins' },
   { slug: 'writing-a-skin', file: 'writing-a-skin', nav: 'Writing a skin' },

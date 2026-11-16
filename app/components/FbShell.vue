@@ -20,6 +20,8 @@ useHead({
       </component>
       <span v-if="context" class="shell__context">{{ context }}</span>
     </header>
+    <!-- On a wide screen this sits in the bottom corner; on a narrow one, here, above the page. -->
+    <UpdateToast v-if="nav" />
     <div :class="{ shell__columns: nav }">
       <AdminNav v-if="nav" class="shell__nav" />
       <main class="shell__main">

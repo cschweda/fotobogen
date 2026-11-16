@@ -1,6 +1,6 @@
 <!-- Says when a newer version of Fotobogen has been released, and lets the
-     admin ask. Shown on the dashboard (only when there is news) and in full
-     on the System page. -->
+     admin ask. Shown in full on the System page; the other admin pages
+     carry the short note in UpdateToast. -->
 <script setup lang="ts">
 const props = defineProps<{ full?: boolean }>()
 

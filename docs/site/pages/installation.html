@@ -30,7 +30,7 @@
 </table></div>
 <ul>
   <li><strong>Memory.</strong> Fotobogen will not start with less than 900 MB available to it, and warns below 2 GB when there is no swap. It resizes one photo at a time to stay small: a 40-megapixel photo was processed inside a container limited to 1 GB, using about 250 MB at its peak.</li>
-  <li><strong>Building needs more than running.</strong> Installing from source, or building the Docker image, takes more memory than the running site. On a 1 GB server add swap first (the commands are <a href="#swap">below</a>). A 2 GB server needs none.</li>
+  <li><strong>Building needs more than running.</strong> Installing from source takes more memory than the running site. On a 1 GB server add swap first (the commands are <a href="#swap">below</a>). A 2 GB server needs none, and neither does a Docker install, which downloads an image that is already built.</li>
   <li><strong>Disk.</strong> It will not start with less than 500 MB free and warns below 2 GB. Most of the space goes to your photographs as uploaded; the resized copies are smaller. A backup zip is about the size of your originals, so leave room for one.</li>
   <li><strong>Other Linux distributions</strong> may well work but are reported as untested.</li>
 </ul>
@@ -111,14 +111,15 @@ cp .env.sample .env</code></pre>
   <li><strong>Edit <code>.env</code></strong> (<code>nano .env</code>) and set your domain by removing the <code>#</code> from this line and changing the name:
 <pre><code>DOMAIN=photos.example.com</code></pre>
   If <code>id -u</code> prints something other than <code>1000</code>, also set <code>PUID</code> and <code>PGID</code> to what <code>id -u</code> and <code>id -g</code> print.</li>
-  <li><strong>Build and start.</strong> No Docker image has been published yet, so the image is built on your server. Open <code>docker-compose.yml</code>, find the line <code># build: .</code> under <code>app:</code>, and remove the <code>#</code> and the space after it. Then:
-<pre><code>docker compose up -d --build</code></pre>
-  The first build takes several minutes.</li>
+  <li><strong>Start it:</strong>
+<pre><code>docker compose up -d</code></pre>
+  This downloads the published image (<code>ghcr.io/cschweda/fotobogen</code>) and Caddy, and starts both. Nothing is built on your server.</li>
   <li><strong>Read the setup token:</strong>
 <pre><code>docker compose logs app</code></pre></li>
 </ol>
 <p>Open <code>https://photos.example.com</code> (your own domain) and go on to <a href="#first-run">the first run</a>.</p>
-<p>Docker starts Fotobogen again by itself after a reboot. To update later: <code>git pull</code>, then <code>docker compose up -d --build</code>.</p>
+<p>Docker starts Fotobogen again by itself after a reboot. To update later: <code>docker compose pull</code>, then <code>docker compose up -d</code>.</p>
+<p>To build the image yourself instead of downloading it, remove the <code>#</code> from <code># build: .</code> in <code>docker-compose.yml</code> and add <code>--build</code> to the command. On a 1 GB server that needs the swap from step 2.</p>
 
 <h2 id="docker-forge">Docker on a Laravel Forge server</h2>
 <p>For a server that <a href="https://forge.laravel.com">Laravel Forge</a> set up. There, nginx already answers on ports 80 and 443 and Forge manages the certificate, so Fotobogen runs alone in Docker, listening only on the server itself, and Forge's nginx passes visitors to it.</p>
@@ -128,18 +129,17 @@ cp .env.sample .env</code></pre>
 sudo usermod -aG docker forge</code></pre>
   Log out and in again. On a 1 GB server, <a href="#swap">add swap</a> too.</li>
   <li><strong>Create the site in Forge</strong> with your domain, and install the repository <code>cschweda/fotobogen</code> into it (branch <code>main</code>). If Forge offers to install Composer dependencies, decline; there are none.</li>
-  <li><strong>Start Fotobogen.</strong> In the site's folder (<code>/home/forge/photos.example.com</code>), open <code>docker-compose.forge.yml</code> and remove the <code>#</code> from <code># build: .</code>, as no image has been published yet. Then:
+  <li><strong>Start Fotobogen.</strong> In the site's folder (<code>/home/forge/photos.example.com</code>):
 <pre><code>mkdir -p data
-PUID=$(id -u) PGID=$(id -g) docker compose -f docker-compose.forge.yml up -d --build</code></pre></li>
+PUID=$(id -u) PGID=$(id -g) docker compose -f docker-compose.forge.yml up -d</code></pre>
+  This downloads the published image; nothing is built on your server.</li>
   <li><strong>Point nginx at it.</strong> In Forge, open the site's nginx configuration and paste in the blocks from <a href="https://github.com/cschweda/fotobogen/blob/main/deploy/forge-nginx.conf"><code>deploy/forge-nginx.conf</code></a>, changing the two marked paths to your site's folder.</li>
   <li><strong>Issue the certificate</strong> in Forge (Let's Encrypt).</li>
   <li><strong>Read the setup token:</strong>
 <pre><code>docker compose -f docker-compose.forge.yml logs app</code></pre></li>
 </ol>
 <p>Fotobogen listens on <code>127.0.0.1:5150</code> only. If something else on the server uses that port, set <code>PORT</code> in a <code>.env</code> file in the site's folder and use the same number in the nginx configuration.</p>
-<div class="note">
-  <p><strong>The deploy script.</strong> <a href="https://github.com/cschweda/fotobogen/blob/main/deploy/forge-deploy.sh"><code>deploy/forge-deploy.sh</code></a> is written for Forge's Deploy Script box, but it downloads a published image, and there is none yet. Until the first release, update by running the command in step 3 again after <code>git pull</code>.</p>
-</div>
+<p><strong>The deploy script.</strong> Paste <a href="https://github.com/cschweda/fotobogen/blob/main/deploy/forge-deploy.sh"><code>deploy/forge-deploy.sh</code></a> into Forge's Deploy Script box. Forge's Deploy button then downloads the newest published image and restarts Fotobogen with it.</p>
 
 <h2 id="linux">Linux without Docker</h2>
 <p>For Ubuntu or Debian, running Fotobogen directly with Node.js, kept alive by <a href="https://pm2.keymetrics.io">pm2</a>, behind nginx.</p>
@@ -236,8 +236,8 @@ pm2 reload ecosystem.config.cjs --update-env</code></pre>
 cd fotobogen
 mkdir -p data
 cp .env.sample .env</code></pre>
-<p>Leave <code>DOMAIN</code> commented out in <code>.env</code>. In <code>docker-compose.yml</code>, remove the <code>#</code> from <code># build: .</code>, then:</p>
-<pre><code>docker compose up -d --build
+<p>Leave <code>DOMAIN</code> commented out in <code>.env</code>, then:</p>
+<pre><code>docker compose up -d
 docker compose logs app</code></pre>
 <p>The site is at <code>http://localhost</code>. The image has been built and run on macOS. On Windows this needs Docker Desktop or WSL and has not been tested.</p>
 
@@ -275,28 +275,4 @@ docker compose logs app</code></pre>
 <p>The address <code>/api/health</code> needs no login and answers <code>200</code> when the site and its database are working, and <code>503</code> when they are not. Point <a href="https://uptimerobot.com">UptimeRobot</a> or a similar monitor at <code>https://your-site.example/api/health</code>.</p>
 
 <h2 id="updating">Updating</h2>
-<p>Download a backup first (<a href="/docs/faq/#backups">how</a>). Under <strong>Admin, System</strong>, <strong>Check for updates</strong> asks GitHub whether a newer release exists; it does not check by itself unless you tick <strong>Check once a day</strong>.</p>
-
-<h3>From the admin</h3>
-<p>When a newer release is found, the System page offers to install it. This arrived in version 1.1.0; a site on 1.0.0 is brought to 1.1.0 by hand, below, and can use it from then on.</p>
-<div class="table"><table>
-  <thead><tr><th>Installed with</th><th>What the System page does</th></tr></thead>
-  <tbody>
-    <tr><td>git and pm2</td><td><strong>Update to version X</strong>: fetches, builds, and restarts by itself</td></tr>
-    <tr><td>git, started with <code>pnpm start</code></td><td><strong>Update to version X</strong>: fetches and builds; you then restart it on the server</td></tr>
-    <tr><td>Docker</td><td>Shows the commands to run on the server. A container cannot replace itself.</td></tr>
-  </tbody>
-</table></div>
-<p>It saves a copy of the database, fetches the release, installs its packages, and builds it, showing each step. The build takes a few minutes and needs about 2 GB of memory, counting swap; the site may be slow for a minute or two. <strong>If any step fails, the old version is put back</strong> and the site carries on as it was. Photographs are never touched.</p>
-<p>From a terminal, the same is <code>pnpm fotobogen update</code>, followed by a restart.</p>
-
-<h3>By hand</h3>
-<div class="table"><table>
-  <thead><tr><th>Installed with</th><th>Update with</th></tr></thead>
-  <tbody>
-    <tr><td>Node.js on a Mac or PC</td><td><code>git pull</code>, <code>pnpm install</code>, <code>pnpm build</code>, <code>pnpm start</code></td></tr>
-    <tr><td>Node.js and pm2</td><td><code>scripts/rebuild.sh</code></td></tr>
-    <tr><td>Docker</td><td><code>git pull</code>, then the same <code>docker compose … up -d --build</code> you installed with</td></tr>
-  </tbody>
-</table></div>
-<p>Changes to the database are applied by themselves when the new version starts.</p>
+<p>Updating an installation you already run has <a href="/docs/updating/">a page of its own</a>: how you hear that a new version is out, updating from the admin, updating by hand, and going back. In short: a copy installed with git updates from <strong>Admin, System</strong>; Docker updates with <code>docker compose pull</code>, then <code>docker compose up -d</code>.</p>
