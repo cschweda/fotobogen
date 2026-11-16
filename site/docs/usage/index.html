@@ -89,6 +89,7 @@
     <tr><td><strong>Search and sharing</strong></td><td>What search engines and shared links show</td></tr>
     <tr><td><strong>Settings</strong></td><td>Title, layout, privacy, licence, slideshow</td></tr>
     <tr><td><strong>System</strong></td><td>Backup, restore, version, updates</td></tr>
+    <tr><td><strong>Webhooks</strong></td><td>Telling another program when a photo is added, published, or deleted</td></tr>
     <tr><td><strong>API tokens</strong></td><td>Letting a script or another program upload</td></tr>
   </tbody>
 </table></div>
@@ -102,7 +103,7 @@
   <li><strong>Size:</strong> up to 50 MB and 100 megapixels each. AVIF is held to 16 megapixels, WebP to 60, and interlaced PNG to 40, because those need far more memory to open. A larger one is refused with a note to upload a JPEG instead.</li>
   <li><strong>Duplicates:</strong> the same file is not stored twice. The page names the photo that already has it.</li>
   <li><strong>Your file is kept untouched.</strong> Fotobogen makes resized copies for the web (up to 2560 pixels on the long side) and never enlarges anything.</li>
-  <li><strong>Processing</strong> happens one photo at a time in the background, so you can keep uploading. A photo that cannot be processed after three tries is marked failed, with the reason and a <strong>Try again</strong> button.</li>
+  <li><strong>Processing</strong> happens one photo at a time in the background, so you can keep uploading. A photo that cannot be processed after three tries is marked failed, with the reason and a <strong>Try again</strong> button, here and on the photo's own page in the library.</li>
 </ul>
 <p>Once processed, a photo is on your site, unless you have set new uploads to start as drafts.</p>
 
@@ -130,14 +131,14 @@
 
 <h3>Links to a photo</h3>
 <p>Further down the same page is a <strong>Links</strong> panel: the full address of the photo's page, the address of each size of the picture, and a line of HTML that shows the photo linked to its page. Each has a <strong>Copy</strong> button. Use them in an email, a post, or another website.</p>
-<p>The pictures are public files: anyone with a picture's address can open it, with no login, and any website can show it. Nothing needs setting up for that (no CORS configuration); Fotobogen already tells browsers that other sites may read its photos. The links begin with your site's address. On your own machine they begin with <code>http://localhost:5150</code>, which works only there, until you set the address under <strong>Admin, Search and sharing</strong> or as <code>SITE_URL</code> on the server.</p>
+<p>The pictures are public files: anyone with a picture's address can open it, with no login, and any website can show it. Nothing needs setting up for that (no CORS configuration); Fotobogen tells browsers that other sites may read its photos. Nothing checks who asks for a picture, either: its address has a long name that cannot be guessed, and keeps working for anyone who has it, even after the photo is hidden, until the photo is deleted or rendered again. The links begin with your site's address. On your own machine they begin with <code>http://localhost:5150</code>, which works only there, until you set the address under <strong>Admin, Search and sharing</strong> or as <code>SITE_URL</code> on the server.</p>
 
 <h2 id="publishing">Publishing, scheduling, and drafts</h2>
 <p>On a photo's page, <strong>Publish</strong> has three choices:</p>
 <ul>
-  <li><strong>Public now.</strong></li>
-  <li><strong>Public from a date and time</strong> you pick, in your own time zone. Until then the photo is in your library but not on the site, the feed, or the sitemap. It appears by itself when the time comes.</li>
-  <li><strong>Hidden</strong>, as a draft.</li>
+  <li><strong>Public</strong>: shown on your site now.</li>
+  <li><strong>Scheduled</strong>: public from a date and time you pick, in your own time zone. Until then the photo is in your library but not on the site, the feed, or the sitemap. It appears by itself when the time comes.</li>
+  <li><strong>Hidden</strong>: a draft only you see.</li>
 </ul>
 <p>In Settings you can make every new upload start as a draft, so nothing is public until you say so.</p>
 
@@ -204,7 +205,7 @@
 <p><a href="/docs/skins/">Skins</a> change the look, the colours, and light or dark.</p>
 
 <h2 id="samples">Sample photos</h2>
-<p>Fotobogen can download 25 photographs so that a new site has something to show. They come from <a href="https://picsum.photos">Lorem Picsum</a> (Unsplash photographs, credited to their photographers) and are not part of the software. <strong>Overview</strong> always has <strong>Download sample photos</strong>, and <strong>Remove sample photos</strong> deletes all of them, and only them.</p>
+<p>Fotobogen can download 25 photographs so that a new site has something to show. They come from <a href="https://picsum.photos">Lorem Picsum</a> (Unsplash photographs, credited to their photographers) and are not part of the software. <strong>Overview</strong> has <strong>Download sample photos</strong> (<strong>Download the rest</strong> when some are already there), and <strong>Remove sample photos</strong> deletes all of them, and only them.</p>
 
 <h2 id="system">Backups and updates</h2>
 <p><strong>Admin, System</strong> shows the version, what is stored, and the free space, and has <strong>Download a backup</strong>, restore, and <strong>Check for updates</strong>. When a newer release is found, a note on every admin page says so, and the System page can <a href="/docs/updating/">install it for you</a>. Take a backup regularly and keep it somewhere other than the server. <a href="/docs/faq/#backups">Backing up and restoring</a> are covered with the questions.</p>

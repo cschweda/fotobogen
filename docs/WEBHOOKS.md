@@ -14,9 +14,9 @@ A webhook tells another program when something happens on your site, by sending 
 
 | Event | When |
 |---|---|
-| `photo.uploaded` | A photo has been accepted. It may not be processed or public yet. |
+| `photo.uploaded` | A photo has been accepted through the upload page or the API. It is not processed yet and may not be public. Sample photos downloaded by Fotobogen do not send this. |
 | `photo.published` | A photo has become visible to visitors: it finished processing as a public photo, was made public, or its scheduled time arrived (checked once a minute). |
-| `photo.deleted` | A photo was deleted from the library. |
+| `photo.deleted` | A photo was deleted from the library. **Remove sample photos** does not send this. |
 
 **Send a test** on the Webhooks page sends an event called `test`.
 
@@ -38,7 +38,7 @@ A `POST` with a JSON body:
 }
 ```
 
-`path` and `image` are relative to your site's address. `image` is the 1280 px copy, or `null` for a deleted photo. For a `test`, `photo` is `null`. For more about a photo, read it from the [public API](API.md): `GET /api/photos/<slug>`.
+`path` and `image` are relative to your site's address. `image` is the 1280 px copy (smaller when the photo itself is smaller), or `null` when there is none: for a deleted photo, and for `photo.uploaded`, which is sent before any copy has been made. For a `test`, `photo` is `null`. For more about a photo, read it from the [public API](API.md): `GET /api/photos/<slug>`.
 
 Headers:
 

@@ -379,7 +379,7 @@ The module works. Copy its folder into data/modules/ on a site and restart to in
 <h2 id="together">How yours works with the others</h2>
 <ul>
   <li>A photo's look is a list of transforms, <strong>up to eight</strong>, run one after another. Yours receives whatever the one before it produced, which may already be black and white, or larger than the photo.</li>
-  <li>They run in the order the modules are listed in the admin. The modules that come with Fotobogen go first: film looks, then the film frame, then the watermark. Installed modules follow, in name order.</li>
+  <li>A look made in the admin runs in the order the modules are listed there. (One saved through the API, or named by a skin, runs in the order it is written.) The modules that come with Fotobogen go first: film looks, then the film frame, then the watermark. Installed modules follow, in name order.</li>
   <li>A <a href="/docs/skins/#looks">skin can name your transform</a> as its look for every photo.</li>
 </ul>
 
@@ -389,6 +389,7 @@ The module works. Copy its folder into data/modules/ on a site and restart to in
   <thead><tr><th>Message</th><th>What to fix</th></tr></thead>
   <tbody>
     <tr><td>The folder is called "x" but module.json names the module "y". They must match.</td><td>Rename the folder, or change <code>name</code>.</td></tr>
+    <tr><td>module.json must be a JSON object. / Parameter "x" must be an object. / Each transform must be an object. / Transform "x": "params" must be an object.</td><td>Something that should be written in braces, <code>{ … }</code>, is a list, a string, or a number.</td></tr>
     <tr><td>module.json needs a "name" of lowercase letters, digits, and hyphens.</td><td>No capitals, spaces, or underscores; start with a letter.</td></tr>
     <tr><td>module.json needs a "version". / a "label".</td><td>Add the missing field.</td></tr>
     <tr><td>module.json needs an "entry": the file name of a .mjs or .js file in the module folder.</td><td>Name your code file, and keep it in the same folder.</td></tr>

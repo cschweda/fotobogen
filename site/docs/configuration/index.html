@@ -94,7 +94,7 @@
     <tr><td>Docker</td><td><code>docker compose up -d</code>, which starts the container again with the new values</td></tr>
   </tbody>
 </table></div>
-<p>Two things to know. Under pm2, <code>ecosystem.config.cjs</code> takes the port from <code>PORT</code> in <code>.env</code> (5150 if it is not set); after changing it, run <code>pm2 reload ecosystem.config.cjs --update-env</code>, because pm2 remembers the port it was started with. That file also sets the address to listen on and the data folder, which win over <code>.env</code>. Under Docker, the same <code>.env</code> file is read, and the compose files pass these settings through to the app: the upload limits, <code>SITE_URL</code>, <code>DEMO_MODE</code>, and <code>WEBHOOKS_ALLOW_PRIVATE</code>.</p>
+<p>Two things to know. Under pm2, <code>ecosystem.config.cjs</code> takes the port from <code>PORT</code> in <code>.env</code> (5150 if it is not set); after changing it, run <code>pm2 reload ecosystem.config.cjs --update-env</code>, because pm2 remembers the port it was started with. That file also sets the address to listen on, the data folder, and <code>TRUST_PROXY</code>, which win over <code>.env</code>. Under Docker, the same <code>.env</code> file is read, and the compose files pass these settings through to the app: the upload limits, <code>SITE_URL</code>, <code>DEMO_MODE</code>, and <code>WEBHOOKS_ALLOW_PRIVATE</code>.</p>
 
 <h3>The two parts of the file</h3>
 <div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
@@ -196,7 +196,7 @@
 <ul>
   <li>Fotobogen must be able to create it and write to it, or it will not start.</li>
   <li>Put it on a disk with room for your photographs, and include it in your backups.</li>
-  <li>Two copies of Fotobogen can never share one data folder.</li>
+  <li>Two copies of Fotobogen must never share one data folder. <code>pnpm start</code> refuses when it can see the other copy; it cannot see one run by another user or in another Docker container.</li>
   <li>With Docker, leave this alone: the container always uses <code>/data</code>, which the compose file maps to <code>./data</code> on the host.</li>
 </ul>
 
@@ -273,7 +273,7 @@
 <div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
   <thead><tr><th>Setting</th><th>Value</th><th>What it is</th></tr></thead>
   <tbody>
-    <tr><td><code>queue.maxAttempts</code></td><td><code>3</code></td><td>How many times a photo is tried before it is marked failed. A failed photo shows the reason and a Try again button, and the uploaded file is kept.</td></tr>
+    <tr><td><code>queue.maxAttempts</code></td><td><code>3</code></td><td>How many times a photo is tried before it is marked failed. A failed photo's page in the library shows the reason and a Try again button, and the uploaded file is kept.</td></tr>
   </tbody>
 </table></div>
 
@@ -319,9 +319,9 @@
 <div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
   <thead><tr><th>Setting</th><th>What it does</th></tr></thead>
   <tbody>
-    <tr><td><code>FOTOBOGEN_NO_QUESTIONS=1</code></td><td>The first start in a terminal asks nothing and uses the defaults. (Nothing is ever asked under pm2, in Docker, or from a script.)</td></tr>
-    <tr><td><code>NO_COLOR=1</code></td><td>Plain text with no colour in the terminal.</td></tr>
-    <tr><td><code>FOTOBOGEN_SKIP_PREFLIGHT=1</code></td><td>Starts even when the preflight check fails. At your own risk: the check failed for a reason, and the usual result is a site that runs out of memory or disk while processing a photo.</td></tr>
+    <tr><td><code>FOTOBOGEN_NO_QUESTIONS=1</code></td><td>The first start in a terminal asks nothing and uses the defaults. Give it when starting (<code>FOTOBOGEN_NO_QUESTIONS=1 pnpm start</code>), not in <code>.env</code>: once <code>.env</code> exists nothing is asked anyway. (Nothing is ever asked under pm2, in Docker, or from a script.)</td></tr>
+    <tr><td><code>NO_COLOR=1</code></td><td>Plain text with no colour in the terminal. Give it when starting (<code>NO_COLOR=1 pnpm start</code>), not in <code>.env</code>.</td></tr>
+    <tr><td><code>FOTOBOGEN_SKIP_PREFLIGHT=1</code></td><td>Starts even when the preflight check fails. At your own risk: the check failed for a reason, and the usual result is a site that runs out of memory or disk while processing a photo. It does not reach a Docker container.</td></tr>
     <tr><td><code>DOMAIN</code></td><td>Docker quick start only. The domain name Caddy gets an HTTPS certificate for. Left unset, the site is plain HTTP on <code>localhost</code>.</td></tr>
     <tr><td><code>PUID</code>, <code>PGID</code></td><td>Docker only. The user and group that own the files in <code>data</code>. Use what <code>id -u</code> and <code>id -g</code> print; 1000 is the usual first user on Linux.</td></tr>
   </tbody>

@@ -13,6 +13,36 @@ is built from this file.
 
 Nothing yet.
 
+## [1.3.3] - 2026-11-16
+
+The documentation was read against the code, line by line, looking for anything it promised that the code did not do. This release fixes what that found: five faults in the code, and the places where the documentation said more than was true.
+
+### Fixed
+
+- **`pnpm fotobogen backup`, `restore`, and `reset-admin` ignored `DATA_DIR` set in `.env`.** With the data folder moved that way, backup and reset-admin found no database, and restore put the backup into `./data` and reported success while the running site was untouched. The command-line tool now reads `.env`, as the server does.
+- **A backup left in the data folder as `restore-pending.zip` was not checked for having been made by a newer version**, though one uploaded in the admin or restored from the command line was. It is now refused and set aside, and the site starts as it was.
+- **An older version started on a database that a newer version had changed**, with no warning. It now refuses, says why, and changes nothing.
+- **Photos served by Fotobogen itself did not carry the header that lets a script on another site read them** (`Access-Control-Allow-Origin`), though the documentation said so; only the nginx and Caddy files that come with it added it. A script on another site could not read a picture from a site run with `pnpm start` or behind a plain nginx proxy.
+- **A photo that could not be processed could only be tried again from the Upload page, before leaving it.** Its page in the library now gives the reason and a **Try again** button, and `GET /api/admin/photos/<id>` gives the reason as `error`.
+
+### Changed
+
+- Documentation: Fotobogen contacts another server for sample photos, for the update check and an update, and for webhooks, all only when asked. It no longer calls the sample photos "the only outside request".
+- Documentation: A failed update usually leaves the site as it was, but not always: if rebuilding the old version fails too, the site must be built by hand before a restart.
+- Documentation: Two copies sharing a data folder is refused only when `pnpm start` can see the other copy; it cannot see one run by another user or in another Docker container.
+- Documentation: Under pm2 the port is always set, so a second site needs its own `PORT` and its own name; and `DATA_DIR`, `HOST`, and `TRUST_PROXY` in `.env` are overridden by `ecosystem.config.cjs`.
+- Documentation: A picture's address keeps working for anyone who has it after the photo is hidden, until the photo is deleted or rendered again.
+- Documentation: Choosing a skin that has a look replaces a look you set yourself, unless its box is unticked.
+- Documentation: With "show where photos were taken" on, the download is the file as uploaded: no watermark, and all its camera data.
+- Documentation: A backup bigger than the upload limit cannot be restored through the admin; the Docker commands for backup and restore are given.
+- Documentation: `pnpm dev` is on port 3000; `NO_COLOR` and `FOTOBOGEN_NO_QUESTIONS` are given when starting, not in `.env`; Docker passes on only some settings; `.env.sample` lists `HOST`, `TRUST_PROXY`, and `FOTOBOGEN_SKIP_PREFLIGHT`.
+- Documentation: API, webhooks, modules, and skins: the header's reach, error bodies, what a malformed token answers, which events sample photos send, when a webhook's `image` is null, the order a look's steps run in, and error messages missing from the guides.
+- The website's front page no longer listed the Docker image as planned, or version 1.1.0 in its description.
+
+### Upgrading from 1.3.2
+
+**Admin, System, Update to version 1.3.3**, or `pnpm fotobogen update`. Docker: `docker compose pull`, then `docker compose up -d`. Nothing else is needed. From this version on, going back to an older version needs the backup made before updating: the older version will refuse the database, where before it would have started on it.
+
 ## [1.3.2] - 2026-11-16
 
 ### Fixed
@@ -40,6 +70,7 @@ A site that has never updated itself from the admin: **Admin, System, Update to 
 
 - **Questions at the first start.** The first time `pnpm start` is run in a terminal, after the machine has been checked, it asks for the port, the site's address, and whether to switch demo mode on, and saves the answers to `.env`. Enter accepts what is suggested. It asks once, and never when nobody is at the keyboard (pm2, Docker, a script), so a server does not wait for an answer.
 - `pnpm fotobogen init` asks the same questions again and keeps the rest of `.env`.
+- Documentation: what to change in nginx on a droplet that already runs it, in the README and on the installation page.
 - The preflight check says whether pm2 is installed. It is never a warning: pm2 is only needed to keep a site running on a server.
 - **Colour in the terminal**: green for what is good, yellow for warnings, red for what stops the start, in the preflight check, the questions, and the start-up messages. The words `ok`, `WARN`, and `FAIL` are still printed. Colour is left out of log files and anything that is not a terminal, and `NO_COLOR=1` switches it off.
 
@@ -54,7 +85,6 @@ A site that has never updated itself from the admin: **Admin, System, Update to 
 ### Upgrading from 1.2.0
 
 A copy installed with git: the note in the admin, or **Admin, System, Update to version 1.3.0**. Docker: `docker compose pull`, then `docker compose up -d`. If you edited `ecosystem.config.cjs` (to change the port, say), the update from the admin will stop and say that file is in the way: move the port to `PORT` in `.env`, run `git checkout ecosystem.config.cjs`, and update again.
-- Documentation: what to change in nginx on a droplet that already runs it, in the README and on the installation page.
 
 ## [1.2.0] - 2026-11-16
 
@@ -162,7 +192,7 @@ Later entries list only what changed.
 - One admin account. Passwords of at least 12 characters, hashed with scrypt. Five wrong attempts in 15 minutes lock an address out.
 - **Backup and restore**: one zip of everything that cannot be made again, from the admin or the command line. What a restore replaces is kept, not deleted.
 - **API tokens** for scripts and other programs: shown once, stored as a hash, and limited to uploading or to managing photos. No token can change settings or reach a backup.
-- **Demo mode** (`DEMO_MODE=1`): a `demo` / `demo` login that can open every admin page and change nothing.
+- **Demo mode** (`DEMO_MODE=1`): a `demo` / `demo` login that can look round the admin (tokens, webhooks, and backups stay closed to it) and change nothing.
 - **Update notice**: the admin can check GitHub for a newer release, on request or once a day.
 - No outside requests unless asked for: sample photos, the update check, and webhooks.
 
@@ -184,6 +214,7 @@ Later entries list only what changed.
 - One admin account only. No comments, no shop, no storage outside the server's own disk.
 
 [Unreleased]: https://github.com/cschweda/fotobogen/commits/staging
+[1.3.3]: https://github.com/cschweda/fotobogen/releases/tag/v1.3.3
 [1.3.2]: https://github.com/cschweda/fotobogen/releases/tag/v1.3.2
 [1.3.1]: https://github.com/cschweda/fotobogen/releases/tag/v1.3.1
 [1.3.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.3.0

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Releases | Fotobogen documentation</title>
-<meta name="description" content="What is in each version of Fotobogen. The current version is 1.3.2.">
+<meta name="description" content="What is in each version of Fotobogen. The current version is 1.3.3.">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#f5f5f2" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0a0a0b" media="(prefers-color-scheme: dark)">
@@ -12,7 +12,7 @@
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://fotobogen.com/docs/changelog/">
 <meta property="og:title" content="Releases | Fotobogen documentation">
-<meta property="og:description" content="What is in each version of Fotobogen. The current version is 1.3.2.">
+<meta property="og:description" content="What is in each version of Fotobogen. The current version is 1.3.3.">
 <meta property="og:image" content="https://fotobogen.com/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -54,6 +54,7 @@
     <div class="pages__here">
       <h2>On this page</h2>
       <ul>
+        <li><a href="#v1-3-3">Version 1.3.3, 16 November 2026</a></li>
         <li><a href="#v1-3-2">Version 1.3.2, 16 November 2026</a></li>
         <li><a href="#v1-3-1">Version 1.3.1, 16 November 2026</a></li>
         <li><a href="#v1-3-0">Version 1.3.0, 16 November 2026</a></li>
@@ -67,6 +68,32 @@
 <h1>Releases</h1>
 <p class="lead">What is in each version of Fotobogen, newest first. This page is made from <a href="https://github.com/cschweda/fotobogen/blob/main/CHANGELOG.md">CHANGELOG.md</a> in the source, so the two always agree.</p>
 <p>Version numbers follow <a href="https://semver.org">semantic versioning</a>: a change in the first number means something you rely on changed, the second adds features, and the third only fixes. <a href="https://github.com/cschweda/fotobogen/blob/main/docs/UPGRADING.md">What a version number promises, and how to upgrade.</a></p>
+<h2 id="v1-3-3">Version 1.3.3, 16 November 2026</h2>
+<p>The documentation was read against the code, line by line, looking for anything it promised that the code did not do. This release fixes what that found: five faults in the code, and the places where the documentation said more than was true.</p>
+<h3>Fixed</h3>
+<ul>
+  <li><strong><code>pnpm fotobogen backup</code>, <code>restore</code>, and <code>reset-admin</code> ignored <code>DATA_DIR</code> set in <code>.env</code>.</strong> With the data folder moved that way, backup and reset-admin found no database, and restore put the backup into <code>./data</code> and reported success while the running site was untouched. The command-line tool now reads <code>.env</code>, as the server does.</li>
+  <li><strong>A backup left in the data folder as <code>restore-pending.zip</code> was not checked for having been made by a newer version</strong>, though one uploaded in the admin or restored from the command line was. It is now refused and set aside, and the site starts as it was.</li>
+  <li><strong>An older version started on a database that a newer version had changed</strong>, with no warning. It now refuses, says why, and changes nothing.</li>
+  <li><strong>Photos served by Fotobogen itself did not carry the header that lets a script on another site read them</strong> (<code>Access-Control-Allow-Origin</code>), though the documentation said so; only the nginx and Caddy files that come with it added it. A script on another site could not read a picture from a site run with <code>pnpm start</code> or behind a plain nginx proxy.</li>
+  <li><strong>A photo that could not be processed could only be tried again from the Upload page, before leaving it.</strong> Its page in the library now gives the reason and a <strong>Try again</strong> button, and <code>GET /api/admin/photos/&lt;id&gt;</code> gives the reason as <code>error</code>.</li>
+</ul>
+<h3>Changed</h3>
+<ul>
+  <li>Documentation: Fotobogen contacts another server for sample photos, for the update check and an update, and for webhooks, all only when asked. It no longer calls the sample photos &quot;the only outside request&quot;.</li>
+  <li>Documentation: A failed update usually leaves the site as it was, but not always: if rebuilding the old version fails too, the site must be built by hand before a restart.</li>
+  <li>Documentation: Two copies sharing a data folder is refused only when <code>pnpm start</code> can see the other copy; it cannot see one run by another user or in another Docker container.</li>
+  <li>Documentation: Under pm2 the port is always set, so a second site needs its own <code>PORT</code> and its own name; and <code>DATA_DIR</code>, <code>HOST</code>, and <code>TRUST_PROXY</code> in <code>.env</code> are overridden by <code>ecosystem.config.cjs</code>.</li>
+  <li>Documentation: A picture's address keeps working for anyone who has it after the photo is hidden, until the photo is deleted or rendered again.</li>
+  <li>Documentation: Choosing a skin that has a look replaces a look you set yourself, unless its box is unticked.</li>
+  <li>Documentation: With &quot;show where photos were taken&quot; on, the download is the file as uploaded: no watermark, and all its camera data.</li>
+  <li>Documentation: A backup bigger than the upload limit cannot be restored through the admin; the Docker commands for backup and restore are given.</li>
+  <li>Documentation: <code>pnpm dev</code> is on port 3000; <code>NO_COLOR</code> and <code>FOTOBOGEN_NO_QUESTIONS</code> are given when starting, not in <code>.env</code>; Docker passes on only some settings; <code>.env.sample</code> lists <code>HOST</code>, <code>TRUST_PROXY</code>, and <code>FOTOBOGEN_SKIP_PREFLIGHT</code>.</li>
+  <li>Documentation: API, webhooks, modules, and skins: the header's reach, error bodies, what a malformed token answers, which events sample photos send, when a webhook's <code>image</code> is null, the order a look's steps run in, and error messages missing from the guides.</li>
+  <li>The website's front page no longer listed the Docker image as planned, or version 1.1.0 in its description.</li>
+</ul>
+<h3>Upgrading from 1.3.2</h3>
+<p><strong>Admin, System, Update to version 1.3.3</strong>, or <code>pnpm fotobogen update</code>. Docker: <code>docker compose pull</code>, then <code>docker compose up -d</code>. Nothing else is needed. From this version on, going back to an older version needs the backup made before updating: the older version will refuse the database, where before it would have started on it.</p>
 <h2 id="v1-3-2">Version 1.3.2, 16 November 2026</h2>
 <h3>Fixed</h3>
 <ul>
@@ -87,6 +114,7 @@
 <ul>
   <li><strong>Questions at the first start.</strong> The first time <code>pnpm start</code> is run in a terminal, after the machine has been checked, it asks for the port, the site's address, and whether to switch demo mode on, and saves the answers to <code>.env</code>. Enter accepts what is suggested. It asks once, and never when nobody is at the keyboard (pm2, Docker, a script), so a server does not wait for an answer.</li>
   <li><code>pnpm fotobogen init</code> asks the same questions again and keeps the rest of <code>.env</code>.</li>
+  <li>Documentation: what to change in nginx on a droplet that already runs it, in the README and on the installation page.</li>
   <li>The preflight check says whether pm2 is installed. It is never a warning: pm2 is only needed to keep a site running on a server.</li>
   <li><strong>Colour in the terminal</strong>: green for what is good, yellow for warnings, red for what stops the start, in the preflight check, the questions, and the start-up messages. The words <code>ok</code>, <code>WARN</code>, and <code>FAIL</code> are still printed. Colour is left out of log files and anything that is not a terminal, and <code>NO_COLOR=1</code> switches it off.</li>
 </ul>
@@ -100,9 +128,6 @@
 </ul>
 <h3>Upgrading from 1.2.0</h3>
 <p>A copy installed with git: the note in the admin, or <strong>Admin, System, Update to version 1.3.0</strong>. Docker: <code>docker compose pull</code>, then <code>docker compose up -d</code>. If you edited <code>ecosystem.config.cjs</code> (to change the port, say), the update from the admin will stop and say that file is in the way: move the port to <code>PORT</code> in <code>.env</code>, run <code>git checkout ecosystem.config.cjs</code>, and update again.</p>
-<ul>
-  <li>Documentation: what to change in nginx on a droplet that already runs it, in the README and on the installation page.</li>
-</ul>
 <h2 id="v1-2-0">Version 1.2.0, 16 November 2026</h2>
 <h3>Added</h3>
 <ul>
@@ -197,7 +222,7 @@
   <li>One admin account. Passwords of at least 12 characters, hashed with scrypt. Five wrong attempts in 15 minutes lock an address out.</li>
   <li><strong>Backup and restore</strong>: one zip of everything that cannot be made again, from the admin or the command line. What a restore replaces is kept, not deleted.</li>
   <li><strong>API tokens</strong> for scripts and other programs: shown once, stored as a hash, and limited to uploading or to managing photos. No token can change settings or reach a backup.</li>
-  <li><strong>Demo mode</strong> (<code>DEMO_MODE=1</code>): a <code>demo</code> / <code>demo</code> login that can open every admin page and change nothing.</li>
+  <li><strong>Demo mode</strong> (<code>DEMO_MODE=1</code>): a <code>demo</code> / <code>demo</code> login that can look round the admin (tokens, webhooks, and backups stay closed to it) and change nothing.</li>
   <li><strong>Update notice</strong>: the admin can check GitHub for a newer release, on request or once a day.</li>
   <li>No outside requests unless asked for: sample photos, the update check, and webhooks.</li>
 </ul>
