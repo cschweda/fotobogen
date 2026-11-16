@@ -173,6 +173,9 @@ pm2 logs fotobogen</code></pre>
     # The largest upload nginx lets through. Keep it equal to MAX_UPLOAD_MB.
     client_max_body_size 50m;
 
+    # Once the site has its certificate: browsers that have visited use https from then on.
+    add_header Strict-Transport-Security &quot;max-age=31536000&quot; always;
+
     location / {
         # Where Fotobogen is listening.
         proxy_pass http://127.0.0.1:5150;
@@ -259,6 +262,7 @@ pm2 reload ecosystem.config.cjs --update-env</code></pre>
 <p>Leave everything else as it is: the <code>listen</code> lines, <code>server_name</code>, the certificate lines, and on Forge every <code>include forge-conf/...</code> line. The <code>root</code> line can stay; it is no longer used.</p>
 <p>Changes 1 to 5, ready to paste:</p>
 <pre><code>client_max_body_size 50m;
+add_header Strict-Transport-Security &quot;max-age=31536000&quot; always;
 
 location / {
     proxy_pass http://127.0.0.1:5150;

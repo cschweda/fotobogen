@@ -51,7 +51,7 @@ Headers:
 
 ## Checking the signature
 
-When you add a webhook, Fotobogen shows its secret once. Every message is signed with it: the signature is the HMAC-SHA256 of the exact bytes of the body, in hexadecimal. Check it before trusting a message, so that nobody else can pretend to be your site.
+When you add a webhook, Fotobogen shows its secret once. Every message is signed with it: the signature is the HMAC-SHA256 of the exact bytes of the body, in hexadecimal. Check it before trusting a message, so that nobody else can pretend to be your site. The signature proves who wrote a message, not when: someone who captured one could send it again. `sentAt` is inside the signed body, so refuse a message whose `sentAt` is more than a few minutes old, and give the webhook an `https` address so messages cannot be read on the way.
 
 ```js
 import { createHmac, timingSafeEqual } from 'node:crypto'

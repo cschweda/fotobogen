@@ -143,7 +143,7 @@ They can change the picture, in any way sharp allows, and change its size (up to
 
 They cannot add screens or controls to the admin, read or change a photo's title or other details, or change the uploaded file: Fotobogen keeps the original untouched and builds every copy from it plus the list of transforms, so switching a transform off always gets the photo back exactly.
 
-**A module is trusted code.** It runs inside the server with the server's permissions, like a WordPress plugin. Install only modules you have read or trust. There is no way to install one through the admin; it has to be put on the server's disk.
+**A module is trusted code.** It runs inside the server with the server's permissions, like a WordPress plugin. Install only modules you have read or trust. There is no way to install one through the admin; it has to be put on the server's disk. A backup carries the modules a site has installed, so a backup file deserves the same care as code: restored on the server (`pnpm fotobogen restore`, or left in the data folder as `restore-pending.zip`) it installs them; uploaded through the admin it is restored without them.
 
 ## How the admin uses a module
 

@@ -24,7 +24,7 @@ describe('the documentation pages', () => {
   })
 
   it('cover installation, usage, skins, modules, and questions', () => {
-    expect(PAGES.map((page: { slug: string }) => page.slug)).toEqual(['', 'installation', 'configuration', 'usage', 'updating', 'customization', 'skins', 'writing-a-skin', 'modules', 'writing-a-module', 'faq', 'changelog'])
+    expect(PAGES.map((page: { slug: string }) => page.slug)).toEqual(['', 'installation', 'configuration', 'usage', 'updating', 'customization', 'skins', 'writing-a-skin', 'modules', 'writing-a-module', 'faq', 'security-audits', 'changelog'])
     const text = (slug: string) => files.get(`docs/${slug}/index.html`)!
     // Installation: each system, both Docker routes, and server sizes.
     for (const id of ['requirements', 'macos', 'windows', 'linux', 'docker-vps', 'docker-forge', 'docker-local', 'first-run']) {

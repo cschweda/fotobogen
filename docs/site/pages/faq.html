@@ -8,7 +8,8 @@
 </div>
 
 <h3>What is in a backup?</h3>
-<p>One zip file holding everything that cannot be made again: the database (titles, albums, tags, settings, your login), your photographs exactly as you uploaded them, and any skins and modules you installed. The resized copies are left out, because they are rebuilt from the originals. The secret key that seals logins is left out too, so a backup file by itself does not open your site.</p>
+<p>One zip file holding everything that cannot be made again: the database (titles, albums, tags, settings, your login), your photographs exactly as you uploaded them, and any skins and modules you installed. The resized copies are left out, because they are rebuilt from the originals. The secret key that seals logins is left out too, so a backup file cannot be used to log in as it stands.</p>
+<p><strong>Keep a backup as private as the server.</strong> It holds every photo, hidden ones included, your settings, your webhooks' secrets, and your password in scrambled form. And <strong>only restore a backup you made yourself</strong>: it replaces the login and the API tokens with its own, and its modules are code. For that reason a backup uploaded through the admin is restored without its modules; restored on the server it installs them.</p>
 
 <h3>How do I make one?</h3>
 <p><strong>In the admin:</strong> <strong>Admin, System, Download a backup</strong>. The site stays running. This works however Fotobogen was installed.</p>

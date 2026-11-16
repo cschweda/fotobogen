@@ -17,6 +17,25 @@ Nothing yet.
 
 The documentation was read against the code, line by line, looking for anything it promised that the code did not do. This release fixes what that found: five faults in the code, and the places where the documentation said more than was true.
 
+### Security
+
+The first security audit was run against this version before release: four attackers, each with a running copy and the source. It made 36 findings, none critical; 20 are fixed here, and every one is listed, with what was done, in the [security audits](https://fotobogen.com/docs/security-audits/) record and the README. The fixes:
+
+- **A backup uploaded through the admin is restored without its modules.** A module is code, and a backup carrying one ran it on the server at the next start, so a stolen admin password was enough to run code there. Modules are now restored only on the server itself, with `pnpm fotobogen restore` or a file left in the data folder.
+- A WebP file's declared size is checked from its first bytes, before anything is decoded. A few tiny files claiming a huge size could take about 1 GB of memory while being refused.
+- Previews, and reading an upload's size, are done one at a time.
+- A skin or module file that is a link to a file elsewhere on the server is not read. A crafted skin could publish the login secret to visitors.
+- The database, the copies made before updates, backups written from the command line, and a new `.env` can be read only by the user running Fotobogen. If you have an `.env` already, run `chmod 600 .env`.
+- The check that a change comes from the site's own pages requires https when the site is reached over https, and a token header no longer stands in for it outside the admin API.
+- Percent-encoded spellings of the admin, API, setup, and login addresses are refused, as are a malformed Host header and methods no website needs.
+- A login ends 90 days after it was made. A restore ends every earlier login.
+- What the admin and the login answer is never stored by a browser or proxy.
+- Characters that XML forbids are kept out of the feed; one put in a title made the feed unreadable.
+- One more range of private addresses is refused for webhooks.
+- The nginx examples send the header that keeps browsers on https. Add it to a site already running: see the installation page.
+- The `latest` Docker tag can no longer move back to an older release.
+- Not fixed, and said plainly: an update trusts the repository it was cloned from, without checking a signature; hiding a photo does not withdraw picture addresses someone already has; a restore has no size limit.
+
 ### Fixed
 
 - **`pnpm fotobogen backup`, `restore`, and `reset-admin` ignored `DATA_DIR` set in `.env`.** With the data folder moved that way, backup and reset-admin found no database, and restore put the backup into `./data` and reported success while the running site was untouched. The command-line tool now reads `.env`, as the server does.
@@ -41,7 +60,7 @@ The documentation was read against the code, line by line, looking for anything 
 
 ### Upgrading from 1.3.2
 
-**Admin, System, Update to version 1.3.3**, or `pnpm fotobogen update`. Docker: `docker compose pull`, then `docker compose up -d`. Nothing else is needed. From this version on, going back to an older version needs the backup made before updating: the older version will refuse the database, where before it would have started on it.
+**Admin, System, Update to version 1.3.3**, or `pnpm fotobogen update`. Docker: `docker compose pull`, then `docker compose up -d`. Then two things by hand, if they apply: `chmod 600 .env`, and on nginx add the `Strict-Transport-Security` line from the installation page. Everyone is asked to log in again 90 days after their last login. From this version on, going back to an older version needs the backup made before updating: the older version will refuse the database, where before it would have started on it.
 
 ## [1.3.2] - 2026-11-16
 

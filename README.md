@@ -63,6 +63,7 @@ free software with no warranty: keep backups of your photographs.
 - [The data directory](#the-data-directory)
 - [Settings](#settings)
 - [Demo mode](#demo-mode)
+- [Security audits](#security-audits)
 - [Branches](#branches)
 - [The fotobogen.com placeholder page](#the-fotobogencom-placeholder-page)
 - [Licence](#licence)
@@ -851,6 +852,9 @@ server {
     # The largest upload nginx lets through. Keep it equal to MAX_UPLOAD_MB.
     client_max_body_size 50m;
 
+    # Once the site has its certificate: browsers that have visited use https from then on.
+    add_header Strict-Transport-Security "max-age=31536000" always;
+
     location / {
         # Where Fotobogen is listening: the HOST and PORT in ecosystem.config.cjs.
         proxy_pass http://127.0.0.1:5150;
@@ -1017,6 +1021,7 @@ The block for changes 2 to 5, ready to paste:
 
 ```nginx
 client_max_body_size 50m;
+add_header Strict-Transport-Security "max-age=31536000" always;
 
 location / {
     proxy_pass http://127.0.0.1:5150;
@@ -1074,8 +1079,16 @@ A backup is one zip file holding everything that cannot be made again: the
 database (titles, albums, tags, settings, your login), your photos exactly
 as you uploaded them, and any skins and modules you installed. Resized
 copies are left out, because they are rebuilt from the originals. The secret
-key that seals logins is left out too, so a backup file does not open your
-site.
+key that seals logins is left out too, so a backup file cannot be used to
+log in as it stands.
+
+**Keep a backup as private as the server.** It holds every photo, hidden
+ones included, your settings, your webhooks' secrets, and your password in
+scrambled form. And **only restore a backup you made yourself**: it replaces
+the login and the API tokens with its own, and its modules are code. For
+that reason a backup uploaded through the admin is restored without its
+modules; restored on the server, with the command or as
+`restore-pending.zip`, it installs them.
 
 **To back up:** **Admin, System, Download a backup**. Or on the server:
 
@@ -1245,7 +1258,7 @@ site's address, are in the app's folder, not here.)
 | `before-restore-<time>/` | What was here before a restore, uploaded photos included. Delete it once the restore looks right; nothing removes it for you |
 | `before-update-<time>.db` | A copy of the database made before an update. Delete old ones when you like |
 | `update-status.json` | What the last update from the admin did |
-| `restore-pending.zip`, `restore-failed-<time>.zip` | A backup waiting to be restored at the next start, and one that could not be |
+| `restore-pending.zip`, `restore-pending-from-admin.zip`, `restore-failed-<time>.zip` | A backup waiting to be restored at the next start, and one that could not be |
 
 ## Settings
 
@@ -1326,6 +1339,76 @@ site cannot become a demo by accident. What a demo visitor may read is a
 short list of named addresses (`server/utils/demo.ts`); anything not on the
 list is refused, so a new admin feature is closed to demo visitors until it
 is added there. Switching demo mode off ends every demo session at once.
+
+## Security audits
+
+Each audit is a red team and blue team exercise: the red team attacks a running copy and reads the code looking for ways in; the blue team fixes what is found. They are carried out with an AI assistant (Claude) at the author's direction, not by an independent security firm, so read them as a careful self-examination and not as a certificate. Every finding is listed, including the ones that were not fixed.
+
+The newest audit is open below; older ones are folded under it. The same record is at [fotobogen.com/docs/security-audits](https://fotobogen.com/docs/security-audits/). To report a problem, open an issue on GitHub. If the details should not be public yet, say only that in the issue and ask for a private way to send them.
+
+<details open>
+<summary><strong>16 November 2026, version 1.3.3.</strong> 36 findings, none critical: 1 high, 5 medium, 19 low, 11 informational. Outcome: 20 fixed, 3 reduced, 6 accepted, 7 open.</summary>
+
+Four separate attackers, each with its own running copy of version 1.3.3 and the source code, took one area each: login and permissions; files going in and out (uploads, backups, skins, modules); injected text and outbound requests (pages, the feed, webhooks); and the updater, the command line, and the deployment files. Each finding had to be shown working against the running copy or proven from the code. The fixes were then made, with a test for each where one could be written, and released in version 1.3.3.
+
+Fixed: closed in this release. Reduced: made harder or documented, not closed. Accepted: left as it is, for the reason given. Open: not yet dealt with.
+
+| # | Severity | What was found | Outcome | What was done |
+|---|---|---|---|---|
+| 1 | High | A backup uploaded through the admin could carry a module. A module is code, and it ran on the server at the next start, even while listed as switched off. A stolen admin password was therefore enough to run code on the server. | **Fixed** | A backup uploaded through the admin is restored without its modules, and the page says so. Modules are restored only on the server itself (the command, or a file left in the data folder), by someone who can already run code there. |
+| 2 | Medium | A WebP file of a few kilobytes that declared a huge size was fully decoded before the size limit was applied. A handful of such uploads at once, each of them refused, took about 1 GB of memory. An upload-only token was enough. | **Fixed** | The size a WebP declares is read from its first bytes and refused before anything is decoded. Reading a picture's size is done one upload at a time. |
+| 3 | Medium | Previews in the photo editor were made in parallel, each decoding the whole photo. Six at once took over 600 MB. On a demo site the public demo login was enough. | **Fixed** | Previews are made one at a time; when four are waiting, the next is told to try again. |
+| 4 | Medium | A skin whose skin.css was a link to another file had that file served to every visitor. A crafted skin folder, once installed and chosen, published the login secret. | **Fixed** | Skins read only real files in their own folder, up to 2 MB. Modules refuse a linked entry file. |
+| 5 | Medium | The database, the copies made before updates, backups written by the command line, and .env could be read by any other user of the same machine. The database holds the password in scrambled form, API token hashes, and webhook secrets. | **Fixed** | The database, its copies, backups, the update record, and a new .env are readable by their owner only; the folder of uploaded photos likewise. An .env that already exists keeps the permissions it has: run chmod 600 .env. |
+| 6 | Medium | An update runs code fetched from the repository the copy was cloned from, without checking a signature. Whoever controls that repository, or changes where "origin" points, can run code on the server at the next update. | **Open** | Not changed. What limits it: only the logged-in owner can start an update; the version comes from Fotobogen, never from the request; a tag must descend from the installed version; a tag that was moved is refused. Signed release tags, checked before the switch, are planned. |
+| 7 | Low | The check that a change comes from the site's own pages compared the name but not the scheme, so a page loaded over http could change a site reached over https. Browsers that treat http and https as different sites already block this. | **Fixed** | Only http and https origins are accepted, and https is required when the request is known to have come over https. |
+| 8 | Low | The admin, its API, setup, and login are guarded by their paths. Percent-encoded spellings (/api/%61dmin/…) reached the same handlers without passing the first guard. Nothing was exposed, because every handler checks the login itself. | **Fixed** | Encoded spellings of those paths are refused before anything else looks at the request. |
+| 9 | Low | A login never expired while it was in use, so a copied cookie could be kept alive for ever. | **Fixed** | A login ends 90 days after it was made, however much it is used. |
+| 10 | Low | Hiding a photo takes it off the site, but its picture files can still be fetched by anyone who has their addresses. | **Accepted** | Documented. The addresses cannot be guessed; deleting the photo, or rendering it again, withdraws them. Giving a hidden photo new addresses is planned. |
+| 11 | Low | With no site address set, the feed, sitemap, and page links were written with whatever Host header the request carried. | **Reduced** | A Host header that is not a name or address is refused. Setting the site's address (Search and sharing, or SITE_URL) fixes the links entirely, and the docs say to. A valid but wrong Host passed on by a misconfigured proxy is still echoed when no address is set. |
+| 12 | Low | Control characters in a photo's title or description made the feed unreadable for every reader. A manage-photos token was enough. | **Fixed** | Characters XML does not allow are left out of the feed and sitemap. |
+| 13 | Low | Pages believed the X-Forwarded-Proto header without TRUST_PROXY, so a visitor could flip http and https in a page's own canonical link. | **Open** | Not changed. It affects only the response to the visitor who sent the header, and not at all once the site's address is set. |
+| 14 | Low | One range of IPv6 addresses that carry an IPv4 address inside them was missing from the list of private addresses a webhook may not call. | **Fixed** | The range is refused. |
+| 15 | Low | With no web server in front, an upload over the limit was refused only after all of it had been read, using memory meanwhile. A login or token was needed. | **Accepted** | The web servers Fotobogen is documented with cut such an upload off themselves. |
+| 16 | Low | Restoring a backup has no size limits: a small zip can unpack to fill the disk. Admin only. | **Open** | Not changed in this release. |
+| 17 | Low | The documentation said a backup file "does not open your site". It holds the scrambled password, token hashes, and every photo; and a restored backup brings its own login and API tokens. | **Fixed** | The admin, README, and docs now say what a backup holds and to restore only your own. A restore ends every earlier login. |
+| 18 | Low | Two updates started at once from the command line both ran, building in the same folder. | **Open** | Not changed. The admin's button was tested and starts only one. |
+| 19 | Low | The record of running copies believed any process number written in it, so "stop the running copy" could stop an unrelated process. | **Reduced** | Process numbers below 2 and processes belonging to other users are ignored. A leftover record whose number has been reused by another of your own processes can still be mistaken for a copy. |
+| 20 | Low | A version written as 1.4.00 or v1.4.0 on the command line was fetched and then rolled back with a full rebuild. | **Fixed** | The version is put in one spelling first. |
+| 21 | Low | The nginx examples did not send the header that keeps browsers on https (HSTS); only the Caddy file did. | **Fixed** | Added to every nginx example. |
+| 22 | Low | Publishing an old release's Docker image again by hand moved the "latest" tag back to it. | **Fixed** | "latest" moves only to the newest release. |
+| 23 | Low | The build actions are pinned by version tag, not by commit, and Docker images are not signed. | **Open** | Not changed in this release. |
+| 24 | Low | pnpm fotobogen backup wrote through a link to another file, and the file could be read by other users. | **Fixed** | A link is refused, and the backup is readable by its owner only. |
+| 25 | Low | Two advisories in packages used to build the site (minimatch, esbuild), neither in code that answers visitors. | **Open** | Waiting for the packages that bring them in to update. |
+| 26 | Informational | A request carrying anything shaped like an API token skipped the same-site check on every address, not only the admin API where tokens work. | **Fixed** | The token stands in for the check only on the admin API. |
+| 27 | Informational | Answers from the admin and the login carried no instruction against being stored by a browser or proxy. | **Fixed** | They are marked never to be stored. |
+| 28 | Informational | A TRACE request, or a Host header that could not be read, produced an error and a long entry in the log. | **Fixed** | Refused at once, quietly. |
+| 29 | Informational | The link to a release's notes was checked by how it began, so an address with "../" in it could lead to another project on GitHub. It needed a forged answer from GitHub. | **Fixed** | The address is parsed and must resolve inside the project. |
+| 30 | Informational | Site text placeholders such as {constructor} were filled from built-in names. Owner only, and harmless. | **Fixed** | Only the names a text is given are filled in. |
+| 31 | Informational | A webhook message can be sent again by someone who captured it: the signature says who wrote it, not when. | **Reduced** | The time sent is inside the signed message; the docs now tell receivers to refuse old ones and to use https. |
+| 32 | Informational | /api/health tells anyone the exact version. | **Accepted** | Monitoring uses it, and the software is open source. |
+| 33 | Informational | A demo visitor sees hidden photos in the library, and an upload-only token can list the library, location included. | **Accepted** | A demo site holds sample photos; a token is given only to your own programs. |
+| 34 | Informational | The date a photo was taken is shown whether or not "show camera details" is on. | **Open** | Not changed in this release. |
+| 35 | Informational | An API token has no limit on how much it may upload. | **Accepted** | A token is given only to your own programs, and can be revoked. |
+| 36 | Informational | fotobogen.com, the project's own website, loads its visit counter from Plausible without a content security policy. | **Accepted** | It is a static page with no login. Installed sites load nothing from elsewhere. |
+
+**What was attacked and held:**
+
+- **Login and permissions.** No way was found to act as the owner, to make an API token do more than its kind allows, or to make a demo visitor change or read what it should not. Setup cannot be run twice. The limit on wrong passwords held against parallel guesses and forged addresses. Nothing told a real username from a wrong one. Every admin address checks the login itself.
+- **Changes from another site.** Requests with no origin, a "null" origin, another port, or a lookalike name were all refused. No address changes anything on a plain visit.
+- **Text on pages.** Hostile markup in titles, descriptions, tags, album names, file names, camera details, and every settings field never ran as script, in a real browser, on 8 public and 12 admin pages. The site's content policy refused injected scripts and links.
+- **Database.** Every query binds its values; no way was found to inject SQL.
+- **Uploads.** Files that are not photos, SVG, disguised files, and oversized images were refused. File names cannot reach the disk. Nothing from the camera survives in the copies visitors see.
+- **Reading files.** No path was found to read a file outside the resized copies, by any encoding. Addresses of a photo hidden from the start cannot be guessed.
+- **Restore.** Entries with "../", absolute paths, and links inside a backup were refused or written as plain files; the login secret cannot be replaced.
+- **Webhooks.** Every spelling of this machine or a private network that was tried was refused, both when saved and again when called, so a name cannot be switched between the two. Redirects are not followed.
+- **Updates.** Nothing in a request, a GitHub answer, or a tag name reached a command line. A demo visitor or a token cannot start an update. Forty simultaneous presses started exactly one.
+- **Settings file.** Answers to the first-start questions cannot add lines to .env.
+- **Docker.** The image runs as an ordinary user and holds no .env, no git history, and no data.
+
+**Not tested:** A real nginx, Caddy, or Docker (their files were read, not run); Windows; browsers other than Chromium; attacks from the network such as flooding; and the 90-day login limit, which has no automated test.
+
+</details>
 
 ## Branches
 

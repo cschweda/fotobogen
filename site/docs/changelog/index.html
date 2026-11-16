@@ -49,6 +49,7 @@
       <li><a href="/docs/modules/">Modules</a></li>
       <li><a href="/docs/writing-a-module/">Writing a module</a></li>
       <li><a href="/docs/faq/">Questions</a></li>
+      <li><a href="/docs/security-audits/">Security audits</a></li>
       <li><a href="/docs/changelog/" aria-current="page">Releases</a></li>
     </ul>
     <div class="pages__here">
@@ -70,6 +71,24 @@
 <p>Version numbers follow <a href="https://semver.org">semantic versioning</a>: a change in the first number means something you rely on changed, the second adds features, and the third only fixes. <a href="https://github.com/cschweda/fotobogen/blob/main/docs/UPGRADING.md">What a version number promises, and how to upgrade.</a></p>
 <h2 id="v1-3-3">Version 1.3.3, 16 November 2026</h2>
 <p>The documentation was read against the code, line by line, looking for anything it promised that the code did not do. This release fixes what that found: five faults in the code, and the places where the documentation said more than was true.</p>
+<h3>Security</h3>
+<p>The first security audit was run against this version before release: four attackers, each with a running copy and the source. It made 36 findings, none critical; 20 are fixed here, and every one is listed, with what was done, in the <a href="https://fotobogen.com/docs/security-audits/">security audits</a> record and the README. The fixes:</p>
+<ul>
+  <li><strong>A backup uploaded through the admin is restored without its modules.</strong> A module is code, and a backup carrying one ran it on the server at the next start, so a stolen admin password was enough to run code there. Modules are now restored only on the server itself, with <code>pnpm fotobogen restore</code> or a file left in the data folder.</li>
+  <li>A WebP file's declared size is checked from its first bytes, before anything is decoded. A few tiny files claiming a huge size could take about 1 GB of memory while being refused.</li>
+  <li>Previews, and reading an upload's size, are done one at a time.</li>
+  <li>A skin or module file that is a link to a file elsewhere on the server is not read. A crafted skin could publish the login secret to visitors.</li>
+  <li>The database, the copies made before updates, backups written from the command line, and a new <code>.env</code> can be read only by the user running Fotobogen. If you have an <code>.env</code> already, run <code>chmod 600 .env</code>.</li>
+  <li>The check that a change comes from the site's own pages requires https when the site is reached over https, and a token header no longer stands in for it outside the admin API.</li>
+  <li>Percent-encoded spellings of the admin, API, setup, and login addresses are refused, as are a malformed Host header and methods no website needs.</li>
+  <li>A login ends 90 days after it was made. A restore ends every earlier login.</li>
+  <li>What the admin and the login answer is never stored by a browser or proxy.</li>
+  <li>Characters that XML forbids are kept out of the feed; one put in a title made the feed unreadable.</li>
+  <li>One more range of private addresses is refused for webhooks.</li>
+  <li>The nginx examples send the header that keeps browsers on https. Add it to a site already running: see the installation page.</li>
+  <li>The <code>latest</code> Docker tag can no longer move back to an older release.</li>
+  <li>Not fixed, and said plainly: an update trusts the repository it was cloned from, without checking a signature; hiding a photo does not withdraw picture addresses someone already has; a restore has no size limit.</li>
+</ul>
 <h3>Fixed</h3>
 <ul>
   <li><strong><code>pnpm fotobogen backup</code>, <code>restore</code>, and <code>reset-admin</code> ignored <code>DATA_DIR</code> set in <code>.env</code>.</strong> With the data folder moved that way, backup and reset-admin found no database, and restore put the backup into <code>./data</code> and reported success while the running site was untouched. The command-line tool now reads <code>.env</code>, as the server does.</li>
@@ -93,7 +112,7 @@
   <li>The website's front page no longer listed the Docker image as planned, or version 1.1.0 in its description.</li>
 </ul>
 <h3>Upgrading from 1.3.2</h3>
-<p><strong>Admin, System, Update to version 1.3.3</strong>, or <code>pnpm fotobogen update</code>. Docker: <code>docker compose pull</code>, then <code>docker compose up -d</code>. Nothing else is needed. From this version on, going back to an older version needs the backup made before updating: the older version will refuse the database, where before it would have started on it.</p>
+<p><strong>Admin, System, Update to version 1.3.3</strong>, or <code>pnpm fotobogen update</code>. Docker: <code>docker compose pull</code>, then <code>docker compose up -d</code>. Then two things by hand, if they apply: <code>chmod 600 .env</code>, and on nginx add the <code>Strict-Transport-Security</code> line from the installation page. Everyone is asked to log in again 90 days after their last login. From this version on, going back to an older version needs the backup made before updating: the older version will refuse the database, where before it would have started on it.</p>
 <h2 id="v1-3-2">Version 1.3.2, 16 November 2026</h2>
 <h3>Fixed</h3>
 <ul>
@@ -244,7 +263,7 @@
   <li>One admin account only. No comments, no shop, no storage outside the server's own disk.</li>
 </ul>
     <p class="next">
-      <a href="/docs/faq/">Back: Questions</a>
+      <a href="/docs/security-audits/">Back: Security audits</a>
       <a href="/">Fotobogen home</a>
     </p>
   </main>
