@@ -19,7 +19,6 @@ function size(bytes: number): string {
   <FbShell context="Admin" wordmark-href="/" nav>
     <h1 class="fb-h1">Overview</h1>
     <p class="fb-lead">Your site and the server it runs on, at a glance.</p>
-    <UpdateNotice />
 
     <section class="block" aria-labelledby="site-heading">
       <h2 id="site-heading" class="heading">Your site</h2>

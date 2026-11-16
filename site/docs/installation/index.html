@@ -42,6 +42,7 @@
       <li><a href="/docs/installation/" aria-current="page">Installation</a></li>
       <li><a href="/docs/configuration/">Configuration</a></li>
       <li><a href="/docs/usage/">Using Fotobogen</a></li>
+      <li><a href="/docs/updating/">Updating</a></li>
       <li><a href="/docs/customization/">Customization</a></li>
       <li><a href="/docs/skins/">Skins</a></li>
       <li><a href="/docs/writing-a-skin/">Writing a skin</a></li>
@@ -347,31 +348,7 @@ docker compose logs app</code></pre>
 <p>The address <code>/api/health</code> needs no login and answers <code>200</code> when the site and its database are working, and <code>503</code> when they are not. Point <a href="https://uptimerobot.com">UptimeRobot</a> or a similar monitor at <code>https://your-site.example/api/health</code>.</p>
 
 <h2 id="updating">Updating</h2>
-<p>Download a backup first (<a href="/docs/faq/#backups">how</a>). Under <strong>Admin, System</strong>, <strong>Check for updates</strong> asks GitHub whether a newer release exists; it does not check by itself unless you tick <strong>Check once a day</strong>.</p>
-
-<h3>From the admin</h3>
-<p>When a newer release is found, the System page offers to install it. This arrived in version 1.1.0; a site on 1.0.0 is brought to 1.1.0 by hand, below, and can use it from then on.</p>
-<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
-  <thead><tr><th>Installed with</th><th>What the System page does</th></tr></thead>
-  <tbody>
-    <tr><td>git and pm2</td><td><strong>Update to version X</strong>: fetches, builds, and restarts by itself</td></tr>
-    <tr><td>git, started with <code>pnpm start</code></td><td><strong>Update to version X</strong>: fetches and builds; you then restart it on the server</td></tr>
-    <tr><td>Docker</td><td>Shows the commands to run on the server. A container cannot replace itself.</td></tr>
-  </tbody>
-</table></div>
-<p>It saves a copy of the database, fetches the release, installs its packages, and builds it, showing each step. The build takes a few minutes and needs about 2 GB of memory, counting swap; the site may be slow for a minute or two. <strong>If any step fails, the old version is put back</strong> and the site carries on as it was. Photographs are never touched.</p>
-<p>From a terminal, the same is <code>pnpm fotobogen update</code>, followed by a restart.</p>
-
-<h3>By hand</h3>
-<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
-  <thead><tr><th>Installed with</th><th>Update with</th></tr></thead>
-  <tbody>
-    <tr><td>Node.js on a Mac or PC</td><td><code>git pull</code>, <code>pnpm install</code>, <code>pnpm build</code>, <code>pnpm start</code></td></tr>
-    <tr><td>Node.js and pm2</td><td><code>scripts/rebuild.sh</code></td></tr>
-    <tr><td>Docker</td><td><code>docker compose pull</code>, then <code>docker compose up -d</code> (add <code>-f docker-compose.forge.yml</code> to both on Forge)</td></tr>
-  </tbody>
-</table></div>
-<p>Changes to the database are applied by themselves when the new version starts.</p>
+<p>Updating an installation you already run has <a href="/docs/updating/">a page of its own</a>: how you hear that a new version is out, updating from the admin, updating by hand, and going back. In short: a copy installed with git updates from <strong>Admin, System</strong>; Docker updates with <code>docker compose pull</code>, then <code>docker compose up -d</code>.</p>
     <p class="next">
       <a href="/docs/">Back: Overview</a>
       <a href="/docs/configuration/">Next: Configuration</a>

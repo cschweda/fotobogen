@@ -9,11 +9,12 @@ A self-hosted publishing platform for photographs: install it on a small
 server, answer a few first-run questions, and get a public photo site with an
 admin backend. Think "WordPress for photos".
 
-**Version 1.1.0** (15 November 2026). It installs on macOS, Windows, and
+**Version 1.2.0** (16 November 2026). It installs on macOS, Windows, and
 Linux; takes your photographs, resizes them for every screen, and publishes
 them on a site you can restyle, reword, and put under your own name, with an
-admin behind a login. Version 1.0.0, the first release, came out the same
-day; 1.1.0 adds updating from the admin.
+admin behind a login. Version 1.0.0 was the first release; 1.1.0 added
+updating from the admin; 1.2.0 tells you in the admin when a new version
+is out.
 
 - **What is in it:** [CHANGELOG.md](CHANGELOG.md), also published as
   [Releases](https://fotobogen.com/docs/changelog/).
@@ -350,7 +351,7 @@ distributions may well work, but are reported as untested.
 `/api/health` needs no login and answers `GET` and `HEAD`:
 
 ```json
-{ "status": "ok", "version": "1.1.0", "database": "ok", "queue": { "depth": 0 }, "uptime": 86400 }
+{ "status": "ok", "version": "1.2.0", "database": "ok", "queue": { "depth": 0 }, "uptime": 86400 }
 ```
 
 It returns `200` when the app and its database are working and `503` when
@@ -968,11 +969,21 @@ until you update.
 
 ## Updates
 
-**Admin, System, Check for updates** asks GitHub whether a newer version of
-Fotobogen has been released, and Overview then says so until you have
-updated. Fotobogen does not check by itself unless you tick **Check once a
-day**. The check is a plain request for the latest release; nothing about
-your site is sent.
+Step by step, for every kind of install:
+[fotobogen.com/docs/updating](https://fotobogen.com/docs/updating/).
+
+**Hearing about a new version.** Fotobogen does not look for new versions
+until you say it may. The first time you open the admin, a note asks **Hear
+about new versions?**; it asks once and remembers either answer. After a
+yes, it asks GitHub for the latest release at most once a day. The check is
+a plain, anonymous request; nothing about your site is sent.
+
+When a newer version exists, a note on every admin page says **Version X is
+available**, with a link to the System page. Nothing is installed by itself.
+**Close** puts the note away for the rest of the session; it comes back at
+the next login for as long as there is a newer version. **Admin, System**
+has **Check for updates** and the **Check once a day** box, to look now or
+change your answer.
 
 [docs/UPGRADING.md](docs/UPGRADING.md) says what a version number promises
 and how to go back. What is in each release is in

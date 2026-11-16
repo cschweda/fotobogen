@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Updating | Fotobogen documentation</title>
+<meta name="description" content="How to update an existing Fotobogen installation: how you hear that a new version is out, updating from the admin, updating by hand with git, pm2 or Docker, what happens to your data, and how to go back.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f5f5f2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0a0a0b" media="(prefers-color-scheme: dark)">
+<link rel="canonical" href="https://fotobogen.com/docs/updating/">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://fotobogen.com/docs/updating/">
+<meta property="og:title" content="Updating | Fotobogen documentation">
+<meta property="og:description" content="How to update an existing Fotobogen installation: how you hear that a new version is out, updating from the admin, updating by hand with git, pm2 or Docker, what happens to your data, and how to go back.">
+<meta property="og:image" content="https://fotobogen.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Fotobogen wordmark beside a contact sheet of sixteen numbered frames, one of them red. Above the wordmark: German for photo sheet, as in a contact sheet.">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230a0a0b'/%3E%3Crect x='6' y='9' width='20' height='14' fill='%23e30613'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/docs/docs.css">
+<script src="/docs/docs.js" defer></script>
+<!-- Privacy-friendly analytics by Plausible -->
+<script async src="https://plausible.io/js/pa-UXO2Zaq02zXvfaEecXWvD.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header>
+  <div class="wrap bar">
+    <a class="bar__name" href="/">Fotobogen<span>Documentation</span></a>
+    <div class="bar__links">
+      <a href="https://github.com/cschweda/fotobogen" data-goal="GitHub click" data-where="docs">Source on GitHub</a>
+      <button class="toggle" type="button" id="theme">Dark</button>
+    </div>
+  </div>
+</header>
+<div class="wrap layout">
+  <nav class="pages" aria-label="Documentation">
+    <ul class="pages__all">
+      <li><a href="/docs/">Overview</a></li>
+      <li><a href="/docs/installation/">Installation</a></li>
+      <li><a href="/docs/configuration/">Configuration</a></li>
+      <li><a href="/docs/usage/">Using Fotobogen</a></li>
+      <li><a href="/docs/updating/" aria-current="page">Updating</a></li>
+      <li><a href="/docs/customization/">Customization</a></li>
+      <li><a href="/docs/skins/">Skins</a></li>
+      <li><a href="/docs/writing-a-skin/">Writing a skin</a></li>
+      <li><a href="/docs/modules/">Modules</a></li>
+      <li><a href="/docs/writing-a-module/">Writing a module</a></li>
+      <li><a href="/docs/faq/">Questions</a></li>
+      <li><a href="/docs/changelog/">Releases</a></li>
+    </ul>
+    <div class="pages__here">
+      <h2>On this page</h2>
+      <ul>
+        <li><a href="#which">The short version</a></li>
+        <li><a href="#hearing">Hearing that a new version is out</a></li>
+        <li><a href="#admin">Updating from the admin</a></li>
+        <li><a href="#hand">Updating by hand</a></li>
+        <li><a href="#check">Checking that it worked</a></li>
+        <li><a href="#back">Going back</a></li>
+        <li><a href="#first">From version 1.0.0</a></li>
+      </ul>
+    </div>
+  </nav>
+  <main id="main" class="doc">
+<h1>Updating</h1>
+<p class="lead">Bringing a site you already run up to a newer version.</p>
+
+<p>Updating never touches your photographs. Everything a site owns is in its <code>data</code> folder, and a new version brings the database up to date by itself the first time it starts. All the same, <strong>download a backup first</strong> (<a href="/docs/faq/#backups">how</a>), and keep it until you have seen the new version working.</p>
+
+<h2 id="which">The short version</h2>
+<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
+  <thead><tr><th>Installed with</th><th>Update with</th></tr></thead>
+  <tbody>
+    <tr><td>git, run under pm2</td><td><strong>Admin, System, Update to version X</strong>. It restarts by itself.</td></tr>
+    <tr><td>git, started with <code>pnpm start</code></td><td><strong>Admin, System, Update to version X</strong>, then restart it on the server</td></tr>
+    <tr><td>Docker</td><td><code>docker compose pull</code>, then <code>docker compose up -d</code></td></tr>
+    <tr><td>Docker on Laravel Forge</td><td>Forge's <strong>Deploy</strong> button, with <code>deploy/forge-deploy.sh</code> as the deploy script</td></tr>
+  </tbody>
+</table></div>
+<p>Not sure which is yours? <strong>Admin, System</strong> says how the copy was installed when it offers an update: it shows either an <strong>Update</strong> button or the commands to run.</p>
+
+<h2 id="hearing">Hearing that a new version is out</h2>
+<p>Fotobogen makes no outside requests you have not agreed to, so it does not look for new versions until you say it may.</p>
+<ul>
+  <li><strong>The first time you open the admin</strong>, a note asks <strong>Hear about new versions?</strong> Answer <strong>Yes, check once a day</strong> or <strong>No thanks</strong>. It asks once, and remembers either answer.</li>
+  <li><strong>After a yes</strong>, Fotobogen asks GitHub for the latest release at most once a day, when you use the admin. The request is anonymous: nothing about your site is sent.</li>
+  <li><strong>When a newer version exists</strong>, a note on every admin page says <strong>Version X is available</strong>, with <strong>See what is new</strong>, which opens the System page. Nothing is installed by itself: updating is always your decision.</li>
+  <li><strong>Close</strong> puts the note away on every admin page for the rest of your session. It comes back the next time you log in, or open your browser again, for as long as there is a newer version.</li>
+</ul>
+<p>To change your answer, or to look right now: <strong>Admin, System</strong> has <strong>Check for updates</strong> and a <strong>Check once a day</strong> box. Releases are also listed on the <a href="/docs/changelog/">Releases</a> page and on <a href="https://github.com/cschweda/fotobogen/releases">GitHub</a>.</p>
+
+<h2 id="admin">Updating from the admin</h2>
+<p>For a copy installed with git (the macOS, Windows, Linux, and pm2 instructions). Available from version 1.1.0.</p>
+<ol>
+  <li>Log in and open <strong>Admin, System</strong>.</li>
+  <li>Press <strong>Download a backup</strong> and keep the file.</li>
+  <li>Press <strong>Check for updates</strong> if the page does not already show a newer version.</li>
+  <li>Read the list under <strong>Install version X</strong>: it says exactly what will happen on your server.</li>
+  <li>Press <strong>Update to version X</strong>, then <strong>Yes, update now</strong>.</li>
+  <li>Watch the steps. You can leave the page; the update carries on.</li>
+  <li>Under pm2, Fotobogen restarts by itself and the page says <strong>Updated to version X</strong>. Started with <code>pnpm start</code>, the page tells you to restart it: in the terminal where it runs, press Control + C, then run <code>pnpm start</code>.</li>
+</ol>
+<p>What the update does, in order:</p>
+<ol>
+  <li>Saves a copy of the database in the data folder (<code>before-update-&lt;time&gt;.db</code>).</li>
+  <li>Fetches the release from where your copy was cloned from, and checks that it is a real, later release that follows on from yours.</li>
+  <li>Switches to it and installs its packages.</li>
+  <li>Builds it. This takes a few minutes and needs about 2 GB of memory, counting swap (<a href="/docs/installation/#swap">adding swap</a>). The site may be slow or show an error for a minute or two.</li>
+  <li>Restarts, or waits for you to restart.</li>
+</ol>
+<div class="note">
+  <p><strong>If any step fails, the old version is put back</strong> and built again, and the site carries on as it was. The page says what went wrong and keeps the output. Files you changed on the server, such as a port in <code>ecosystem.config.cjs</code>, are left as they are.</p>
+</div>
+<p>Only the logged-in owner can update. An API token cannot, and neither can a demo visitor.</p>
+
+<h3 id="cli">The same from a terminal</h3>
+<pre tabindex="0"><code>cd fotobogen
+pnpm fotobogen update            # the latest release
+pnpm fotobogen update 1.2.0      # a particular one</code></pre>
+<p>Then restart Fotobogen.</p>
+
+<h2 id="hand">Updating by hand</h2>
+<p>Use these if the admin cannot update your copy, if you are on version 1.0.0, or if you simply prefer to.</p>
+<h3 id="hand-node">Node.js on a Mac, a PC, or a Linux server</h3>
+<p>Stop Fotobogen (Control + C), then in its folder:</p>
+<pre tabindex="0"><code>git pull
+pnpm install
+pnpm build
+pnpm start</code></pre>
+<h3 id="hand-pm2">Node.js with pm2</h3>
+<pre tabindex="0"><code>cd fotobogen
+scripts/rebuild.sh</code></pre>
+<p>It fetches, installs, builds, and restarts under pm2 in one step.</p>
+<h3 id="hand-docker">Docker</h3>
+<pre tabindex="0"><code>cd fotobogen
+docker compose pull
+docker compose up -d</code></pre>
+<p>That downloads the new version's image and starts it; nothing is built on your server. On Laravel Forge, add <code>-f docker-compose.forge.yml</code> after <code>docker compose</code> in both commands, or press Forge's <strong>Deploy</strong> button if <code>deploy/forge-deploy.sh</code> is your deploy script. If you build the image yourself, use <code>git pull</code> and <code>docker compose up -d --build</code> instead.</p>
+<p>To stay on one version instead of following the newest, set the image's tag in the compose file, for example <code>ghcr.io/cschweda/fotobogen:1.1.0</code>.</p>
+
+<h2 id="check">Checking that it worked</h2>
+<ul>
+  <li><strong>Admin, Overview</strong> shows the version under <strong>The server</strong>.</li>
+  <li><code>/api/health</code> on your site answers with the version: <code>{ "status": "ok", "version": "…" }</code>.</li>
+  <li>Open your site and a photograph or two.</li>
+</ul>
+
+<h2 id="back">Going back</h2>
+<p>Changes to the database only go forward, so an older version cannot open a database that a newer one has changed. To go back, install the older version and restore the backup you made before updating. The steps are in the <a href="https://github.com/cschweda/fotobogen/blob/main/docs/UPGRADING.md#going-back">upgrade policy</a>, which also says what a version number promises.</p>
+
+<h2 id="first">From version 1.0.0</h2>
+<p>Version 1.0.0 cannot update itself, and its System page links to the release instead of offering a button. Update it once <a href="#hand">by hand</a>; from then on the admin can do it.</p>
+    <p class="next">
+      <a href="/docs/usage/">Back: Using Fotobogen</a>
+      <a href="/docs/customization/">Next: Customization</a>
+    </p>
+  </main>
+</div>
+<footer>
+  <div class="wrap">
+    <span>Fotobogen is free and open source, under the MIT licence.</span>
+    <span>It comes with no warranty. Keep backups of your photographs.</span>
+    <span>&copy; 2026 <a href="https://github.com/cschweda" data-goal="Author click">Christopher Schweda</a></span>
+  </div>
+</footer>
+</body>
+</html>

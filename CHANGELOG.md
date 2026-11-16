@@ -11,6 +11,16 @@ is built from this file.
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [1.2.0] - 2026-11-16
+
+### Added
+
+- **A note in the admin when a new version is out.** Every admin page says **Version X is available**, with a link to the System page. Nothing is installed by itself. **Close** puts the note away for the rest of the session; it comes back at the next login for as long as there is a newer version.
+- **The admin asks, once, whether it may check for new versions.** **Hear about new versions?** appears the first time the admin is opened. A yes checks straight away and then at most once a day; a no is remembered. Fotobogen still makes no outside request you have not agreed to. A site that already had **Check once a day** ticked is not asked.
+- **[Updating](https://fotobogen.com/docs/updating/)**, a documentation page on updating an existing installation: hearing about a version, updating from the admin, by hand, with Docker, checking it worked, and going back.
+
 ### Fixed
 
 - The System page told a Docker install to update with `git pull` and `docker compose up -d --build`. With the published image that does not fetch the new version. It now says `docker compose pull`, then `docker compose up -d`.
@@ -18,6 +28,11 @@ is built from this file.
 ### Changed
 
 - The Docker instructions download the published image (`ghcr.io/cschweda/fotobogen`) instead of building one on the server, now that releases are tagged and their images published.
+- Every release is now tagged, and has a release on GitHub with these notes and an image for Intel and ARM machines. This is what the update check in the admin looks for.
+
+### Upgrading from 1.1.0
+
+A copy installed with git: **Admin, System, Check for updates**, then **Update to version 1.2.0**, or `pnpm fotobogen update`. Docker: `docker compose pull`, then `docker compose up -d`. Nothing in your data needs changing.
 
 ## [1.1.0] - 2026-11-15
 
@@ -126,5 +141,6 @@ Later entries list only what changed.
 - One admin account only. No comments, no shop, no storage outside the server's own disk.
 
 [Unreleased]: https://github.com/cschweda/fotobogen/commits/staging
-[1.1.0]: https://github.com/cschweda/fotobogen/tree/main
-[1.0.0]: https://github.com/cschweda/fotobogen/blob/main/CHANGELOG.md
+[1.2.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.2.0
+[1.1.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.1.0
+[1.0.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.0.0
