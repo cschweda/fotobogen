@@ -11,7 +11,9 @@ is built from this file.
 
 ## [Unreleased]
 
-Nothing yet.
+### Fixed
+
+- After **Check for updates** found a newer version, the System page said so but did not offer to install it until the page was reloaded. The offer now appears at once.
 
 ## [1.3.1] - 2026-11-16
 
