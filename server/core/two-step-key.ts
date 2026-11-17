@@ -31,7 +31,8 @@ export function keyFileFor(env: Env, home: string, dataDir: string): string {
 
 /** True when the file is one every site of this account shares, rather than this site's own. */
 export function keyIsShared(env: Env, home: string): boolean {
-  return Boolean(env.TWO_STEP_KEY?.trim() || env.TWO_STEP_KEY_FILE?.trim() || (env.FOTOBOGEN_IN_DOCKER !== '1' && home))
+  // In Docker the machine's name is the container's, which says nothing: there the entry is named after the site.
+  return Boolean(env.TWO_STEP_KEY_FILE?.trim() || (env.FOTOBOGEN_IN_DOCKER !== '1' && (env.TWO_STEP_KEY?.trim() || home)))
 }
 
 /** The server's key, made the first time it is asked for. */

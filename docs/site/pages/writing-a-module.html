@@ -11,7 +11,7 @@
 <ul>
   <li>The <strong>admin draws the controls</strong> from the settings you declare: a slider, a menu, a checkbox, or a text field for each. You write no interface code.</li>
   <li>The <strong>server checks every value</strong> before your code sees it, so your code can trust its inputs.</li>
-  <li>Your transform is run on <strong>every size</strong> of every photo that uses it, in the background, and on small previews in the admin.</li>
+  <li>Your transform is run <strong>once</strong> for every photo that uses it, in the background, on a working copy at most 2560 pixels on its long side; every size shown on the site is then made from the result. It is also run on small previews in the admin.</li>
   <li>The <strong>uploaded file is never touched</strong>. Every copy is made from the original plus the list of transforms, so switching yours off always gets the photo back exactly.</li>
 </ul>
 <p>The whole of the image library <a href="https://sharp.pixelplumbing.com">sharp</a> is available to you, without installing or importing anything.</p>
@@ -122,7 +122,7 @@ export default {
 <div class="table"><table>
   <thead><tr><th>Argument</th><th>What it is</th></tr></thead>
   <tbody>
-    <tr><td><code>image</code></td><td>The photograph, as a sharp pipeline. It is already the right way up, in sRGB, 8 bits a channel, and at most 2560 pixels on its long side.</td></tr>
+    <tr><td><code>image</code></td><td>The photograph, as a sharp pipeline. It is already the right way up, in sRGB, 8 bits a channel, and at most 2560 pixels on its long side when yours is the first step. A step before yours may have changed its size.</td></tr>
     <tr><td><code>params</code></td><td>Your settings, by name, already checked.</td></tr>
     <tr><td><code>context.width</code>, <code>context.height</code></td><td>The size of <code>image</code>, in pixels.</td></tr>
     <tr><td><code>context.sharp</code></td><td>The sharp function itself, for making a new picture from a buffer: an SVG you have written, or raw pixels. You need it only if you build something around or over the photo.</td></tr>
@@ -321,6 +321,7 @@ The module works. Copy its folder into data/modules/ on a site and restart to in
     <tr><td>module.json needs a "name" of lowercase letters, digits, and hyphens.</td><td>No capitals, spaces, or underscores; start with a letter.</td></tr>
     <tr><td>module.json needs a "version". / a "label".</td><td>Add the missing field.</td></tr>
     <tr><td>module.json needs an "entry": the file name of a .mjs or .js file in the module folder.</td><td>Name your code file, and keep it in the same folder.</td></tr>
+    <tr><td>The entry file index.mjs must be a file in the module's folder, not a link.</td><td>The file named by <code>entry</code> is a link to somewhere else. Put the file itself in the folder.</td></tr>
     <tr><td>The entry file index.mjs is missing.</td><td>The file named by <code>entry</code> is not there.</td></tr>
     <tr><td>The module must export { transforms: [...] } with at least one transform.</td><td>Use <code>export default { transforms: [ … ] }</code>.</td></tr>
     <tr><td>Each transform needs an "id" of lowercase letters, digits, and hyphens.</td><td>Add or correct <code>id</code>.</td></tr>

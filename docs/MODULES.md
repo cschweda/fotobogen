@@ -4,9 +4,9 @@ A module changes how photos look: a film look, a border, a tint. Three come with
 
 - [`modules/filmframe`](../modules/filmframe/index.mjs): makes a photo look contact printed, with the negative's border, sprocket holes, and made-up stock markings. It changes the photo's size.
 - [`modules/filmlooks`](../modules/filmlooks/index.mjs): tone and grain in the manner of a few kinds of film. It keeps the photo's size.
+- [`modules/watermark`](../modules/watermark/index.mjs): a line of text in a corner. It shows a `text` parameter and drawing over the photo.
 
 Each bundled module has a **Sharpening** slider, from 0 (none) to 100. Around 25 is what a print or scan is normally given; 60 and up gives the crisp look of a sharp lens on black-and-white film. Film looks starts at 25; the frame and the watermark start at 0. The function is a dozen lines (`sharpened` in each `index.mjs`) and can be copied into a module of your own. A [skin](SKINS.md#a-look-for-every-photo) can set a module's look for every photo.
-- [`modules/watermark`](../modules/watermark/index.mjs): a line of text in a corner. It shows a `text` parameter and drawing over the photo.
 
 > **New to this?** The step-by-step guide, with five worked examples, is at [fotobogen.com/docs/writing-a-module](https://fotobogen.com/docs/writing-a-module/). This file is the reference.
 
@@ -42,7 +42,7 @@ pnpm fotobogen module test my-module    # runs it on a test picture and reports
 2. Restart Fotobogen (`docker compose restart app`, or `pm2 restart fotobogen`).
 3. Open **Admin, Modules**. The module is listed, switched off. Switch it on.
 
-To remove one, switch it off, delete its folder, and restart. Photos that used it go back to how they were uploaded.
+To remove one, switch it off, delete its folder, and restart. Photos that used it go back to how they would look without it.
 
 ## Do I have to rebuild anything?
 
@@ -148,7 +148,7 @@ They cannot add screens or controls to the admin, read or change a photo's title
 ## How the admin uses a module
 
 - **Admin, Modules** lists every module, each switched off until you switch it on. Under "For all photos" you choose transforms for the whole site, including photos uploaded later.
-- **Admin, Photos**, then a photo, lets that one photo use the site's setting or have its own. A preview shows the change before it is saved.
+- **Admin, Library**, then a photo, lets that one photo use the site's setting or have its own. A preview shows the change before it is saved.
 - A look made in the admin runs in the order the modules are listed: looks first, then the frame, so grain is not printed on the border. The server itself runs the steps in the order they are stored, so a look saved through the API or named by a skin runs as written.
 - Under the photo on its edit page is a strip of small previews, one per look: each transform with its default settings. **If a transform's first parameter is a `select`, the strip shows one preview for every option in it**, which is how the film looks appear side by side. Put the menu that defines the look first if you want that.
 
