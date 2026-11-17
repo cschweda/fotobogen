@@ -20,6 +20,7 @@ The admin's own endpoints under `/api/admin/` are not part of this; they need a 
 - [Slideshow](#slideshow)
 - [Search](#search)
 - [One page](#one-page)
+- [A private album](#a-private-album)
 - [Images](#images)
 - [Feeds](#feeds)
 - [Health](#health)
@@ -54,7 +55,7 @@ The admin's own endpoints under `/api/admin/` are not part of this; they need a 
 
 `GET /api/photos?page=1`
 
-Thirty photos a page, newest first (the order set in the library). That is always the order here, whatever the site's own front page shows. For a shuffle, add `order=random&seed=<a whole number>`: the photos are dealt in a random order that is the same for every page asked for with the same seed, so pages do not repeat or miss photos. Any other `order` answers `400`.
+Thirty photos a page, newest first (the order set in the library). That is always the order here, whatever the site's own front page shows. For a shuffle, add `order=random&seed=<a whole number>`: the photos are dealt in a random order that is the same for every page asked for with the same seed, so pages do not repeat or miss photos. `order=sequence` is the library's order, the same as leaving it out. `order=random` without a `seed` of one to ten digits, and any other `order`, answers `400`.
 
 ```json
 {
@@ -171,13 +172,13 @@ All images are WebP. Sizes: `thumb` 480 px wide, `square` 480 × 480, `medium` 1
 
 `GET /api/search?q=<words>&page=1`
 
-The public photos that match, in the same shape as [Photos](#photos), with `query`: the words as they were understood.
+The public photos that match, in the same shape as [Photos](#photos), with `query`: what was asked for, trimmed.
 
 ```json
 { "query": "sea road", "page": 1, "pages": 1, "total": 2, "tiles": [] }
 ```
 
-Every word must be found, in any case, somewhere in a photo's title, description, alt text, tags, or the titles of the public albums it is in. Up to six words and 100 characters are used. An empty search finds nothing. Only what a visitor can see is searched: not hidden photos, not photos in the trash, not the names of hidden albums.
+Every word must be found, in capitals or small letters (for the letters a to z; accented letters must match exactly), somewhere in a photo's title, description, alt text, tags, or the titles of the public albums it is in. Up to six words and 100 characters are used. An empty search finds nothing. Only what a visitor can see is searched: not hidden photos, not photos in the trash, not the names of hidden albums.
 
 ## One page
 
@@ -191,10 +192,16 @@ A page the owner wrote, such as About. `/api/site` lists the ones in the menu, u
 
 `body` is plain text with a little marking, never HTML: an empty line between paragraphs, `## ` and `### ` for headings, `- ` for list items, `**bold**`, `*italic*`, and `[words](address)` for links. Web and email addresses written out are links too. If you draw it yourself, treat it as text; [`shared/page-text.ts`](../shared/page-text.ts) reads it into pieces and allows a link only to an `http(s)` address, a `mailto:` address, or a path on the site. A hidden page answers `404`.
 
+## A private album
+
+`GET /api/private/<token>?page=1` and `GET /api/private/<token>/photos/<slug>`
+
+What the page at a private album's secret link is made from: the album (`title`, `description`, `count`) with a page of its photos, and one of its photos. The token is the last part of the link the owner copies in the admin; whoever has it can read the album, and a wrong one is a `404`. A photo here carries no tags, albums, location, or download. Unlike the rest of this API, these answers do not allow reading from another site's pages in a browser, are never cached, and are marked not to be indexed.
+
 ## Feeds
 
 - `GET /feed.xml`: RSS of the thirty newest photos.
-- `GET /sitemap.xml`: the home page, albums, and every public photo.
+- `GET /sitemap.xml`: the home page, the list of albums, each public album, your pages, and every public photo.
 
 ## Health
 
@@ -202,11 +209,19 @@ A page the owner wrote, such as About. `/api/site` lists the ones in the menu, u
 
 ## Errors
 
-A photo, album, or tag that does not exist, or that a visitor may not see, is a `404`. Before a site has been set up, the API answers `503`.
+A photo, album, tag, or page that does not exist, or that a visitor may not see, is a `404`. A request that is not understood, such as `order=random` with no seed, is a `400`. Both have this shape; read `statusCode` and `message`:
 
 ```json
-{ "status": 404, "message": "There is no such photo." }
+{
+  "error": true,
+  "url": "https://photos.example.com/api/photos/no-such-photo",
+  "statusCode": 404,
+  "statusMessage": "Not Found",
+  "message": "There is no such photo."
+}
 ```
+
+Before a site has been set up, the API answers `503` with `{ "message": "Fotobogen has not been set up yet." }`.
 
 Go by the HTTP status. `message` is for people, is not on every error (the `503` has one; a missing download has none), and its wording may change.
 

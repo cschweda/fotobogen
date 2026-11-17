@@ -24,7 +24,7 @@ Download a backup: **Admin, System, Download a backup**, or `pnpm fotobogen back
 | Source, with pm2 | `scripts/rebuild.sh` |
 | Source, by hand | `git pull`, `pnpm install --frozen-lockfile`, `pnpm build`, then restart |
 
-Updating from the admin saves a copy of the database first, and puts the old version back if the new one will not install or build; the [README](../README.md#updating-from-the-admin) says exactly what it does. It arrived in version 1.1.0; a site on 1.0.0 is brought to 1.1.0 with one of the others.
+Updating from the admin saves a copy of the database first, and tries to put the old version back if the new one will not install or build (if that fails too, it says what to run by hand); the [README](../README.md#updating-from-the-admin) says exactly what it does. It arrived in version 1.1.0; a site on 1.0.0 is brought to 1.1.0 with one of the others.
 
 Nothing else is needed. When the new version starts it brings the database up to date by itself.
 
@@ -46,7 +46,7 @@ These are what a site owner, a skin author, a module author, or a script relies 
 
 1. **Your data.** The contents of the data directory. An upgrade never loses photos, titles, albums, or settings.
 2. **The public API** ([API.md](API.md)): a field removed or changed in meaning. Adding fields is not breaking.
-3. **Public addresses:** `/photo/<slug>`, `/album/<slug>`, `/tag/<slug>`, `/media/…`, `/feed.xml`.
+3. **Public addresses:** `/photo/<slug>`, `/album/<slug>`, `/tag/<slug>`, `/media/…`, `/feed.xml`, `/sitemap.xml`, `/embed/slideshow`, `/private/<token>`, and the addresses of your own pages.
 4. **The skin contract** ([SKINS.md](SKINS.md)): a documented class name removed or the markup's structure changed.
 5. **The module contract** ([MODULES.md](MODULES.md)): what `apply` receives, or a parameter type removed.
 6. **Settings:** an environment variable or a key in the "okay to change" part of `fotobogen.config.js` renamed or removed.

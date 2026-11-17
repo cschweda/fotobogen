@@ -18,7 +18,7 @@ The feature list agreed on 2026-11-15, in the order it is being built. Each item
 | 8 | RSS, sitemap, and social cards per photo | Done |
 | 9 | A notice in the admin when a new version exists | Done |
 
-Visit counting is left to Plausible, which already tracks fotobogen.com. The page sends named events (`GitHub click`, `Author click`, `Docs click`, `Theme switch`, `Section viewed`, `Screenshot viewed`) that can be added as goals there.
+Visits to fotobogen.com itself are counted with Plausible. (Counting visits to your own site is a separate, optional feature of the software: Admin, Visitor statistics.) The page sends named events (`GitHub click`, `Author click`, `Docs click`, `Theme switch`, `Section viewed`, `Screenshot viewed`) that can be added as goals there.
 
 ## Added since, at the owner's request
 
@@ -41,6 +41,11 @@ Visit counting is left to Plausible, which already tracks fotobogen.com. The pag
 | Search on the public site | Done |
 | Private albums, shown only at a link that cannot be guessed | Done |
 | Albums to choose from on the front page, and a shuffled front page | Done |
+| Optional visitor statistics, with a service the owner chooses | Done, in 1.4.0 |
+| The admin at an address of its own (`ADMIN_HOST`) | Done, in 1.5.0 |
+| A slideshow other sites can embed | Done, in 1.6.0 |
+| A one-line installer, `npx fotobogen@latest` | Done |
+| Optional two-step login with an authenticator app and backup codes | Done, in 1.9.0 |
 | A picture-quality setting for the web copies | Done |
 | Demo mode: a read-only login for a site that shows Fotobogen off | Done |
 | Update from the admin, for a copy installed with git | Done, in 1.1.0 |
@@ -55,7 +60,7 @@ Visit counting is left to Plausible, which already tracks fotobogen.com. The pag
 | 2 | More module hook types: metadata extractors, export targets, page blocks | Planned |
 | 3 | A module scaffold and a way to test a module from the command line ([MODULES.md](MODULES.md#starting-and-testing-a-module-from-the-command-line)) | Done |
 | 4 | A read-only JSON API for public photos ([API.md](API.md)) | Done |
-| 5 | Webhooks on upload and publish ([WEBHOOKS.md](WEBHOOKS.md)) | Done |
+| 5 | Webhooks on upload, publish, and delete ([WEBHOOKS.md](WEBHOOKS.md)) | Done |
 | 6 | An S3-compatible storage adapter | Planned |
 | 7 | An import command for a folder of photos; importers for Flickr and WordPress exports | Planned |
 | 8 | A documented upgrade and migration policy ([UPGRADING.md](UPGRADING.md)) | Done |

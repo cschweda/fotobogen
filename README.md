@@ -68,17 +68,20 @@ free software with no warranty: keep backups of your photographs.
 - [Updates](#updates)
 - [For developers](#for-developers)
 - [Resetting the admin password](#resetting-the-admin-password)
+- [Two-step login](#two-step-login)
 - [The data directory](#the-data-directory)
 - [Settings](#settings)
 - [Demo mode](#demo-mode)
 - [Security audits](#security-audits)
 - [Branches](#branches)
-- [The fotobogen.com placeholder page](#the-fotobogencom-placeholder-page)
+- [The fotobogen.com site](#the-fotobogencom-site)
 - [Licence](#licence)
 
 ## Screenshots
 
-Taken from a local install at the current stage of development. The
+Taken from a local install of an earlier version: the admin's menu has
+since gained Pages, Visitor statistics, Embed on another site, and Two-step
+login, and the version shown is not the current one. The
 photographs are the sample photos Fotobogen can download (Unsplash
 photographs, via Lorem Picsum).
 
@@ -457,7 +460,7 @@ expects the text `"status":"ok"`.
 
 ## The public site
 
-Visitors see two kinds of page:
+Visitors see these pages:
 
 - **The grid** at `/`: your photos, shuffled afresh for each visit or in the
   order of your library (Admin, Settings), with a row of albums to choose
@@ -585,8 +588,9 @@ your site.
   away, which asks first and removes the uploaded file and every resized
   copy. Uploading a file that is in the trash is refused, with a note
   saying where it is.
-- **Find:** show only hidden photos, photos without alt text, or photos
-  that could not be processed. Each is also flagged on its card.
+- **Show:** only hidden photos, scheduled photos, photos without alt text,
+  photos that could not be processed, or the trash. Each is also flagged on
+  its card.
 - **One photo:** open it to edit its title, description, alt text, web
   address, date taken, and whether it is public or hidden; to see what the
   file recorded (camera, lens, exposure, location); or to delete it (to the
@@ -625,7 +629,7 @@ switches: camera details (on by default) and location (off by default).
 
 ## Making the site your own
 
-Nothing a visitor sees has to say "Fotobogen". Three admin pages make the
+Nothing a visitor sees has to say "Fotobogen". These admin pages make the
 site yours:
 
 **Admin, Site text.** The site's title and tagline, the language its text is
@@ -797,7 +801,7 @@ upload to your site without your password. A token is shown once, when it
 is made, and only a hash of it is stored. There are two kinds: **Upload
 only** (upload, list, and check photos, and retry one that failed) and **Manage photos** (also edit,
 reorder, hide, and delete photos and manage albums). No token can change
-visitor statistics, embedding, pages, the menu, settings, skins, or site text, reach a backup, restore one, or make or
+visitor statistics, embedding, pages, the menu, settings, skins, or site text, reach a backup, restore one, install an update, read or change two-step login, or make or
 revoke tokens. Revoking a token stops it at once, and the page shows when
 each was last used.
 
@@ -878,6 +882,7 @@ it to: for these photos, to check for or install an update
   is down.
 - **Later**, Overview always has **Download sample photos**, and
   **Remove sample photos** deletes all of them, and only them, in one click.
+  They are deleted for good, not moved to the trash.
 - **Two sample albums** come with them, "Coast and mountains" and "Desk and
   table", so a new site shows how albums work: on the albums page, and as
   a row to choose from on the front page. Delete either under **Admin,
@@ -955,7 +960,8 @@ reset. You can run that script yourself after `pnpm build`:
 ./scripts/smoke-test.ps1
 ```
 
-Two differences from Linux and macOS: the `secret` and `setup-token` files
+Two differences from Linux and macOS: the `secret` and `setup-token` files,
+and the two-step login key file in your home folder,
 are not restricted to your user by the app (Windows has no equivalent of
 file mode `0600`; they inherit the folder's permissions), and the Docker
 path needs Docker Desktop or WSL, which is not covered by the Windows test
@@ -1347,7 +1353,8 @@ database (titles, albums, tags, settings, your login), your photos exactly
 as you uploaded them, and any skins and modules you installed. Resized
 copies are left out, because they are rebuilt from the originals. The secret
 key that seals logins is left out too, so a backup file cannot be used to
-log in as it stands.
+log in as it stands. So are the [two-step login](#two-step-login) key and
+backup codes.
 
 **Keep a backup as private as the server.** It holds every photo, hidden
 ones included, your settings, your webhooks' secrets, and your password in
@@ -1392,8 +1399,10 @@ restored as Fotobogen starts; a file that cannot be restored is set aside as
 `restore-failed-<time>.zip` and the site starts as it was. On Laravel Forge,
 add `-f docker-compose.forge.yml` after `docker compose`.
 
-A restore replaces everything on the site with the backup, including the
-login. What was there is **not deleted**: it is moved into a folder named
+A restore replaces the site's photos, database, and skins with the backup's,
+including the username and password. Two-step login stays as the site has
+it (see [Two-step login](#two-step-login)), and a backup uploaded through
+the admin leaves the installed modules alone. What was there is **not deleted**: it is moved into a folder named
 `before-restore-<time>` in the data directory. After a restore the resized
 copies are made again in the background, and photos reappear on the site as
 each finishes. A backup made by a newer version of Fotobogen is refused
@@ -1521,10 +1530,12 @@ backup codes**. Download them and keep them somewhere other than your phone.
 **A lost phone does not lock you out.** There are three ways back in:
 
 1. **A backup code.** Type one where the login page asks for the code. Each
-   works once. While you are logged in, the same page shows the codes again,
-   marks the used ones, and makes ten new ones when you ask.
-2. **A new phone.** While you are logged in, the page shows the QR code and
-   the key again, so the entry can be added to another phone.
+   works once. Once logged in, **Admin, Two-step login** shows the codes
+   again after you give your password, marks the used ones, and makes ten
+   new ones when you ask.
+2. **A new phone.** While you are logged in, the same page shows the QR code
+   and the key again, after your password, so the entry can be added to
+   another phone.
 3. **The server.** With no phone and no codes:
 
    ```bash
@@ -1533,8 +1544,11 @@ backup codes**. Download them and keep them somewhere other than your phone.
    ```
 
    It switches two-step login off and signs out every session. Log in with
-   your password and switch it on again. `pnpm fotobogen two-step key` prints
-   the server's key, to add to a new phone without logging in at all.
+   your password and switch it on again. `pnpm fotobogen two-step key`
+   (with Docker, `docker compose exec app node scripts/fotobogen.mjs two-step key`)
+   prints the key this server keeps, to add to a new phone without logging
+   in at all. A site whose data folder was copied here from another server
+   still uses the key it came with: use `two-step off` there.
 
 **One entry in your app for the whole server.** The key is kept once for the
 account Fotobogen runs under, in `.fotobogen/two-step-key.json` in that
@@ -1549,7 +1563,7 @@ switch two-step login on, so a site goes on working if the file is lost.
 In Docker the home folder does not last, so each site keeps a key of its own
 in its data folder and the entry is named after the site. To share one entry
 between Docker sites, give them the same `TWO_STEP_KEY` (the key as the app
-shows it). `TWO_STEP_KEY_FILE` names a different file to keep the key in.
+shows it) in each site's `.env`. `TWO_STEP_KEY_FILE` names a different file to keep the key in.
 
 What else to know:
 
@@ -1577,7 +1591,7 @@ site's address, are in the app's folder, not here.)
 | `fotobogen.db` | The SQLite database |
 | `secret` | The key that seals login cookies. Keep it private; deleting it signs everyone out |
 | `setup-token` | The one-time setup token. Exists only until setup is complete |
-| `two-step-key.json` | In Docker only: the key for [two-step login](#two-step-login). Elsewhere it is in `.fotobogen` in the home folder. Never in a backup file; keep it private |
+| `two-step-key.json` | In Docker, or for an account with no home folder: the key for [two-step login](#two-step-login). Elsewhere it is in `.fotobogen` in the home folder. Never in a backup file; keep it private |
 | `originals/` | The photos exactly as you uploaded them. Back these up |
 | `derivatives/` | Resized copies. They can always be made again from the originals |
 | `tmp/` | Uploads in progress. Emptied every time the server starts |
@@ -1605,7 +1619,8 @@ What is actually used is decided in this order:
 So to change something on one server, copy `.env.sample` to `.env` and set
 it there. `.env` is never committed; `.env.sample` is. `docker compose`
 reads the same file, but passes on only `SITE_URL`, `ADMIN_HOST`, `DEMO_MODE`,
-`MAX_UPLOAD_MB`, `MAX_MEGAPIXELS`, `WEBHOOKS_ALLOW_PRIVATE`, `PUID`, `PGID`,
+`MAX_UPLOAD_MB`, `MAX_MEGAPIXELS`, `WEBHOOKS_ALLOW_PRIVATE`, `TWO_STEP_KEY`,
+`TWO_STEP_KEY_FILE`, `PUID`, `PGID`,
 `DOMAIN`, and (on Forge) `PORT`; the others in the table do nothing in
 Docker. A setting that is switched on with `1` is switched on only by `1`,
 not by `true` or `yes`.
@@ -1633,7 +1648,7 @@ the app starts: run `pnpm start` again, `pm2 restart fotobogen`, or
 `docker compose up -d`. Under pm2, one setting is different: after changing
 `PORT`, run `pm2 reload ecosystem.config.cjs --update-env`, because pm2
 remembers the port it was started with (and change the port in nginx to
-match). `HOST` and `DATA_DIR` are set in `ecosystem.config.cjs` and win over
+match). `HOST`, `DATA_DIR`, and `TRUST_PROXY` are set in `ecosystem.config.cjs` and win over
 `.env`. A rebuild
 (`pnpm build`) is needed only after updating the software or editing
 `fotobogen.config.js`.
@@ -1647,15 +1662,15 @@ For a site whose purpose is to show Fotobogen off. Put `DEMO_MODE=1` in
 `.env` and restart. The login page then says the site is a demonstration
 and offers a way in: the username `demo` and the password `demo`.
 
-- **A demo visitor can look at everything and change nothing.** Every admin
-  page opens. Any request that would save, upload, or delete is refused by
+- **A demo visitor can look at almost everything and change nothing.** Every
+  admin page opens except the ones listed below. Any request that would save, upload, or delete is refused by
   the server with "This is a demo: you can look at everything, but nothing
   can be changed." Nothing is written, so there is nothing to reset.
 - **Your own login is unaffected** and keeps full control; use it to change
   the site.
 - **Kept from a demo visitor altogether:** downloading a backup (it holds
-  your login and every original file), restoring, API tokens, webhooks, and
-  where photos were taken.
+  your login and every original file), restoring, API tokens, webhooks,
+  two-step login, private albums' links, and where photos were taken.
 - **What a demo visitor does see:** everything else the admin shows,
   including hidden and scheduled photos and your settings. Do not switch it
   on for a site with anything in the admin you would not show a stranger.
@@ -1839,12 +1854,13 @@ The batching matters because a push to `main` that changes `site/` or
 `netlify.toml` triggers a production deploy of the placeholder page on
 Netlify, and each one costs build credits.
 
-## The fotobogen.com placeholder page
+## The fotobogen.com site
 
 `site/` holds what is shown at fotobogen.com: a front page that is a visual
 guide to the software, and the documentation at
 [fotobogen.com/docs](https://fotobogen.com/docs/) (installation, using it,
-skins, modules, and questions).
+configuration, customization, updating, skins, modules, security audits,
+the changelog, and questions).
 
 The documentation's source is `docs/site/`: one HTML file per page in
 `docs/site/pages/`, a stylesheet, and a small script. Netlify publishes
