@@ -201,7 +201,7 @@ async function restore(args) {
   const file = args[0]
   if (!file) throw new CliError('Say which backup to restore: fotobogen restore backup.zip')
   if (!existsSync(file)) throw new CliError(`There is no file at ${file}.`)
-  const { applyRestore, inspectBackup } = await import('../server/core/backup.ts')
+  const { applyRestore, inspectBackup, TWO_STEP_UNKNOWN } = await import('../server/core/backup.ts')
   const { runningInstances } = await import('../server/core/instances.ts')
   const { resolve } = await import('node:path')
   const { mkdirSync } = await import('node:fs')
@@ -214,6 +214,7 @@ async function restore(args) {
   const result = await applyRestore(paths, file)
   console.log(`Restored ${result.photos} photos from a backup made ${inspected.manifest.createdAt.slice(0, 10)}.`)
   console.log(`What was here before is kept in ${result.keptIn}.`)
+  if (result.twoStep === 'unknown') console.warn(`WARNING: ${TWO_STEP_UNKNOWN}`)
   console.log('Start Fotobogen; it will make the resized copies again.')
 }
 
