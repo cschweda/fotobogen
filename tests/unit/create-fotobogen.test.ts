@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 // The one-line installer (npx create-fotobogen): the decisions it makes.
-import { BANNER, compareVersions, folderProblem, freeName, majorOf, newestRelease, parseArgs, releaseVersion, saysYes, toolProblems } from '../../create-fotobogen/lib/plan.mjs'
+import { BANNER, compareVersions, folderProblem, freeName, isOnPath, looksLikeForge, serverNotes, majorOf, newestRelease, parseArgs, releaseVersion, saysYes, toolProblems } from '../../create-fotobogen/lib/plan.mjs'
 
 describe('create-fotobogen', () => {
   it('reads the command line', () => {
@@ -64,6 +64,55 @@ describe('create-fotobogen', () => {
       expect(line).toMatch(/^[\x20-\x7e]*$/)
       expect(line.length).toBeLessThanOrEqual(60)
     }
+  })
+
+  it('recognises a server managed by Laravel Forge', () => {
+    const none = () => false
+    expect(looksLikeForge({ platform: 'linux', username: 'forge', exists: none })).toBe(true)
+    expect(looksLikeForge({ platform: 'linux', username: 'root', exists: path => path === '/etc/nginx/forge-conf' })).toBe(true)
+    expect(looksLikeForge({ platform: 'linux', username: 'deploy', exists: path => path === '/home/forge' })).toBe(true)
+    expect(looksLikeForge({ platform: 'linux', username: 'ubuntu', exists: none })).toBe(false)
+    // A Mac whose owner happens to be called forge is not a Forge server.
+    expect(looksLikeForge({ platform: 'darwin', username: 'forge', exists: () => true })).toBe(false)
+    expect(looksLikeForge({ platform: 'win32', username: 'forge', exists: () => true })).toBe(false)
+  })
+
+  it('always says where the pm2 settings file is, and how to get pm2 when it is missing', () => {
+    const without = serverNotes({ folder: 'fotobogen-live', pm2: false, forge: false }).join('\n')
+    expect(without).toContain('ecosystem.config.cjs, is already in the folder')
+    expect(without).toContain('pm2 is not installed')
+    expect(without).toContain('npm install -g pm2')
+    expect(without).toContain('https://pm2.io')
+    expect(without).toMatch(/cd fotobogen-live\n\s+pm2 start ecosystem\.config\.cjs/)
+    expect(without).not.toContain('Forge')
+
+    const having = serverNotes({ folder: 'site', pm2: true, forge: false }).join('\n')
+    expect(having).toContain('pm2 is installed')
+    expect(having).not.toContain('npm install -g pm2')
+    expect(having).toContain('ecosystem.config.cjs')
+    expect(having).toContain('pm2 save')
+  })
+
+  it('on a Forge server, says what nginx needs: the proxy, and room for uploads', () => {
+    const notes = serverNotes({ folder: 'photos.example.com', pm2: true, forge: true }).join('\n')
+    expect(notes).toContain('Laravel Forge')
+    expect(notes).toContain('proxy_pass http://127.0.0.1:5150;')
+    expect(notes).toContain('client_max_body_size 50m;')
+    expect(notes).toContain('413')
+    expect(notes).toContain('deploy/forge-nginx.conf')
+    expect(notes).toContain('https://fotobogen.com/docs/installation/#forge-pm2')
+    // Nothing that would not print on any terminal.
+    expect(notes).toMatch(/^[\x20-\x7e\n]*$/)
+  })
+
+  it('finds a tool on the path without running it', () => {
+    const files = new Set(['/usr/local/bin/pm2', 'C:\\Users\\me\\AppData\\Roaming\\npm\\pm2.cmd'])
+    const exists = (path: string) => files.has(path)
+    expect(isOnPath('pm2', { path: '/usr/bin:/usr/local/bin', platform: 'linux', exists })).toBe(true)
+    expect(isOnPath('pm2', { path: '/usr/bin:/opt/bin', platform: 'linux', exists })).toBe(false)
+    expect(isOnPath('pm2', { path: 'C:\\Windows;C:\\Users\\me\\AppData\\Roaming\\npm', platform: 'win32', exists })).toBe(true)
+    expect(isOnPath('pm2', { path: '', platform: 'linux', exists })).toBe(false)
+    expect(isOnPath('pm2', { path: undefined, platform: 'linux', exists })).toBe(false)
   })
 
   it('reads a yes or no, with Enter taking the default', () => {

@@ -14,8 +14,9 @@ import { spawn, spawnSync } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { createInterface } from 'node:readline'
+import { userInfo } from 'node:os'
 import { fileURLToPath } from 'node:url'
-import { BANNER, DEFAULT_FOLDER, HELP, NEEDS, REPO, folderProblem, freeName, newestRelease, parseArgs, saysYes, toolProblems } from '../lib/plan.mjs'
+import { BANNER, DEFAULT_FOLDER, HELP, NEEDS, REPO, folderProblem, freeName, isOnPath, looksLikeForge, newestRelease, parseArgs, saysYes, serverNotes, toolProblems } from '../lib/plan.mjs'
 
 const windows = process.platform === 'win32'
 const own = JSON.parse(readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), '..', 'package.json'), 'utf8'))
@@ -145,6 +146,9 @@ if (problems.length > 0) {
   if (problems.length > 0) stop(`pnpm was installed but cannot be run from here. Open a new terminal and run this again.`)
 }
 say(`  Node.js ${process.version.slice(1)}, ${printed('git', ['--version'])}, pnpm ${printed('pnpm', ['--version'])}.`)
+// A server managed by Laravel Forge needs its nginx told two things; said here and, in full, at the end.
+const forge = looksLikeForge({ platform: process.platform, username: (() => { try { return userInfo().username } catch { return '' } })(), exists: existsSync })
+if (forge) say('  This looks like a Laravel Forge server: nginx will need a proxy and room for uploads. The details come at the end.')
 
 // ── 2. Where to put it ──────────────────────────────────────────────
 let folder = options.folder ?? (asking ? null : DEFAULT_FOLDER)
@@ -217,11 +221,7 @@ say('')
 say('The first start asks a few questions, then prints the address to open')
 say('and a setup token to type there. Control + C stops it.')
 say('')
-say('On a server, to keep it running and start it again after a restart, use pm2.')
-say('Its settings file is already in the folder:')
-say(`  cd ${folder}`)
-say('  pm2 start ecosystem.config.cjs')
-say('The rest (a domain, https, nginx) is at https://fotobogen.com/docs/installation/')
+for (const line of serverNotes({ folder, pm2: isOnPath('pm2', { path: process.env.PATH ?? process.env.Path, platform: process.platform, exists: existsSync }), forge })) say(line)
 
 if (asking && options.start && await askYes('\nStart it now? [Y/n] ', true)) {
   say('')
