@@ -7,7 +7,8 @@
       "height": 1707,
       "title": "Forest above the strait",
       "description": "Evergreens in the foreground, open water and a far shore behind.",
-      "alt": "Dense evergreen forest with blue water and distant hills beyond it."
+      "alt": "Dense evergreen forest with blue water and distant hills beyond it.",
+      "album": "outdoors"
     },
     {
       "id": 11,
@@ -15,7 +16,8 @@
       "height": 1707,
       "title": "Valley in mist",
       "description": "A stream winds through a green valley under low cloud.",
-      "alt": "A stream crossing a grassy valley between forested slopes fading into mist."
+      "alt": "A stream crossing a grassy valley between forested slopes fading into mist.",
+      "album": "outdoors"
     },
     {
       "id": 12,
@@ -23,7 +25,8 @@
       "height": 1707,
       "title": "Low tide",
       "description": "Dark rocks, wet sand, and wooded islands on the horizon.",
-      "alt": "Dark rocks in front of a wide sandy beach, with small wooded islands offshore."
+      "alt": "Dark rocks in front of a wide sandy beach, with small wooded islands offshore.",
+      "album": "outdoors"
     },
     {
       "id": 15,
@@ -31,7 +34,8 @@
       "height": 1707,
       "title": "Waterfall gorge",
       "description": "A thin waterfall drops into a gorge of grey boulders.",
-      "alt": "A narrow waterfall falling between mossy cliffs onto a bed of grey rocks."
+      "alt": "A narrow waterfall falling between mossy cliffs onto a bed of grey rocks.",
+      "album": "outdoors"
     },
     {
       "id": 16,
@@ -39,7 +43,8 @@
       "height": 1707,
       "title": "Driftwood shore",
       "description": "Bleached driftwood on a rocky shore beside calm blue water.",
-      "alt": "A rocky shoreline with driftwood logs, calm blue sea, and hazy mountains in the distance."
+      "alt": "A rocky shoreline with driftwood logs, calm blue sea, and hazy mountains in the distance.",
+      "album": "outdoors"
     },
     {
       "id": 20,
@@ -47,7 +52,8 @@
       "height": 1707,
       "title": "Work in progress",
       "description": "A desk seen from above: laptop, notebooks, a phone, and printed pages.",
-      "alt": "Overhead view of a wooden desk with a laptop, notebooks, pencils, a phone, and an open magazine."
+      "alt": "Overhead view of a wooden desk with a laptop, notebooks, pencils, a phone, and an open magazine.",
+      "album": "indoors"
     },
     {
       "id": 22,
@@ -63,7 +69,8 @@
       "height": 1707,
       "title": "Open book",
       "description": "An old book lies open on a wooden table.",
-      "alt": "A thick open book on a wooden surface, its pages softly out of focus."
+      "alt": "A thick open book on a wooden surface, its pages softly out of focus.",
+      "album": "indoors"
     },
     {
       "id": 26,
@@ -71,7 +78,8 @@
       "height": 1707,
       "title": "Everyday carry",
       "description": "A wallet, sunglasses, a watch, headphones, and other small things laid out in rows.",
-      "alt": "Personal items arranged neatly on a grey surface: wallet, sunglasses, bow tie, notebook, phone, watch, glasses, and headphones."
+      "alt": "Personal items arranged neatly on a grey surface: wallet, sunglasses, bow tie, notebook, phone, watch, glasses, and headphones.",
+      "album": "indoors"
     },
     {
       "id": 27,
@@ -79,7 +87,8 @@
       "height": 1707,
       "title": "Watching the surf",
       "description": "A figure stands on a red rock ledge as waves come in at sunset.",
-      "alt": "A person standing on a reddish rock ledge looking out at breaking waves in warm evening light."
+      "alt": "A person standing on a reddish rock ledge looking out at breaking waves in warm evening light.",
+      "album": "outdoors"
     },
     {
       "id": 28,
@@ -87,7 +96,8 @@
       "height": 2560,
       "title": "Spring gorge",
       "description": "A stream runs over flat rocks between bright green trees.",
-      "alt": "A rocky stream bed between cliffs covered in bright green trees, under a blue sky with small clouds."
+      "alt": "A rocky stream bed between cliffs covered in bright green trees, under a blue sky with small clouds.",
+      "album": "outdoors"
     },
     {
       "id": 29,
@@ -95,7 +105,8 @@
       "height": 2560,
       "title": "High peaks",
       "description": "Snow-covered mountains rise behind a bare rocky slope.",
-      "alt": "Snowy mountain peaks under a deep blue sky, with a steep slope of rock and snow in the foreground."
+      "alt": "Snowy mountain peaks under a deep blue sky, with a steep slope of rock and snow in the foreground.",
+      "album": "outdoors"
     },
     {
       "id": 30,
@@ -103,7 +114,8 @@
       "height": 2560,
       "title": "Coffee mug",
       "description": "A white mug with a red printed label on a speckled counter.",
-      "alt": "A white ceramic mug with a red label, standing on a stone countertop against a warm blurred background."
+      "alt": "A white ceramic mug with a red label, standing on a stone countertop against a warm blurred background.",
+      "album": "indoors"
     },
     {
       "id": 37,
@@ -111,7 +123,8 @@
       "height": 2560,
       "title": "Headland",
       "description": "Flowering shrubs above a pale sea, with a rocky headland beyond.",
-      "alt": "Green coastal shrubs with red flowers in front of a calm grey sea and a rocky headland under an overcast sky."
+      "alt": "Green coastal shrubs with red flowers in front of a calm grey sea and a rocky headland under an overcast sky.",
+      "album": "outdoors"
     },
     {
       "id": 42,
@@ -119,7 +132,8 @@
       "height": 2560,
       "title": "Café table",
       "description": "Two green cups and a phone on a long wooden table.",
-      "alt": "A long wooden café table with two green cups on saucers and a phone, and people seated at tables in the background."
+      "alt": "A long wooden café table with two green cups on saucers and a phone, and people seated at tables in the background.",
+      "album": "indoors"
     },
     {
       "id": 48,
@@ -127,7 +141,8 @@
       "height": 2560,
       "title": "Laptop by the window",
       "description": "A laptop sits open on a wooden table in a bright room.",
-      "alt": "The back of an open silver laptop on a wooden table, with a softly blurred tiled wall behind it."
+      "alt": "The back of an open silver laptop on a wooden table, with a softly blurred tiled wall behind it.",
+      "album": "indoors"
     },
     {
       "id": 49,
@@ -143,7 +158,8 @@
       "height": 2000,
       "title": "Summit",
       "description": "Hikers gather on a green hilltop under towering clouds.",
-      "alt": "A group of people on top of a steep green hill, with large white clouds in a bright blue sky."
+      "alt": "A group of people on top of a steep green hill, with large white clouds in a bright blue sky.",
+      "album": "outdoors"
     },
     {
       "id": 58,
@@ -151,7 +167,8 @@
       "height": 2000,
       "title": "Lighthouse",
       "description": "A stone lighthouse under a heavy sky, in black and white.",
-      "alt": "Black-and-white photo of a short stone lighthouse on rocky ground beneath dramatic clouds."
+      "alt": "Black-and-white photo of a short stone lighthouse on rocky ground beneath dramatic clouds.",
+      "album": "outdoors"
     },
     {
       "id": 60,
@@ -159,7 +176,8 @@
       "height": 2000,
       "title": "Desk from above",
       "description": "Keyboard, mouse, tablets, glasses, and notebooks arranged on a dark desk.",
-      "alt": "Overhead view of a dark desk with a monitor, keyboard, mouse, tablets, glasses, and a notebook."
+      "alt": "Overhead view of a dark desk with a monitor, keyboard, mouse, tablets, glasses, and a notebook.",
+      "album": "indoors"
     },
     {
       "id": 64,
@@ -175,7 +193,8 @@
       "height": 853,
       "title": "Golden hour",
       "description": "Long hair lit from behind by a low sun over a field.",
-      "alt": "The back of a person's head with long hair, glowing in low golden sunlight over a field."
+      "alt": "The back of a person's head with long hair, glowing in low golden sunlight over a field.",
+      "album": "outdoors"
     },
     {
       "id": 76,
@@ -191,7 +210,8 @@
       "height": 2560,
       "title": "Pines at dusk",
       "description": "A dark stand of pines under an orange evening sky.",
-      "alt": "Tall dark pine trees above a misty clearing, with an orange sky fading overhead."
+      "alt": "Tall dark pine trees above a misty clearing, with an orange sky fading overhead.",
+      "album": "outdoors"
     },
     {
       "id": 96,
@@ -199,7 +219,20 @@
       "height": 2560,
       "title": "Controller",
       "description": "A game controller on a glossy surface, its red light reflected below.",
-      "alt": "A game controller seen from the front on a reflective surface, with a small red light and its reflection."
+      "alt": "A game controller seen from the front on a reflective surface, with a small red light and its reflection.",
+      "album": "indoors"
+    }
+  ],
+  "albums": [
+    {
+      "key": "outdoors",
+      "title": "Coast and mountains",
+      "description": "A sample album, to show how albums work. Delete it whenever you like: the photos in it stay in your library."
+    },
+    {
+      "key": "indoors",
+      "title": "Desk and table",
+      "description": "A sample album, to show how albums work. Delete it whenever you like: the photos in it stay in your library."
     }
   ]
 }

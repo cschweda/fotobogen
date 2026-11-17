@@ -1,6 +1,6 @@
 # Roadmap
 
-**Version 1.7.0 is the current release** (17 November 2026), following 1.6.0, 1.5.0, 1.4.0, 1.3.3, 1.3.2, 1.3.1, 1.3.0, 1.2.0, 1.1.0 and 1.0.0, the first: see [CHANGELOG.md](../CHANGELOG.md). Everything marked Done below is in it. What is marked Planned or Later comes after.
+**Version 1.8.0 is the current release** (17 November 2026), following 1.7.0, 1.6.0, 1.5.0, 1.4.0, 1.3.3, 1.3.2, 1.3.1, 1.3.0, 1.2.0, 1.1.0 and 1.0.0, the first: see [CHANGELOG.md](../CHANGELOG.md). Everything marked Done below is in it. What is marked Planned or Later comes after.
 
 The feature list agreed on 2026-11-15, in the order it is being built. Each item lands as one pull request against `staging`.
 
@@ -36,6 +36,11 @@ Visit counting is left to Plausible, which already tracks fotobogen.com. The pag
 | A site icon and a logo, uploaded in the admin | Done |
 | API tokens for uploading from a script or another program | Done |
 | A slideshow that other sites can show in their own pages | Done |
+| A trash: deleted photos are kept for 30 days and can be restored | Done |
+| Pages of words (About, Contact) and the owner's own links in the menu | Done |
+| Search on the public site | Done |
+| Private albums, shown only at a link that cannot be guessed | Done |
+| Albums to choose from on the front page, and a shuffled front page | Done |
 | A picture-quality setting for the web copies | Done |
 | Demo mode: a read-only login for a site that shows Fotobogen off | Done |
 | Update from the admin, for a copy installed with git | Done, in 1.1.0 |

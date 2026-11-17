@@ -2,7 +2,7 @@
 // machine, with a stand-in for pnpm that records what it was asked to do.
 // (Not on Windows, where the stand-in would have to be a batch file.)
 import { spawnSync } from 'node:child_process'
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { delimiter, join } from 'node:path'
 import { beforeAll, describe, expect, it } from 'vitest'
@@ -121,6 +121,10 @@ describe.skipIf(process.platform === 'win32')('the installer, run', () => {
     expect(again(['a-file', '--yes'])).toMatchObject({ status: 1, stderr: expect.stringContaining('already exists') })
     expect(again(['no-such-parent/site', '--yes'])).toMatchObject({ status: 1, stderr: expect.stringContaining('There is no folder') })
     expect(readdirSync(join(cwd, 'empty'))).toEqual([])
+    // A link that leads nowhere is still something that is there: git would write through it.
+    symlinkSync(join(cwd, 'elsewhere'), join(cwd, 'dangling'))
+    expect(again(['dangling', '--yes'])).toMatchObject({ status: 1, stderr: expect.stringContaining('already exists') })
+    expect(existsSync(join(cwd, 'elsewhere'))).toBe(false)
   })
 
   it('stops before fetching anything when pnpm is missing or too old and it cannot ask', () => {

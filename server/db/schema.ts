@@ -47,7 +47,10 @@ export const photos = sqliteTable('photos', {
   lng: real('lng'),
   exifJson: text('exif_json', { mode: 'json' }),
   recipeJson: text('recipe_json', { mode: 'json' }),
-  status: text('status', { enum: ['processing', 'ready', 'failed'] }).notNull().default('processing'),
+  // 'trashed': deleted by the owner, off the site, and kept for thirty days in case it is wanted back.
+  status: text('status', { enum: ['processing', 'ready', 'failed', 'trashed'] }).notNull().default('processing'),
+  /** When it was moved to the trash; null otherwise. */
+  trashedAt: integer('trashed_at'),
   visibility: text('visibility', { enum: ['public', 'hidden'] }).notNull().default('public'),
   // When a public photo goes live. Null means at once; a time in the future
   // keeps it off the site until then.
@@ -80,7 +83,8 @@ export const derivatives = sqliteTable('derivatives', {
 
 export const jobs = sqliteTable('jobs', {
   id: text('id').primaryKey(),
-  type: text('type', { enum: ['ingest', 'rerender'] }).notNull(),
+  // 'restore': a photo taken back out of the trash, made again like a re-render and announced like an upload.
+  type: text('type', { enum: ['ingest', 'rerender', 'restore'] }).notNull(),
   photoId: text('photo_id').notNull().references(() => photos.id, { onDelete: 'cascade' }),
   status: text('status', { enum: ['queued', 'running', 'done', 'failed'] }).notNull().default('queued'),
   attempts: integer('attempts').notNull().default(0),
@@ -101,7 +105,12 @@ export const albums = sqliteTable('albums', {
   description: text('description'),
   // The photo shown for the album in lists; the first photo when not set.
   coverPhotoId: text('cover_photo_id').references(() => photos.id, { onDelete: 'set null' }),
-  visibility: text('visibility', { enum: ['public', 'hidden'] }).notNull().default('public'),
+  // 'private': not listed anywhere, and shown only at a link that cannot be guessed (/private/<token>).
+  visibility: text('visibility', { enum: ['public', 'hidden', 'private'] }).notNull().default('public'),
+  // The secret part of a private album's link; null unless the album is private.
+  privateToken: text('private_token').unique(),
+  // Whether visitors are offered this album on the front page, to see it alone.
+  onFront: integer('on_front', { mode: 'boolean' }).notNull().default(false),
   sortOrder: integer('sort_order').notNull().default(0),
   createdAt: integer('created_at').notNull(),
   updatedAt: integer('updated_at').notNull(),
@@ -153,4 +162,20 @@ export const apiTokens = sqliteTable('api_tokens', {
   scope: text('scope').notNull(),
   createdAt: integer('created_at').notNull(),
   lastUsedAt: integer('last_used_at'),
+})
+
+// Pages: About, Contact, and anything else the owner writes. Each has an
+// address of its own at the top of the site (/about). The body is plain text
+// with a little marking (shared/page-text.ts), never HTML.
+export const pages = sqliteTable('pages', {
+  id: text('id').primaryKey(),
+  slug: text('slug').notNull().unique(),
+  title: text('title').notNull(),
+  body: text('body').notNull().default(''),
+  visibility: text('visibility', { enum: ['public', 'hidden'] }).notNull().default('public'),
+  // Whether the page is listed in the site's menu.
+  inMenu: integer('in_menu', { mode: 'boolean' }).notNull().default(true),
+  sortOrder: integer('sort_order').notNull().default(0),
+  createdAt: integer('created_at').notNull(),
+  updatedAt: integer('updated_at').notNull(),
 })

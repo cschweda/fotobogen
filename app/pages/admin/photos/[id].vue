@@ -109,14 +109,13 @@ async function saveDetails() {
   }
 }
 
-const confirmingDelete = ref(false)
 async function remove() {
   try {
     await $fetch(`/api/admin/photos/${id}`, { method: 'DELETE' })
     await navigateTo('/admin/photos')
   }
   catch (caught) {
-    problem.value = failure(caught, 'The photo could not be deleted.')
+    problem.value = failure(caught, 'The photo could not be moved to the trash.')
   }
 }
 
@@ -427,12 +426,8 @@ onBeforeUnmount(() => {
             </div>
           </dl>
           <div class="actions">
-            <button v-if="!confirmingDelete" type="button" class="fb-button fb-button--quiet" @click="confirmingDelete = true">Delete photo</button>
-            <template v-else>
-              <span class="delete__warning">Delete this photo for good, including the file you uploaded?</span>
-              <button type="button" class="fb-button delete__yes" @click="remove">Yes, delete</button>
-              <button type="button" class="fb-button fb-button--quiet" @click="confirmingDelete = false">Cancel</button>
-            </template>
+            <button type="button" class="fb-button fb-button--quiet" aria-describedby="delete-note" @click="remove">Delete photo</button>
+            <span id="delete-note" class="delete__note">It goes to the trash: off your site at once, kept for 30 days, and restored from the library if you change your mind.</span>
           </div>
         </section>
       </div>
@@ -463,7 +458,7 @@ onBeforeUnmount(() => {
 .pick__select { width: 100%; height: 2.75rem; margin-top: 0.5rem; padding: 0 0.6rem; border: 1px solid var(--fb-edge); background: var(--fb-panel); color: var(--fb-text); font: inherit; border-radius: 0; }
 .pick__note { margin: 0.5rem 0 0; color: var(--fb-muted); font-size: 0.875rem; }
 .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; margin-top: 1.5rem; }
-.delete__yes { background: var(--fb-error); border-color: var(--fb-error); color: var(--fb-ground); }
+.delete__note { max-width: 30rem; color: var(--fb-muted); font-size: 0.875rem; }
 .facts { margin: 0; border-top: 1px solid var(--fb-line); font-size: 0.9375rem; }
 .facts__row { display: grid; grid-template-columns: 7rem 1fr; gap: 1rem; padding: 0.5rem 0; border-bottom: 1px solid var(--fb-line); }
 .facts dt { color: var(--fb-muted); }

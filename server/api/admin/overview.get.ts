@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
   const admin = await requireAdmin(event)
   const photos = getSqlite().prepare(`
     select count(*) as total, coalesce(sum(status = 'processing'), 0) as processing, coalesce(sum(status = 'failed'), 0) as failed
-    from photos
+    from photos where status <> 'trashed'
   `).get() as { total: number, processing: number, failed: number }
   return {
     siteTitle: getSetting('site.title', ''),

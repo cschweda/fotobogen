@@ -2,6 +2,7 @@
 import { defineEventHandler, getRouterParam, readBody } from 'nuxt/server'
 import { setPhotoAlbums, setPhotoTags } from '../../../../pipeline/collections.ts'
 import { updatePhoto } from '../../../../pipeline/library.ts'
+import { trashedAmong } from '../../../../pipeline/remove.ts'
 import { getPipeline } from '../../../../utils/app.ts'
 import { isLive, photoPublished } from '../../../../utils/photo-events.ts'
 import { fail } from '../../../../utils/respond.ts'
@@ -12,6 +13,8 @@ export default defineEventHandler(async (event) => {
   const body = await readBody<Record<string, unknown>>(event).catch(() => null)
   if (!body || typeof body !== 'object') return fail(event, 422, 'Send the fields to change as JSON.')
   const id = getRouterParam(event, 'id') ?? ''
+  // A photo in the trash is left exactly as it was: restore it first.
+  if (trashedAmong(getPipeline(), [id]).length > 0) return fail(event, 404, 'That photo is in the trash. Restore it to change it.')
   const wasLive = isLive(id)
   const result = updatePhoto(getPipeline(), id, body)
   if (result.ok) {

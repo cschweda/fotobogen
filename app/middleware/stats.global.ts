@@ -4,7 +4,8 @@
 // loads the page afresh from the server, which never puts the script on those.
 export default defineNuxtRouteMiddleware((to) => {
   if (import.meta.server) return
-  if (/^\/(admin|login|setup)(\/|$)/i.test(to.path) && document.querySelector('script[data-fb-stats]')) {
+  // The same for a private album: its link is a secret, and the counting service must not be told it.
+  if (/^\/(admin|login|setup|private)(\/|$)/i.test(to.path) && document.querySelector('script[data-fb-stats]')) {
     return navigateTo(to.fullPath, { external: true })
   }
 })

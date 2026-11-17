@@ -1,23 +1,29 @@
 <!-- The library: every photo, with its state, and the things done to
      several at once (hide, show, delete) or to the order. Photos can be
      dragged into place; the Up, Down, and To top buttons do the same from
-     the keyboard. -->
+     the keyboard.
+
+     Deleting moves photos to the trash, which is one of the views here
+     (Show, Trash): from it a photo is restored, or deleted for good. -->
 <script setup lang="ts">
 definePageMeta({ middleware: 'admin' })
 useHead({ title: 'Photos | Fotobogen' })
 
 interface Photo {
-  id: string, title: string | null, filename: string, status: 'processing' | 'ready' | 'failed'
+  id: string, title: string | null, filename: string, status: 'processing' | 'ready' | 'failed' | 'trashed'
+  /** In the trash: the day it will be removed for good. */
+  removedOn?: number
   hidden: boolean, missingAlt: boolean, isSample: boolean, scheduledFor: number | null
   thumb: { url: string, width: number, height: number } | null
 }
-interface Listing { counts: { total: number, hidden: number, missingAlt: number, failed: number, processing: number }, photos: Photo[] }
+interface Listing { counts: { total: number, hidden: number, missingAlt: number, failed: number, processing: number, trash: number }, photos: Photo[] }
 
 const show = ref('')
 const route = useRoute()
 // ?album=<id> lists one album's photos.
 const album = computed(() => typeof route.query.album === 'string' ? route.query.album : '')
-const { data, refresh } = await useFetch<Listing>('/api/admin/photos', { query: { show, album } })
+const inTrash = computed(() => show.value === 'trash')
+const { data, refresh } = await useFetch<Listing>('/api/admin/photos', { query: { show, album, trash: computed(() => inTrash.value ? '1' : undefined) } })
 const { data: albumList } = await useFetch<{ albums: { id: string, title: string }[] }>('/api/admin/albums')
 const inAlbum = computed(() => albumList.value?.albums.find(candidate => candidate.id === album.value))
 const toAlbum = ref('')
@@ -27,6 +33,8 @@ const counts = computed(() => data.value?.counts)
 const selected = ref<string[]>([])
 const confirming = ref(false)
 const message = ref('')
+/** Said on the page, not only to screen readers: what happened to deleted photos, and that it can be undone. */
+const notice = ref('')
 const problem = ref('')
 const dragging = ref<string | null>(null)
 const over = ref<string | null>(null)
@@ -40,13 +48,16 @@ watch(photos, (list) => {
   selected.value = selected.value.filter(id => list.some(photo => photo.id === id))
 })
 
-async function bulk(action: 'hide' | 'show' | 'delete') {
+async function bulk(action: 'hide' | 'show' | 'delete' | 'restore' | 'delete-forever') {
   problem.value = ''
-  const count = selected.value.length
+  notice.value = ''
   try {
-    await $fetch('/api/admin/photos/bulk', { method: 'POST', body: { ids: selected.value, action } })
-    message.value = action === 'delete' ? `${plural(count)} deleted.` : `${plural(count)} ${action === 'hide' ? 'hidden' : 'shown'}.`
-    if (action === 'delete') selected.value = []
+    const { changed } = await $fetch<{ changed: number }>('/api/admin/photos/bulk', { method: 'POST', body: { ids: selected.value, action } })
+    if (action === 'delete') notice.value = `${plural(changed)} moved to the trash, and off your site. Kept there for 30 days.`
+    else if (action === 'restore') notice.value = `${plural(changed)} restored.`
+    else if (action === 'delete-forever') notice.value = `${plural(changed)} deleted for good.`
+    message.value = notice.value || `${plural(changed)} ${action === 'hide' ? 'hidden' : 'shown'}.`
+    if (action !== 'hide' && action !== 'show') selected.value = []
   }
   catch (error) {
     problem.value = failure(error)
@@ -54,6 +65,14 @@ async function bulk(action: 'hide' | 'show' | 'delete') {
   confirming.value = false
   await refresh()
 }
+// Entering or leaving the trash starts afresh: nothing chosen, nothing half-confirmed.
+// (Between the other views a selection is kept, so a filter can be used to check it.)
+watch(inTrash, () => {
+  selected.value = []
+  confirming.value = false
+  notice.value = ''
+})
+const day = (time: number) => new Date(time).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })
 
 async function move(photo: Photo, body: { to: string } | { before: string | null }, said: string) {
   problem.value = ''
@@ -105,14 +124,18 @@ function selectAll(on: boolean) {
 
 <template>
   <FbShell context="Admin" :wordmark-href="$siteHome" nav>
-    <h1 class="fb-h1">{{ inAlbum ? inAlbum.title : 'Photos' }}</h1>
+    <h1 class="fb-h1">{{ inTrash ? 'Trash' : inAlbum ? inAlbum.title : 'Photos' }}</h1>
     <p v-if="inAlbum" class="fb-small"><NuxtLink class="fb-link" to="/admin/photos">All photos</NuxtLink> · <NuxtLink class="fb-link" to="/admin/albums">Albums</NuxtLink></p>
-    <p v-if="counts" class="fb-lead">
-      {{ plural(counts.total) }}<template v-if="counts.hidden">, {{ counts.hidden }} hidden</template><template v-if="counts.missingAlt">, {{ counts.missingAlt }} without alt text</template>.
+    <p v-if="inTrash" class="fb-lead">
+      Photos you deleted. They are off your site, and each is kept here for 30 days, then removed for good. Restoring a photo puts it back as it was: same address, albums, and tags. Until a photo is deleted for good, someone who already has the address of one of its pictures can still open it.
+    </p>
+    <p v-else-if="counts" class="fb-lead">
+      {{ plural(counts.total) }}<template v-if="counts.hidden">, {{ counts.hidden }} hidden</template><template v-if="counts.missingAlt">, {{ counts.missingAlt }} without alt text</template><template v-if="counts.trash">, {{ counts.trash }} in the trash</template>.
       The first photo here is the first on your site.
     </p>
     <p class="fb-visually-hidden" role="status">{{ message }}</p>
     <div class="fb-alert" role="alert">{{ problem }}</div>
+    <p v-if="notice" class="notice">{{ notice }} <button v-if="!inTrash && counts?.trash" type="button" class="notice__link" @click="show = 'trash'">Open the trash</button></p>
 
     <div class="bar">
       <NuxtLink class="fb-button" to="/admin/upload">Upload photos</NuxtLink>
@@ -124,6 +147,7 @@ function selectAll(on: boolean) {
           <option value="scheduled">Scheduled</option>
           <option value="missing-alt">Without alt text</option>
           <option value="failed">Could not be processed</option>
+          <option value="trash">Trash{{ counts?.trash ? ` (${counts.trash})` : '' }}</option>
         </select>
       </label>
       <button v-if="photos.length" type="button" class="fb-button fb-button--quiet bar__small" @click="selectAll(selected.length !== photos.length)">
@@ -133,10 +157,19 @@ function selectAll(on: boolean) {
 
     <div v-if="selected.length" class="bulk" role="group" aria-label="Actions for the selected photos">
       <span class="bulk__count">{{ plural(selected.length) }} selected</span>
-      <template v-if="!confirming">
+      <template v-if="inTrash && !confirming">
+        <button type="button" class="fb-button fb-button--quiet bar__small" @click="bulk('restore')">Restore</button>
+        <button type="button" class="fb-button fb-button--quiet bar__small" @click="confirming = true">Delete for good</button>
+      </template>
+      <template v-else-if="inTrash">
+        <span class="bulk__warning">Delete {{ plural(selected.length) }} for good, including the files you uploaded? This cannot be undone.</span>
+        <button type="button" class="fb-button bar__small bulk__delete" @click="bulk('delete-forever')">Yes, delete for good</button>
+        <button type="button" class="fb-button fb-button--quiet bar__small" @click="confirming = false">Cancel</button>
+      </template>
+      <template v-else>
         <button type="button" class="fb-button fb-button--quiet bar__small" @click="bulk('hide')">Hide</button>
         <button type="button" class="fb-button fb-button--quiet bar__small" @click="bulk('show')">Show</button>
-        <button type="button" class="fb-button fb-button--quiet bar__small" @click="confirming = true">Delete</button>
+        <button type="button" class="fb-button fb-button--quiet bar__small" @click="bulk('delete')">Delete</button>
         <button v-if="inAlbum" type="button" class="fb-button fb-button--quiet bar__small" @click="group({ action: 'remove-from-album', album }, changed => `${plural(changed)} taken out of ${inAlbum!.title}.`)">Take out of this album</button>
         <span v-if="albumList?.albums.length" class="bulk__group">
           <label class="fb-visually-hidden" for="to-album">Album to add the selected photos to</label>
@@ -152,30 +185,30 @@ function selectAll(on: boolean) {
           <button type="button" class="fb-button fb-button--quiet bar__small" @click="addTag">Add tag</button>
         </span>
       </template>
-      <template v-else>
-        <span class="bulk__warning">Delete {{ plural(selected.length) }} for good, including the files you uploaded?</span>
-        <button type="button" class="fb-button bar__small bulk__delete" @click="bulk('delete')">Yes, delete</button>
-        <button type="button" class="fb-button fb-button--quiet bar__small" @click="confirming = false">Cancel</button>
-      </template>
     </div>
 
-    <p v-if="photos.length === 0" class="empty">{{ show ? 'No photos match.' : 'There are no photos yet.' }}</p>
+    <p v-if="photos.length === 0" class="empty">{{ inTrash ? 'The trash is empty.' : show ? 'No photos match.' : 'There are no photos yet.' }}</p>
     <ul v-else class="grid">
       <li
         v-for="(photo, index) in photos" :key="photo.id" class="card"
         :class="{ 'card--over': over === photo.id && dragging !== photo.id, 'card--dragging': dragging === photo.id }"
-        draggable="true"
+        :draggable="!inTrash"
         @dragstart="dragging = photo.id" @dragend="dragging = null; over = null"
         @dragover.prevent="over = photo.id" @drop.prevent="drop(photo)"
       >
-        <NuxtLink class="card__frame" :to="`/admin/photos/${photo.id}`" :aria-label="`Edit ${name(photo)}`" draggable="false">
+        <!-- In the trash a photo cannot be edited or moved, only restored or deleted for good. -->
+        <span v-if="inTrash" class="card__frame card__frame--still">
+          <img v-if="photo.thumb" :src="photo.thumb.url" :width="photo.thumb.width" :height="photo.thumb.height" alt="" loading="lazy" draggable="false">
+        </span>
+        <NuxtLink v-else class="card__frame" :to="`/admin/photos/${photo.id}`" :aria-label="`Edit ${name(photo)}`" draggable="false">
           <img v-if="photo.thumb" :src="photo.thumb.url" :width="photo.thumb.width" :height="photo.thumb.height" alt="" loading="lazy" draggable="false">
         </NuxtLink>
         <label class="card__select">
           <input v-model="selected" type="checkbox" :value="photo.id">
           <span class="card__name">{{ name(photo) }}</span>
         </label>
-        <p v-if="photo.hidden || photo.scheduledFor || photo.missingAlt || photo.status !== 'ready' || photo.isSample" class="card__badges">
+        <p v-if="inTrash && photo.removedOn" class="card__badges"><span class="badge">Removed for good on {{ day(photo.removedOn) }}</span></p>
+        <p v-else-if="photo.hidden || photo.scheduledFor || photo.missingAlt || photo.status !== 'ready' || photo.isSample" class="card__badges">
           <span v-if="photo.status === 'processing'" class="badge">Processing</span>
           <span v-if="photo.status === 'failed'" class="badge badge--problem">Could not be processed</span>
           <span v-if="photo.hidden" class="badge">Hidden</span>
@@ -183,7 +216,7 @@ function selectAll(on: boolean) {
           <span v-if="photo.missingAlt" class="badge badge--problem">No alt text</span>
           <span v-if="photo.isSample" class="badge">Sample</span>
         </p>
-        <div class="card__order">
+        <div v-if="!inTrash" class="card__order">
           <button type="button" class="order" :disabled="index === 0" :aria-label="`Up: ${name(photo)}`" @click="move(photo, { to: 'up' }, `${name(photo)} moved up.`)">Up</button>
           <button type="button" class="order" :disabled="index === photos.length - 1" :aria-label="`Down: ${name(photo)}`" @click="move(photo, { to: 'down' }, `${name(photo)} moved down.`)">Down</button>
           <button type="button" class="order" :disabled="index === 0" :aria-label="`To top: ${name(photo)}`" @click="move(photo, { to: 'top' }, `${name(photo)} moved to the top.`)">To top</button>
@@ -208,6 +241,9 @@ function selectAll(on: boolean) {
 .bulk__group input::placeholder { color: var(--fb-muted); }
 .bulk__delete { background: var(--fb-error); border-color: var(--fb-error); color: var(--fb-ground); }
 .empty { margin-top: 2.5rem; color: var(--fb-muted); }
+.notice { margin: 1.25rem 0 0; padding: 0.7rem 1rem; border-left: 4px solid var(--fb-text); background: var(--fb-panel); }
+.notice__link { margin-left: 0.5rem; padding: 0; border: 0; background: none; color: var(--fb-text); font: inherit; text-decoration: underline; text-underline-offset: 0.2em; cursor: pointer; }
+.card__frame--still { cursor: default; }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); gap: 2rem 1rem; margin: 2rem 0 0; padding: 0; list-style: none; }
 .card { display: grid; gap: 0.45rem; align-content: start; padding-top: 4px; border-top: 4px solid transparent; }
 .card--over { border-top-color: var(--fb-red); }

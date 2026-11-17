@@ -1,6 +1,6 @@
 {
   "name": "fotobogen",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Installs Fotobogen, a self-hosted photo website, in one command: npx fotobogen@latest",
   "type": "module",
   "license": "MIT",

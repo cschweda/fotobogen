@@ -165,8 +165,31 @@
   <li><strong>One service, and nothing else.</strong> Your pages may report to the service you chose. Everything else stays blocked.</li>
   <li><strong>Only you can change it,</strong> logged in. No API token can, and a demo visitor cannot.</li>
   <li><strong>You are trusting the service, with your visitors and with your site.</strong> Its script runs on every visitor's page, on your site's own address. Fotobogen keeps it off the admin and off pages you open while logged in, but it cannot fence a script off from the site it runs on: if the service were ever hostile or broken into, a public page left open in a browser where you are logged in could be used to act as you. Choose a service you would trust that far, or close the gap altogether by giving <a href="/docs/installation/#admin-address">the admin its own address</a>.</li>
+  <li><strong>The service is told the address of each page viewed.</strong> For the search page, that address holds the words searched for. A private album's pages never carry the script, so the service never learns such a link.</li>
   <li><strong>What you owe your visitors is yours to decide.</strong> Whether you owe visitors a privacy note or a cookie banner is yours to decide; Google Analytics generally needs one in the EU and UK, and cookieless services generally do not. Fotobogen shows no banner.</li>
   <li><strong>No box for pasting script.</strong> JavaScript of your own cannot be added from the admin, on purpose: such a box would let anyone who got your password put code in every visitor's browser.</li>
+</ul>
+
+<h2 id="pages">Pages and your menu</h2>
+<p><strong>Admin, Pages</strong> is for pages of words beside your photographs: About, Contact, anything. Give a page a title and it gets an address of its own at the top of your site, such as <code>/about</code>, and a place in your site's menu. You can change the address, take the page out of the menu, or hide it while you write.</p>
+<p>A page's text is plain text with a little marking:</p>
+<div class="table"><table>
+  <thead><tr><th>You type</th><th>You get</th></tr></thead>
+  <tbody>
+    <tr><td>An empty line</td><td>A new paragraph</td></tr>
+    <tr><td><code>## Prints</code> at the start of a line</td><td>A heading (<code>###</code> for a smaller one)</td></tr>
+    <tr><td><code>- Small</code> at the start of a line</td><td>A list item</td></tr>
+    <tr><td><code>**bold**</code> and <code>*italic*</code></td><td><strong>bold</strong> and <em>italic</em></td></tr>
+    <tr><td><code>[the shop](https://shop.example.com)</code></td><td>A link reading "the shop"</td></tr>
+    <tr><td>A web address or an email address, written out</td><td>A link, by itself</td></tr>
+  </tbody>
+</table></div>
+<p>A preview under the box shows how it will look. A contact page can be as simple as a line with your email address.</p>
+<ul>
+  <li><strong>It is never HTML.</strong> Anything typed is shown as text, and a link goes only to a web address, an email address, or a page of your site. Someone who got your password could not use a page to put a script on your site.</li>
+  <li><strong>Links in your menu.</strong> On the same page, add links of your own after your pages: a shop, another site, <code>mailto:</code> and your address, or a page of this site such as <code>/album/road-trip</code>. Up to eight.</li>
+  <li><strong>Addresses the site uses are kept for it:</strong> a page cannot be <code>/albums</code> or <code>/admin</code>. Up to 50 pages.</li>
+  <li><strong>Only you can change them,</strong> logged in. No API token can.</li>
 </ul>
 
 <h2 id="embed">Showing your photos on another site</h2>
@@ -196,7 +219,7 @@
     <tr><td><strong>Manage photos</strong></td><td>All of that, and edit, reorder, hide, and delete photos, set their looks, and manage albums</td><td>Change anything about the site itself</td></tr>
   </tbody>
 </table></div>
-<p>No token can change settings, skins, site text, visitor statistics, or embedding, make or revoke tokens, download a backup, or restore one. The token is shown once, when it is made; copy it then. Revoking a token stops it at once. <a href="/docs/usage/#tokens">How to use one.</a></p>
+<p>No token can change settings, skins, site text, pages, the menu, visitor statistics, or embedding, make or revoke tokens, download a backup, or restore one. The token is shown once, when it is made; copy it then. Revoking a token stops it at once. <a href="/docs/usage/#tokens">How to use one.</a></p>
 
 <h2 id="address">Its address</h2>
 <p>The site answers at whatever address reaches the server. To use your own domain:</p>

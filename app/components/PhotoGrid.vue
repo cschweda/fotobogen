@@ -2,7 +2,14 @@
 import type { PublicPhoto } from '~/components/PhotoView.vue'
 
 /** `source` is the API address that returns a page of tiles; `base` the page's own address, for "More photos" links. */
-const props = defineProps<{ source: string, base: string }>()
+/**
+ * `photoApi` and `photoBase` say where a photo's details and its own page are:
+ * /api/photos and /photo, unless the grid is a private album's, whose photos
+ * are reached only through the album's link.
+ */
+const props = withDefaults(defineProps<{ source: string, base: string, photoApi?: string, photoBase?: string }>(), { photoApi: '/api/photos', photoBase: '/photo' })
+/** The page's own address for another page of photos. `base` may already carry a question (a search). */
+const pageAddress = (number: number) => `${props.base}${props.base.includes('?') ? '&' : '?'}page=${number}`
 
 interface Tile {
   slug: string, title: string | null, alt: string, placeholder: string | null, span: number
@@ -53,7 +60,7 @@ let pushed = false
 
 async function load(slug: string): Promise<boolean> {
   try {
-    open.value = await $fetch<PublicPhoto>(`/api/photos/${encodeURIComponent(slug)}`)
+    open.value = await $fetch<PublicPhoto>(`${props.photoApi}/${encodeURIComponent(slug)}`)
     return true
   }
   catch {
@@ -66,10 +73,10 @@ async function openPhoto(tile: Tile, event: MouseEvent) {
   if (site.value?.photoView !== 'modal' || event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return
   event.preventDefault()
   if (!(await load(tile.slug))) {
-    window.location.href = `/photo/${tile.slug}`
+    window.location.href = `${props.photoBase}/${tile.slug}`
     return
   }
-  history.pushState({ fotobogenPhoto: tile.slug }, '', `/photo/${tile.slug}`)
+  history.pushState({ fotobogenPhoto: tile.slug }, '', `${props.photoBase}/${tile.slug}`)
   pushed = true
   dialog.value?.showModal()
 }
@@ -77,7 +84,7 @@ async function openPhoto(tile: Tile, event: MouseEvent) {
 async function go(slug: string, event: MouseEvent) {
   if (event.metaKey || event.ctrlKey || event.shiftKey) return
   event.preventDefault()
-  if (await load(slug)) history.replaceState({ fotobogenPhoto: slug }, '', `/photo/${slug}`)
+  if (await load(slug)) history.replaceState({ fotobogenPhoto: slug }, '', `${props.photoBase}/${slug}`)
 }
 
 /** The dialog closed (Escape, the button, or Back): put the address back to the grid. */
@@ -100,7 +107,7 @@ function onPopState() {
 function onKey(event: KeyboardEvent) {
   if (!open.value || event.metaKey || event.ctrlKey || event.altKey) return
   const target = event.key === 'ArrowLeft' ? open.value.previous : event.key === 'ArrowRight' ? open.value.next : null
-  if (target) void load(target).then(ok => ok && history.replaceState({ fotobogenPhoto: target }, '', `/photo/${target}`))
+  if (target) void load(target).then(ok => ok && history.replaceState({ fotobogenPhoto: target }, '', `${props.photoBase}/${target}`))
 }
 
 onMounted(() => window.addEventListener('popstate', onPopState))
@@ -116,7 +123,7 @@ onBeforeUnmount(() => window.removeEventListener('popstate', onPopState))
           v-for="(tile, index) in tiles" :key="tile.slug" class="fb-tile"
           :style="{ '--fb-span': tile.span, 'backgroundImage': tile.placeholder ? `url(${tile.placeholder})` : undefined }"
         >
-          <a class="fb-tile__link" :href="`/photo/${tile.slug}`" :aria-label="tile.alt ? undefined : (tile.title ?? t('untitledPhoto'))" @click="openPhoto(tile, $event)">
+          <a class="fb-tile__link" :href="`${photoBase}/${tile.slug}`" :aria-label="tile.alt ? undefined : (tile.title ?? t('untitledPhoto'))" @click="openPhoto(tile, $event)">
             <img
               class="fb-tile__image"
               :src="square ? tile.square.url : tile.thumb.url"
@@ -131,13 +138,13 @@ onBeforeUnmount(() => window.removeEventListener('popstate', onPopState))
 
     <p class="fb-visually-hidden" role="status">{{ announcement }}</p>
     <nav v-if="page < pages || firstPage > 1" class="fb-pager" :aria-label="t('gridMore')">
-      <a v-if="firstPage > 1" class="fb-pager__more" :href="firstPage === 2 ? base : `${base}?page=${firstPage - 1}`">{{ t('gridPrevious') }}</a>
-      <a v-if="page < pages" class="fb-pager__more" :href="`${base}?page=${page + 1}`" @click="more">{{ t('gridMore') }}</a>
+      <a v-if="firstPage > 1" class="fb-pager__more" :href="firstPage === 2 ? base : pageAddress(firstPage - 1)">{{ t('gridPrevious') }}</a>
+      <a v-if="page < pages" class="fb-pager__more" :href="pageAddress(page + 1)" @click="more">{{ t('gridMore') }}</a>
     </nav>
 
     <dialog ref="dialog" class="fb-modal" :aria-label="t('photoDialog')" @close="closed" @keydown="onKey">
       <button type="button" class="fb-modal__close" @click="dialog?.close()">{{ t('close') }}</button>
-      <PhotoView v-if="open" :photo="open" heading-level="h2" @go="go" />
+      <PhotoView v-if="open" :photo="open" heading-level="h2" :photo-base="photoBase" @go="go" />
     </dialog>
   </div>
 </template>

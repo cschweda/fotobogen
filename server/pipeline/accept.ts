@@ -37,7 +37,8 @@ export interface UploadInput {
 
 export type AcceptResult
   = | { result: 'accepted', photo: { id: string, slug: string } }
-    | { result: 'duplicate', existing: { id: string, slug: string, title: string | null, filename: string } }
+    /** `trashed`: the copy already here is in the trash (1) or in the library (0). */
+    | { result: 'duplicate', existing: { id: string, slug: string, title: string | null, filename: string, trashed?: number } }
     | { result: 'rejected', reason: 'not-an-image' | 'too-many-pixels', message: string }
 
 const NOT_AN_IMAGE = 'This file is not a photo Fotobogen can read. Use a JPEG, PNG, WebP, TIFF, or AVIF file.'
@@ -144,8 +145,8 @@ export async function acceptUpload(ctx: PipelineContext, input: UploadInput): Pr
 
     const checksum = await sha256(input.tmpPath)
     const findExisting = () => sqlite
-      .prepare(`select id, slug, title, original_filename as filename from photos where checksum = ?`)
-      .get(checksum) as { id: string, slug: string, title: string | null, filename: string } | undefined
+      .prepare(`select id, slug, title, original_filename as filename, status = 'trashed' as trashed from photos where checksum = ?`)
+      .get(checksum) as { id: string, slug: string, title: string | null, filename: string, trashed: number } | undefined
     const existing = findExisting()
     if (existing) return { result: 'duplicate', existing }
 

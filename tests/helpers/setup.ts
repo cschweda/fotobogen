@@ -20,10 +20,16 @@ export function setupAnswers(server: TestServer, overrides: Record<string, unkno
 
 /** Runs the wizard's final submit and returns the admin's session cookie. */
 export async function completeSetup(server: TestServer, overrides: Record<string, unknown> = {}): Promise<string> {
-  const { acknowledge: _acknowledge, ...answers } = overrides
+  const { acknowledge: _acknowledge, homeOrder: _homeOrder, ...answers } = overrides
   const response = await post(server, '/api/setup/complete', setupAnswers(server, answers))
   if (response.status !== 200) throw new Error(`Setup failed: ${response.status} ${await response.text()}`)
   const cookie = sessionCookie(response)!
+  // A new site shows its front page shuffled. Most tests are about the order photos are in, so they
+  // ask for the library's order, as an owner may in Settings (tests/server/front-page.test.ts has the shuffle).
+  if (overrides.homeOrder !== 'random') {
+    const settings = await (await fetch(server.url + '/api/admin/settings', { headers: { cookie } })).json() as Record<string, unknown>
+    await fetch(server.url + '/api/admin/settings', { method: 'PUT', headers: { 'origin': server.url, cookie, 'content-type': 'application/json' }, body: JSON.stringify({ ...settings, homeOrder: 'sequence' }) })
+  }
   // An owner presses "I understand" on the backup notice once; most tests start after that.
   if (overrides.acknowledge !== false) {
     await fetch(server.url + '/api/admin/acknowledge', { method: 'POST', headers: { origin: server.url, cookie } })

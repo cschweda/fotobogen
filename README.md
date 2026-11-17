@@ -9,7 +9,7 @@ A self-hosted publishing platform for photographs: install it on a small
 server, answer a few first-run questions, and get a public photo site with an
 admin backend. Think "WordPress for photos".
 
-**Version 1.7.0** (17 November 2026). It installs on macOS, Windows, and
+**Version 1.8.0** (17 November 2026). It installs on macOS, Windows, and
 Linux; takes your photographs, resizes them for every screen, and publishes
 them on a site you can restyle, reword, and put under your own name, with an
 admin behind a login. Version 1.0.0 was the first release; 1.1.0 added
@@ -18,8 +18,9 @@ is out; 1.3.0 asks a few questions at the first start; 1.3.3 followed the
 first [security audit](#security-audits); 1.4.0 adds optional visitor
 statistics; 1.5.0 lets the admin live at an address of its own; 1.6.0 lets
 other sites show a slideshow of your photos; 1.7.0 followed the
-second audit, makes the full-screen buttons work, and gives the photo
-window one size in the middle of the screen.
+second audit and makes the full-screen buttons work; 1.8.0 adds pages,
+search, private albums, a trash, albums to choose from on the front page,
+and a one-line installer.
 
 - **What is in it:** [CHANGELOG.md](CHANGELOG.md), also published as
   [Releases](https://fotobogen.com/docs/changelog/).
@@ -441,7 +442,7 @@ distributions may well work, but are reported as untested.
 `/api/health` needs no login and answers `GET` and `HEAD`:
 
 ```json
-{ "status": "ok", "version": "1.7.0", "database": "ok", "queue": { "depth": 0 }, "uptime": 86400 }
+{ "status": "ok", "version": "1.8.0", "database": "ok", "queue": { "depth": 0 }, "uptime": 86400 }
 ```
 
 It returns `200` when the app and its database are working and `503` when
@@ -457,7 +458,9 @@ expects the text `"status":"ok"`.
 
 Visitors see two kinds of page:
 
-- **The grid** at `/`: your photos newest first, in a masonry layout (each
+- **The grid** at `/`: your photos, shuffled afresh for each visit or in the
+  order of your library (Admin, Settings), with a row of albums to choose
+  from if you offer any; in a masonry layout (each
   photo keeps its shape) or equal squares. It is laid out by CSS alone, so
   it works with JavaScript off and photos are read in the order they
   appear. Each tile shows a blurred placeholder until its image loads, and
@@ -475,6 +478,11 @@ Visitors see two kinds of page:
 - **Albums and tags**: `/albums`, `/album/<name>`, and `/tag/<name>` (see
   [Albums and tags](#albums-and-tags)).
 
+- **Search** at `/search`: a box, and the photos whose title, description,
+  alt text, tags, or albums hold every word typed. Only what a visitor can
+  already see is searched. It works with JavaScript switched off.
+- **Pages** you write (About, Contact) at addresses of their own, such as
+  `/about`, and in the menu with any links you add (**Admin, Pages**).
 - **Slideshow** at `/slideshow`: full screen, one photo after another, for
   the whole site or for one album or tag ("Play as a slideshow"). It loads
   each photo before showing it and cross-fades; it goes round for ever, in
@@ -568,13 +576,20 @@ your site.
 
 - **Order:** drag a photo onto another to put it in front, or use each
   photo's Up, Down, and To top buttons, which do the same from the keyboard.
-- **Several at once:** tick photos, then Hide, Show, or Delete. Deleting
-  asks first, and removes the uploaded file and every resized copy.
+- **Several at once:** tick photos, then Hide, Show, or Delete.
+- **Deleting and the trash:** a deleted photo goes to the trash. It is off
+  your site at once, and kept for 30 days, file and all, then removed for
+  good. Under **Show, Trash** you can restore it, which puts it back as it
+  was (same address, albums, and tags), or delete it for good straight
+  away, which asks first and removes the uploaded file and every resized
+  copy. Uploading a file that is in the trash is refused, with a note
+  saying where it is.
 - **Find:** show only hidden photos, photos without alt text, or photos
   that could not be processed. Each is also flagged on its card.
 - **One photo:** open it to edit its title, description, alt text, web
   address, date taken, and whether it is public or hidden; to see what the
-  file recorded (camera, lens, exposure, location); or to delete it.
+  file recorded (camera, lens, exposure, location); or to delete it (to the
+  trash).
 - **Looks:** under the photo is a strip of small previews, one for each look
   the switched-on modules offer. Choosing one sets it up for that photo,
   with a larger preview, and nothing changes until you save.
@@ -585,8 +600,9 @@ zone), or hidden as a draft. A scheduled photo is in your library but not on
 the site, the feed, or the sitemap until its time, and then appears by
 itself. In Settings you can make every new upload start as a draft.
 Hiding takes a photo off the site; it does not withdraw a picture address
-someone already has (see **Links to a photo** below). To do that, delete the
-photo.
+someone already has (see **Links to a photo** below). Nor does the trash,
+for the 30 days a photo is kept there. To withdraw the addresses, delete the
+photo and then delete it for good from the trash.
 
 **Licence and downloads.** Settings has the licence your photos are
 published under (all rights reserved by default, or a Creative Commons
@@ -678,6 +694,9 @@ What that means in practice:
   you are logged in could be used to act as you. Choose a service you would
   trust that far, or close the gap altogether by giving
   [the admin its own address](#the-admin-at-its-own-address).
+- The service is told the address of each page viewed. For the search page
+  that address holds the words searched for. A private album's pages never
+  carry the script, so the service never learns such a link.
 - Whether you owe visitors a privacy note or a cookie banner (Google
   Analytics generally does in the EU and UK; cookieless services generally
   do not) is yours to decide. Fotobogen shows no banner.
@@ -685,6 +704,27 @@ What that means in practice:
   script tags, cannot be added from the admin. That is deliberate: a box for
   pasting script would let anyone who got your password put code in every
   visitor's browser.
+
+**Admin, Pages.** Pages of words beside your photographs: About, Contact,
+anything. Give a page a title and it gets an address of its own at the top
+of your site (`/about`), which you can change, and a place in your site's
+menu unless you take it out. A page can be hidden while you write it.
+
+- **Its text is plain text with a little marking.** An empty line between
+  paragraphs; `## ` at the start of a line for a heading; `- ` for a list
+  item; `**bold**`, `*italic*`, and `[words](https://example.com)` for a
+  link. A web address or an email address written out becomes a link by
+  itself, so a contact page can be as simple as your email address. A
+  preview under the box shows how it will look.
+- **It is never HTML.** Anything typed is shown as text, and a link goes
+  only to a web address, an email address, or a page of your site. Someone
+  who got your password could not use a page to put a script on your site.
+- **Links in your menu.** On the same page, add links of your own after
+  your pages: a shop, another site, `mailto:` and your address, or a page of
+  this site such as `/album/road-trip`. Up to eight.
+- A page cannot take an address the site itself uses (`/albums`, `/admin`,
+  and so on). Up to 50 pages. Pages are in the sitemap, and in every backup.
+- Only the logged-in owner can change pages and the menu. No API token can.
 
 **Admin, Embed on another site.** Other sites can show a slideshow of your
 photos inside their own pages: a blog, a club's site, a portfolio. Switch it
@@ -740,7 +780,7 @@ with photos and with the public API (the nginx and Caddy files that come
 with it do the same when they serve photos from disk). The files have long
 names that cannot be guessed, and nothing checks who asks for one: a
 picture's address keeps working for anyone who has it, even after the photo
-is hidden, until the photo is deleted or rendered again. Each
+is hidden or in the trash, until the photo is deleted for good or rendered again. Each
 photo's page in the library has a **Links** panel: the full address of the photo's page and of each size of the picture,
 and a line of HTML that shows the photo linked to its page, each with a Copy
 button. Together with the title, description, and alt text above it, that
@@ -756,7 +796,7 @@ upload to your site without your password. A token is shown once, when it
 is made, and only a hash of it is stored. There are two kinds: **Upload
 only** (upload, list, and check photos, and retry one that failed) and **Manage photos** (also edit,
 reorder, hide, and delete photos and manage albums). No token can change
-visitor statistics, embedding, settings, skins, or site text, reach a backup, restore one, or make or
+visitor statistics, embedding, pages, the menu, settings, skins, or site text, reach a backup, restore one, or make or
 revoke tokens. Revoking a token stops it at once, and the page shows when
 each was last used.
 
@@ -783,6 +823,43 @@ Two ways to group photos:
 
 Deleting an album never deletes its photos.
 
+**Albums on the front page.** Each album has a switch, **Offer it on the
+front page** (Admin, Albums, Edit). The albums switched on appear as a row of
+names over the photos on your front page: All, then each album. A visitor
+who chooses one sees that album alone, in its own order, at an address of
+its own (`/?album=travel-photos`); All brings everything back. A new album
+is offered there unless you switch it off; with none switched on there is no
+row. Only a public album with photos in it is offered.
+
+**The order of the front page** is under Admin, Settings: **shuffled**, a
+new order for each visit, or **the order of your library**. A new site
+starts shuffled; a site set up before version 1.8.0 keeps the order of its
+library until you change it. The slideshow has its own order setting, and
+always starts again after the last photo.
+
+**Private albums.** An album can be **private**: for a client, a family, a
+few friends. Edit the album, choose **Private**, and it gets a link that
+cannot be guessed, such as `https://photos.example.com/private/Qe7…`, which
+the album's entry shows with a Copy button.
+
+- Whoever has the link sees the album, and each photo in it, with no
+  login. Nobody else does: a private album is not listed at `/albums`, in
+  the menu, in search, in the feed or sitemap, or in the public API.
+- It can hold **hidden** photos, which stay off your site. That is the
+  usual way to use it: upload, hide the photos (or make every upload start
+  as a draft, in Settings), add them to the album, make it private, and
+  send the link.
+- **Make a new link** replaces the link at once; the old one stops working
+  for everyone who has it. Making the album public or hidden ends the link
+  too.
+- A link is only as private as the people who hold it: anyone can pass it
+  on. Search engines are told to keep away, the pages are never stored by
+  browsers or proxies, the link is not sent on to other sites, and no
+  counting script is put on these pages, so a counting service never
+  learns the link.
+- A private album has no slideshow and offers no downloads, and its photos
+  show no tags, other albums, or location.
+
 ## Sample photos
 
 Fotobogen can download 25 placeholder photographs so a new site has
@@ -800,7 +877,14 @@ it to: for these photos, to check for or install an update
   is down.
 - **Later**, Overview always has **Download sample photos**, and
   **Remove sample photos** deletes all of them, and only them, in one click.
-- In a source checkout, `pnpm seed:fetch` does the same from the terminal.
+- **Two sample albums** come with them, "Coast and mountains" and "Desk and
+  table", so a new site shows how albums work: on the albums page, and as
+  a row to choose from on the front page. Delete either under **Admin,
+  Albums** whenever you like; deleting an album never touches its photos.
+  Removing the sample photos takes the sample albums with them, unless you
+  have put photos of your own into one, which then stays.
+- In a source checkout, `pnpm seed:fetch` fetches the photos from the
+  terminal (the photos only, without the sample albums).
 
 See [seed/README.md](seed/README.md) for the list and the licence.
 
@@ -1530,6 +1614,40 @@ Each audit is a red team and blue team exercise: the red team attacks a running 
 The newest audit is open below; older ones are folded under it. The same record is at [fotobogen.com/docs/security-audits](https://fotobogen.com/docs/security-audits/). To report a problem, open an issue on GitHub. If the details should not be public yet, say only that in the issue and ask for a private way to send them.
 
 <details open>
+<summary><strong>17 November 2026, version 1.8.0.</strong> 11 findings, none critical, high, or medium: 5 low, 6 informational. Outcome: 4 fixed, 6 accepted, 1 open.</summary>
+
+The third audit, of everything added since version 1.7.0: the trash, pages and menu links, search, private albums, the albums offered on the front page and its shuffled order, the sample albums, and the one-line installer. One attacker, with a running copy on this machine and the source code, sent about 150 requests of its own making, raw where a browser would tidy them, and used a real browser where one was needed. The aims: to see a photo, a page, or an album a visitor may not see; to change something without being the owner; to make text typed by an owner run as script; and to learn a private album's link. Each finding was shown against the running copy or measured. The fixes were made with a test that failed first and are in version 1.8.0.
+
+Fixed: closed in this release. Reduced: made harder or documented, not closed. Accepted: left as it is, for the reason given. Open: not yet dealt with.
+
+| # | Severity | What was found | Outcome | What was done |
+|---|---|---|---|---|
+| 1 | Low | A counting script, once loaded on a public page, could come along into a private album if the visitor arrived there from that page without the server being asked. The script would then report the album's secret link to the counting service. No link on the site makes such a move by itself; it took a call to the site's own router to show it. | **Fixed** | Arriving at a private album from a page that carries the script now asks the server for the page afresh, and the server never puts the script there. A browser test keeps it. |
+| 2 | Low | A photo in the trash could still be changed through the admin's API: its title, its place in the order, its tags, whether it was hidden. It is meant to be left exactly as it was. | **Fixed** | Changing or moving a photo in the trash is refused; only restoring it or deleting it for good touches it. |
+| 3 | Low | A page whose text had no spaces in it (20,000 letters, say) took about a third of a second to read, on every view. Someone with the owner's password could have made a site's pages slow. | **Fixed** | Addresses are looked for only where a word begins. The longest page a site can hold is read in under a twentieth of a second, whatever it is made of; a test measures it. |
+| 4 | Low | The installer checked whether the folder it was given exists by following links. A link of that name leading nowhere passed the check, and git would then have written through it to wherever it pointed. | **Fixed** | Anything at that name counts as there, a link that leads nowhere included. In installer 1.0.1. |
+| 5 | Low | The picture files of a photo in the trash, and of photos someone saw through a private album's link before the link was replaced, can still be opened by anyone who kept a picture's own address. | **Accepted** | The same as for a hidden photo (the first audit's finding 10). The addresses cannot be guessed. Deleting the photo for good withdraws them. The admin and the docs say so. |
+| 6 | Informational | A private album's link is its whole protection, and a link travels: it is in the server's log, in the browser's history, and wherever it is pasted. | **Accepted** | It is how a link works, and the admin says so beside the link. Make a new link ends the old one. The site sends no referrer, marks the pages never to be stored or listed, and loads no counting script on them. |
+| 7 | Informational | With a counting service switched on, the service is told the address of each page viewed. For the search page that address holds the words searched for, if the service records it in full. | **Accepted** | It is within what choosing a counting service already means, and the docs now say it. |
+| 8 | Informational | A program with a manage-photos token can read a private album's link and can make an album private. One with an upload-only token can list what is in the trash, as it can the library. | **Accepted** | A token is given only to the owner's own programs. The API guide says what each kind can reach. |
+| 9 | Informational | A demo visitor can read pages that are hidden, in the admin. | **Accepted** | A demo site holds nothing private; a demo visitor is not shown private albums' links. |
+| 10 | Informational | The publish script hands npm's two-factor code to npm on its command line, where another user of the same computer could see it for a moment. | **Accepted** | The code lasts about 30 seconds and is used at once, on the author's own machine. |
+| 11 | Informational | A request that carries no Origin header is told twice over that any site may read the public API. Browsers asking from another site always send that header and are told once, so nothing fails. | **Open** | Not changed in this release. |
+
+**What was attacked and held:**
+
+- **The trash.** A photo in the trash was looked for at seven addresses of its own and in eight lists (the grid, the feed, the sitemap, the slideshow, search, the albums, its album, its tag) and was in none. Restoring and deleting for good were refused from another site, with an upload-only token, and with no login. A photo that is not in the trash cannot be deleted for good.
+- **Pages and the menu.** Nineteen spellings of addresses the site uses (capitals, slashes, a circled letter, a null byte) were refused or turned into harmless ones, and the site's own twelve addresses went on answering as themselves. Twelve hostile texts in a page produced no tag and no link that could run script; ten hostile menu links were refused. Neither kind of API token could read or write pages or the menu.
+- **Search.** A hidden photo was not found by its title, description, or tag, and no photo by its file name or id. Nine inputs written to break out of the query found nothing and broke nothing. Forty six-word searches at once took 16 milliseconds.
+- **Private albums.** Fourteen public addresses were read for any trace of a private album, its name or its link: none. Eight near-misses of a real link all failed. A photo outside the album could not be reached through its link, and a photo in it gave no tags, albums, location, or download. A new link ended the old one at once. The private API carries no permission for other sites to read it.
+- **The front page.** Nine malformed requests for a shuffle were refused or answered plainly. Only an album the owner offers can be chosen on the front page: a hidden album, a private one, and names written to break the query all showed the ordinary page. Forty shuffles at once took 14 milliseconds.
+- **The installer.** A folder name cannot be read by git as an option, a version is taken only in the form of a release, and nothing typed reaches a command line on Windows.
+
+**Not tested:** Browsers other than Chromium; a private album's link with the admin at an address of its own; search and shuffling on a library of many thousands of photos; the installer on Windows. Findings left open by the earlier audits are still open.
+
+</details>
+
+<details>
 <summary><strong>17 November 2026, version 1.7.0.</strong> 7 findings, none critical, high, or medium: 4 low, 3 informational. Outcome: 3 fixed, 1 reduced, 3 accepted, none open.</summary>
 
 This audit covered what is new since the last one, above all the slideshow for other sites (version 1.6.0), the one place where Fotobogen lets another site put one of its pages in a frame. One attacker, with a running copy on this machine and the source code, tried to get any other page into a frame, to steer the frame elsewhere, to switch the slideshow on or off without being the owner, and to make it show something a visitor may not see. It also looked at the changes in 1.7.0: full screen allowed again, and the date read from a photo. Each finding was shown against the running copy. The fixes were made with a test for each and are in version 1.7.0.

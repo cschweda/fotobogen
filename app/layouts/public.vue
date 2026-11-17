@@ -46,6 +46,9 @@ useHead({
         <a href="/">{{ t('navPhotos') }}</a>
         <a v-if="site?.hasAlbums" href="/albums">{{ t('navAlbums') }}</a>
         <a href="/slideshow">{{ t('navSlideshow') }}</a>
+        <a href="/search">{{ t('navSearch') }}</a>
+        <!-- What the owner added: their pages, then their own links (Admin, Pages). -->
+        <a v-for="link in site?.menu ?? []" :key="link.href" :href="link.href" :rel="link.external ? 'noopener' : undefined">{{ link.label }}</a>
         <!-- The stylesheet shows whichever label names the other mode. -->
         <button type="button" class="fb-mode" @click="toggle">
           <span class="fb-mode__to-dark">{{ t('modeDark') }}</span><span class="fb-mode__to-light">{{ t('modeLight') }}</span>

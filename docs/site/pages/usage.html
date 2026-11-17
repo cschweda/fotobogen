@@ -8,7 +8,7 @@
   <thead><tr><th>Page</th><th>What it is for</th></tr></thead>
   <tbody>
     <tr><td><strong>Upload</strong></td><td>Adding photographs</td></tr>
-    <tr><td><strong>Library</strong></td><td>Every photo: order, hide, delete, edit, copy links</td></tr>
+    <tr><td><strong>Library</strong></td><td>Every photo: order, hide, delete, edit, copy links; and the trash</td></tr>
     <tr><td><strong>Albums</strong></td><td>Named sets of photos</td></tr>
     <tr><td><strong>Skins</strong></td><td>How the public site looks, and light or dark</td></tr>
     <tr><td><strong>Modules</strong></td><td>Looks applied to photos: film, frames, watermark</td></tr>
@@ -16,6 +16,7 @@
     <tr><td><strong>Icon and logo</strong></td><td>The picture in the browser tab, and a logo in place of the name</td></tr>
     <tr><td><strong>Search and sharing</strong></td><td>What search engines and shared links show</td></tr>
     <tr><td><strong>Visitor statistics</strong></td><td>Counting visits with a service you choose; off to begin with</td></tr>
+    <tr><td><strong>Pages</strong></td><td>Pages of words (About, Contact) and links of your own in the site's menu</td></tr>
     <tr><td><strong>Embed on another site</strong></td><td>A slideshow of your photos for other sites to show; off to begin with</td></tr>
     <tr><td><strong>Settings</strong></td><td>Title, layout, privacy, licence, slideshow</td></tr>
     <tr><td><strong>System</strong></td><td>Backup, restore, version, updates</td></tr>
@@ -63,6 +64,15 @@
 <p>Further down the same page is a <strong>Links</strong> panel: the full address of the photo's page, the address of each size of the picture, and a line of HTML that shows the photo linked to its page. Each has a <strong>Copy</strong> button. Use them in an email, a post, or another website.</p>
 <p>The pictures are public files: anyone with a picture's address can open it, with no login, and any website can show it. Nothing needs setting up for that (no CORS configuration); Fotobogen tells browsers that other sites may read its photos. Nothing checks who asks for a picture, either: its address has a long name that cannot be guessed, and keeps working for anyone who has it, even after the photo is hidden, until the photo is deleted or rendered again. The links begin with your site's address. On your own machine they begin with <code>http://localhost:5150</code>, which works only there, until you set the address under <strong>Admin, Search and sharing</strong> or as <code>SITE_URL</code> on the server.</p>
 
+<h2 id="trash">Deleting, and the trash</h2>
+<p>Deleting a photo, from the library or from its own page, moves it to the trash. It is off your site at once: the grid, its page, its albums, the feed. It is kept for <strong>30 days</strong>, with the file you uploaded, and then removed for good.</p>
+<p>In the library, choose <strong>Show, Trash</strong> to see what is there and the day each photo will go. Tick photos and press:</p>
+<ul>
+  <li><strong>Restore</strong>, to put them back as they were: the same address, albums, tags, and place in the order. A restored photo is made again from the file you uploaded, so it takes a moment to reappear.</li>
+  <li><strong>Delete for good</strong>, to remove them now. This asks first, and cannot be undone: the uploaded file and every resized copy are deleted.</li>
+</ul>
+<p>Two things to know. Uploading a file that is in the trash is refused, with a note saying where it is: restore it, or delete it for good first. And while a photo is in the trash its picture files still exist, so someone who already has a picture's own address can still open it; to withdraw those addresses, delete the photo for good.</p>
+
 <h2 id="publishing">Publishing, scheduling, and drafts</h2>
 <p>On a photo's page, <strong>Publish</strong> has three choices:</p>
 <ul>
@@ -76,6 +86,20 @@
 <ul>
   <li><strong>Albums</strong> are named sets you arrange yourself. Create them under <strong>Admin, Albums</strong>; add photos from the library (tick photos, choose an album, <strong>Add to album</strong>) or from a photo's page. A photo can be in several. Each public album has a page at <code>/album/…</code>, and they are listed at <code>/albums</code>. An album can be hidden. Deleting an album never deletes its photos.</li>
   <li><strong>Tags</strong> are short labels typed on a photo's page, separated by commas, or added to several photos at once from the library. Each has a page at <code>/tag/…</code>. A tag exists only while a photo carries it.</li>
+</ul>
+
+<h3 id="front-albums">Albums on the front page</h3>
+<p>Each album has a switch, <strong>Offer it on the front page</strong> (Admin, Albums, Edit). The albums switched on appear as a row of names over the photos on your front page: All, then each album. A visitor who chooses one sees that album alone, in its own order; All brings everything back. A new album is offered there unless you switch it off. With none switched on there is no row. Only a public album with photos in it is offered.</p>
+<p>The <strong>order of the front page</strong> is under Admin, Settings: shuffled, a new order for each visit, or the order of your library. A new site starts shuffled; a site set up before version 1.8.0 keeps the order of its library until you change it.</p>
+
+<h3 id="private-albums">Private albums</h3>
+<p>An album can be <strong>private</strong>: for a client, a family, a few friends. Under <strong>Admin, Albums</strong>, edit the album and choose <strong>Private</strong>. It gets a link that cannot be guessed, shown in the album's entry with a <strong>Copy</strong> button. Send that link to the people who may see the album.</p>
+<ul>
+  <li><strong>Whoever has the link sees the album,</strong> and each photo in it, with no login. Nobody else does: it is not on the albums page, in the menu, in search, in the feed, or in the sitemap.</li>
+  <li><strong>It can hold hidden photos,</strong> which stay off your site. The usual way: upload, hide the photos, add them to the album, make it private, send the link. To have every upload start hidden, switch that on in <strong>Settings</strong>.</li>
+  <li><strong>Make a new link</strong> replaces the link at once, and the old one stops working for everyone who has it. Making the album public or hidden ends the link too.</li>
+  <li><strong>A link is only as private as the people who hold it:</strong> anyone can pass it on. Fotobogen tells search engines to keep away, never lets a browser or proxy store the pages, does not send the link on to other sites, and puts no counting script on these pages.</li>
+  <li>A private album has no slideshow and offers no downloads, and its photos show no tags, other albums, or location.</li>
 </ul>
 
 <h2 id="public">What visitors see</h2>

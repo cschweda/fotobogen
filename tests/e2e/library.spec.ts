@@ -50,7 +50,7 @@ test('the library lists photos, flags missing alt text, and reorders from the ke
   await expect.poll(() => names(page)).toEqual(['apple.jpg', 'birch.jpg', 'cedar.jpg'])
 })
 
-test('several photos can be hidden, shown, and deleted, with a confirmation before deleting', async ({ page }) => {
+test('several photos can be hidden and shown; deleting moves them to the trash, from where they are restored or deleted for good', async ({ page }) => {
   await page.goto(server.url + '/admin/photos')
   await page.getByRole('checkbox', { name: 'birch.jpg' }).check()
   await page.getByRole('checkbox', { name: 'cedar.jpg' }).check()
@@ -70,14 +70,50 @@ test('several photos can be hidden, shown, and deleted, with a confirmation befo
   await expect(page.getByText('3 photos selected')).toBeVisible()
   await page.getByRole('button', { name: 'Select none' }).click()
   await page.getByRole('checkbox', { name: 'cedar.jpg' }).check()
+  // Deleting asks nothing, because it can be undone: the photo goes to the trash.
   await page.getByRole('button', { name: 'Delete' }).click()
-  await expect(page.getByText('Delete 1 photo for good, including the files you uploaded?')).toBeVisible()
-  await page.getByRole('button', { name: 'Cancel' }).click()
-  await expect.poll(async () => (await names(page)).length).toBe(3)
-  await page.getByRole('button', { name: 'Delete' }).click()
-  await page.getByRole('button', { name: 'Yes, delete' }).click()
   await expect.poll(() => names(page)).toEqual(['apple.jpg', 'birch.jpg'])
+  await expect(page.locator('.notice')).toContainText('1 photo moved to the trash, and off your site. Kept there for 30 days.')
+  await expect(page.getByRole('status').first()).toContainText('1 photo moved to the trash')
+  await expect(page.locator('.fb-lead')).toContainText(/^\s*2 photos,.*1 in the trash\./)
+  expect(query(server, 'select count(*) as n from photos')).toEqual([{ n: 3 }]) // still there
+  expect(await (await fetch(server.url + '/api/photos')).json()).toMatchObject({ total: 2 })
+  await expectNoAxeViolations(page)
+
+  // The trash: what is in it, when it goes for good, and no way to edit or reorder it.
+  await page.getByRole('button', { name: 'Open the trash' }).click()
+  await expect(heading(page, 'Trash')).toBeVisible()
+  await expect.poll(() => names(page)).toEqual(['cedar.jpg'])
+  await expect(page.locator('.badge', { hasText: 'Removed for good on' })).toHaveCount(1)
+  await expect(page.getByRole('link', { name: 'Edit cedar.jpg' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: /^Up:/ })).toHaveCount(0)
+  await expectNoAxeViolations(page)
+
+  // Restored, it is back in the library and on the site.
+  await page.getByRole('checkbox', { name: 'cedar.jpg' }).check()
+  await page.getByRole('button', { name: 'Restore' }).click()
+  await expect(page.getByText('The trash is empty.')).toBeVisible()
+  await expect(page.locator('.notice')).toContainText('1 photo restored.')
+  await page.getByLabel('Show').selectOption('')
+  await expect.poll(async () => (await names(page)).length).toBe(3)
+  await expect.poll(async () => (await (await fetch(server.url + '/api/photos')).json() as { total: number }).total).toBe(3)
+
+  // Deleted again, and this time for good: that is asked about first, and only the trash offers it.
+  await expect(page.getByRole('button', { name: 'Delete for good' })).toHaveCount(0)
+  await page.getByRole('checkbox', { name: 'cedar.jpg' }).check()
+  await page.getByRole('button', { name: 'Delete' }).click()
+  await page.getByLabel('Show').selectOption('trash')
+  await page.getByRole('checkbox', { name: 'cedar.jpg' }).check()
+  await page.getByRole('button', { name: 'Delete for good' }).click()
+  await expect(page.getByText('Delete 1 photo for good, including the files you uploaded? This cannot be undone.')).toBeVisible()
+  await page.getByRole('button', { name: 'Cancel' }).click()
+  await expect.poll(() => names(page)).toEqual(['cedar.jpg'])
+  await page.getByRole('button', { name: 'Delete for good' }).click()
+  await page.getByRole('button', { name: 'Yes, delete for good' }).click()
+  await expect(page.getByText('The trash is empty.')).toBeVisible()
   expect(query(server, 'select count(*) as n from photos')).toEqual([{ n: 2 }])
+  await page.getByLabel('Show').selectOption('')
+  await expect.poll(() => names(page)).toEqual(['apple.jpg', 'birch.jpg'])
 })
 
 test('a photo is edited, tried in different looks from thumbnails under it, and the change reaches the site', async ({ page }) => {
@@ -121,13 +157,14 @@ test('a photo is edited, tried in different looks from thumbnails under it, and 
   await expect(page.getByRole('img', { name: 'Rows of apple trees in blossom' })).toBeVisible()
 })
 
-test('a photo can be deleted from its own page, after confirming', async ({ page }) => {
+test('a photo is deleted from its own page to the trash, and the page says so', async ({ page }) => {
   await page.goto(server.url + '/admin/photos')
   await page.getByRole('link', { name: 'Edit birch.jpg' }).click()
+  await expect(page.getByText('It goes to the trash: off your site at once, kept for 30 days')).toBeVisible()
   await page.getByRole('button', { name: 'Delete photo' }).click()
-  await page.getByRole('button', { name: 'Yes, delete' }).click()
   await expect(page).toHaveURL(server.url + '/admin/photos')
   await expect.poll(() => names(page)).toEqual(['Apple orchard'])
+  await expect(page.locator('.fb-lead')).toContainText(/^\s*1 photo,.*1 in the trash\./)
 })
 
 test('settings change the site title and how photos are shown', async ({ page }) => {

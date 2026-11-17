@@ -5,7 +5,7 @@ Every Fotobogen site answers a small read-only JSON API: the same data its own p
 - **Read-only.** There is nothing to log in to and nothing can be changed through it.
 - **Public only.** It returns exactly what a visitor can see: processed, public photos whose publication time has come. Hidden photos, drafts, scheduled photos, and hidden albums never appear. Camera details and location follow the site's privacy settings.
 - **Open to browsers on other sites.** Responses carry `Access-Control-Allow-Origin: *`.
-- **Versioned.** Every answer from an address under `/api/photos`, `/api/albums`, `/api/tags`, `/api/slideshow`, and `/api/site` carries `X-Fotobogen-API: 1` (the health check and the feeds do not, nor does the `503` before setup). Fields may be added at any time; a field is removed or changes meaning only with a new number, noted in the [changelog](../CHANGELOG.md).
+- **Versioned.** Every answer from an address under `/api/photos`, `/api/albums`, `/api/tags`, `/api/slideshow`, `/api/search`, `/api/pages`, and `/api/site` carries `X-Fotobogen-API: 1` (the health check and the feeds do not, nor does the `503` before setup). Fields may be added at any time; a field is removed or changes meaning only with a new number, noted in the [changelog](../CHANGELOG.md).
 
 The admin's own endpoints under `/api/admin/` are not part of this; they need a login and may change between versions.
 
@@ -18,6 +18,8 @@ The admin's own endpoints under `/api/admin/` are not part of this; they need a 
 - [One album](#one-album)
 - [One tag](#one-tag)
 - [Slideshow](#slideshow)
+- [Search](#search)
+- [One page](#one-page)
 - [Images](#images)
 - [Feeds](#feeds)
 - [Health](#health)
@@ -39,6 +41,9 @@ The admin's own endpoints under `/api/admin/` are not part of this; they need a 
   "language": "en",
   "text": { "navPhotos": "Fotografias" },
   "seo": { "homeTitle": "", "titlePattern": "{page} | {site}", "description": "", "indexing": true, "siteUrl": "", "author": "", "twitter": "", "googleVerification": "", "bingVerification": "", "card": null },
+  "menu": [{ "label": "About", "href": "/about", "external": false }],
+  "homeOrder": "random",
+  "frontAlbums": [{ "slug": "road-trip", "title": "Road Trip" }],
   "hasAlbums": true
 }
 ```
@@ -49,7 +54,7 @@ The admin's own endpoints under `/api/admin/` are not part of this; they need a 
 
 `GET /api/photos?page=1`
 
-Thirty photos a page, newest first (the order set in the library).
+Thirty photos a page, newest first (the order set in the library). That is always the order here, whatever the site's own front page shows. For a shuffle, add `order=random&seed=<a whole number>`: the photos are dealt in a random order that is the same for every page asked for with the same seed, so pages do not repeat or miss photos. Any other `order` answers `400`.
 
 ```json
 {
@@ -118,7 +123,7 @@ A page past the end returns an empty `tiles`.
 { "albums": [{ "slug": "road-trip", "title": "Road Trip", "description": "Three days north.", "count": 12, "cover": { "url": "/media/…-square-….webp", "width": 480, "height": 480 } }] }
 ```
 
-Only public albums with at least one visible photo.
+Only public albums with at least one visible photo. A private album (one reached by a secret link) is never in the public API.
 
 ## One album
 
@@ -162,6 +167,30 @@ Image addresses are relative to the site (`/media/<name>.webp`). Each name conta
 
 All images are WebP. Sizes: `thumb` 480 px wide, `square` 480 × 480, `medium` 1280 px on the long edge, `large` 2560 px. Nothing is enlarged, so a small photo has smaller copies.
 
+## Search
+
+`GET /api/search?q=<words>&page=1`
+
+The public photos that match, in the same shape as [Photos](#photos), with `query`: the words as they were understood.
+
+```json
+{ "query": "sea road", "page": 1, "pages": 1, "total": 2, "tiles": [] }
+```
+
+Every word must be found, in any case, somewhere in a photo's title, description, alt text, tags, or the titles of the public albums it is in. Up to six words and 100 characters are used. An empty search finds nothing. Only what a visitor can see is searched: not hidden photos, not photos in the trash, not the names of hidden albums.
+
+## One page
+
+`GET /api/pages/<slug>`
+
+A page the owner wrote, such as About. `/api/site` lists the ones in the menu, under `menu`, followed by the owner's own links (`external` is `true` for a link to another site).
+
+```json
+{ "slug": "about", "title": "About", "body": "I photograph the **coast**.\n\n## Contact\n\nWrite to me@example.com." }
+```
+
+`body` is plain text with a little marking, never HTML: an empty line between paragraphs, `## ` and `### ` for headings, `- ` for list items, `**bold**`, `*italic*`, and `[words](address)` for links. Web and email addresses written out are links too. If you draw it yourself, treat it as text; [`shared/page-text.ts`](../shared/page-text.ts) reads it into pieces and allows a link only to an `http(s)` address, a `mailto:` address, or a path on the site. A hidden page answers `404`.
+
 ## Feeds
 
 - `GET /feed.xml`: RSS of the thirty newest photos.
@@ -183,7 +212,7 @@ Go by the HTTP status. `message` is for people, is not on every error (the `503`
 
 ## The admin API, with a token
 
-Everything above is public and read-only. The admin's own API, under `/api/admin/`, needs a login, or an **API token** made under **Admin, API tokens**. A token is sent in a header:
+Everything above is public and read-only. The admin's own API, under `/api/admin/`, needs a login, or an **API token** made under **Admin, API tokens**. A `manage` token reaches everything about albums, a private album's link included, so give one only to a program of your own. A token is sent in a header:
 
 ```
 Authorization: Bearer fb_…
@@ -196,7 +225,7 @@ A request with a token needs no cookie and no `Origin` header, and is judged by 
 | `upload` | `POST /api/admin/photos` (upload), `GET /api/admin/photos` (list), `GET /api/admin/photos/<id>`, `POST /api/admin/photos/<id>/retry` |
 | `manage` | Everything under `/api/admin/photos` and `/api/admin/albums`, and `GET /api/admin/overview` |
 
-Anything else answers `403`. No token can reach settings, skins, site text, visitor statistics, embedding, backups, restore, or the tokens themselves. A wrong or revoked token answers `401`. A header that is not in the form `Bearer fb_…` is not taken for a token at all: a request that changes something then answers `403`, and one that reads answers `401` asking for a login.
+Anything else answers `403`. No token can reach settings, skins, site text, pages, the menu, visitor statistics, embedding, backups, restore, or the tokens themselves. A wrong or revoked token answers `401`. A header that is not in the form `Bearer fb_…` is not taken for a token at all: a request that changes something then answers `403`, and one that reads answers `401` asking for a login.
 
 Uploading:
 
@@ -207,6 +236,8 @@ curl -H "Authorization: Bearer fb_YOUR_TOKEN" -F "file=@photo.jpg" https://photo
 ```json
 { "result": "accepted", "photo": { "id": "V1StGXR8_Z5j", "slug": "photo" } }
 ```
+
+Deleting, for a `manage` token: `DELETE /api/admin/photos/<id>` moves a photo to the trash (off the site, kept for 30 days); `POST /api/admin/photos/<id>/restore` takes it back out; `DELETE /api/admin/photos/<id>?forever=1` deletes a photo that is in the trash for good, and answers `409` for one that is not.
 
 The photo is processed in the background; `GET /api/admin/photos/<id>` shows `"status": "ready"` when it is done, or `"failed"` with the reason in `error` (from version 1.3.3; before that the reason was only in the list, `GET /api/admin/photos`). A duplicate or a file that is not an accepted photo answers `409` or `422` with a `message` saying why; one that is too large answers `413`, and a request with no file in it `400`. Unlike the public API, the admin API is not covered by the version promise in [UPGRADING.md](UPGRADING.md): it may change in a minor release, and the changelog will say so.
 

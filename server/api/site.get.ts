@@ -2,7 +2,8 @@
 import { publicBrand } from '../utils/brand.ts'
 import { resolveSettings } from '../core/config.ts'
 import { defineEventHandler } from 'nuxt/server'
-import { publicAlbums } from '../utils/public.ts'
+import { siteMenu } from '../utils/pages.ts'
+import { frontAlbums, publicAlbums } from '../utils/public.ts'
 import { getSetting } from '../utils/settings.ts'
 import { cleanLanguage, cleanText } from '../../shared/site-text.ts'
 import { seoSettings, sharingCard } from '../utils/seo.ts'
@@ -21,6 +22,12 @@ export default defineEventHandler(() => {
   mode: activeSkin().mode,
   // Whether to offer visitors a link to the albums.
   hasAlbums: publicAlbums().length > 0,
+  // The front page: whether its photos are in the library's order or dealt afresh for each visit,
+  // and the albums a visitor may choose there to see alone.
+  homeOrder: getSetting<'sequence' | 'random'>('layout.home_order', 'random') === 'sequence' ? 'sequence' : 'random',
+  frontAlbums: frontAlbums(),
+  // What the owner added to the menu: their pages, then their own links.
+  menu: siteMenu(),
   // The owner's icon and logo, if they uploaded any.
   brand: publicBrand(),
   // The language the site's words are in, for the page's lang attribute.

@@ -11,7 +11,7 @@
 // works afterwards. Written to run on Node.js 18, so that on an old Node.js
 // it can say what is needed rather than fail to start.
 import { spawn, spawnSync } from 'node:child_process'
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
+import { existsSync, lstatSync, readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { createInterface } from 'node:readline'
 import { userInfo } from 'node:os'
@@ -86,7 +86,15 @@ async function askYes(question, fallback) {
  */
 function folderTaken(name) {
   const path = resolve(name)
-  if (!existsSync(path)) return existsSync(dirname(path)) ? null : `There is no folder ${dirname(path)} to put it in.`
+  // lstat, not "exists": a link that leads nowhere does not exist to follow, but it is there, and git would write through it.
+  let there = true
+  try {
+    lstatSync(path)
+  }
+  catch {
+    there = false
+  }
+  if (!there) return existsSync(dirname(path)) ? null : `There is no folder ${dirname(path)} to put it in.`
   let what = `"${name}" already exists here (${path}).`
   try {
     const found = JSON.parse(readFileSync(resolve(path, 'package.json'), 'utf8'))

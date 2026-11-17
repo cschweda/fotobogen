@@ -216,7 +216,7 @@ describe('GET /api/site', () => {
       const response = await get(server, '/api/site')
       expect(response.status).toBe(200)
       expect(await response.json()).toEqual({
-        title: 'Test Photos', tagline: 'Pictures of things', grid: 'masonry', photoView: 'modal', skinVersion: expect.stringMatching(/^[0-9a-f]{10}$/), mode: 'dark', hasAlbums: false,
+        title: 'Test Photos', tagline: 'Pictures of things', grid: 'masonry', photoView: 'modal', skinVersion: expect.stringMatching(/^[0-9a-f]{10}$/), mode: 'dark', hasAlbums: false, menu: [], frontAlbums: [], homeOrder: 'sequence', // the order the test helper asks for; a new site's own is 'random'
         // The site's words and search settings, all at their defaults on a new site.
         language: 'en', text: {}, brand: { icon: null, logo: null },
         seo: { homeTitle: '', titlePattern: '{page} | {site}', description: '', indexing: true, siteUrl: '', author: '', twitter: '', googleVerification: '', bingVerification: '', card: null },
