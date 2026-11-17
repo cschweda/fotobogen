@@ -40,6 +40,8 @@ export default defineNuxtConfig({
   },
 
   // No third-party origins at run time: system fonts, icons bundled locally.
+  // (The one exception is the owner's choice: a counting service switched on under
+  // Admin, Visitor statistics, which server/plugins/10.stats.ts lets in page by page.)
   // The whole product is dark (DESIGN.md section 11), so color mode is fixed.
   ui: { fonts: false, colorMode: false },
   icon: {

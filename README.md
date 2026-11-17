@@ -9,12 +9,14 @@ A self-hosted publishing platform for photographs: install it on a small
 server, answer a few first-run questions, and get a public photo site with an
 admin backend. Think "WordPress for photos".
 
-**Version 1.3.3** (16 November 2026). It installs on macOS, Windows, and
+**Version 1.4.0** (16 November 2026). It installs on macOS, Windows, and
 Linux; takes your photographs, resizes them for every screen, and publishes
 them on a site you can restyle, reword, and put under your own name, with an
 admin behind a login. Version 1.0.0 was the first release; 1.1.0 added
 updating from the admin; 1.2.0 tells you in the admin when a new version
-is out; 1.3.0 asks a few questions at the first start.
+is out; 1.3.0 asks a few questions at the first start; 1.3.3 followed the
+first [security audit](#security-audits); 1.4.0 adds optional visitor
+statistics.
 
 - **What is in it:** [CHANGELOG.md](CHANGELOG.md), also published as
   [Releases](https://fotobogen.com/docs/changelog/).
@@ -388,7 +390,7 @@ distributions may well work, but are reported as untested.
 `/api/health` needs no login and answers `GET` and `HEAD`:
 
 ```json
-{ "status": "ok", "version": "1.3.3", "database": "ok", "queue": { "depth": 0 }, "uptime": 86400 }
+{ "status": "ok", "version": "1.4.0", "database": "ok", "queue": { "depth": 0 }, "uptime": 86400 }
 ```
 
 It returns `200` when the app and its database are working and `503` when
@@ -598,6 +600,34 @@ file can carry scripts. Each picture is redrawn before it is kept, and both
 are stored in the database, so they are in every backup. Fotobogen's own
 mark appears only in the admin.
 
+**Admin, Visitor statistics.** Fotobogen counts nothing itself, and until
+you choose a service here your pages load nothing from anywhere else. To
+count visits, choose **Plausible** (paste the script address from its
+snippet), **Google Analytics** (your measurement ID, `G-…`), or **Another
+service** that is installed with one script tag, such as Umami, Fathom,
+GoatCounter, Simple Analytics, or Cloudflare Web Analytics (its script
+address and any `data-` attributes). You give an address or an ID, and
+Fotobogen writes the script tag: no code is typed into the admin, and
+nothing typed there is ever run as script.
+
+What that means in practice:
+
+- The script is on the public pages only: never on the admin, the login, or
+  setup, and never while you are logged in, so your own visits are not
+  counted. To check it works, open your site in a private window.
+- Your pages may then report to that one service. Everything else stays
+  blocked, as before.
+- Only the logged-in owner can change it. No API token can, and a demo
+  visitor cannot.
+- You are trusting the service: its script runs on every visitor's page.
+  Whether you owe visitors a privacy note or a cookie banner (Google
+  Analytics generally does in the EU and UK; cookieless services generally
+  do not) is yours to decide. Fotobogen shows no banner.
+- Custom JavaScript of your own, or a service that needs code between
+  script tags, cannot be added from the admin. That is deliberate: a box for
+  pasting script would let anyone who got your password put code in every
+  visitor's browser.
+
 **Admin, Skins** changes how it looks ([Skins](#skins)).
 
 **Links to a photo.** The resized copies of every public photo are served
@@ -625,7 +655,7 @@ upload to your site without your password. A token is shown once, when it
 is made, and only a hash of it is stored. There are two kinds: **Upload
 only** (upload, list, and check photos, and retry one that failed) and **Manage photos** (also edit,
 reorder, hide, and delete photos and manage albums). No token can change
-settings, skins, or site text, reach a backup, restore one, or make or
+visitor statistics, settings, skins, or site text, reach a backup, restore one, or make or
 revoke tokens. Revoking a token stops it at once, and the page shows when
 each was last used.
 

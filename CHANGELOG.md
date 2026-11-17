@@ -13,6 +13,20 @@ is built from this file.
 
 Nothing yet.
 
+## [1.4.0] - 2026-11-16
+
+### Added
+
+- **Visitor statistics.** A new page in the admin lets the owner count visits with a service of their choice: Plausible, Google Analytics, or any service installed with one script tag (Umami, Fathom, GoatCounter, Simple Analytics, Cloudflare Web Analytics, and others). It is off until chosen; a site that does not use it still loads nothing from anywhere else.
+- The owner gives a script address, a measurement ID, or `data-` attributes, and Fotobogen writes the script tag. No code is typed into the admin, and there is deliberately no box for pasting script: that would let anyone who got the password put code in every visitor's browser.
+- The script is on public pages only: never on the admin, the login, or setup, and never while the owner is logged in, so their own visits are not counted.
+- A page with the script may report to that one service. Everything else stays blocked.
+- Only the logged-in owner can change it. API tokens and demo visitors cannot.
+
+### Upgrading from 1.3.3
+
+**Admin, System, Update to version 1.4.0**, or `pnpm fotobogen update`. Docker: `docker compose pull`, then `docker compose up -d`. Nothing changes for your visitors unless you choose a service under **Admin, Visitor statistics**.
+
 ## [1.3.3] - 2026-11-16
 
 The documentation was read against the code, line by line, looking for anything it promised that the code did not do. This release fixes what that found: five faults in the code, and the places where the documentation said more than was true.
@@ -233,6 +247,7 @@ Later entries list only what changed.
 - One admin account only. No comments, no shop, no storage outside the server's own disk.
 
 [Unreleased]: https://github.com/cschweda/fotobogen/commits/staging
+[1.4.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.4.0
 [1.3.3]: https://github.com/cschweda/fotobogen/releases/tag/v1.3.3
 [1.3.2]: https://github.com/cschweda/fotobogen/releases/tag/v1.3.2
 [1.3.1]: https://github.com/cschweda/fotobogen/releases/tag/v1.3.1
