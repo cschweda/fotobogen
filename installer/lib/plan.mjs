@@ -19,7 +19,8 @@ export const BANNER = [
 
 export const HELP = `Installs Fotobogen, a photo website you host yourself.
 
-  npx create-fotobogen@latest [folder] [options]
+  npx fotobogen@latest [folder] [options]
+  npx fotobogen@latest install [folder] [options]     (the same)
 
   folder             Where to put it: a folder that does not exist yet. Asked for if
                      left out (default: ${DEFAULT_FOLDER}).
@@ -39,6 +40,8 @@ installed outside the folder you name, except pnpm if you agree to that.
 /** Reads the command line. `problem` is set when it cannot be understood. */
 export function parseArgs(argv) {
   const options = { folder: null, release: null, yes: false, start: true, help: false, version: false, problem: null }
+  // "npx fotobogen install" reads naturally, and installing is all this does: the word may be said first.
+  if (argv[0] === 'install') argv = argv.slice(1)
   for (let index = 0; index < argv.length; index++) {
     const arg = argv[index]
     if (arg === '--help' || arg === '-h') options.help = true

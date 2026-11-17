@@ -55,6 +55,7 @@
     <div class="pages__here">
       <h2>On this page</h2>
       <ul>
+        <li><a href="#one-line">The one-line install</a></li>
         <li><a href="#choose">Which way to install</a></li>
         <li><a href="#requirements">What the machine needs</a></li>
         <li><a href="#macos">macOS</a></li>
@@ -80,7 +81,21 @@
 <h1>Installation</h1>
 <p class="lead">Pick the section that matches your machine. Each one ends at the same place: a web address and a setup token, which the <a href="#first-run">first run</a> section takes from there.</p>
 
+<h2 id="one-line">The one-line install</h2>
+<p>With <a href="https://nodejs.org">Node.js 24</a> and git on the machine, one command installs Fotobogen:</p>
+<pre tabindex="0"><code>npx fotobogen@latest</code></pre>
+<p>It asks which folder to put it in, fetches the newest release, installs its packages, builds it, and offers to start it. Then go on to <a href="#first-run">the first run</a>.</p>
+<ul>
+  <li><strong>It checks first.</strong> Node.js 24, git, and pnpm 10. If pnpm is missing it offers to install it; that is the only thing it installs outside the folder you name.</li>
+  <li><strong>It never installs into a folder that already exists.</strong> If the name is taken it says so before doing anything, and suggests a free one. To name the folder yourself: <code>npx fotobogen@latest fotobogen-live</code>.</li>
+  <li><strong>It does what the steps on this page do by hand,</strong> and nothing else. The npm package <code>fotobogen</code> is only this installer, two small files with no dependencies; Fotobogen itself comes from GitHub with git, so <a href="/docs/updating/">updating from the admin</a> works afterwards.</li>
+  <li><strong>On a server,</strong> it ends by saying how to run the site under pm2 (its settings file, <code>ecosystem.config.cjs</code>, is in every install) and how to install pm2 if it is missing. On a server managed by Laravel Forge it also says what nginx needs: the proxy, and <code>client_max_body_size</code> for uploads. The sections below have the rest: a domain, HTTPS, nginx.</li>
+  <li><strong>Other choices:</strong> <code>--release 1.7.0</code> installs a particular version, <code>--yes</code> asks nothing, and <code>--help</code> lists everything.</li>
+</ul>
+<p>It has been run for real on macOS, and its tests run on Linux. On Windows, follow <a href="#windows">the Windows steps</a> for now. If a step fails, it says which, and how to carry on by hand from there.</p>
+
 <h2 id="choose">Which way to install</h2>
+<p>The one-line install above covers a Mac, a Linux computer, and the first steps on a server without Docker. Each way, by hand:</p>
 <div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
   <thead><tr><th>You have</th><th>Use</th><th>Result</th></tr></thead>
   <tbody>
@@ -140,7 +155,7 @@ Fotobogen is running. Open it in a browser on this computer:
 Logging in works at that address, or over https.</code></pre></li>
 </ol>
 <p><strong>If <code>pnpm install</code> stops and says Node.js is too old,</strong> the terminal you are in is using an older version, even if a newer one is installed. With nvm, <code>nvm use 24</code> switches the terminal you are in; <code>nvm alias default 24</code> only affects terminals opened afterwards. nvm keeps tools separately for each version of Node.js, so install pnpm again after switching: <code>npm install -g pnpm@10</code>.</p>
-<p><strong>To install into a folder with another name,</strong> give the name when you clone: <code>git clone https://github.com/cschweda/fotobogen.git fotobogen-live</code>, then <code>cd fotobogen-live</code> and carry on as above. Each folder is its own site with its own <code>data</code>; see <a href="#several">several installs on one machine</a>.</p>
+<p><strong>To install into a folder with another name,</strong> name it to the installer (<code>npx fotobogen@latest fotobogen-live</code>), or give the name when you clone: <code>git clone https://github.com/cschweda/fotobogen.git fotobogen-live</code>, then <code>cd fotobogen-live</code> and carry on as above. Each folder is its own site with its own <code>data</code>; see <a href="#several">several installs on one machine</a>.</p>
 <p>Leave that Terminal window open while you use the site; <kbd>Control</kbd> + <kbd>C</kbd> stops it, and <code>pnpm start</code> starts it again with everything as you left it. Go on to <a href="#first-run">the first run</a>.</p>
 <p>To reach it from another device on your home network, use the Mac's name or address in place of <code>localhost</code>, for example <code>http://my-mac.local:5150</code>. You can look around the public site that way, but <strong>logging in works only over HTTPS or on <code>localhost</code></strong>, so do the admin work on the Mac itself. From another computer you can borrow the Mac's <code>localhost</code> over SSH: run <code>ssh -L 5150:localhost:5150 you@my-mac.local</code> there, leave it open, and browse to <code>http://localhost:5150</code>.</p>
 
@@ -407,7 +422,7 @@ pnpm start</code></pre>
 <div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
   <thead><tr><th>Each install needs its own</th><th>How</th></tr></thead>
   <tbody>
-    <tr><td><strong>Folder</strong></td><td>The name you give <code>git clone</code>.</td></tr>
+    <tr><td><strong>Folder</strong></td><td>The name you give the installer (<code>npx fotobogen@latest fotobogen-live</code>) or <code>git clone</code>.</td></tr>
     <tr><td><strong>Port</strong></td><td>Put <code>PORT=5160</code> (any free port) in a <code>.env</code> file in its folder. Without one, a second copy started in a terminal asks whether to run beside the first, takes the next free port, and prints its address.</td></tr>
     <tr><td><strong>Data folder</strong></td><td>Nothing to do: it is <code>data</code> inside the install's own folder. Never point two installs at one data folder.</td></tr>
     <tr><td><strong>pm2 name</strong>, on a server</td><td>Change <code>name: 'fotobogen'</code> in its <code>ecosystem.config.cjs</code>, to <code>fotobogen-live</code>, say.</td></tr>

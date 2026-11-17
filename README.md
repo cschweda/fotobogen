@@ -158,6 +158,28 @@ public site on a server, see [Docker quick start](#docker-quick-start),
 [Without Docker (pm2)](#without-docker-pm2), or
 [the installation guide](https://fotobogen.com/docs/installation/).
 
+**The one-line install.** With [Node.js 24](https://nodejs.org) and git on
+the machine, one command does everything in this section:
+
+```bash
+npx fotobogen@latest
+```
+
+It asks which folder to put it in, fetches the newest release, installs its
+packages, builds it, and offers to start it. If pnpm is missing it offers to
+install that too. It never installs into a folder that already exists. Name
+the folder on the command line to skip the question:
+`npx fotobogen@latest fotobogen-live`. The npm package `fotobogen` is only
+this installer ([`installer/`](installer), two small files with no
+dependencies); Fotobogen itself comes from GitHub with git, so updating from
+the admin works afterwards. It has been run for real on macOS, and its tests
+run on Linux; on Windows, use the steps below for now.
+
+At the end it also says how to run the site under pm2 on a server, and on a
+server managed by Laravel Forge it says what nginx needs.
+
+The same steps by hand:
+
 **1. Have Node.js 24 and pnpm 10.**
 
 ```bash
@@ -200,8 +222,10 @@ Leave the terminal open while you use the site. Control + C stops it, and
 
 ### In a folder with another name
 
-The folder does not have to be called `fotobogen`. `git clone` takes the
-folder's name as a second argument, and everything else is the same:
+The folder does not have to be called `fotobogen`. With the one-line
+install, name it: `npx fotobogen@latest fotobogen-live`. By hand,
+`git clone` takes the folder's name as a second argument, and everything
+else is the same:
 
 ```bash
 git clone https://github.com/cschweda/fotobogen.git fotobogen-live
@@ -222,7 +246,7 @@ itself. What they must not share:
 
 | Each install needs its own | How |
 |---|---|
-| Folder | The name you give `git clone` |
+| Folder | The name you give the installer, or `git clone` |
 | Port | Put `PORT=5160` (any free port) in a `.env` file in its folder. Without one, a second copy started in a terminal asks whether to run beside the first, takes the next free port, and prints its address |
 | Data folder | Nothing to do: it is `data` inside the install's own folder. Never point two installs at one data folder |
 | pm2 name, on a server | Change `name: 'fotobogen'` in its `ecosystem.config.cjs`, to `fotobogen-live`, say ([Without Docker (pm2)](#without-docker-pm2)) |

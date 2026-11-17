@@ -76,7 +76,7 @@
 <p>Version numbers follow <a href="https://semver.org">semantic versioning</a>: a change in the first number means something you rely on changed, the second adds features, and the third only fixes. <a href="https://github.com/cschweda/fotobogen/blob/main/docs/UPGRADING.md">What a version number promises, and how to upgrade.</a></p>
 <h2 id="unreleased">Not yet released</h2>
 <ul>
-  <li>A one-line installer, <code>npx create-fotobogen@latest</code>, in <a href="https://github.com/cschweda/fotobogen/blob/main/create-fotobogen"><code>create-fotobogen/</code></a>: it checks the tools, asks for a folder, fetches the newest release, installs, builds, and offers to start it. It is its own npm package with its own version numbers and changelog, published with <code>./publish.sh</code>. It changes nothing in Fotobogen itself.</li>
+  <li>A one-line installer, <code>npx fotobogen@latest</code>, in <a href="https://github.com/cschweda/fotobogen/blob/main/installer"><code>installer/</code></a>: it checks the tools, asks for a folder, fetches the newest release, installs, builds, and offers to start it. It is published to npm as <code>fotobogen</code>, with its own version numbers and changelog, by <code>./publish.sh</code>. It changes nothing in Fotobogen itself. The README and the installation guide now begin with it.</li>
 </ul>
 <h2 id="v1-7-0">Version 1.7.0, 17 November 2026</h2>
 <p>The second <a href="https://fotobogen.com/docs/security-audits/">security audit</a>, of the slideshow for other sites, and a round of fixes found by installing 1.6.0 on a Mac.</p>

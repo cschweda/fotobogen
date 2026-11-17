@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Publishes create-fotobogen, the one-line installer (npx create-fotobogen@latest), to npm.
-# It does NOT publish Fotobogen itself, which is not an npm package: Fotobogen is released by
-# tagging main (see the README, Branches).
+# Publishes the one-line installer (npx fotobogen@latest) to npm, as the package "fotobogen".
+# That package is the installer in installer/, with version numbers of its own. It is NOT
+# Fotobogen itself, which is not an npm package and is released by tagging main (see the
+# README, Branches): the root package.json is private and is never published.
 #
 # Usage:
 #   ./publish.sh --dry-run   run every check and a dry-run publish; change nothing
@@ -11,11 +12,11 @@ set -euo pipefail
 #
 # A release is two commands: ./publish.sh --dry-run, then ./publish.sh.
 #
-# The version published is the one in create-fotobogen/package.json. This script never changes
+# The version published is the one in installer/package.json. This script never changes
 # it, and never commits or pushes to a branch: a push to main starts a production build of the
 # website. To release a new version of the installer, change the version and add an entry to
-# create-fotobogen/CHANGELOG.md in a pull request, merge it to main in the usual way, and then
-# run this. The only thing it pushes is the tag create-fotobogen-vX.Y.Z, which builds nothing.
+# installer/CHANGELOG.md in a pull request, merge it to main in the usual way, and then
+# run this. The only thing it pushes is the tag installer-vX.Y.Z, which builds nothing.
 #
 # It asks for npm's two-factor code last, just before it publishes: a code lasts about 30
 # seconds, and the checks take minutes. Press Enter there instead of typing a code and npm
@@ -26,7 +27,7 @@ set -euo pipefail
 # Before anything is published, it checks that:
 #   - you're in the Fotobogen root, on main, up to date with origin/main, with a clean tree;
 #   - you're logged in to npm, and the version isn't on npm or tagged on another commit;
-#   - create-fotobogen/CHANGELOG.md has an entry for the version;
+#   - installer/CHANGELOG.md has an entry for the version;
 #   - CI finished and passed for this commit (needs the GitHub CLI, logged in: without it a
 #     publish stops, and a dry run only warns);
 #   - the installer has no dependencies and no install scripts, so nothing runs on the machine
@@ -41,11 +42,11 @@ set -euo pipefail
 # be typed, and then for npm's two-factor code. What it publishes is the same tarball it
 # installed and ran. Afterwards it reads the version back from npm and compares the checksum.
 
-PACKAGE_NAME="create-fotobogen"
-PACKAGE_DIR="create-fotobogen"
+PACKAGE_NAME="fotobogen"
+PACKAGE_DIR="installer"
 BRANCH="main"
-TAG_PREFIX="create-fotobogen-v"
-EXPECTED_FILES="CHANGELOG.md LICENSE README.md bin/create-fotobogen.mjs lib/plan.mjs package.json"
+TAG_PREFIX="installer-v"
+EXPECTED_FILES="CHANGELOG.md LICENSE README.md bin/fotobogen.mjs lib/plan.mjs package.json"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -174,7 +175,7 @@ fi
 for field in dependencies optionalDependencies peerDependencies bundledDependencies bundleDependencies scripts; do
   [[ -z "$(pkg_field "$field")" ]] || die "$PACKAGE_DIR/package.json has '$field'. The installer is published with none, so that it runs nothing but its own files."
 done
-[[ "$(pkg_field 'bin["create-fotobogen"]')" == "bin/create-fotobogen.mjs" ]] || die "$PACKAGE_DIR/package.json doesn't point 'create-fotobogen' at bin/create-fotobogen.mjs."
+[[ "$(pkg_field 'bin.fotobogen')" == "bin/fotobogen.mjs" ]] || die "$PACKAGE_DIR/package.json doesn't point 'fotobogen' at bin/fotobogen.mjs."
 info "The installer has no dependencies and no scripts."
 
 # ─── Tests ──────────────────────────────────────────────────────────
@@ -182,8 +183,8 @@ info "The installer has no dependencies and no scripts."
 info "Installing the test tools..."
 pnpm install --frozen-lockfile
 info "Running the installer's tests..."
-pnpm exec vitest run tests/unit/create-fotobogen.test.ts tests/unit/create-fotobogen-run.test.ts
-for file in "$PACKAGE_DIR/bin/create-fotobogen.mjs" "$PACKAGE_DIR/lib/plan.mjs"; do
+pnpm exec vitest run tests/unit/installer.test.ts tests/unit/installer-run.test.ts
+for file in "$PACKAGE_DIR/bin/fotobogen.mjs" "$PACKAGE_DIR/lib/plan.mjs"; do
   node --check "$file" || die "$file does not parse."
 done
 [[ -z "$(git status --porcelain)" ]] || die "The checks changed the tree:"$'\n'"$(git status --short)"
@@ -198,7 +199,7 @@ FILES=$(cd "$PACKAGE_DIR" && npm pack --dry-run --json --ignore-scripts | node -
 # Exactly these and no others, so a file taken in by mistake is found here and not published.
 [[ "$FILES" == "$EXPECTED_FILES" ]] ||
   die "The package would hold: $FILES"$'\n'"It should hold exactly: $EXPECTED_FILES"
-head -1 "$PACKAGE_DIR/bin/create-fotobogen.mjs" | grep -q '^#!/usr/bin/env node' || die "bin/create-fotobogen.mjs has no #!/usr/bin/env node line."
+head -1 "$PACKAGE_DIR/bin/fotobogen.mjs" | grep -q '^#!/usr/bin/env node' || die "bin/fotobogen.mjs has no #!/usr/bin/env node line."
 info "$(wc -w <<<"$FILES" | tr -d ' ') files, exactly the ones expected."
 
 # ─── Install the real tarball and run it ────────────────────────────
@@ -212,17 +213,17 @@ TARBALL=$(ls "$SCRATCH"/*.tgz)
   cd "$SCRATCH" || exit 1
   npm init -y >/dev/null || exit 1
   npm install --ignore-scripts --no-audit --no-fund "$TARBALL" >/dev/null || exit 1
-  INSTALLED=$(npx --no-install create-fotobogen --version) || exit 1
+  INSTALLED=$(npx --no-install fotobogen --version) || exit 1
   [[ "$INSTALLED" == "$VERSION" ]] || {
-    echo "create-fotobogen --version printed '$INSTALLED', expected '$VERSION'" >&2
+    echo "fotobogen --version printed '$INSTALLED', expected '$VERSION'" >&2
     exit 1
   }
-  npx --no-install create-fotobogen --help | grep -q 'npx create-fotobogen@latest' || {
-    echo "create-fotobogen --help did not print its usage" >&2
+  npx --no-install fotobogen --help | grep -q 'npx fotobogen@latest' || {
+    echo "fotobogen --help did not print its usage" >&2
     exit 1
   }
 ) || die "The packed tarball didn't install and run."
-info "The packed tarball installs, and create-fotobogen --version prints $VERSION."
+info "The packed tarball installs, and fotobogen --version prints $VERSION."
 
 # The real thing, from the tarball: fetch the newest Fotobogen from GitHub, install its packages,
 # build it. This is what someone typing the one line gets, and it takes a few minutes.
@@ -230,7 +231,7 @@ info "Installing Fotobogen for real with the packed installer (a few minutes)...
 (
   cd "$SCRATCH" || exit 1
   # Through npx, as someone typing the one line runs it: npx changes the environment it is run in.
-  npx --no-install create-fotobogen trial-install --yes || {
+  npx --no-install fotobogen trial-install --yes || {
     echo "the installer stopped with an error (printed above)" >&2
     exit 1
   }
