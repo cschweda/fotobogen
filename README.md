@@ -79,17 +79,17 @@ free software with no warranty: keep backups of your photographs.
 
 ## Screenshots
 
-Taken from a local install of an earlier version: the admin's menu has
-since gained Pages, Visitor statistics, Embed on another site, and Two-step
-login, and the version shown is not the current one. The
+Taken from a local install. The grid, the photo page, and the admin's
+Overview are from version 1.9.0; the others are from earlier versions and
+differ in small ways, such as a shorter menu. The
 photographs are the sample photos Fotobogen can download (Unsplash
 photographs, via Lorem Picsum).
 
 What visitors see: the grid, and a photo on its own page.
 
-![The public site: a dark page with a masonry grid of photographs of different shapes](docs/screenshots/gallery.jpg)
+![The public site: a dark page with a row of album names to choose from, above a masonry grid of photographs of different shapes](docs/screenshots/gallery.jpg)
 
-![A photo page: the photograph with its title and description beside it, and Previous and Next links](docs/screenshots/photo.jpg)
+![A photo page: the photograph with its title, description, and size beside it, and Previous and Next links](docs/screenshots/photo.jpg)
 
 Editing a photo, with the strip of look previews under it and a film frame
 chosen:
