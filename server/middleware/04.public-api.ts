@@ -3,7 +3,7 @@
 // read it from a browser; these headers say so.
 import { defineEventHandler, getRequestURL } from 'nuxt/server'
 
-const PUBLIC = /^\/api\/(photos|albums|tags|slideshow|site)(\/|$)/
+const PUBLIC = /^\/api\/(photos|albums|tags|slideshow|site|pages)(\/|$)/
 
 export default defineEventHandler((event) => {
   if (!PUBLIC.test(getRequestURL(event).pathname.toLowerCase())) return

@@ -43,6 +43,13 @@
       "when": 1794937050572,
       "tag": "0005_trash",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1794938702821,
+      "tag": "0006_pages",
+      "breakpoints": true
     }
   ]
 }

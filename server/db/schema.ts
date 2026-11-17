@@ -158,3 +158,19 @@ export const apiTokens = sqliteTable('api_tokens', {
   createdAt: integer('created_at').notNull(),
   lastUsedAt: integer('last_used_at'),
 })
+
+// Pages: About, Contact, and anything else the owner writes. Each has an
+// address of its own at the top of the site (/about). The body is plain text
+// with a little marking (shared/page-text.ts), never HTML.
+export const pages = sqliteTable('pages', {
+  id: text('id').primaryKey(),
+  slug: text('slug').notNull().unique(),
+  title: text('title').notNull(),
+  body: text('body').notNull().default(''),
+  visibility: text('visibility', { enum: ['public', 'hidden'] }).notNull().default('public'),
+  // Whether the page is listed in the site's menu.
+  inMenu: integer('in_menu', { mode: 'boolean' }).notNull().default(true),
+  sortOrder: integer('sort_order').notNull().default(0),
+  createdAt: integer('created_at').notNull(),
+  updatedAt: integer('updated_at').notNull(),
+})
