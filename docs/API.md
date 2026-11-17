@@ -5,7 +5,7 @@ Every Fotobogen site answers a small read-only JSON API: the same data its own p
 - **Read-only.** There is nothing to log in to and nothing can be changed through it.
 - **Public only.** It returns exactly what a visitor can see: processed, public photos whose publication time has come. Hidden photos, drafts, scheduled photos, and hidden albums never appear. Camera details and location follow the site's privacy settings.
 - **Open to browsers on other sites.** Responses carry `Access-Control-Allow-Origin: *`.
-- **Versioned.** Every answer from an address under `/api/photos`, `/api/albums`, `/api/tags`, `/api/slideshow`, `/api/pages`, and `/api/site` carries `X-Fotobogen-API: 1` (the health check and the feeds do not, nor does the `503` before setup). Fields may be added at any time; a field is removed or changes meaning only with a new number, noted in the [changelog](../CHANGELOG.md).
+- **Versioned.** Every answer from an address under `/api/photos`, `/api/albums`, `/api/tags`, `/api/slideshow`, `/api/search`, `/api/pages`, and `/api/site` carries `X-Fotobogen-API: 1` (the health check and the feeds do not, nor does the `503` before setup). Fields may be added at any time; a field is removed or changes meaning only with a new number, noted in the [changelog](../CHANGELOG.md).
 
 The admin's own endpoints under `/api/admin/` are not part of this; they need a login and may change between versions.
 
@@ -18,6 +18,7 @@ The admin's own endpoints under `/api/admin/` are not part of this; they need a 
 - [One album](#one-album)
 - [One tag](#one-tag)
 - [Slideshow](#slideshow)
+- [Search](#search)
 - [One page](#one-page)
 - [Images](#images)
 - [Feeds](#feeds)
@@ -163,6 +164,18 @@ To show the slideshow inside another site's page without writing any code, use t
 Image addresses are relative to the site (`/media/<name>.webp`). Each name contains a hash of the file's contents, so an address never changes what it shows and can be cached for good; when a photo is re-rendered (a new film look, say) it gets new addresses. Fetch the JSON again rather than storing image addresses for long.
 
 All images are WebP. Sizes: `thumb` 480 px wide, `square` 480 × 480, `medium` 1280 px on the long edge, `large` 2560 px. Nothing is enlarged, so a small photo has smaller copies.
+
+## Search
+
+`GET /api/search?q=<words>&page=1`
+
+The public photos that match, in the same shape as [Photos](#photos), with `query`: the words as they were understood.
+
+```json
+{ "query": "sea road", "page": 1, "pages": 1, "total": 2, "tiles": [] }
+```
+
+Every word must be found, in any case, somewhere in a photo's title, description, alt text, tags, or the titles of the public albums it is in. Up to six words and 100 characters are used. An empty search finds nothing. Only what a visitor can see is searched: not hidden photos, not photos in the trash, not the names of hidden albums.
 
 ## One page
 

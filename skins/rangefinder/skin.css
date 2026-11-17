@@ -54,6 +54,11 @@
 .fb-page-title { margin: 0.5rem 0 0.5rem; font-size: clamp(1.75rem, 1.2rem + 2vw, 2.75rem); font-weight: 700; line-height: 1.05; letter-spacing: -0.03em; }
 .fb-page-description { max-width: 38rem; margin: 0 0 2rem; color: var(--fb-muted); white-space: pre-line; }
 .fb-page-actions { margin: 0 0 1.5rem; font-size: 0.875rem; }
+/* The search page: a box and a button on one line, wrapping on a narrow screen. */
+.fb-search__form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 0.5rem; max-width: 34rem; margin: 1rem 0 1.25rem; }
+.fb-search__label { flex: 1 0 100%; font-size: 0.875rem; color: var(--fb-muted); }
+.fb-search__input { appearance: none; -webkit-appearance: none; flex: 1; min-width: 10rem; min-height: 2.75rem; padding: 0 0.75rem; border: 1px solid var(--fb-muted); background: var(--fb-ground); color: var(--fb-text); font: inherit; }
+.fb-search__button { appearance: none; -webkit-appearance: none; min-height: 2.75rem; padding: 0 1.25rem; border: 1px solid var(--fb-text); background: var(--fb-text); color: var(--fb-ground); font: inherit; font-weight: 700; cursor: pointer; }
 /* A page the owner wrote: text at a readable width. */
 .fb-page-body { max-width: 40rem; margin-top: 1.5rem; }
 .fb-page-body p, .fb-page-body ul { margin: 0 0 1.1rem; }

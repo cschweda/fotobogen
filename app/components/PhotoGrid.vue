@@ -3,6 +3,8 @@ import type { PublicPhoto } from '~/components/PhotoView.vue'
 
 /** `source` is the API address that returns a page of tiles; `base` the page's own address, for "More photos" links. */
 const props = defineProps<{ source: string, base: string }>()
+/** The page's own address for another page of photos. `base` may already carry a question (a search). */
+const pageAddress = (number: number) => `${props.base}${props.base.includes('?') ? '&' : '?'}page=${number}`
 
 interface Tile {
   slug: string, title: string | null, alt: string, placeholder: string | null, span: number
@@ -131,8 +133,8 @@ onBeforeUnmount(() => window.removeEventListener('popstate', onPopState))
 
     <p class="fb-visually-hidden" role="status">{{ announcement }}</p>
     <nav v-if="page < pages || firstPage > 1" class="fb-pager" :aria-label="t('gridMore')">
-      <a v-if="firstPage > 1" class="fb-pager__more" :href="firstPage === 2 ? base : `${base}?page=${firstPage - 1}`">{{ t('gridPrevious') }}</a>
-      <a v-if="page < pages" class="fb-pager__more" :href="`${base}?page=${page + 1}`" @click="more">{{ t('gridMore') }}</a>
+      <a v-if="firstPage > 1" class="fb-pager__more" :href="firstPage === 2 ? base : pageAddress(firstPage - 1)">{{ t('gridPrevious') }}</a>
+      <a v-if="page < pages" class="fb-pager__more" :href="pageAddress(page + 1)" @click="more">{{ t('gridMore') }}</a>
     </nav>
 
     <dialog ref="dialog" class="fb-modal" :aria-label="t('photoDialog')" @close="closed" @keydown="onKey">

@@ -475,6 +475,11 @@ Visitors see two kinds of page:
 - **Albums and tags**: `/albums`, `/album/<name>`, and `/tag/<name>` (see
   [Albums and tags](#albums-and-tags)).
 
+- **Search** at `/search`: a box, and the photos whose title, description,
+  alt text, tags, or albums hold every word typed. Only what a visitor can
+  already see is searched. It works with JavaScript switched off.
+- **Pages** you write (About, Contact) at addresses of their own, such as
+  `/about`, and in the menu with any links you add (**Admin, Pages**).
 - **Slideshow** at `/slideshow`: full screen, one photo after another, for
   the whole site or for one album or tag ("Play as a slideshow"). It loads
   each photo before showing it and cross-fades; it goes round for ever, in
