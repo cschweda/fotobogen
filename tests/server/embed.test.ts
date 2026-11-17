@@ -86,6 +86,38 @@ describe('the slideshow for other sites', () => {
     }
   })
 
+  it('answers every other spelling of its address, and every wrong album or tag, with the bare refusal that cannot be framed', async () => {
+    // Found by the audit of 17 November 2026: some of these reached the site's own error page, menu and all.
+    const album = (await (await send('POST', '/api/admin/albums', { title: 'Kept Back' })).json() as { id: string }).id
+    await send('PATCH', `/api/admin/albums/${album}`, { visibility: 'hidden' })
+    for (const path of [
+      '/embed/slideshow?album=no-such-album', '/embed/slideshow?tag=no-such-tag', '/embed/slideshow?album=kept-back', // hidden looks the same as missing
+      '/embed/slideshow?album=coast&album=coast', '/embed/slideshow?album=coast&tag=night', '/embed/slideshow?album=',
+      '/embed/slideshow////', '/Embed/SlideShow', '/embed/slideshow;x', '/embed//slideshow',
+    ]) {
+      const { status, html, policy, frameOptions } = await page(path)
+      expect(status, path).toBe(404)
+      expect(html, path).toBe('This slideshow is not available.')
+      expect(policy, path).toContain('frame-ancestors \'none\'')
+      expect(frameOptions, path).toBe('DENY')
+    }
+    expect((await page('/embed/slideshow/')).status).toBe(200) // one trailing slash is the same address
+    expect((await page('/embed/slideshow?album=coast')).status).toBe(200)
+  })
+
+  it('is never kept by a browser or a proxy, so switching it off takes effect at once', async () => {
+    expect((await get(server, '/embed/slideshow')).headers.get('cache-control')).toBe('no-store')
+  })
+
+  it('shows hostile text in a title as text', async () => {
+    const list = await (await get(server, '/api/admin/photos', { cookie })).json() as { photos: { id: string }[] }
+    await send('PATCH', `/api/admin/photos/${list.photos[0]!.id}`, { title: '"><img src=x onerror=alert(1)>', alt: '\'"><script>alert(2)</script>' })
+    const { html } = await page('/embed/slideshow')
+    expect(html).not.toContain('<img src=x')
+    expect(html).not.toContain('<script>alert(2)')
+    expect(html).toContain('&lt;img src=x')
+  })
+
   it('opens nothing else to other sites: every other page still refuses to be framed by them', async () => {
     for (const path of ['/', '/slideshow', '/albums']) {
       const { policy, frameOptions } = await page(path)

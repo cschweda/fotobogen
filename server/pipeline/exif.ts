@@ -45,12 +45,37 @@ function shutterSpeed(seconds: number | null): string | null {
   return seconds >= 1 ? `${short(seconds)} s` : `1/${Math.round(1 / seconds)} s`
 }
 
+/**
+ * A camera writes the day and time on its own clock, with no time zone:
+ * "2019:07:04 22:30:00". The reader turns that into a moment using the
+ * server's time zone, so the same photo would be dated differently on two
+ * servers, and an evening photo could land on the next day. This puts each
+ * date back as the camera wrote it, held as if that clock read UTC, which is
+ * how the site shows dates. Nothing else in the metadata is touched.
+ */
+export function datesAsWritten(parsed: Record<string, unknown>): Record<string, unknown> {
+  const kept = { ...parsed }
+  for (const key of ['DateTimeOriginal', 'CreateDate', 'ModifyDate']) {
+    const date = kept[key]
+    if (date instanceof Date && !Number.isNaN(date.getTime())) {
+      const written = new Date(0)
+      // Set in two steps: given a year below 100 in one go, JavaScript adds 1900 to it.
+      written.setUTCFullYear(date.getFullYear(), date.getMonth(), date.getDate())
+      written.setUTCHours(date.getHours(), date.getMinutes(), date.getSeconds(), 0)
+      kept[key] = written
+    }
+  }
+  return kept
+}
+
 export function exifColumns(parsed: Parsed): ExifColumns {
   const exif = parsed ?? {}
   const focal = positive(exif.FocalLength)
   const fNumber = positive(exif.FNumber)
   const iso = positive(exif.ISO)
-  const taken = exif.DateTimeOriginal
+  // When the picture was taken; failing that, when it became a file (a scan, some phone apps).
+  // Never when it was last edited, which says nothing about when it was taken.
+  const taken = [exif.DateTimeOriginal, exif.CreateDate].find(date => date instanceof Date && !Number.isNaN(date.getTime())) as Date | undefined
   const lat = exif.latitude
   const lng = exif.longitude
   const located = typeof lat === 'number' && typeof lng === 'number'
@@ -63,7 +88,7 @@ export function exifColumns(parsed: Parsed): ExifColumns {
     aperture: fNumber === null ? null : `f/${short(fNumber)}`,
     shutter: shutterSpeed(positive(exif.ExposureTime)),
     iso: iso === null ? null : Math.round(iso),
-    takenAt: taken instanceof Date && !Number.isNaN(taken.getTime()) ? taken.getTime() : null,
+    takenAt: taken ? taken.getTime() : null,
     lat: located ? lat : null,
     lng: located ? lng : null,
   }

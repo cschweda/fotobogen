@@ -9,7 +9,7 @@ A self-hosted publishing platform for photographs: install it on a small
 server, answer a few first-run questions, and get a public photo site with an
 admin backend. Think "WordPress for photos".
 
-**Version 1.6.0** (17 November 2026). It installs on macOS, Windows, and
+**Version 1.7.0** (17 November 2026). It installs on macOS, Windows, and
 Linux; takes your photographs, resizes them for every screen, and publishes
 them on a site you can restyle, reword, and put under your own name, with an
 admin behind a login. Version 1.0.0 was the first release; 1.1.0 added
@@ -17,7 +17,9 @@ updating from the admin; 1.2.0 tells you in the admin when a new version
 is out; 1.3.0 asks a few questions at the first start; 1.3.3 followed the
 first [security audit](#security-audits); 1.4.0 adds optional visitor
 statistics; 1.5.0 lets the admin live at an address of its own; 1.6.0 lets
-other sites show a slideshow of your photos.
+other sites show a slideshow of your photos; 1.7.0 followed the
+second audit, makes the full-screen buttons work, and gives the photo
+window one size in the middle of the screen.
 
 - **What is in it:** [CHANGELOG.md](CHANGELOG.md), also published as
   [Releases](https://fotobogen.com/docs/changelog/).
@@ -198,18 +200,41 @@ Leave the terminal open while you use the site. Control + C stops it, and
 
 ### In a folder with another name
 
-`git clone` takes the folder's name as a second argument, so an install can
-sit beside a copy of the source, or beside another install:
+The folder does not have to be called `fotobogen`. `git clone` takes the
+folder's name as a second argument, and everything else is the same:
 
 ```bash
 git clone https://github.com/cschweda/fotobogen.git fotobogen-live
 cd fotobogen-live
+pnpm install
+pnpm build
+pnpm start
 ```
 
-Each folder is its own site, with its own `data` folder. If one copy is
-running when you start another, Fotobogen asks whether to run both; the
-second takes the next free port and prints its address. To give a copy a
-port of its own, put `PORT=5160` in a `.env` file in its folder.
+Use this to keep an install beside a copy of the source, or to run several
+sites on one machine: `fotobogen-live`, `fotobogen-test`, one for each
+client. Nothing in Fotobogen depends on the folder's name.
+
+**Several installs on one machine.** Each folder is a complete site of its
+own: its own photos and database (in its own `data` folder), its own login,
+its own settings (in its own `.env`), and its own version, updated by
+itself. What they must not share:
+
+| Each install needs its own | How |
+|---|---|
+| Folder | The name you give `git clone` |
+| Port | Put `PORT=5160` (any free port) in a `.env` file in its folder. Without one, a second copy started in a terminal asks whether to run beside the first, takes the next free port, and prints its address |
+| Data folder | Nothing to do: it is `data` inside the install's own folder. Never point two installs at one data folder |
+| pm2 name, on a server | Change `name: 'fotobogen'` in its `ecosystem.config.cjs`, to `fotobogen-live`, say ([Without Docker (pm2)](#without-docker-pm2)) |
+| Address, on a server | Its own domain and its own nginx `server` block, forwarding to its port ([nginx in front of the app](#nginx-in-front-of-the-app)) |
+
+One thing to know on your own computer: a browser keeps one login for
+`localhost`, whatever the port. Logging in to the install at
+`http://localhost:5160` logs you out of the one at `http://localhost:5150`.
+To be logged in to two at once, open the second at `http://127.0.0.1:5160`
+(the browser counts that as a different place), or in another browser or a
+private window. On a server, each install has its own domain and this does
+not arise.
 
 Run the commands from the folder you mean. `cd` into it first and check with
 `pwd`; cloning from inside an existing copy puts the new one inside the old.
@@ -392,7 +417,7 @@ distributions may well work, but are reported as untested.
 `/api/health` needs no login and answers `GET` and `HEAD`:
 
 ```json
-{ "status": "ok", "version": "1.6.0", "database": "ok", "queue": { "depth": 0 }, "uptime": 86400 }
+{ "status": "ok", "version": "1.7.0", "database": "ok", "queue": { "depth": 0 }, "uptime": 86400 }
 ```
 
 It returns `200` when the app and its database are working and `503` when
@@ -671,6 +696,12 @@ What that means in practice:
   set under Visitor statistics.
 - Only the logged-in owner can switch it on or off. No API token can, and a
   demo visitor cannot.
+- Switching it off does not hide your photos. They stay public on your
+  site, and the [public API](docs/API.md) is still readable from any site,
+  so someone who writes their own code can show them.
+- It plays from your server. Each person who sees it on another site
+  fetches it from here, so a busy site that embeds it adds to your server's
+  work, and your server's log shows which pages embed it.
 - Some hosted site builders remove frames from pasted code. There the
   slideshow cannot be shown; link to its address instead.
 
@@ -1475,6 +1506,36 @@ Each audit is a red team and blue team exercise: the red team attacks a running 
 The newest audit is open below; older ones are folded under it. The same record is at [fotobogen.com/docs/security-audits](https://fotobogen.com/docs/security-audits/). To report a problem, open an issue on GitHub. If the details should not be public yet, say only that in the issue and ask for a private way to send them.
 
 <details open>
+<summary><strong>17 November 2026, version 1.7.0.</strong> 7 findings, none critical, high, or medium: 4 low, 3 informational. Outcome: 3 fixed, 1 reduced, 3 accepted, none open.</summary>
+
+This audit covered what is new since the last one, above all the slideshow for other sites (version 1.6.0), the one place where Fotobogen lets another site put one of its pages in a frame. One attacker, with a running copy on this machine and the source code, tried to get any other page into a frame, to steer the frame elsewhere, to switch the slideshow on or off without being the owner, and to make it show something a visitor may not see. It also looked at the changes in 1.7.0: full screen allowed again, and the date read from a photo. Each finding was shown against the running copy. The fixes were made with a test for each and are in version 1.7.0.
+
+Fixed: closed in this release. Reduced: made harder or documented, not closed. Accepted: left as it is, for the reason given. Open: not yet dealt with.
+
+| # | Severity | What was found | Outcome | What was done |
+|---|---|---|---|---|
+| 1 | Low | At the slideshow's address, a wrong album or tag, a hidden album, an album named twice, and some odd spellings of the address (extra slashes, capital letters) were answered with the site's own "not found" page, menu and links included, or with the slideshow itself. That address is the one whose rules allow framing by other sites. No other site could in fact frame the result, but only because the security layer happens not to apply an address's rules to error pages, which nothing in Fotobogen guaranteed. | **Fixed** | The address is decided before any page is made. It must be spelled exactly, and an album or tag must be one a visitor may see; anything else gets a bare "not available" that cannot be framed. A hidden album answers exactly as a missing one. |
+| 2 | Low | The slideshow's page carried no instruction against being stored. A cache between the server and a viewer could have gone on showing it after the owner switched it off. | **Fixed** | It is marked never to be stored, so switching it off takes effect at once. |
+| 3 | Low | Once switched on, any site can embed the slideshow, and every viewer's browser fetches it from this server. A busy site that embeds it adds its visitors to this server's load, and there is no limit. | **Accepted** | The photos are public already, and a list of allowed sites was left out on purpose. Switching it off stops it everywhere at once. The admin page and the docs now say this. |
+| 4 | Low | Version 1.7.0 allows the site's own pages to go full screen again, which the photo and slideshow buttons need. A counting service's script on a public page could, after a click, put that page full screen and draw anything there, a false login for one. | **Accepted** | It is within the trust already described for a counting service, which is off unless the owner chooses one. Pages framed inside the site get no full screen, and camera, microphone, location, and screen capture stay refused. |
+| 5 | Informational | Switching the slideshow off stops the framed page only. The public API stays readable from any site, as documented, so someone can still build their own slideshow of the public photos. | **Reduced** | The admin page and the docs now say so in plain words. |
+| 6 | Informational | A photo whose camera data claimed a year below 100 had 1900 added to it. | **Fixed** | The date is kept as written. |
+| 7 | Informational | The server's log shows which pages embed the slideshow and the addresses of the people who view it there, as for any frame. | **Accepted** | It is how a frame works. The docs now mention it. |
+
+**What was attacked and held:**
+
+- **Putting any other page in a frame.** Twenty-seven spellings of addresses under /embed were tried as raw requests: dot segments, encoded dots and slashes, doubled slashes, capitals, semicolons, extra path, a null byte, a line break, a payload file. None returned anything another site can frame except the slideshow itself. The home page, the site's slideshow, a photo page, the login, and the admin kept their refusals.
+- **Steering the frame.** From a second site in a real browser, the frame was pointed at the home page, the login, the admin, the site's slideshow, a wrong album, and a dot-segment address: each time it showed nothing. The site's own router, told inside the frame to go to the home page, asked the server afresh and was refused. Taking that guard out made the home page appear in the frame, so a test now keeps it in.
+- **Switching it on or off.** Refused: a request from another site, with a "null" origin, with no origin, from a lookalike name, sent as plain text, with an API token, and with no login. A plain visit to an address changes nothing. Anything but true or false is refused.
+- **What it shows.** A hidden album cannot be told from one that does not exist. With the owner's login sent along, the page is the same and sets no cookie. Hostile markup in a title and alt text came out as text.
+- **Counting.** With a counting service switched on, the slideshow page carried no script of it and no permission to report to it.
+- **The admin at its own address.** The slideshow is served only at the public address; at the admin's it is sent on, and it cannot be switched from the public address. The code the admin gives points at the public site.
+
+**Not tested:** Pasting the code into real site builders; browsers other than Chromium; a real proxy or CDN in front; heavy load from a busy embedding site. The seven findings left open by the audit of 16 November 2026 are still open.
+
+</details>
+
+<details>
 <summary><strong>16 November 2026, version 1.3.3.</strong> 36 findings, none critical: 1 high, 5 medium, 19 low, 11 informational. Outcome: 20 fixed, 3 reduced, 6 accepted, 7 open.</summary>
 
 Four separate attackers, each with its own running copy of version 1.3.3 and the source code, took one area each: login and permissions; files going in and out (uploads, backups, skins, modules); injected text and outbound requests (pages, the feed, webhooks); and the updater, the command line, and the deployment files. Each finding had to be shown working against the running copy or proven from the code. The fixes were then made, with a test for each where one could be written, and released in version 1.3.3.

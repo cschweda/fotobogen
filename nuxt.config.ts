@@ -69,6 +69,10 @@ export default defineNuxtConfig({
     headers: {
       // TLS is terminated by the proxy, which also sets HSTS.
       strictTransportSecurity: false,
+      // The photo page and the slideshow have a full-screen button. The default here forbids full screen
+      // outright, and the browser then refuses the button; the site's own pages are allowed it, and
+      // nothing framed inside them is. Camera, microphone, location, and screen capture stay refused.
+      permissionsPolicy: { fullscreen: ['self'] },
       contentSecurityPolicy: {
         'default-src': ["'self'"],
         'img-src': ["'self'", 'data:', 'blob:'],

@@ -13,6 +13,34 @@ is built from this file.
 
 Nothing yet.
 
+## [1.7.0] - 2026-11-17
+
+The second [security audit](https://fotobogen.com/docs/security-audits/), of the slideshow for other sites, and a round of fixes found by installing 1.6.0 on a Mac.
+
+### Security
+
+- **A second audit, of the slideshow for other sites.** Seven findings, none above low: three fixed, one reduced, three accepted, none open. The whole record is in the README and at [fotobogen.com/docs/security-audits](https://fotobogen.com/docs/security-audits/). No way was found to put any other page of a site in a frame, to steer the frame elsewhere, or to switch the slideshow without being the owner.
+- The slideshow's address is now decided before any page is made. It must be spelled exactly, and an album or tag must be one a visitor may see. Anything else, a hidden album included, gets a bare "not available" that cannot be framed, where before some of these reached the site's own "not found" page.
+- The slideshow's page is marked never to be stored by a browser or a proxy, so switching it off takes effect at once.
+- New tests keep these in place, among them a real browser on a second site trying to steer the frame to the home page, the login, and the admin.
+
+### Fixed
+
+- **Full screen works.** The full-screen button over a photo and the one in the slideshow (and the F key there) did nothing: the browser refused, and its console said "Permissions policy violation: fullscreen is not allowed in this document". A header Fotobogen sends with every page forbade full screen outright. The site's own pages are now allowed it. Camera, microphone, location, and screen capture stay refused, and a page framed inside the site gets no full screen.
+- **The photo that opens over the grid is centred, in a card that is the same for every photo.** It sat in the top-left corner of the window, and its size changed with each photo: short for a wide picture, tall for an upright one. It now sits in the middle of the window at one size, with the words in one column down its right side and the picture in the middle of the room that is left, whatever the picture's shape and however little there is to say about it. On a phone it is one column, as before. This is in all four skins. A skin of your own gets the centring without any change; for the fixed card, copy the block that begins `@media (min-width: 52.01rem)` from a bundled skin.
+- **The date taken is the day the camera wrote.** The date is read from the photo's own metadata at upload, as before, but it was worked out on the server's clock: on a server not set to UTC, a photo taken in the evening could show the next day's date. It is now kept exactly as the camera wrote it. Photos already uploaded keep the date they have; correct one under **Admin, Library**, or upload it again.
+- A photo whose camera data claimed a year below 100 had 1900 added to it. The date is kept as written.
+- The tests stood in for the browser's part of full screen, which is why this was missed. A new test asks a real browser whether full screen is allowed, and another measures where the photo window sits.
+
+### Changed
+
+- When a file has no "date taken" but does say when it was made (a scan, some phone apps), that date is used. A file that says only when it was last edited, or nothing, leaves the date empty for you to fill in. The field in the admin now says where its date comes from.
+- The README and the installation guide explain installing into a folder with another name and running several installs on one machine: what each needs of its own, and why a browser keeps only one login for `localhost`.
+
+### Updating
+
+**Admin, System, Update to version 1.7.0**, or `pnpm fotobogen update`. Docker: `docker compose pull`, then `docker compose up -d`.
+
 ## [1.6.0] - 2026-11-17
 
 ### Added
@@ -291,6 +319,7 @@ Later entries list only what changed.
 - One admin account only. No comments, no shop, no storage outside the server's own disk.
 
 [Unreleased]: https://github.com/cschweda/fotobogen/commits/staging
+[1.7.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.7.0
 [1.6.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.6.0
 [1.5.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.5.0
 [1.4.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.4.0
