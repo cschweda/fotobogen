@@ -817,6 +817,29 @@ Two ways to group photos:
 
 Deleting an album never deletes its photos.
 
+**Private albums.** An album can be **private**: for a client, a family, a
+few friends. Edit the album, choose **Private**, and it gets a link that
+cannot be guessed, such as `https://photos.example.com/private/Qe7…`, which
+the album's entry shows with a Copy button.
+
+- Whoever has the link sees the album, and each photo in it, with no
+  login. Nobody else does: a private album is not listed at `/albums`, in
+  the menu, in search, in the feed or sitemap, or in the public API.
+- It can hold **hidden** photos, which stay off your site. That is the
+  usual way to use it: upload, hide the photos (or make every upload start
+  as a draft, in Settings), add them to the album, make it private, and
+  send the link.
+- **Make a new link** replaces the link at once; the old one stops working
+  for everyone who has it. Making the album public or hidden ends the link
+  too.
+- A link is only as private as the people who hold it: anyone can pass it
+  on. Search engines are told to keep away, the pages are never stored by
+  browsers or proxies, the link is not sent on to other sites, and no
+  counting script is put on these pages, so a counting service never
+  learns the link.
+- A private album has no slideshow and offers no downloads, and its photos
+  show no tags, other albums, or location.
+
 ## Sample photos
 
 Fotobogen can download 25 placeholder photographs so a new site has

@@ -1,6 +1,7 @@
 // Albums and tags: two ways of grouping photos. An album is a named set
 // the owner arranges; a tag is a short label, and exists only while some
 // photo carries it.
+import { randomBytes } from 'node:crypto'
 import { newId } from '../core/ids.ts'
 import type { PipelineContext } from './context.ts'
 import { slugify, uniqueSlug } from './slug.ts'
@@ -11,7 +12,12 @@ export interface AlbumInput {
   slug?: unknown
   visibility?: unknown
   coverPhotoId?: unknown
+  /** true: give a private album a new link, which ends the old one. */
+  newPrivateLink?: unknown
 }
+
+/** The secret part of a private album's link: 32 characters, 192 bits, from the system's random source. */
+export const newPrivateToken = (): string => randomBytes(24).toString('base64url')
 
 export type AlbumResult
   = | { ok: true, id: string, slug: string }
@@ -43,10 +49,10 @@ function checkAlbum(input: AlbumInput, creating: boolean) {
     slug = typeof input.slug === 'string' ? slugify(input.slug) : ''
     if (!slug) errors.slug = 'Use letters and numbers. This becomes the album\'s web address.'
   }
-  let visibility: 'public' | 'hidden' | undefined
+  let visibility: 'public' | 'hidden' | 'private' | undefined
   if (input.visibility !== undefined) {
-    if (input.visibility === 'public' || input.visibility === 'hidden') visibility = input.visibility
-    else errors.visibility = 'Choose public or hidden.'
+    if (input.visibility === 'public' || input.visibility === 'hidden' || input.visibility === 'private') visibility = input.visibility
+    else errors.visibility = 'Choose public, hidden, or private.'
   }
   return { errors, title, description, slug, visibility }
 }
@@ -60,8 +66,8 @@ export function createAlbum(ctx: PipelineContext, input: AlbumInput): AlbumResul
     const slug = uniqueSlug(checked.slug ?? slugify(checked.title!), id, candidate => sqlite.prepare(`select 1 from albums where slug = ?`).get(candidate) !== undefined)
     const { next } = sqlite.prepare(`select coalesce(max(sort_order), 0) + 1 as next from albums`).get() as { next: number }
     const now = Date.now()
-    sqlite.prepare(`insert into albums (id, slug, title, description, visibility, sort_order, created_at, updated_at) values (?, ?, ?, ?, ?, ?, ?, ?)`)
-      .run(id, slug, checked.title, checked.description ?? null, checked.visibility ?? 'public', next, now, now)
+    sqlite.prepare(`insert into albums (id, slug, title, description, visibility, private_token, sort_order, created_at, updated_at) values (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+      .run(id, slug, checked.title, checked.description ?? null, checked.visibility ?? 'public', checked.visibility === 'private' ? newPrivateToken() : null, next, now, now)
     return { ok: true, id, slug }
   })()
 }
@@ -77,14 +83,24 @@ export function updateAlbum(ctx: PipelineContext, id: string, input: AlbumInput)
   }
   if (Object.keys(checked.errors).length > 0) return { ok: false, reason: 'invalid', errors: checked.errors }
   return sqlite.transaction((): AlbumResult => {
-    const current = sqlite.prepare(`select slug from albums where id = ?`).get(id) as { slug: string } | undefined
+    const current = sqlite.prepare(`select slug, visibility, private_token as token from albums where id = ?`).get(id) as { slug: string, visibility: string, token: string | null } | undefined
     if (!current) return { ok: false, reason: 'not-found', errors: {} }
+    // A private album has a link; nothing else does. Leaving "private" ends the link for good:
+    // made private again, the album gets a new one, never the old.
+    const becomes = checked.visibility ?? current.visibility
+    let token: string | null | undefined
+    if (input.newPrivateLink === true) {
+      if (becomes !== 'private') return { ok: false, reason: 'invalid', errors: { newPrivateLink: 'Only a private album has a link.' } }
+      token = newPrivateToken()
+    }
+    else if (becomes === 'private' && !current.token) token = newPrivateToken()
+    else if (becomes !== 'private' && current.token) token = null
     if (checked.slug !== undefined && checked.slug !== current.slug && sqlite.prepare(`select 1 from albums where slug = ? and id <> ?`).get(checked.slug, id)) {
       return { ok: false, reason: 'slug-taken', errors: { slug: 'Another album already has this address. Choose a different one.' } }
     }
     const sets: string[] = []
     const values: unknown[] = []
-    for (const [column, value] of [['title', checked.title], ['description', checked.description], ['slug', checked.slug], ['visibility', checked.visibility], ['cover_photo_id', cover]] as const) {
+    for (const [column, value] of [['title', checked.title], ['description', checked.description], ['slug', checked.slug], ['visibility', checked.visibility], ['cover_photo_id', cover], ['private_token', token]] as const) {
       if (value === undefined) continue
       sets.push(`${column} = ?`)
       values.push(value)

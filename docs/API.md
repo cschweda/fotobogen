@@ -121,7 +121,7 @@ A page past the end returns an empty `tiles`.
 { "albums": [{ "slug": "road-trip", "title": "Road Trip", "description": "Three days north.", "count": 12, "cover": { "url": "/media/…-square-….webp", "width": 480, "height": 480 } }] }
 ```
 
-Only public albums with at least one visible photo.
+Only public albums with at least one visible photo. A private album (one reached by a secret link) is never in the public API.
 
 ## One album
 
