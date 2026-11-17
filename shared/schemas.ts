@@ -41,6 +41,8 @@ export type SetupAnswers = z.infer<typeof setupSchema>
 export const loginSchema = z.object({
   username: z.string().min(1).max(64),
   password: z.string().min(1).max(PASSWORD_MAX_LENGTH),
+  /** With two-step login on: a code from the authenticator app, or a backup code. */
+  code: z.string().max(40).optional(),
 })
 
 /** One message per field, keyed by field name, from a failed zod parse. */

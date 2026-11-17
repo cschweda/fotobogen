@@ -55,6 +55,7 @@
     <div class="pages__here">
       <h2>On this page</h2>
       <ul>
+        <li><a href="#audit-2026-11-17-c">17 November 2026, the fourth audit</a></li>
         <li><a href="#audit-2026-11-17-b">17 November 2026, the third audit</a></li>
         <li><a href="#audit-2026-11-17">17 November 2026</a></li>
         <li><a href="#audit-2026-11-16">16 November 2026</a></li>
@@ -69,6 +70,24 @@
 <p>The newest audit is open below; older ones are folded under it. To report a problem, <a href="https://github.com/cschweda/fotobogen/issues">open an issue on GitHub</a>. If the details should not be public yet, say only that in the issue and ask for a private way to send them.</p>
 
 <details class="audit" open>
+<summary><strong>17 November 2026, two-step login (after version 1.8.0).</strong> 5 findings, none critical, high, or medium: 1 low, 4 informational. Outcome: 1 fixed, 4 accepted.</summary>
+<h2 id="audit-2026-11-17-c">17 November 2026, the fourth audit</h2>
+<p>The fourth audit, of two-step login alone: the code after the password, the backup codes, the key a server keeps for every Fotobogen on it, the admin page, and the commands on the server. One attacker, with a running copy on this machine and the source code, sent about 60 requests of its own making. The aims: to log in without a code; to read the key or the backup codes without the password; to use one code twice; to switch two-step login on or off from another site or with an API token; and to fetch the key file by a web address. Each finding was shown against the running copy. The fix was made with a test that failed first.</p>
+<p>Fixed: closed in this release. Reduced: made harder or documented, not closed. Accepted: left as it is, for the reason given. Open: not yet dealt with.</p>
+<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
+  <thead><tr><th>#</th><th>Severity</th><th>What was found</th><th>Outcome</th><th>What was done</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>Low</td><td>Wrong codes were limited for each address only (five in fifteen minutes). Someone who already had the password could have guessed at the six digits from many addresses at once.</td><td><strong>Fixed</strong></td><td>Wrong codes are also counted for the account, wherever they come from: after ten in fifteen minutes no code is looked at, right or wrong, until the wait is over.</td></tr>
+    <tr><td>2</td><td>Informational</td><td>The key and the backup codes are kept readable in the database, so they are in every backup file.</td><td><strong>Accepted</strong></td><td>The key has to be readable for a code to be checked, and the codes are kept readable so the owner can see them again. Sealing them with the site&#x27;s secret would lock the owner out after restoring a backup on another server. Keep backups as private as the site.</td></tr>
+    <tr><td>3</td><td>Informational</td><td>One key serves every Fotobogen of one server account. Whoever reads one site&#x27;s database, or the key file, can pass the second step of the others.</td><td><strong>Accepted</strong></td><td>Chosen so that an authenticator app holds one entry for the server. Such a reader still needs each site&#x27;s password, and can already read whatever that account can. <code>TWO_STEP_KEY_FILE</code> gives a site a key of its own.</td></tr>
+    <tr><td>4</td><td>Informational</td><td>The login page says the password was right before it asks for the code.</td><td><strong>Accepted</strong></td><td>It has to, to ask. Guessing at the password is limited as before.</td></tr>
+    <tr><td>5</td><td>Informational</td><td>Someone who has the password can use up the account&#x27;s ten wrong codes and keep the owner waiting, fifteen minutes at a time.</td><td><strong>Accepted</strong></td><td>It needs the password. The owner changes it on the server with <code>reset-admin</code>, which also signs everyone out.</td></tr>
+  </tbody>
+</table></div>
+<p>What was tried and held: requests from another site, with no Origin header, and as plain text are refused; a browser that is already logged in cannot read the key or the codes, make new codes, or switch it off without the password; an API token and a demo visitor are refused everywhere; one code sent eight times at the same moment logs in once, an app code and a backup code alike; numbers, lists, and very long text in place of a code or a password are refused without an error; the key file is not reachable at any address tried, and is not in a backup file; nothing else the admin answers contains the key or a code; every answer is marked not to be kept by a browser or a proxy.</p>
+</details>
+
+<details class="audit">
 <summary><strong>17 November 2026, version 1.8.0.</strong> 11 findings, none critical, high, or medium: 5 low, 6 informational. Outcome: 4 fixed, 6 accepted, 1 open.</summary>
 <h2 id="audit-2026-11-17-b">17 November 2026, the third audit</h2>
 <p>The third audit, of everything added since version 1.7.0: the trash, pages and menu links, search, private albums, the albums offered on the front page and its shuffled order, the sample albums, and the one-line installer. One attacker, with a running copy on this machine and the source code, sent about 150 requests of its own making, raw where a browser would tidy them, and used a real browser where one was needed. The aims: to see a photo, a page, or an album a visitor may not see; to change something without being the owner; to make text typed by an owner run as script; and to learn a private album&#x27;s link. Each finding was shown against the running copy or measured. The fixes were made with a test that failed first and are in version 1.8.0.</p>

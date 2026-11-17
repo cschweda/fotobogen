@@ -17,7 +17,7 @@ describe('applyMigrations', () => {
     expect(applied.length).toBeGreaterThan(0)
     expect(tableNames(db)).toEqual(expect.arrayContaining(['users', 'settings', 'photos', 'derivatives', 'jobs', 'modules']))
     const userColumns = (db.prepare(`pragma table_info(users)`).all() as { name: string }[]).map(c => c.name)
-    expect(userColumns).toEqual(['id', 'username', 'password_hash', 'role', 'session_version', 'created_at', 'last_login_at'])
+    expect(userColumns).toEqual(['id', 'username', 'password_hash', 'role', 'session_version', 'created_at', 'last_login_at', 'totp_secret', 'totp_last_step', 'backup_codes'])
   })
 
   it('applies nothing the second time', () => {

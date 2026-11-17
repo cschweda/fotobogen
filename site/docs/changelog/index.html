@@ -55,6 +55,7 @@
     <div class="pages__here">
       <h2>On this page</h2>
       <ul>
+        <li><a href="#unreleased">Not yet released</a></li>
         <li><a href="#v1-8-0">Version 1.8.0, 17 November 2026</a></li>
         <li><a href="#v1-7-0">Version 1.7.0, 17 November 2026</a></li>
         <li><a href="#v1-6-0">Version 1.6.0, 17 November 2026</a></li>
@@ -74,6 +75,23 @@
 <h1>Releases</h1>
 <p class="lead">What is in each version of Fotobogen, newest first. This page is made from <a href="https://github.com/cschweda/fotobogen/blob/main/CHANGELOG.md">CHANGELOG.md</a> in the source, so the two always agree.</p>
 <p>Version numbers follow <a href="https://semver.org">semantic versioning</a>: a change in the first number means something you rely on changed, the second adds features, and the third only fixes. <a href="https://github.com/cschweda/fotobogen/blob/main/docs/UPGRADING.md">What a version number promises, and how to upgrade.</a></p>
+<h2 id="unreleased">Not yet released</h2>
+<h3>Added</h3>
+<ul>
+  <li><strong>Two-step login</strong>, as an option under <strong>Admin, Two-step login</strong>. Switched on, logging in takes your password and then a six-digit code from an authenticator app such as Google Authenticator. Nothing is sent by text message or email. It is off until you switch it on, and updating changes nothing about how you log in.</li>
+  <li><strong>Ten backup codes</strong>, given when you switch it on, each good for one login when the phone is not to hand. The page shows them again whenever you ask, marks the used ones, lets you download them, and makes ten new ones on request.</li>
+  <li><strong>One entry in the authenticator app for a whole server.</strong> The key is kept once for the account Fotobogen runs under, so a site you delete and install again, or a second site on the same server, uses the entry the app already has. The entry is named after the server. In Docker each site has its own key unless <code>TWO_STEP_KEY</code> is set.</li>
+  <li><strong><code>pnpm fotobogen two-step off</code></strong> switches it off from the server, for an owner who has lost both the phone and the backup codes; <strong><code>pnpm fotobogen two-step key</code></strong> shows the server's key, to add to a new phone.</li>
+  <li>The key and the backup codes are shown only after the password is given again, and no API token can read or change them. Switching two-step login on signs out every other browser.</li>
+</ul>
+<h3>Security</h3>
+<ul>
+  <li>The fourth <a href="https://fotobogen.com/docs/security-audits/">security audit</a>, of two-step login: 5 findings, 1 low and 4 informational; 1 fixed, 4 accepted. Wrong codes are counted for the account as well as for each address, so guessing from many addresses at once is stopped after ten.</li>
+</ul>
+<h3>Fixed</h3>
+<ul>
+  <li>A browser test of the sample photos that could fail on a slow Windows machine.</li>
+</ul>
 <h2 id="v1-8-0">Version 1.8.0, 17 November 2026</h2>
 <p>Pages, search, private albums, a trash, albums to choose from on the front page, a one-line installer, and the third <a href="https://fotobogen.com/docs/security-audits/">security audit</a>. Updating changes nothing about how your site looks or behaves until you use the new things, with one exception: deleting a photo now moves it to the trash.</p>
 <h3>Added</h3>

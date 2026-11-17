@@ -1505,6 +1505,65 @@ docker compose exec app node scripts/fotobogen.mjs reset-admin    # Docker
 It asks for a new password (at least 12 characters) and signs out every
 existing session. The app does not need to be stopped.
 
+## Two-step login
+
+An option, off until you switch it on under **Admin, Two-step login**. With it
+on, logging in takes your password and then a six-digit code from an
+authenticator app on your phone (Google Authenticator, or any other that reads
+the usual QR codes). Someone who learns your password still cannot log in.
+Nothing is sent by text message or email, and nothing is paid for.
+
+To switch it on: give your password again, scan the QR code with the app (or
+type the key), and enter the code the app shows. You are then given **ten
+backup codes**. Download them and keep them somewhere other than your phone.
+
+**A lost phone does not lock you out.** There are three ways back in:
+
+1. **A backup code.** Type one where the login page asks for the code. Each
+   works once. While you are logged in, the same page shows the codes again,
+   marks the used ones, and makes ten new ones when you ask.
+2. **A new phone.** While you are logged in, the page shows the QR code and
+   the key again, so the entry can be added to another phone.
+3. **The server.** With no phone and no codes:
+
+   ```bash
+   pnpm fotobogen two-step off                                        # native
+   docker compose exec app node scripts/fotobogen.mjs two-step off    # Docker
+   ```
+
+   It switches two-step login off and signs out every session. Log in with
+   your password and switch it on again. `pnpm fotobogen two-step key` prints
+   the server's key, to add to a new phone without logging in at all.
+
+**One entry in your app for the whole server.** The key is kept once for the
+account Fotobogen runs under, in `.fotobogen/two-step-key.json` in that
+account's home folder, not once per site. Every Fotobogen you install on that
+server uses it, so a site you delete and install again, or a second site
+beside the first, needs no new entry: the page says the app already has one,
+and asks only for a code. The entry is named after the server, `Fotobogen
+(your-server-name)`, so an entry from a server you no longer use is easy to
+recognise and delete. Each site copies the key into its own database when you
+switch two-step login on, so a site goes on working if the file is lost, and a
+backup restored on another server still asks for the same codes.
+
+In Docker the home folder does not last, so each site keeps a key of its own
+in its data folder and the entry is named after the site. To share one entry
+between Docker sites, give them the same `TWO_STEP_KEY` (the key as the app
+shows it). `TWO_STEP_KEY_FILE` names a different file to keep the key in.
+
+What else to know:
+
+- Each code works once, and codes are accepted for the half minute they
+  belong to and the one either side. If a right code is refused, check the
+  clock on the phone.
+- Five wrong attempts from one address, or ten wrong codes for the account
+  from anywhere, and logging in waits fifteen minutes.
+- Switching it on signs out every other browser.
+- API tokens are not affected, and no token can read or change any of this.
+- `reset-admin` changes the password only; two-step login stays as it was.
+- A backup holds the key and the backup codes, as it holds everything else
+  in the database. Keep backups as private as the site.
+
 ## The data directory
 
 Everything a site owns lives in one directory. Backing up or moving a site
@@ -1516,6 +1575,7 @@ site's address, are in the app's folder, not here.)
 | `fotobogen.db` | The SQLite database |
 | `secret` | The key that seals login cookies. Keep it private; deleting it signs everyone out |
 | `setup-token` | The one-time setup token. Exists only until setup is complete |
+| `two-step-key.json` | In Docker only: the key for [two-step login](#two-step-login). Elsewhere it is in `.fotobogen` in the home folder. Never in a backup file; keep it private |
 | `originals/` | The photos exactly as you uploaded them. Back these up |
 | `derivatives/` | Resized copies. They can always be made again from the originals |
 | `tmp/` | Uploads in progress. Emptied every time the server starts |
@@ -1562,6 +1622,8 @@ not by `true` or `yes`.
 | `NO_COLOR` | off | Set to `1` in the environment (`NO_COLOR=1 pnpm start`), not in `.env`, for plain text with no colour in the terminal |
 | `FOTOBOGEN_SKIP_PREFLIGHT` | off | Set to `1` to start even when the preflight check fails. At your own risk |
 | `WEBHOOKS_ALLOW_PRIVATE` | off | Set to `1` to let webhooks call this machine or a private network |
+| `TWO_STEP_KEY` | not set | The key for [two-step login](#two-step-login), instead of one kept in a file. For giving several Docker sites one entry in an authenticator app |
+| `TWO_STEP_KEY_FILE` | `.fotobogen/two-step-key.json` in the home folder (in Docker, in the data folder) | Where the key for two-step login is kept |
 | `TRUST_PROXY` | off | Set to `1` only when the app is reachable solely through your own reverse proxy. It makes the login limit use the visitor's address from `X-Forwarded-For`, and makes full links (the feed, the sitemap, links in the admin) use `https` when the proxy's `X-Forwarded-Proto` says so. The shipped Docker and pm2 files set it |
 
 **After changing `.env`, restart; never rebuild.** `.env` is read each time
@@ -1614,6 +1676,25 @@ Each audit is a red team and blue team exercise: the red team attacks a running 
 The newest audit is open below; older ones are folded under it. The same record is at [fotobogen.com/docs/security-audits](https://fotobogen.com/docs/security-audits/). To report a problem, open an issue on GitHub. If the details should not be public yet, say only that in the issue and ask for a private way to send them.
 
 <details open>
+<summary><strong>17 November 2026, two-step login (after version 1.8.0).</strong> 5 findings, none critical, high, or medium: 1 low, 4 informational. Outcome: 1 fixed, 4 accepted.</summary>
+
+The fourth audit, of two-step login alone: the code after the password, the backup codes, the key a server keeps for every Fotobogen on it, the admin page, and the commands on the server. One attacker, with a running copy on this machine and the source code, sent about 60 requests of its own making. The aims: to log in without a code; to read the key or the backup codes without the password; to use one code twice; to switch two-step login on or off from another site or with an API token; and to fetch the key file by a web address. Each finding was shown against the running copy. The fix was made with a test that failed first.
+
+Fixed: closed in this release. Reduced: made harder or documented, not closed. Accepted: left as it is, for the reason given. Open: not yet dealt with.
+
+| # | Severity | What was found | Outcome | What was done |
+|---|---|---|---|---|
+| 1 | Low | Wrong codes were limited for each address only (five in fifteen minutes). Someone who already had the password could have guessed at the six digits from many addresses at once. | **Fixed** | Wrong codes are also counted for the account, wherever they come from: after ten in fifteen minutes no code is looked at, right or wrong, until the wait is over. |
+| 2 | Informational | The key and the backup codes are kept readable in the database, so they are in every backup file. | **Accepted** | The key has to be readable for a code to be checked, and the codes are kept readable so the owner can see them again. Sealing them with the site's secret would lock the owner out after restoring a backup on another server. Keep backups as private as the site. |
+| 3 | Informational | One key serves every Fotobogen of one server account. Whoever reads one site's database, or the key file, can pass the second step of the others. | **Accepted** | Chosen so that an authenticator app holds one entry for the server. Such a reader still needs each site's password, and can already read whatever that account can. `TWO_STEP_KEY_FILE` gives a site a key of its own. |
+| 4 | Informational | The login page says the password was right before it asks for the code. | **Accepted** | It has to, to ask. Guessing at the password is limited as before. |
+| 5 | Informational | Someone who has the password can use up the account's ten wrong codes and keep the owner waiting, fifteen minutes at a time. | **Accepted** | It needs the password. The owner changes it on the server with `reset-admin`, which also signs everyone out. |
+
+What was tried and held: requests from another site, with no Origin header, and as plain text are refused; a browser that is already logged in cannot read the key or the codes, make new codes, or switch it off without the password; an API token and a demo visitor are refused everywhere; one code sent eight times at the same moment logs in once, an app code and a backup code alike; numbers, lists, and very long text in place of a code or a password are refused without an error; the key file is not reachable at any address tried, and is not in a backup file; nothing else the admin answers contains the key or a code; every answer is marked not to be kept by a browser or a proxy.
+
+</details>
+
+<details>
 <summary><strong>17 November 2026, version 1.8.0.</strong> 11 findings, none critical, high, or medium: 5 low, 6 informational. Outcome: 4 fixed, 6 accepted, 1 open.</summary>
 
 The third audit, of everything added since version 1.7.0: the trash, pages and menu links, search, private albums, the albums offered on the front page and its shuffled order, the sample albums, and the one-line installer. One attacker, with a running copy on this machine and the source code, sent about 150 requests of its own making, raw where a browser would tidy them, and used a real browser where one was needed. The aims: to see a photo, a page, or an album a visitor may not see; to change something without being the owner; to make text typed by an owner run as script; and to learn a private album's link. Each finding was shown against the running copy or measured. The fixes were made with a test that failed first and are in version 1.8.0.

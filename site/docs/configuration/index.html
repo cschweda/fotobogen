@@ -60,6 +60,7 @@
         <li><a href="#data">Okay to change: where data is kept</a></li>
         <li><a href="#uploads">Okay to change: uploads</a></li>
         <li><a href="#webhooks">Okay to change: webhooks</a></li>
+        <li><a href="#two-step">Okay to change: two-step login</a></li>
         <li><a href="#internals">Do not touch: internals</a></li>
         <li><a href="#env-only">Settings that exist only in .env</a></li>
         <li><a href="#all">Every setting at a glance</a></li>
@@ -234,6 +235,27 @@
 </table></div>
 <p>A webhook sends a message to an address you enter in the admin. By default it may only call addresses on the public internet, so that a webhook cannot be pointed at this machine or at the private network behind it. The check is made again at the moment of connecting, so a name that changes what it points to does not get through.</p>
 <p>Turn this on only if you want to call something on your own network, such as an automation tool on the same server.</p>
+
+<h2 id="two-step">Okay to change: two-step login</h2>
+<p>Two-step login is switched on in the admin, under <strong>Two-step login</strong>, not here. These two settings are in <code>.env</code> only, and only say where its key comes from. Most installs need neither.</p>
+
+<h3><code>TWO_STEP_KEY_FILE</code></h3>
+<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
+  <tbody>
+    <tr><th scope="row">Default</th><td><code>.fotobogen/two-step-key.json</code> in your home folder; in Docker, <code>two-step-key.json</code> in the data folder</td></tr>
+    <tr><th scope="row">In <code>.env</code></th><td><code>TWO_STEP_KEY_FILE=/path/to/two-step-key.json</code></td></tr>
+  </tbody>
+</table></div>
+<p>The file the key is kept in. Every Fotobogen that reads the same file shares one key, and so one entry in your authenticator app. Name a different file to give a site a key of its own. The file is made the first time two-step login is set up, readable by your account alone.</p>
+
+<h3><code>TWO_STEP_KEY</code></h3>
+<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
+  <tbody>
+    <tr><th scope="row">Default</th><td>not set</td></tr>
+    <tr><th scope="row">In <code>.env</code></th><td><code>TWO_STEP_KEY=ABCD EFGH IJKL MNOP QRST UVWX YZ23 4567</code></td></tr>
+  </tbody>
+</table></div>
+<p>The key itself, as an authenticator app shows it: letters A to Z and digits 2 to 7, at least 26 of them. When it is set, no file is used. It is for giving several Docker sites one entry in the app. Changing it does not change a site that already has two-step login on: each site keeps its own copy from the moment it was switched on.</p>
 
 <h2 id="internals">Do not touch: internals</h2>
 <div class="note">

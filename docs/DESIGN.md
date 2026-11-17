@@ -170,6 +170,8 @@ The password strength indicator is a small built-in estimate (length and charact
 
 **Lost password.** No email in v1. `pnpm fotobogen reset-admin` on the server prompts for a new password and signs out all existing sessions (section 4, `session_version`). In Docker: `docker compose exec app node scripts/fotobogen.mjs reset-admin`. The CLI is a plain Node script that shares the hashing and database code with the server and does not need the server running.
 
+**Two-step login** (added after 1.8.0). An option, never required: a TOTP code (RFC 6238, SHA-1, six digits, 30 seconds, one step either side, each code accepted once) asked for after the password, with ten single-use backup codes. No SMS and no email. The key is kept once per server account (`~/.fotobogen/two-step-key.json`; in Docker, the data folder; or `TWO_STEP_KEY`), so an authenticator app holds one entry however many sites are installed and deleted on a server, and is copied into a site's database when the option is switched on, so restoring a backup elsewhere cannot lock the owner out. The key and codes are shown only after the password is given again. The way back in with nothing to hand is `fotobogen two-step off` on the server. Wrong codes are limited per address and per account.
+
 ---
 
 ## 6. Auth and security
