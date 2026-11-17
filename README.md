@@ -9,7 +9,7 @@ A self-hosted publishing platform for photographs: install it on a small
 server, answer a few first-run questions, and get a public photo site with an
 admin backend. Think "WordPress for photos".
 
-**Version 1.8.0** (17 November 2026). It installs on macOS, Windows, and
+**Version 1.9.0** (17 November 2026). It installs on macOS, Windows, and
 Linux; takes your photographs, resizes them for every screen, and publishes
 them on a site you can restyle, reword, and put under your own name, with an
 admin behind a login. Version 1.0.0 was the first release; 1.1.0 added
@@ -20,7 +20,8 @@ statistics; 1.5.0 lets the admin live at an address of its own; 1.6.0 lets
 other sites show a slideshow of your photos; 1.7.0 followed the
 second audit and makes the full-screen buttons work; 1.8.0 adds pages,
 search, private albums, a trash, albums to choose from on the front page,
-and a one-line installer.
+and a one-line installer; 1.9.0 adds optional
+[two-step login](#two-step-login).
 
 - **What is in it:** [CHANGELOG.md](CHANGELOG.md), also published as
   [Releases](https://fotobogen.com/docs/changelog/).
@@ -442,7 +443,7 @@ distributions may well work, but are reported as untested.
 `/api/health` needs no login and answers `GET` and `HEAD`:
 
 ```json
-{ "status": "ok", "version": "1.8.0", "database": "ok", "queue": { "depth": 0 }, "uptime": 86400 }
+{ "status": "ok", "version": "1.9.0", "database": "ok", "queue": { "depth": 0 }, "uptime": 86400 }
 ```
 
 It returns `200` when the app and its database are working and `503` when
@@ -1677,9 +1678,9 @@ Each audit is a red team and blue team exercise: the red team attacks a running 
 The newest audit is open below; older ones are folded under it. The same record is at [fotobogen.com/docs/security-audits](https://fotobogen.com/docs/security-audits/). To report a problem, open an issue on GitHub. If the details should not be public yet, say only that in the issue and ask for a private way to send them.
 
 <details open>
-<summary><strong>17 November 2026, two-step login (after version 1.8.0).</strong> 6 findings, none critical, high, or medium: 2 low, 4 informational. Outcome: 2 fixed, 4 accepted.</summary>
+<summary><strong>17 November 2026, version 1.9.0.</strong> 6 findings, none critical, high, or medium: 2 low, 4 informational. Outcome: 2 fixed, 4 accepted.</summary>
 
-The fourth audit, of two-step login alone: the code after the password, the backup codes, the key a server keeps for every Fotobogen on it, the admin page, and the commands on the server. One attacker, with a running copy on this machine and the source code, sent about 60 requests of its own making. The aims: to log in without a code; to read the key or the backup codes without the password; to use one code twice; to switch two-step login on or off from another site or with an API token; and to fetch the key file by a web address. Each finding was shown against the running copy or by a test. Finding 2 was not found by the attacker: an automated review of the finished change raised it afterwards. Both fixes were made with a test that failed first.
+The fourth audit, of two-step login alone: the code after the password, the backup codes, the key a server keeps for every Fotobogen on it, the admin page, and the commands on the server. One attacker, with a running copy on this machine and the source code, sent about 60 requests of its own making. The aims: to log in without a code; to read the key or the backup codes without the password; to use one code twice; to switch two-step login on or off from another site or with an API token; and to fetch the key file by a web address. Each finding was shown against the running copy or by a test. Finding 2 was not found by the attacker: an automated review of the finished change raised it afterwards. Both fixes were made with a test that failed first and are in version 1.9.0.
 
 Fixed: closed in this release. Reduced: made harder or documented, not closed. Accepted: left as it is, for the reason given. Open: not yet dealt with.
 

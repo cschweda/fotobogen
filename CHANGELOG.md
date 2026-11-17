@@ -11,6 +11,12 @@ is built from this file.
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [1.9.0] - 2026-11-17
+
+Optional two-step login, and the fourth [security audit](https://fotobogen.com/docs/security-audits/). Updating changes nothing about how you log in until you switch it on.
+
 ### Added
 
 - **Two-step login**, as an option under **Admin, Two-step login**. Switched on, logging in takes your password and then a six-digit code from an authenticator app such as Google Authenticator. Nothing is sent by text message or email. It is off until you switch it on, and updating changes nothing about how you log in.
@@ -26,6 +32,10 @@ is built from this file.
 ### Fixed
 
 - A browser test of the sample photos that could fail on a slow Windows machine.
+
+### Updating
+
+**Admin, System, Update to version 1.9.0**, or `pnpm fotobogen update`. Docker: `docker compose pull`, then `docker compose up -d`. The update adds to the database by itself. Two-step login stays off until you switch it on under **Admin, Two-step login**.
 
 ## [1.8.0] - 2026-11-17
 
@@ -373,6 +383,7 @@ Later entries list only what changed.
 - One admin account only. No comments, no shop, no storage outside the server's own disk.
 
 [Unreleased]: https://github.com/cschweda/fotobogen/commits/staging
+[1.9.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.9.0
 [1.8.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.8.0
 [1.7.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.7.0
 [1.6.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.6.0
