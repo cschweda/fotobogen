@@ -160,7 +160,7 @@ onBeforeUnmount(() => clearTimeout(poll))
 </script>
 
 <template>
-  <FbShell context="Admin" wordmark-href="/" nav>
+  <FbShell context="Admin" :wordmark-href="$siteHome" nav>
     <h1 class="fb-h1">Upload photos</h1>
     <p class="fb-lead">
       JPEG, PNG, WebP, TIFF, or AVIF. Each photo is resized for every screen; the file you upload is kept untouched.

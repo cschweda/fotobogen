@@ -38,12 +38,18 @@ async function submit() {
     message.value = `Your password was right, but your browser did not keep the login. That happens when this page is opened over http at an address other than localhost. On the computer Fotobogen runs on, open http://localhost:${window.location.port || '5150'} and log in there, or use https.`
     return
   }
+  // Pages of the site open in other tabs load themselves again, as pages for someone logged in
+  // (which carry no counting script). See app/plugins/hosts.ts.
+  try {
+    new BroadcastChannel('fotobogen').postMessage('signed-in')
+  }
+  catch { /* a browser without it; nothing depends on this */ }
   await navigateTo('/admin')
 }
 </script>
 
 <template>
-  <FbShell context="Admin" wordmark-href="/">
+  <FbShell context="Admin" :wordmark-href="$siteHome">
     <div class="login">
       <h1 class="fb-h1">Log in</h1>
       <section v-if="demo?.enabled" class="demo" aria-labelledby="demo-heading">

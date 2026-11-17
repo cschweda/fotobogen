@@ -36,7 +36,7 @@ async function save() {
 </script>
 
 <template>
-  <FbShell context="Admin" wordmark-href="/" nav>
+  <FbShell context="Admin" :wordmark-href="$siteHome" nav>
     <h1 class="fb-h1">Settings</h1>
     <form class="settings" novalidate @submit.prevent="save">
       <div class="fb-alert" role="alert">{{ problem }}</div>
@@ -124,7 +124,7 @@ async function save() {
 
       <div class="actions">
         <button type="submit" class="fb-button" :aria-disabled="busy">Save settings</button>
-        <a class="fb-button fb-button--quiet" href="/">View your site</a>
+        <a class="fb-button fb-button--quiet" :href="$siteHome">View your site</a>
       </div>
       <p v-if="message" class="fb-small saved" aria-hidden="true">{{ message }}</p>
     </form>

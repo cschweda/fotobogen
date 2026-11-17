@@ -21,6 +21,8 @@ services:
       # Passed through from .env when set there; empty means "not set".
       # The site's proper address, used wherever a full address is written out.
       SITE_URL: "${SITE_URL:-}"
+      # The admin at a name of its own (admin.photos.example.com). Needs SITE_URL too.
+      ADMIN_HOST: "${ADMIN_HOST:-}"
       # 1 lets anyone log in as demo / demo to look round the admin, read-only.
       DEMO_MODE: "${DEMO_MODE:-}"
       # 1 lets webhooks call addresses on your own network.

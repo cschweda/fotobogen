@@ -49,7 +49,7 @@ async function save() {
 </script>
 
 <template>
-  <FbShell context="Admin" wordmark-href="/" nav>
+  <FbShell context="Admin" :wordmark-href="$siteHome" nav>
     <h1 class="fb-h1">Skins</h1>
     <p class="fb-lead">A skin changes how your public site looks. Switching takes effect at once; nothing is rebuilt and no photo is touched.</p>
     <p class="fb-visually-hidden" role="status">{{ message }}</p>
@@ -124,7 +124,7 @@ async function save() {
       </div>
       <div class="actions">
         <button type="submit" class="fb-button" :aria-disabled="busy">Save</button>
-        <a class="fb-button fb-button--quiet" href="/">View your site</a>
+        <a class="fb-button fb-button--quiet" :href="$siteHome">View your site</a>
       </div>
       <p v-if="message" class="fb-small saved" aria-hidden="true">{{ message }}</p>
     </form>

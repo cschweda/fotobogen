@@ -104,7 +104,7 @@ function selectAll(on: boolean) {
 </script>
 
 <template>
-  <FbShell context="Admin" wordmark-href="/" nav>
+  <FbShell context="Admin" :wordmark-href="$siteHome" nav>
     <h1 class="fb-h1">{{ inAlbum ? inAlbum.title : 'Photos' }}</h1>
     <p v-if="inAlbum" class="fb-small"><NuxtLink class="fb-link" to="/admin/photos">All photos</NuxtLink> · <NuxtLink class="fb-link" to="/admin/albums">Albums</NuxtLink></p>
     <p v-if="counts" class="fb-lead">
