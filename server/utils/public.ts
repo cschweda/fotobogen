@@ -48,8 +48,25 @@ function placeholder(thumbhash: string | null): string | null {
   }
 }
 
-/** Which photos a grid shows: all of them, one album's, or one tag's. */
-export type Scope = { album: string } | { tag: string } | undefined
+// Where a searched-for word may be found: a photo's title, description, and alt text, its tags, and
+// the titles of the public albums it is in. (A hidden album's name must not be findable.) The word is
+// given as a value, never put into the SQL, with % and _ escaped so that they mean themselves.
+const SEARCHED = `p.title like ? escape '\\' or p.description like ? escape '\\' or p.alt like ? escape '\\'
+  or exists (select 1 from photo_tags spt join tags st on st.id = spt.tag_id where spt.photo_id = p.id and st.name like ? escape '\\')
+  or exists (select 1 from album_photos sap join albums sa on sa.id = sap.album_id and sa.visibility = 'public' where sap.photo_id = p.id and sa.title like ? escape '\\')`
+const SEARCHED_PLACES = 5
+
+export const SEARCH_MAX_LENGTH = 100
+export const SEARCH_MAX_WORDS = 6
+/** What was typed, tidied: one line, a sensible length; and the words in it to look for. */
+export function searchWords(input: unknown): { query: string, words: string[] } {
+  // eslint-disable-next-line no-control-regex
+  const query = (typeof input === 'string' ? input : '').replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, SEARCH_MAX_LENGTH).trim()
+  return { query, words: query === '' ? [] : query.split(' ').slice(0, SEARCH_MAX_WORDS) }
+}
+
+/** Which photos a grid shows: all of them, one album's, one tag's, or those a search finds. */
+export type Scope = { album: string } | { tag: string } | { search: string[] } | undefined
 
 export function publicTiles(page: number, scope?: Scope): { tiles: Tile[], total: number, pages: number } {
   const { sqlite, storage } = getPipeline()
@@ -60,9 +77,14 @@ export function publicTiles(page: number, scope?: Scope): { tiles: Tile[], total
       ? `from photos p join photo_tags pt on pt.photo_id = p.id and pt.tag_id = ?`
       : `from photos p`
   const order = scope && 'album' in scope ? `ap.position` : `p.sort_order desc`
-  const key = scope ? ['album' in scope ? scope.album : scope.tag] : []
+  // A search: every word must be found somewhere in what a visitor can read about the photo.
+  const words = scope && 'search' in scope ? scope.search : []
+  const matching = words.map(() => `and (${SEARCHED})`).join(' ')
+  const key = scope && 'search' in scope
+    ? words.flatMap(word => Array.from({ length: SEARCHED_PLACES }, () => `%${word.replace(/[\\%_]/g, character => `\\${character}`)}%`))
+    : scope ? ['album' in scope ? scope.album : scope.tag] : []
 
-  const { total } = sqlite.prepare(`select count(*) as total ${from} where ${visible()}`).get(...key) as { total: number }
+  const { total } = sqlite.prepare(`select count(*) as total ${from} where ${visible()} ${matching}`).get(...key) as { total: number }
   const rows = sqlite.prepare(`
     select p.slug, p.title, p.alt, p.thumbhash,
       t.path as thumbPath, t.width as thumbWidth, t.height as thumbHeight,
@@ -70,7 +92,7 @@ export function publicTiles(page: number, scope?: Scope): { tiles: Tile[], total
     ${from}
     join derivatives t on t.photo_id = p.id and t.kind = 'thumb'
     join derivatives s on s.photo_id = p.id and s.kind = 'square'
-    where ${visible()}
+    where ${visible()} ${matching}
     order by ${order}
     limit ? offset ?
   `).all(...key, PAGE_SIZE, (page - 1) * PAGE_SIZE) as Row[]
@@ -229,7 +251,7 @@ export interface Slide {
 const SLIDE_LIMIT = 500
 
 /** The photos a slideshow plays: everything a visitor may see, or one album's or tag's. Never a location. */
-export function publicSlides(scope?: Scope): Slide[] {
+export function publicSlides(scope?: Exclude<Scope, { search: string[] }>): Slide[] {
   const { sqlite, storage } = getPipeline()
   const from = scope && 'album' in scope
     ? `from photos p join album_photos ap on ap.photo_id = p.id and ap.album_id = ?`
