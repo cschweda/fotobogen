@@ -14,3 +14,5 @@ tests
 test-results
 playwright-report
 *.log
+create-fotobogen
+publish.sh

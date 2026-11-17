@@ -55,6 +55,7 @@
     <div class="pages__here">
       <h2>On this page</h2>
       <ul>
+        <li><a href="#unreleased">Not yet released</a></li>
         <li><a href="#v1-7-0">Version 1.7.0, 17 November 2026</a></li>
         <li><a href="#v1-6-0">Version 1.6.0, 17 November 2026</a></li>
         <li><a href="#v1-5-0">Version 1.5.0, 16 November 2026</a></li>
@@ -73,6 +74,10 @@
 <h1>Releases</h1>
 <p class="lead">What is in each version of Fotobogen, newest first. This page is made from <a href="https://github.com/cschweda/fotobogen/blob/main/CHANGELOG.md">CHANGELOG.md</a> in the source, so the two always agree.</p>
 <p>Version numbers follow <a href="https://semver.org">semantic versioning</a>: a change in the first number means something you rely on changed, the second adds features, and the third only fixes. <a href="https://github.com/cschweda/fotobogen/blob/main/docs/UPGRADING.md">What a version number promises, and how to upgrade.</a></p>
+<h2 id="unreleased">Not yet released</h2>
+<ul>
+  <li>A one-line installer, <code>npx create-fotobogen@latest</code>, in <a href="https://github.com/cschweda/fotobogen/blob/main/create-fotobogen"><code>create-fotobogen/</code></a>: it checks the tools, asks for a folder, fetches the newest release, installs, builds, and offers to start it. It is its own npm package with its own version numbers and changelog, published with <code>./publish.sh</code>. It changes nothing in Fotobogen itself.</li>
+</ul>
 <h2 id="v1-7-0">Version 1.7.0, 17 November 2026</h2>
 <p>The second <a href="https://fotobogen.com/docs/security-audits/">security audit</a>, of the slideshow for other sites, and a round of fixes found by installing 1.6.0 on a Mac.</p>
 <h3>Security</h3>
