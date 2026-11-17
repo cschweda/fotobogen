@@ -2,9 +2,15 @@
 // script tag is added to public pages here, as each page is made, and the
 // page is allowed to report to that one service and nowhere else.
 //
-// Never on the admin, the login, or setup; and never for someone who is
-// logged in: a script from another company must not run in a browser that
-// holds the owner's login (and the owner's own visits are not counted).
+// Never on the admin, the login, or setup; and never on a page made for
+// someone who is logged in, so the owner's own visits are not counted and the
+// script is not handed to a browser that holds the owner's login.
+//
+// What this does not do, and cannot: fence the script off from the admin. It
+// runs on this site's own address, with the standing of the site's own pages.
+// A public page opened before logging in keeps its script afterwards, and a
+// hostile service could use that page to act as the owner. That is the trust
+// the owner places in the service they choose, and the admin and docs say so.
 import { statsHtml } from '../../shared/stats.ts'
 import { isSetupComplete } from '../utils/app.ts'
 import { currentAdmin } from '../utils/session.ts'

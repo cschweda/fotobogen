@@ -117,8 +117,8 @@ async function save() {
       <div v-if="form.provider !== 'off'" class="know">
         <h2 class="know__heading">Before you switch this on</h2>
         <ul>
-          <li><strong>You are trusting the service.</strong> Its script runs on every visitor's page and can see what they see. Use a service you would trust with your visitors.</li>
-          <li><strong>It is only on your public pages,</strong> never on the admin or the login, and never while you are logged in. Your own visits are not counted.</li>
+          <li><strong>You are trusting the service, with your visitors and with your site.</strong> Its script runs on every visitor's page and can see what they see. It also runs on your site's own address: if the service were ever hostile or broken into, a public page of your site left open in a browser where you are logged in could be used to act as you. Choose a service you would trust that far.</li>
+          <li><strong>It is only on your public pages,</strong> never on the admin or the login, and not on pages you open while logged in, so your own visits are not counted.</li>
           <li><strong>Your pages may talk to that one service</strong> and nowhere else. Everything else stays blocked.</li>
           <li><strong>What you owe your visitors is yours to decide:</strong> a privacy note, or asking first, depending on the service and where your visitors are.</li>
         </ul>

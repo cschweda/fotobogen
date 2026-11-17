@@ -619,8 +619,14 @@ What that means in practice:
   blocked, as before.
 - Only the logged-in owner can change it. No API token can, and a demo
   visitor cannot.
-- You are trusting the service: its script runs on every visitor's page.
-  Whether you owe visitors a privacy note or a cookie banner (Google
+- You are trusting the service, with your visitors and with your site. Its
+  script runs on every visitor's page, on your site's own address. Fotobogen
+  keeps it off the admin and off pages you open while logged in, but it
+  cannot fence a script off from the site it runs on: if the service were
+  ever hostile or broken into, a public page left open in a browser where
+  you are logged in could be used to act as you. Choose a service you would
+  trust that far.
+- Whether you owe visitors a privacy note or a cookie banner (Google
   Analytics generally does in the EU and UK; cookieless services generally
   do not) is yours to decide. Fotobogen shows no banner.
 - Custom JavaScript of your own, or a service that needs code between

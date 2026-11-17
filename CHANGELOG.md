@@ -22,6 +22,7 @@ Nothing yet.
 - The script is on public pages only: never on the admin, the login, or setup, and never while the owner is logged in, so their own visits are not counted.
 - A page with the script may report to that one service. Everything else stays blocked.
 - Only the logged-in owner can change it. API tokens and demo visitors cannot.
+- Said plainly where the service is chosen: its script runs on your site's own address, so you are trusting the service with your site as well as your visitors. Fotobogen keeps it off the admin and off pages you open while logged in; it cannot fence it off entirely.
 
 ### Upgrading from 1.3.3
 

@@ -78,6 +78,7 @@
   <li>The script is on public pages only: never on the admin, the login, or setup, and never while the owner is logged in, so their own visits are not counted.</li>
   <li>A page with the script may report to that one service. Everything else stays blocked.</li>
   <li>Only the logged-in owner can change it. API tokens and demo visitors cannot.</li>
+  <li>Said plainly where the service is chosen: its script runs on your site's own address, so you are trusting the service with your site as well as your visitors. Fotobogen keeps it off the admin and off pages you open while logged in; it cannot fence it off entirely.</li>
 </ul>
 <h3>Upgrading from 1.3.3</h3>
 <p><strong>Admin, System, Update to version 1.4.0</strong>, or <code>pnpm fotobogen update</code>. Docker: <code>docker compose pull</code>, then <code>docker compose up -d</code>. Nothing changes for your visitors unless you choose a service under <strong>Admin, Visitor statistics</strong>.</p>
