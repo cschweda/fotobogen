@@ -89,7 +89,7 @@ async function saveHeight() {
 </script>
 
 <template>
-  <FbShell context="Admin" wordmark-href="/" nav>
+  <FbShell context="Admin" :wordmark-href="$siteHome" nav>
     <h1 class="fb-h1">Icon and logo</h1>
     <p class="fb-lead">Two optional pictures that make the site recognisably yours. Without them, the site shows its name as text and the browser tab has no icon.</p>
     <p class="status" role="status">{{ message }}</p>

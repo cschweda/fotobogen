@@ -69,7 +69,7 @@ async function remove(album: Album) {
 </script>
 
 <template>
-  <FbShell context="Admin" wordmark-href="/" nav>
+  <FbShell context="Admin" :wordmark-href="$siteHome" nav>
     <h1 class="fb-h1">Albums</h1>
     <p class="fb-lead">An album is a named set of photos with its own page. A photo can be in several albums, or none.</p>
     <p class="fb-visually-hidden" role="status">{{ message }}</p>

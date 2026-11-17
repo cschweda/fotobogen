@@ -54,7 +54,7 @@ function useDefaults() {
 </script>
 
 <template>
-  <FbShell context="Admin" wordmark-href="/" nav>
+  <FbShell context="Admin" :wordmark-href="$siteHome" nav>
     <h1 class="fb-h1">Site text</h1>
     <p class="fb-lead">Your site in your own words. Its name, and every label, link, and message a visitor sees, can be changed here. Nothing on your site has to say “Fotobogen”.</p>
 
@@ -95,7 +95,7 @@ function useDefaults() {
       <div class="actions">
         <button type="submit" class="fb-button" :aria-disabled="busy">Save</button>
         <button type="button" class="fb-button fb-button--quiet" @click="useDefaults">Use the default wording everywhere</button>
-        <a class="fb-button fb-button--quiet" href="/">View your site</a>
+        <a class="fb-button fb-button--quiet" :href="$siteHome">View your site</a>
       </div>
       <p v-if="message" class="fb-small saved" aria-hidden="true">{{ message }}</p>
     </form>

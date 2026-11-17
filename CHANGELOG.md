@@ -13,6 +13,27 @@ is built from this file.
 
 Nothing yet.
 
+## [1.5.0] - 2026-11-16
+
+### Added
+
+- **The admin at its own address.** Set `ADMIN_HOST=admin.photos.example.com` (with `SITE_URL`) and the admin, the login, and their API answer only at that name, and the public pages only at the site's. A browser keeps the login for the admin's name and never sends it to the public one, so a script on a public page, such as a counting service's, can neither read from the admin nor send to it. This closes the limit described under visitor statistics in 1.4.0. It is optional; without it everything works as before. The README and the installation page have the four steps: DNS, `.env`, the web server, the certificate.
+- A test in a real browser: the owner logged in at the admin's address, a hostile script on a public page next door, trying five ways to reach the admin. All five fail.
+
+### Security
+
+- The admin, the login, and setup can no longer be shown inside a frame, not even by one of the site's own pages.
+- When the owner logs in, pages of the site open in other tabs that carry a counting script load themselves again, without it. This covers a tab left open; it is not proof against a script written to get round it, which is what `ADMIN_HOST` is for.
+
+### Changed
+
+- Any name ending in `.localhost` counts as this computer, as browsers treat it, so logging in over plain http works at such a name.
+- "View your site" in the admin leads to the site's own address when the admin has another.
+
+### Upgrading from 1.4.0
+
+**Admin, System, Update to version 1.5.0**, or `pnpm fotobogen update`. Docker: `docker compose pull`, then `docker compose up -d`; to use `ADMIN_HOST` with Docker, also fetch the new `docker-compose.yml` (`git pull`), which passes the setting on. Nothing changes unless you set `ADMIN_HOST`.
+
 ## [1.4.0] - 2026-11-16
 
 ### Added
@@ -248,6 +269,7 @@ Later entries list only what changed.
 - One admin account only. No comments, no shop, no storage outside the server's own disk.
 
 [Unreleased]: https://github.com/cschweda/fotobogen/commits/staging
+[1.5.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.5.0
 [1.4.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.4.0
 [1.3.3]: https://github.com/cschweda/fotobogen/releases/tag/v1.3.3
 [1.3.2]: https://github.com/cschweda/fotobogen/releases/tag/v1.3.2

@@ -4,13 +4,13 @@ import { config, resolveSettings } from '../../server/core/config.ts'
 describe('settings', () => {
   it('come from fotobogen.config.js when the environment says nothing', () => {
     expect(resolveSettings({})).toEqual({
-      port: 5150, portIsExplicit: false, host: '0.0.0.0', dataDir: './data', trustProxy: false, demoMode: false, siteUrl: '', maxUploadMb: 50, maxMegapixels: 100, webhooksAllowPrivate: false,
+      port: 5150, portIsExplicit: false, host: '0.0.0.0', dataDir: './data', trustProxy: false, demoMode: false, siteUrl: '', adminHost: '', maxUploadMb: 50, maxMegapixels: 100, webhooksAllowPrivate: false,
     })
     expect(config.server.port).toBe(5150)
   })
   it('are overridden by the environment, which is where .env ends up', () => {
     expect(resolveSettings({ PORT: '8088', HOST: '127.0.0.1', DATA_DIR: '/srv/photos', TRUST_PROXY: '1', SITE_URL: 'https://photos.example.com/', MAX_UPLOAD_MB: '120', MAX_MEGAPIXELS: '60' })).toEqual({
-      port: 8088, portIsExplicit: true, host: '127.0.0.1', dataDir: '/srv/photos', trustProxy: true, demoMode: false, siteUrl: 'https://photos.example.com', maxUploadMb: 120, maxMegapixels: 60, webhooksAllowPrivate: false,
+      port: 8088, portIsExplicit: true, host: '127.0.0.1', dataDir: '/srv/photos', trustProxy: true, demoMode: false, siteUrl: 'https://photos.example.com', adminHost: '', maxUploadMb: 120, maxMegapixels: 60, webhooksAllowPrivate: false,
     })
   })
   it('ignore values that make no sense, rather than starting on a broken setting', () => {

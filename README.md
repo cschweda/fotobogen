@@ -9,14 +9,14 @@ A self-hosted publishing platform for photographs: install it on a small
 server, answer a few first-run questions, and get a public photo site with an
 admin backend. Think "WordPress for photos".
 
-**Version 1.4.0** (16 November 2026). It installs on macOS, Windows, and
+**Version 1.5.0** (16 November 2026). It installs on macOS, Windows, and
 Linux; takes your photographs, resizes them for every screen, and publishes
 them on a site you can restyle, reword, and put under your own name, with an
 admin behind a login. Version 1.0.0 was the first release; 1.1.0 added
 updating from the admin; 1.2.0 tells you in the admin when a new version
 is out; 1.3.0 asks a few questions at the first start; 1.3.3 followed the
 first [security audit](#security-audits); 1.4.0 adds optional visitor
-statistics.
+statistics; 1.5.0 lets the admin live at an address of its own.
 
 - **What is in it:** [CHANGELOG.md](CHANGELOG.md), also published as
   [Releases](https://fotobogen.com/docs/changelog/).
@@ -58,6 +58,7 @@ free software with no warranty: keep backups of your photographs.
 - [nginx in front of the app](#nginx-in-front-of-the-app)
 - [Laravel Forge with pm2 (no Docker)](#laravel-forge-with-pm2-no-docker)
 - [An existing droplet with nginx: what to change](#an-existing-droplet-with-nginx-what-to-change)
+- [The admin at its own address](#the-admin-at-its-own-address)
 - [Backup and restore](#backup-and-restore)
 - [Updates](#updates)
 - [For developers](#for-developers)
@@ -390,7 +391,7 @@ distributions may well work, but are reported as untested.
 `/api/health` needs no login and answers `GET` and `HEAD`:
 
 ```json
-{ "status": "ok", "version": "1.4.0", "database": "ok", "queue": { "depth": 0 }, "uptime": 86400 }
+{ "status": "ok", "version": "1.5.0", "database": "ok", "queue": { "depth": 0 }, "uptime": 86400 }
 ```
 
 It returns `200` when the app and its database are working and `503` when
@@ -625,7 +626,8 @@ What that means in practice:
   cannot fence a script off from the site it runs on: if the service were
   ever hostile or broken into, a public page left open in a browser where
   you are logged in could be used to act as you. Choose a service you would
-  trust that far.
+  trust that far, or close the gap altogether by giving
+  [the admin its own address](#the-admin-at-its-own-address).
 - Whether you owe visitors a privacy note or a cookie banner (Google
   Analytics generally does in the EU and UK; cookieless services generally
   do not) is yours to decide. Fotobogen shows no banner.
@@ -1102,6 +1104,57 @@ without Docker) needs about 2 GB counting swap, for a few minutes; on a
 small droplet, [add swap](https://fotobogen.com/docs/installation/#swap)
 first, or use the Docker image, which is already built.
 
+## The admin at its own address
+
+Normally the admin is part of the site, at `/admin`. It can instead be given
+a name of its own, such as `admin.photos.example.com`, with the public site
+staying at `photos.example.com`. It is optional, and worth doing if you
+switch on [visitor statistics](#making-the-site-your-own).
+
+**Why.** A script from a counting service runs on your public pages, at
+your site's address. With the admin at the same address, a hostile or
+broken-into service could use a public page, open in a browser where you
+are logged in, to act as you. With the admin at its own name the browser
+keeps the two apart: your login is kept for the admin's name and is never
+sent to the public one, and a script on a public page can neither read from
+the admin nor send to it. A test does exactly this in a real browser, with
+a hostile script trying five ways in.
+
+**How.** Four things, all on the same server and the same copy of Fotobogen:
+
+1. **DNS:** point `admin.photos.example.com` at the server, like the site's
+   own name.
+2. **`.env`:** set both, then restart.
+
+   ```bash
+   SITE_URL=https://photos.example.com
+   ADMIN_HOST=admin.photos.example.com
+   ```
+
+3. **The web server:** make it answer for both names.
+   - nginx: `server_name photos.example.com admin.photos.example.com;`
+   - Laravel Forge: add `admin.photos.example.com` as an alias of the site.
+   - The Docker quick start: in `.env`, give both names:
+     `DOMAIN=photos.example.com, admin.photos.example.com`, then
+     `docker compose up -d`.
+4. **The certificate:** issue it again so that it covers both names (Forge
+   and Certbot both ask which names; Caddy does it by itself).
+
+**What changes.** You log in at `https://admin.photos.example.com/login`.
+`/admin` and `/login` at the public address lead there. The admin's API
+(`/api/admin/…`, used by API tokens) is at the admin's name too, so point
+any upload script at it. Public pages asked for at the admin's name lead
+back to the site. Photo addresses, the public API, and the feed do not
+change.
+
+Fotobogen will not start with `ADMIN_HOST` set and `SITE_URL` missing, or
+with the two naming the same place, and says which.
+
+Two smaller protections apply whether or not you do this: the admin and
+the login cannot be shown inside a frame, and when you log in, pages of
+your site open in other tabs load themselves again without the counting
+script.
+
 ## Backup and restore
 
 The first time you open the admin it shows one page before anything else:
@@ -1312,7 +1365,7 @@ What is actually used is decided in this order:
 
 So to change something on one server, copy `.env.sample` to `.env` and set
 it there. `.env` is never committed; `.env.sample` is. `docker compose`
-reads the same file, but passes on only `SITE_URL`, `DEMO_MODE`,
+reads the same file, but passes on only `SITE_URL`, `ADMIN_HOST`, `DEMO_MODE`,
 `MAX_UPLOAD_MB`, `MAX_MEGAPIXELS`, `WEBHOOKS_ALLOW_PRIVATE`, `PUID`, `PGID`,
 `DOMAIN`, and (on Forge) `PORT`; the others in the table do nothing in
 Docker. A setting that is switched on with `1` is switched on only by `1`,
@@ -1324,6 +1377,7 @@ not by `true` or `yes`.
 | `PORT` | `5150` | Port the server listens on. Unset, a busy 5150 moves up to the next free port; set, it is used exactly |
 | `HOST` | all interfaces | Address the server listens on |
 | `SITE_URL` | none | The site's proper address, such as `https://photos.example.com`. Used wherever a full address is written out: a photo's links in the admin, the feed, the sitemap, and what search engines are told. Without it, the address each visitor used is given, which on your own machine is `http://localhost:5150`. It can also be set under **Admin, Search and sharing**; a value here wins |
+| `ADMIN_HOST` | none | A name of its own for the admin, such as `admin.photos.example.com`. The admin and login then answer only there, and the public pages only at `SITE_URL`, which must be set too (see [The admin at its own address](#the-admin-at-its-own-address)) |
 | `DEMO_MODE` | off | Set to `1` on a site meant to show Fotobogen off. Anyone can then log in as `demo` / `demo` and look round the admin, read-only (see [Demo mode](#demo-mode)) |
 | `MAX_UPLOAD_MB` | `50` | Largest upload, in megabytes. If you raise it, raise the proxy's limit too (`max_size` in `deploy/Caddyfile`, `client_max_body_size` in nginx) |
 | `MAX_MEGAPIXELS` | `100` | Largest image, in megapixels (width times height) |

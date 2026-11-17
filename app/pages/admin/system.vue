@@ -45,7 +45,7 @@ async function cancel() {
 </script>
 
 <template>
-  <FbShell context="Admin" wordmark-href="/" nav>
+  <FbShell context="Admin" :wordmark-href="$siteHome" nav>
     <h1 class="fb-h1">System</h1>
     <p class="fb-visually-hidden" role="status">{{ message }}</p>
     <div class="fb-alert" role="alert">{{ problem }}</div>

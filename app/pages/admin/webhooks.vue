@@ -59,7 +59,7 @@ async function remove(hook: Hook) {
 </script>
 
 <template>
-  <FbShell context="Admin" wordmark-href="/" nav>
+  <FbShell context="Admin" :wordmark-href="$siteHome" nav>
     <h1 class="fb-h1">Webhooks</h1>
     <p class="fb-lead">A webhook tells another program when something happens here, by sending a short message to an address you give. Use it to post new photos elsewhere, rebuild another site, or keep a log.</p>
     <p class="fb-visually-hidden" role="status">{{ message }}</p>

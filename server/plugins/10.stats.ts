@@ -24,6 +24,8 @@ export default defineNitroPlugin((nitroApp) => {
       if (!isSetupComplete()) return
       const tags = statsForPath(event.path)
       if (!tags) return
+      // With the admin at its own address, nothing from another company is ever put on a page served there.
+      if ((event.context as { fbHosts?: { here: string } }).fbHosts?.here === 'admin') return
       // The page's own rules and its one-time number for scripts. Without both, nothing is added.
       const security = (event.context as { security?: { nonce?: string, rules?: { headers?: { contentSecurityPolicy?: Policy | false } } } }).security
       const policy = security?.rules?.headers?.contentSecurityPolicy

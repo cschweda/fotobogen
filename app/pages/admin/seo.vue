@@ -57,7 +57,7 @@ async function save() {
 </script>
 
 <template>
-  <FbShell context="Admin" wordmark-href="/" nav>
+  <FbShell context="Admin" :wordmark-href="$siteHome" nav>
     <h1 class="fb-h1">Search and sharing</h1>
     <p class="fb-lead">What search engines show for your site, and what appears when someone shares a link to it. Every field is optional; left alone, your site's title, tagline, and newest photo are used.</p>
 
@@ -130,7 +130,7 @@ async function save() {
 
       <div class="actions">
         <button type="submit" class="fb-button" :aria-disabled="busy">Save</button>
-        <a class="fb-button fb-button--quiet" href="/">View your site</a>
+        <a class="fb-button fb-button--quiet" :href="$siteHome">View your site</a>
       </div>
       <p v-if="message" class="fb-small saved" aria-hidden="true">{{ message }}</p>
     </form>
