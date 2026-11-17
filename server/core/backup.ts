@@ -227,7 +227,8 @@ export async function applyRestore(paths: DataPaths, file: string, options: { mo
         db.prepare(`delete from jobs`).run()
         // Every login from before is ended: a backup must not bring a signed-out session back to life.
         db.prepare(`update users set session_version = session_version + 1`).run()
-        const ids = (db.prepare(`select id from photos`).all() as { id: string }[]).map(row => row.id)
+        // What was in the trash stays there; it is made again if it is ever restored.
+        const ids = (db.prepare(`select id from photos where status <> 'trashed'`).all() as { id: string }[]).map(row => row.id)
         for (const id of ids) {
           db.prepare(`update photos set status = 'processing' where id = ?`).run(id)
           db.prepare(`insert into jobs (id, type, photo_id, status, attempts, created_at) values (?, 'rerender', ?, 'queued', 0, ?)`).run(newId(), id, now)

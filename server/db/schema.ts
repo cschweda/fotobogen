@@ -47,7 +47,10 @@ export const photos = sqliteTable('photos', {
   lng: real('lng'),
   exifJson: text('exif_json', { mode: 'json' }),
   recipeJson: text('recipe_json', { mode: 'json' }),
-  status: text('status', { enum: ['processing', 'ready', 'failed'] }).notNull().default('processing'),
+  // 'trashed': deleted by the owner, off the site, and kept for thirty days in case it is wanted back.
+  status: text('status', { enum: ['processing', 'ready', 'failed', 'trashed'] }).notNull().default('processing'),
+  /** When it was moved to the trash; null otherwise. */
+  trashedAt: integer('trashed_at'),
   visibility: text('visibility', { enum: ['public', 'hidden'] }).notNull().default('public'),
   // When a public photo goes live. Null means at once; a time in the future
   // keeps it off the site until then.
@@ -80,7 +83,8 @@ export const derivatives = sqliteTable('derivatives', {
 
 export const jobs = sqliteTable('jobs', {
   id: text('id').primaryKey(),
-  type: text('type', { enum: ['ingest', 'rerender'] }).notNull(),
+  // 'restore': a photo taken back out of the trash, made again like a re-render and announced like an upload.
+  type: text('type', { enum: ['ingest', 'rerender', 'restore'] }).notNull(),
   photoId: text('photo_id').notNull().references(() => photos.id, { onDelete: 'cascade' }),
   status: text('status', { enum: ['queued', 'running', 'done', 'failed'] }).notNull().default('queued'),
   attempts: integer('attempts').notNull().default(0),

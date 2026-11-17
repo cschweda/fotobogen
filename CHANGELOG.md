@@ -11,6 +11,17 @@ is built from this file.
 
 ## [Unreleased]
 
+### Added
+
+- **A trash.** Deleting a photo, in the library or on its own page, now moves it to the trash: it is off the site at once and kept for 30 days, with the file that was uploaded, then removed for good. Under **Admin, Library, Show, Trash** a photo can be restored, which puts it back as it was (same address, albums, tags, and place in the order), or deleted for good straight away, which asks first. The library says how many photos are in the trash, and each one there shows the day it will go.
+- Uploading a file that is in the trash is refused, with a note saying where it is.
+
+### Changed
+
+- For programs using an API token: `DELETE /api/admin/photos/<id>` moves a photo to the trash; `?forever=1` deletes one that is in the trash for good; `POST /api/admin/photos/<id>/restore` takes it back out. In bulk actions, `delete` moves to the trash, and `restore` and `delete-forever` are new. A deleted photo answers `404` to `GET /api/admin/photos/<id>` and is left out of the list unless `?trash=1` is given.
+- Webhooks: `photo.deleted` is sent when a photo goes to the trash, which is when it leaves the site. Restoring it sends `photo.published`.
+- While a photo is in the trash, its picture files still exist: an address someone already has keeps working until the photo is deleted for good.
+
 - A one-line installer, `npx fotobogen@latest`, in [`installer/`](installer): it checks the tools, asks for a folder, fetches the newest release, installs, builds, and offers to start it. It is published to npm as `fotobogen`, with its own version numbers and changelog, by `./publish.sh`. It changes nothing in Fotobogen itself. The README and the installation guide now begin with it.
 
 ## [1.7.0] - 2026-11-17

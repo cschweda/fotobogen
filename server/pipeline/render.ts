@@ -223,7 +223,8 @@ export async function processPhoto(ctx: PipelineContext, photoId: string, option
           columns.takenAt, columns.lat, columns.lng, stored ? JSON.stringify(stored) : null, photo.id)
       }
       // Still "processing" if another pass is waiting, so nothing shows a look that is about to be replaced.
-      sqlite.prepare(`update photos set thumbhash = ?, status = ?, updated_at = ? where id = ?`)
+      // A photo moved to the trash while it was being made stays there.
+      sqlite.prepare(`update photos set thumbhash = ?, status = ?, updated_at = ? where id = ? and status <> 'trashed'`)
         .run(thumbhash, options.anotherPassWaiting?.() ? 'processing' : 'ready', Date.now(), photo.id)
     })()
 

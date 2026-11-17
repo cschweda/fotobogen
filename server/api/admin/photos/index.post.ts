@@ -55,6 +55,8 @@ export default defineEventHandler(async (event) => {
     return outcome
   }
   if (outcome.result === 'duplicate') {
+    // In the trash it is not in the library, but it is still here: say where, and what to do.
+    if (outcome.existing.trashed) return fail(event, 409, 'This photo is in the trash. Restore it from there (Admin, Library, Trash), or delete it for good first.', outcome)
     return fail(event, 409, 'This photo is already in your library.', outcome)
   }
   return fail(event, 422, outcome.message, { result: outcome.result, reason: outcome.reason })

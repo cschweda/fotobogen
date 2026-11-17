@@ -16,7 +16,7 @@ A webhook tells another program when something happens on your site, by sending 
 |---|---|
 | `photo.uploaded` | A photo has been accepted through the upload page or the API. It is not processed yet and may not be public. Sample photos downloaded by Fotobogen do not send this. |
 | `photo.published` | A photo has become visible to visitors: it finished processing as a public photo, was made public, or its scheduled time arrived (checked once a minute). |
-| `photo.deleted` | A photo was deleted from the library. **Remove sample photos** does not send this. |
+| `photo.deleted` | A photo was deleted from the library, which moves it to the trash and takes it off the site. Deleting it for good later sends nothing more; restoring it from the trash sends `photo.published` once it is back on the site. **Remove sample photos** does not send this. |
 
 **Send a test** on the Webhooks page sends an event called `test`.
 

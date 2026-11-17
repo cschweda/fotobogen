@@ -15,6 +15,7 @@ import * as schema from '../db/schema.ts'
 import type { PipelineContext } from '../pipeline/context.ts'
 import { readLimits } from '../pipeline/limits.ts'
 import { createQueue, type Queue } from '../pipeline/queue.ts'
+import { emptyOldTrash, TRASH_DAYS } from '../pipeline/remove.ts'
 import { bundledModules } from '../modules/bundled.ts'
 import { createRegistry } from '../modules/registry.ts'
 import { createSkinRegistry, readSkinFolders, type SkinFiles, type SkinRegistry } from '../skins/registry.ts'
@@ -120,7 +121,8 @@ async function boot(loadMigrations: () => Promise<Migration[]>, loadSkins: () =>
   }
   const queue = createQueue(pipeline, {
     // A photo that has just been processed for the first time may now be live.
-    onDone: (job) => { if (job.type === 'ingest') void import('./photo-events.ts').then(events => events.photoPublished(job.photoId)) },
+    // A photo new to the site, or back on it from the trash, is announced to webhooks once it can be seen.
+    onDone: (job) => { if (job.type === 'ingest' || job.type === 'restore') void import('./photo-events.ts').then(events => events.photoPublished(job.photoId)) },
     onError: (job, error) => console.error(`Photo ${job.photoId} could not be processed (attempt ${job.attempts}): ${error instanceof Error ? error.message : error}`),
   })
   queue.recover()
@@ -131,6 +133,12 @@ async function boot(loadMigrations: () => Promise<Migration[]>, loadSkins: () =>
   state = { paths, secret, sqlite, db, setupComplete, pipeline, queue, skins }
   queue.kick()
   void import('./photo-events.ts').then(events => events.watchSchedule())
+  // What has been in the trash for thirty days is removed for good: now, and every six hours while running.
+  const clearTrash = () => emptyOldTrash(pipeline).then(({ count }) => {
+    if (count > 0) console.log(`Removed ${count} ${count === 1 ? 'photo' : 'photos'} that had been in the trash for ${TRASH_DAYS} days.`)
+  }).catch(error => console.warn(`The trash could not be cleared: ${(error as Error).message}`))
+  void clearTrash()
+  setInterval(clearTrash, 6 * 60 * 60 * 1000).unref()
 
   const { users } = sqlite.prepare(`select count(*) as users from users`).get() as { users: number }
   if (users === 0) {
