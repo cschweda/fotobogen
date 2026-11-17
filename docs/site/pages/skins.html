@@ -85,7 +85,7 @@
   <li>In <code>skin.css</code>, never write a colour for the page. Use the names instead, and both modes work:
 <pre><code>.fb-public body { background: var(--fb-ground); color: var(--fb-text); }
 .fb-site-header { border-bottom: 4px solid var(--fb-text); }</code></pre></li>
-  <li>Add your own rules at the end. Plakat's headline is two lines:
+  <li>Add your own rules at the end. Plakat's headline is two lines (shortened here):
 <pre><code>.fb-site-title { font-size: clamp(2.75rem, 11vw, 8.5rem); line-height: 0.88; overflow-wrap: anywhere; }
 .fb-site-title::after { content: ""; display: block; width: 7rem; height: 0.7rem; background: var(--fb-accent); }</code></pre></li>
   <li>To give it a look for every photo, add <code>look</code> to <code>skin.json</code>:

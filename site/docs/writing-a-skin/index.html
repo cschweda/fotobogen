@@ -219,13 +219,15 @@ cp -R skins/swiss data/skins/harbour</code></pre>
 <h2 id="markup">The HTML you are styling</h2>
 <p>These class names are stable; a skin may rely on them.</p>
 <pre tabindex="0"><code>&lt;html class="fb-public" data-fb-mode="light"&gt;        &lt;!-- or "dark", or "auto" --&gt;
+&lt;div class="fb-site"&gt;                                  &lt;!-- around everything on the page --&gt;
   &lt;a class="fb-skip"&gt;Skip to content&lt;/a&gt;
   &lt;header class="fb-site-header"&gt;
     &lt;p class="fb-site-title"&gt;&lt;a&gt;Site title&lt;/a&gt;&lt;/p&gt;
     &lt;p class="fb-site-tagline"&gt;Tagline&lt;/p&gt;
     &lt;nav class="fb-nav"&gt;
-      &lt;a&gt;Photos&lt;/a&gt;&lt;a&gt;Albums&lt;/a&gt;&lt;a&gt;Slideshow&lt;/a&gt;
-      &lt;button class="fb-mode"&gt;Dark mode&lt;/button&gt;      &lt;!-- the light and dark switch --&gt;
+      &lt;a&gt;Photos&lt;/a&gt;&lt;a&gt;Albums&lt;/a&gt;&lt;a&gt;Slideshow&lt;/a&gt;&lt;a&gt;Search&lt;/a&gt;
+      &lt;!-- The light and dark switch. It holds both wordings; the stylesheet shows the one for the mode in use. --&gt;
+      &lt;button class="fb-mode"&gt;&lt;span class="fb-mode__to-dark"&gt;Dark mode&lt;/span&gt;&lt;span class="fb-mode__to-light"&gt;Light mode&lt;/span&gt;&lt;/button&gt;
     &lt;/nav&gt;
   &lt;/header&gt;
   &lt;main class="fb-main"&gt;
@@ -289,6 +291,7 @@ cp -R skins/swiss data/skins/harbour</code></pre>
     &lt;p class="fb-site-footer__note"&gt;The owner's own line, if they wrote one&lt;/p&gt;
     &lt;a&gt;RSS feed&lt;/a&gt;
   &lt;/footer&gt;
+&lt;/div&gt;
 &lt;/html&gt;</code></pre>
 <p>The words shown here are the defaults; an owner can change any of them, so never rely on a piece of text or its length. A site title may be three letters or forty.</p>
 <p>Newer parts of the site are not in the outline above. A skin should also style them:</p>
@@ -322,11 +325,16 @@ cp -R skins/swiss data/skins/harbour</code></pre>
   &lt;/div&gt;
   &lt;nav class="fb-slideshow__controls"&gt;
     &lt;button class="fb-slideshow__control"&gt;Previous&lt;/button&gt;
+    &lt;button class="fb-slideshow__control" aria-pressed="false"&gt;Pause&lt;/button&gt;   &lt;!-- or Play --&gt;
+    &lt;button class="fb-slideshow__control"&gt;Next&lt;/button&gt;
     &lt;span class="fb-slideshow__count"&gt;3 / 25&lt;/span&gt;
+    &lt;button class="fb-slideshow__control"&gt;Full screen&lt;/button&gt;
     &lt;a class="fb-slideshow__control"&gt;Close&lt;/a&gt;
   &lt;/nav&gt;
+  &lt;!-- With nothing to show, the page holds only this: --&gt;
+  &lt;p class="fb-slideshow__empty"&gt;There are no photos to show. &lt;a&gt;Go back&lt;/a&gt;&lt;/p&gt;
 &lt;/main&gt;</code></pre>
-<p>Two images are stacked; the one with <code>--front</code> is showing, and the skin makes the change between them. Swiss fades <code>opacity</code> over a second, and not at all when the visitor's device asks for reduced motion. Unless you want a different slideshow, leave Swiss's rules for it as they are.</p>
+<p>The words in the outlines are the defaults. Two images are stacked; the one with <code>--front</code> is showing, and the skin makes the change between them. Swiss fades <code>opacity</code> over a second, and not at all when the visitor's device asks for reduced motion. Unless you want a different slideshow, leave Swiss's rules for it as they are.</p>
 
 <h2 id="grid">The grid</h2>
 <p>Both layouts are CSS grid with no JavaScript, so photos are read in the order they appear. If you copied Swiss you already have both; this is what its rules do, in case you change them.</p>
@@ -403,15 +411,15 @@ cp -R skins/swiss data/skins/harbour</code></pre>
   <tbody>
     <tr><td>The folder is called "x" but skin.json names the skin "y". They must match.</td><td>Rename the folder, or change <code>name</code>.</td></tr>
     <tr><td>skin.json must be a JSON object. / Option "x" must be an object.</td><td>Something that should be written in braces, <code>{ … }</code>, is a list, a string, or a number.</td></tr>
-    <tr><td>skin.json needs a "name" of lowercase letters, digits, and hyphens.</td><td>No capitals, spaces, or underscores; start with a letter.</td></tr>
+    <tr><td>skin.json needs a "name" of lowercase letters, digits, and hyphens.</td><td>No capitals, spaces, or underscores; start with a letter; 40 characters at most.</td></tr>
     <tr><td>skin.json needs a "version". / a "label".</td><td>Add the missing field.</td></tr>
-    <tr><td>skin.css is missing or empty.</td><td>The stylesheet must be in the same folder, with that name.</td></tr>
+    <tr><td>skin.css is missing or empty.</td><td>The stylesheet must be in the same folder, with that name. A file that is a link to somewhere else, or larger than 2 MB, is read as empty: put the file itself in the folder, and keep it under that size. The same goes for <code>skin.json</code>.</td></tr>
     <tr><td>skin.json needs "modes" with a "light" and a "dark" set of colours. Every skin can be viewed in both.</td><td>Add <code>modes</code> with both. (A skin written before modes existed used <code>tokens</code>; move those colours under <code>modes</code>.)</td></tr>
     <tr><td>The light and dark modes must name the same colours.</td><td>A name is in one and not the other.</td></tr>
     <tr><td>Colour "x" (light) must be written like "#0a0a0b".</td><td>Six-digit hex only.</td></tr>
     <tr><td>Colour names are lowercase letters, digits, and hyphens.</td><td>Rename the colour.</td></tr>
     <tr><td>Option names are lowercase letters, digits, and hyphens.</td><td>Rename the option.</td></tr>
-    <tr><td>Colour option "x" needs a default like "#e30613", or one for each mode: { "light": …, "dark": … }.</td><td>Give a hex colour, or one for each mode.</td></tr>
+    <tr><td>Colour option "x" needs a default like "#e30613", or one for each mode: { "light": "#e30613", "dark": "#ff5a4f" }.</td><td>Give a hex colour, or one for each mode.</td></tr>
     <tr><td>Select option "x" needs a list of text options and a default that is one of them.</td><td>The default must appear in <code>options</code>.</td></tr>
     <tr><td>Select option "x": "…" cannot be used as a CSS value.</td><td>A value in <code>values</code> has a character that is not allowed, such as <code>;</code> or <code>{</code>.</td></tr>
     <tr><td>Range option "x" needs numeric min, max, and default, with min below max.</td><td>All three as numbers, not text.</td></tr>

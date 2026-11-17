@@ -232,13 +232,18 @@ A `color` default may also be a single colour, used in both modes. A `select` sh
 These class names are stable. A skin may rely on them.
 
 ```html
-<html class="fb-public">
+<html class="fb-public" data-fb-mode="light">   <!-- or "dark", or "auto" -->
+<div class="fb-site">                            <!-- around everything on the page -->
   <a class="fb-skip">Skip to content</a>
   <header class="fb-site-header">
     <p class="fb-site-title"><a>Site title</a></p>
     <p class="fb-site-tagline">Tagline</p>
     <!-- After Slideshow come the owner's pages and links, as many as they add: let the menu wrap. -->
-    <nav class="fb-nav"><a>Photos</a><a>Albums</a><a>Slideshow</a><a>Search</a><a>About</a></nav>
+    <nav class="fb-nav">
+      <a>Photos</a><a>Albums</a><a>Slideshow</a><a>Search</a><a>About</a>
+      <!-- The light and dark switch. It holds both wordings; the stylesheet shows the one for the mode in use. -->
+      <button class="fb-mode"><span class="fb-mode__to-dark">Dark mode</span><span class="fb-mode__to-light">Light mode</span></button>
+    </nav>
   </header>
   <main class="fb-main">
 
@@ -273,6 +278,7 @@ These class names are stable. A skin may rely on them.
     <!-- An album or tag page: a heading, then the same grid -->
     <h1 class="fb-page-title">Album name</h1>
     <p class="fb-page-description">Description</p>
+    <p class="fb-page-actions"><a>Play as a slideshow</a></p>
 
     <!-- Over the grid on the front page, when the owner offers albums there: a row of names.
          The one being shown carries aria-current="page". -->
@@ -318,7 +324,11 @@ These class names are stable. A skin may rely on them.
     </dialog>
 
   </main>
-  <footer class="fb-site-footer"><a>RSS feed</a></footer>
+  <footer class="fb-site-footer">
+    <p class="fb-site-footer__note">The owner's own line, if they wrote one</p>
+    <a>RSS feed</a>
+  </footer>
+</div>
 </html>
 ```
 
@@ -354,9 +364,14 @@ You do not need to do anything: Fotobogen's own rules, added after your styleshe
   </div>
   <nav class="fb-slideshow__controls">
     <button class="fb-slideshow__control">Previous</button>
+    <button class="fb-slideshow__control" aria-pressed="false">Pause</button>   <!-- or Play -->
+    <button class="fb-slideshow__control">Next</button>
     <span class="fb-slideshow__count">3 / 25</span>
+    <button class="fb-slideshow__control">Full screen</button>
     <a class="fb-slideshow__control">Close</a>
   </nav>
+  <!-- With nothing to show, the page holds only this: -->
+  <p class="fb-slideshow__empty">There are no photos to show. <a>Go back</a></p>
 </main>
 ```
 
