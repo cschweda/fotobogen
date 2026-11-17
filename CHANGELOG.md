@@ -13,6 +13,28 @@ is built from this file.
 
 Nothing yet.
 
+## [1.6.0] - 2026-11-17
+
+### Added
+
+- **A slideshow for other sites.** A new page, **Admin, Embed on another site**, lets other sites show a slideshow of your public photos inside their own pages, and gives the one line of code to paste there. Choose every photo, one album, or one tag, and a size; the frame shrinks to fit a narrower page and keeps its shape. The slideshow has one bar of controls (first, back, play or pause, forward, last, and where it has got to) with "Powered by Fotobogen" at the end, linked to fotobogen.com. Pressing a photo opens its page on your site in a new tab. It is worked from the keyboard too: the arrow keys, Home, End, and Space.
+- It is off until you switch it on. While it is off, its address (`/embed/slideshow`) answers "not found", and switching it off again stops it at once on every site that has the code.
+- Two new pieces of site text, for the First and Last buttons, under **Admin, Site text**.
+
+### Security
+
+- Only the slideshow at `/embed/slideshow` may be shown in a frame by another site, and only while it is switched on. Every other page still refuses, the admin and the login refuse even the site's own pages, and so does anything else asked for under `/embed`.
+- The embedded slideshow shows what a visitor can already see and nothing else: no hidden, draft, or scheduled photo, and never a location. It carries no login, loads no counting script whatever is set under Visitor statistics, and every link in it opens in a new tab, so no other page of the site is ever shown inside the frame.
+- Only the logged-in owner can switch it on or off. No API token can, and a demo visitor cannot.
+
+### Changed
+
+- The site's own slideshow and the embedded one share one piece of code for playing. Nothing about the site's own slideshow changes.
+
+### Updating
+
+**Admin, System, Update to version 1.6.0**, or `pnpm fotobogen update`. Docker: `docker compose pull`, then `docker compose up -d`. Nothing changes for your site unless you switch the slideshow on under **Admin, Embed on another site**.
+
 ## [1.5.0] - 2026-11-16
 
 ### Added
@@ -269,6 +291,7 @@ Later entries list only what changed.
 - One admin account only. No comments, no shop, no storage outside the server's own disk.
 
 [Unreleased]: https://github.com/cschweda/fotobogen/commits/staging
+[1.6.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.6.0
 [1.5.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.5.0
 [1.4.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.4.0
 [1.3.3]: https://github.com/cschweda/fotobogen/releases/tag/v1.3.3
