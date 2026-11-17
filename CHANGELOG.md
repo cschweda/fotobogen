@@ -21,7 +21,7 @@ is built from this file.
 
 ### Security
 
-- The fourth [security audit](https://fotobogen.com/docs/security-audits/), of two-step login: 5 findings, 1 low and 4 informational; 1 fixed, 4 accepted. Wrong codes are counted for the account as well as for each address, so guessing from many addresses at once is stopped after ten.
+- The fourth [security audit](https://fotobogen.com/docs/security-audits/), of two-step login: 6 findings, 2 low and 4 informational; 2 fixed, 4 accepted. Wrong codes are counted for the account as well as for each address, so guessing from many addresses at once is stopped after ten. A backup file never holds the two-step key or the backup codes, and restoring a backup leaves two-step login as the site has it.
 
 ### Fixed
 

@@ -200,7 +200,7 @@ function download() {
           <li><strong>Each code works once,</strong> a backup code as well as a code from the app.</li>
           <li><strong>Switching it on signs out every other browser.</strong> This one stays logged in.</li>
           <li><strong>API tokens are not affected.</strong> A script that uploads with a token goes on working, and no token can read or change anything on this page.</li>
-          <li><strong>A backup of the site contains the key and the codes,</strong> as it contains everything else. Keep backups as private as the site.</li>
+          <li><strong>A backup file never contains the key or the codes,</strong> and restoring a backup leaves two-step login as it is here. A site restored on a new server starts with it off.</li>
         </ul>
       </div>
     </div>
