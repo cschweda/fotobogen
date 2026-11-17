@@ -71,7 +71,31 @@ export function searchWords(input: unknown): { query: string, words: string[] } 
 /** Which photos a grid shows: all of them, one album's, one tag's, or those a search finds. */
 export type Scope = { album: string } | { tag: string } | { search: string[] } | { privateAlbum: string } | undefined
 
-export function publicTiles(page: number, scope?: Scope): { tiles: Tile[], total: number, pages: number } {
+/** A shuffle that is the same every time for the same seed, so the pages of one visit agree with each other. */
+function shuffled<T>(items: T[], seed: number): T[] {
+  let state = seed >>> 0
+  const random = () => {
+    // mulberry32: small, fast, and good enough to deal photographs.
+    state = (state + 0x6D2B79F5) >>> 0
+    let t = state
+    t = Math.imul(t ^ (t >>> 15), t | 1)
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+  const dealt = [...items]
+  for (let i = dealt.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1))
+    ;[dealt[i], dealt[j]] = [dealt[j]!, dealt[i]!]
+  }
+  return dealt
+}
+
+/**
+ * A page of photos for a grid. `seed`, for the whole library only, deals the
+ * photos in a random order that is the same for every page asked for with
+ * that seed.
+ */
+export function publicTiles(page: number, scope?: Scope, seed?: number): { tiles: Tile[], total: number, pages: number } {
   const { sqlite, storage } = getPipeline()
   // An album keeps its own order; everything else follows the library's.
   const inAlbum = scope && ('album' in scope || 'privateAlbum' in scope)
@@ -91,10 +115,23 @@ export function publicTiles(page: number, scope?: Scope): { tiles: Tile[], total
     : scope ? ['album' in scope ? scope.album : 'privateAlbum' in scope ? scope.privateAlbum : scope.tag] : []
 
   const { total } = sqlite.prepare(`select count(*) as total ${from} where ${shown} ${matching}`).get(...key) as { total: number }
-  const rows = sqlite.prepare(`
-    select p.slug, p.title, p.alt, p.thumbhash,
+  const columns = `select p.slug, p.title, p.alt, p.thumbhash,
       t.path as thumbPath, t.width as thumbWidth, t.height as thumbHeight,
-      s.path as squarePath, s.width as squareWidth, s.height as squareHeight
+      s.path as squarePath, s.width as squareWidth, s.height as squareHeight`
+  let rows: Row[]
+  if (seed !== undefined && !scope) {
+    // Deal every visible photo's id, take this page's share, and fetch those, keeping the dealt order.
+    const ids = (sqlite.prepare(`select p.id from photos p where ${shown} order by p.sort_order desc`).all() as { id: string }[]).map(row => row.id)
+    const dealt = shuffled(ids, seed).slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+    const one = sqlite.prepare(`${columns} from photos p
+      join derivatives t on t.photo_id = p.id and t.kind = 'thumb'
+      join derivatives s on s.photo_id = p.id and s.kind = 'square'
+      where p.id = ? and ${shown}`)
+    rows = dealt.map(id => one.get(id) as Row | undefined).filter(row => row !== undefined)
+  }
+  else {
+    rows = sqlite.prepare(`
+    ${columns}
     ${from}
     join derivatives t on t.photo_id = p.id and t.kind = 'thumb'
     join derivatives s on s.photo_id = p.id and s.kind = 'square'
@@ -102,6 +139,7 @@ export function publicTiles(page: number, scope?: Scope): { tiles: Tile[], total
     order by ${order}
     limit ? offset ?
   `).all(...key, PAGE_SIZE, (page - 1) * PAGE_SIZE) as Row[]
+  }
   return {
     total,
     pages: Math.max(1, Math.ceil(total / PAGE_SIZE)),
@@ -160,6 +198,12 @@ export function privateAlbum(token: string): { id: string, title: string, descri
     from albums a where a.private_token = ? and a.visibility = 'private'
   `).get(token) as { id: string, title: string, description: string | null, count: number } | undefined
   return album ?? null
+}
+
+/** The public albums a visitor is offered on the front page: those switched on for it, in the albums page's order. */
+export function frontAlbums(): { slug: string, title: string }[] {
+  const on = new Set((getPipeline().sqlite.prepare(`select id from albums where on_front = 1 and visibility = 'public'`).all() as { id: string }[]).map(row => row.id))
+  return publicAlbums().filter(album => on.has(album.id)).map(album => ({ slug: album.slug, title: album.title }))
 }
 
 export const publicAlbum = (slug: string): PublicAlbum | null => publicAlbums().find(album => album.slug === slug) ?? null

@@ -109,6 +109,8 @@ export const albums = sqliteTable('albums', {
   visibility: text('visibility', { enum: ['public', 'hidden', 'private'] }).notNull().default('public'),
   // The secret part of a private album's link; null unless the album is private.
   privateToken: text('private_token').unique(),
+  // Whether visitors are offered this album on the front page, to see it alone.
+  onFront: integer('on_front', { mode: 'boolean' }).notNull().default(false),
   sortOrder: integer('sort_order').notNull().default(0),
   createdAt: integer('created_at').notNull(),
   updatedAt: integer('updated_at').notNull(),

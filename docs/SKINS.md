@@ -274,6 +274,10 @@ These class names are stable. A skin may rely on them.
     <h1 class="fb-page-title">Album name</h1>
     <p class="fb-page-description">Description</p>
 
+    <!-- Over the grid on the front page, when the owner offers albums there: a row of names.
+         The one being shown carries aria-current="page". -->
+    <nav class="fb-chooser"><a class="fb-chooser__link" aria-current="page">All</a><a class="fb-chooser__link">Travel photos</a></nav>
+
     <!-- The search page: a form, a line saying what was found, then the same grid -->
     <div class="fb-search">
       <h1 class="fb-page-title">Search</h1>

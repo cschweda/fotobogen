@@ -457,7 +457,9 @@ expects the text `"status":"ok"`.
 
 Visitors see two kinds of page:
 
-- **The grid** at `/`: your photos newest first, in a masonry layout (each
+- **The grid** at `/`: your photos, shuffled afresh for each visit or in the
+  order of your library (Admin, Settings), with a row of albums to choose
+  from if you offer any; in a masonry layout (each
   photo keeps its shape) or equal squares. It is laid out by CSS alone, so
   it works with JavaScript off and photos are read in the order they
   appear. Each tile shows a blurred placeholder until its image loads, and
@@ -816,6 +818,20 @@ Two ways to group photos:
   at `/tag/<name>`. A tag exists only while a photo carries it.
 
 Deleting an album never deletes its photos.
+
+**Albums on the front page.** Each album has a switch, **Offer it on the
+front page** (Admin, Albums, Edit). The albums switched on appear as a row of
+names over the photos on your front page: All, then each album. A visitor
+who chooses one sees that album alone, in its own order, at an address of
+its own (`/?album=travel-photos`); All brings everything back. A new album
+is offered there unless you switch it off; with none switched on there is no
+row. Only a public album with photos in it is offered.
+
+**The order of the front page** is under Admin, Settings: **shuffled**, a
+new order for each visit, or **the order of your library**. A new site
+starts shuffled; a site set up before version 1.8.0 keeps the order of its
+library until you change it. The slideshow has its own order setting, and
+always starts again after the last photo.
 
 **Private albums.** An album can be **private**: for a client, a family, a
 few friends. Edit the album, choose **Private**, and it gets a link that

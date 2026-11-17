@@ -40,6 +40,7 @@ Visit counting is left to Plausible, which already tracks fotobogen.com. The pag
 | Pages of words (About, Contact) and the owner's own links in the menu | Done (after 1.7.0) |
 | Search on the public site | Done (after 1.7.0) |
 | Private albums, shown only at a link that cannot be guessed | Done (after 1.7.0) |
+| Albums to choose from on the front page, and a shuffled front page | Done (after 1.7.0) |
 | A picture-quality setting for the web copies | Done |
 | Demo mode: a read-only login for a site that shows Fotobogen off | Done |
 | Update from the admin, for a copy installed with git | Done, in 1.1.0 |

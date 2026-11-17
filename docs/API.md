@@ -42,6 +42,8 @@ The admin's own endpoints under `/api/admin/` are not part of this; they need a 
   "text": { "navPhotos": "Fotografias" },
   "seo": { "homeTitle": "", "titlePattern": "{page} | {site}", "description": "", "indexing": true, "siteUrl": "", "author": "", "twitter": "", "googleVerification": "", "bingVerification": "", "card": null },
   "menu": [{ "label": "About", "href": "/about", "external": false }],
+  "homeOrder": "random",
+  "frontAlbums": [{ "slug": "road-trip", "title": "Road Trip" }],
   "hasAlbums": true
 }
 ```
@@ -52,7 +54,7 @@ The admin's own endpoints under `/api/admin/` are not part of this; they need a 
 
 `GET /api/photos?page=1`
 
-Thirty photos a page, newest first (the order set in the library).
+Thirty photos a page, newest first (the order set in the library). That is always the order here, whatever the site's own front page shows. For a shuffle, add `order=random&seed=<a whole number>`: the photos are dealt in a random order that is the same for every page asked for with the same seed, so pages do not repeat or miss photos. Any other `order` answers `400`.
 
 ```json
 {

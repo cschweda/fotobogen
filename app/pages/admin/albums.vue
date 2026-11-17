@@ -6,7 +6,7 @@ useHead({ title: 'Albums | Fotobogen' })
 
 import type { HostHalves } from '~/plugins/hosts'
 
-interface Album { id: string, slug: string, title: string, description: string | null, visibility: 'public' | 'hidden' | 'private', count: number, cover: string | null, privateLink: string | null }
+interface Album { id: string, slug: string, title: string, description: string | null, visibility: 'public' | 'hidden' | 'private', count: number, cover: string | null, privateLink: string | null, onFront: boolean }
 // A private album's link is given out in full: the public site's address, then the link.
 const halves = useState<HostHalves | null>('fb-hosts')
 const siteAddress = halves.value?.here === 'admin' ? halves.value.site : useRequestURL().origin
@@ -19,7 +19,7 @@ const errors = ref<Record<string, string>>({})
 const message = ref('')
 const problem = ref('')
 const editing = ref<string | null>(null)
-const draft = reactive({ title: '', description: '', visibility: 'public' as 'public' | 'hidden' | 'private' })
+const draft = reactive({ title: '', description: '', visibility: 'public' as 'public' | 'hidden' | 'private', onFront: true })
 const draftErrors = ref<Record<string, string>>({})
 const deleting = ref<string | null>(null)
 
@@ -45,7 +45,7 @@ function edit(album: Album) {
   editing.value = album.id
   deleting.value = null
   draftErrors.value = {}
-  Object.assign(draft, { title: album.title, description: album.description ?? '', visibility: album.visibility })
+  Object.assign(draft, { title: album.title, description: album.description ?? '', visibility: album.visibility, onFront: album.onFront })
 }
 
 async function save(album: Album) {
@@ -111,7 +111,7 @@ async function remove(album: Album) {
           <div v-if="editing !== album.id" class="album__text">
             <h3 class="album__name">{{ album.title }}</h3>
             <p class="album__meta">
-              {{ album.count }} {{ album.count === 1 ? 'photo' : 'photos' }}<template v-if="album.visibility === 'hidden'">, hidden</template><template v-if="album.visibility === 'private'">, private</template>
+              {{ album.count }} {{ album.count === 1 ? 'photo' : 'photos' }}<template v-if="album.visibility === 'hidden'">, hidden</template><template v-if="album.visibility === 'private'">, private</template><template v-if="album.visibility === 'public' && album.onFront">, on the front page</template>
             </p>
             <p v-if="album.description" class="album__about">{{ album.description }}</p>
             <div v-if="album.privateLink" class="private">
@@ -146,6 +146,8 @@ async function remove(album: Album) {
               <label class="scope__choice"><input v-model="draft.visibility" type="radio" :name="`visibility-${album.id}`" value="hidden"><span>Hidden: only you see it</span></label>
               <label class="scope__choice"><input v-model="draft.visibility" type="radio" :name="`visibility-${album.id}`" value="private"><span>Private: only people you give its link to see it. It can hold hidden photos, which stay off your site.</span></label>
             </fieldset>
+            <label class="front"><input v-model="draft.onFront" type="checkbox" :aria-describedby="`front-${album.id}`"><span>Offer it on the front page</span></label>
+            <p :id="`front-${album.id}`" class="front__note">Visitors see a row of these albums over your photos and can choose one, to see it alone. Only a public album with photos in it is offered.</p>
             <div class="album__actions">
               <button type="submit" class="fb-button small">Save album</button>
               <button type="button" class="fb-button fb-button--quiet small" @click="editing = null">Cancel</button>
@@ -158,6 +160,9 @@ async function remove(album: Album) {
 </template>
 
 <style scoped>
+.front { display: flex; align-items: center; gap: 0.6rem; margin-top: 0.75rem; font-weight: 700; cursor: pointer; }
+.front input { flex: none; width: 1.25rem; height: 1.25rem; margin: 0; accent-color: var(--fb-red); }
+.front__note { max-width: 34rem; margin: 0.25rem 0 0.75rem 1.85rem; color: var(--fb-muted); font-size: 0.875rem; }
 .private { margin: 0.75rem 0 0.25rem; padding: 0.9rem 1rem; border-left: 4px solid var(--fb-text); background: var(--fb-panel); }
 .private__note { max-width: 36rem; margin: 0 0 0.75rem; color: var(--fb-muted); font-size: 0.875rem; }
 .back { margin: 0 0 1.5rem; font-size: 0.875rem; }
