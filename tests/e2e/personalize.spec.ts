@@ -65,7 +65,12 @@ test('the owner renames the site and rewords its pages, and visitors see it at o
   await page.goto(server.url + '/admin/text')
   await page.getByRole('button', { name: 'Use the default wording everywhere' }).click()
   await page.getByLabel('Language of your site\'s text').fill('en')
-  await page.getByRole('button', { name: 'Save' }).click()
+  // Wait for the save itself: the line below it appears as soon as the fields are emptied, before anything is saved,
+  // and leaving the page then would call the save off.
+  await Promise.all([
+    page.waitForResponse(response => response.url().endsWith('/api/admin/site-text') && response.request().method() === 'PUT' && response.ok()),
+    page.getByRole('button', { name: 'Save' }).click(),
+  ])
   await expect(page.getByText('Nothing has been changed yet.')).toBeVisible()
   await page.goto(server.url + '/')
   await expect(page.getByRole('link', { name: 'Photos', exact: true })).toBeVisible()
