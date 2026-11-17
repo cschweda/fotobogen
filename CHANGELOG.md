@@ -19,7 +19,13 @@ Nothing yet.
 
 - **Full screen works.** The full-screen button over a photo and the one in the slideshow (and the F key there) did nothing: the browser refused, and its console said "Permissions policy violation: fullscreen is not allowed in this document". A header Fotobogen sends with every page forbade full screen outright. The site's own pages are now allowed it. Camera, microphone, location, and screen capture stay refused, and a page framed inside the site gets no full screen.
 - **The photo that opens over the grid is centred.** It sat in the top-left corner of the window, with its picture and words against its left edge. It now sits in the middle, with the picture and words in the middle of it, in all four skins. A skin of your own gets the first part without any change; for the second, add `justify-content: center` to `.fb-modal .fb-photo`.
+- **The date taken is the day the camera wrote.** The date is read from the photo's own metadata at upload, as before, but it was worked out on the server's clock: on a server not set to UTC, a photo taken in the evening could show the next day's date. It is now kept exactly as the camera wrote it. Photos already uploaded keep the date they have; correct one under **Admin, Library**, or upload it again.
 - The tests stood in for the browser's part of full screen, which is why this was missed. A new test asks a real browser whether full screen is allowed, and another measures where the photo window sits.
+
+### Changed
+
+- When a file has no "date taken" but does say when it was made (a scan, some phone apps), that date is used. A file that says only when it was last edited, or nothing, leaves the date empty for you to fill in. The field in the admin now says where its date comes from.
+- The README and the installation guide explain installing into a folder with another name and running several installs on one machine: what each needs of its own, and why a browser keeps only one login for `localhost`.
 
 ### Updating
 

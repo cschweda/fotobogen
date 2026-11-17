@@ -18,7 +18,8 @@ is out; 1.3.0 asks a few questions at the first start; 1.3.3 followed the
 first [security audit](#security-audits); 1.4.0 adds optional visitor
 statistics; 1.5.0 lets the admin live at an address of its own; 1.6.0 lets
 other sites show a slideshow of your photos; 1.6.1 makes the full-screen
-buttons work and centres the photo window.
+buttons work, centres the photo window, and keeps a photo's date as the
+camera wrote it.
 
 - **What is in it:** [CHANGELOG.md](CHANGELOG.md), also published as
   [Releases](https://fotobogen.com/docs/changelog/).
@@ -199,18 +200,41 @@ Leave the terminal open while you use the site. Control + C stops it, and
 
 ### In a folder with another name
 
-`git clone` takes the folder's name as a second argument, so an install can
-sit beside a copy of the source, or beside another install:
+The folder does not have to be called `fotobogen`. `git clone` takes the
+folder's name as a second argument, and everything else is the same:
 
 ```bash
 git clone https://github.com/cschweda/fotobogen.git fotobogen-live
 cd fotobogen-live
+pnpm install
+pnpm build
+pnpm start
 ```
 
-Each folder is its own site, with its own `data` folder. If one copy is
-running when you start another, Fotobogen asks whether to run both; the
-second takes the next free port and prints its address. To give a copy a
-port of its own, put `PORT=5160` in a `.env` file in its folder.
+Use this to keep an install beside a copy of the source, or to run several
+sites on one machine: `fotobogen-live`, `fotobogen-test`, one for each
+client. Nothing in Fotobogen depends on the folder's name.
+
+**Several installs on one machine.** Each folder is a complete site of its
+own: its own photos and database (in its own `data` folder), its own login,
+its own settings (in its own `.env`), and its own version, updated by
+itself. What they must not share:
+
+| Each install needs its own | How |
+|---|---|
+| Folder | The name you give `git clone` |
+| Port | Put `PORT=5160` (any free port) in a `.env` file in its folder. Without one, a second copy started in a terminal asks whether to run beside the first, takes the next free port, and prints its address |
+| Data folder | Nothing to do: it is `data` inside the install's own folder. Never point two installs at one data folder |
+| pm2 name, on a server | Change `name: 'fotobogen'` in its `ecosystem.config.cjs`, to `fotobogen-live`, say ([Without Docker (pm2)](#without-docker-pm2)) |
+| Address, on a server | Its own domain and its own nginx `server` block, forwarding to its port ([nginx in front of the app](#nginx-in-front-of-the-app)) |
+
+One thing to know on your own computer: a browser keeps one login for
+`localhost`, whatever the port. Logging in to the install at
+`http://localhost:5160` logs you out of the one at `http://localhost:5150`.
+To be logged in to two at once, open the second at `http://127.0.0.1:5160`
+(the browser counts that as a different place), or in another browser or a
+private window. On a server, each install has its own domain and this does
+not arise.
 
 Run the commands from the folder you mean. `cd` into it first and check with
 `pwd`; cloning from inside an existing copy puts the new one inside the old.
