@@ -1,0 +1,23 @@
+{
+  "name": "create-fotobogen",
+  "version": "1.0.0",
+  "description": "Installs Fotobogen, a self-hosted photo website, in one command: npx create-fotobogen@latest",
+  "type": "module",
+  "license": "MIT",
+  "author": "Christopher Schweda",
+  "homepage": "https://fotobogen.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cschweda/fotobogen.git",
+    "directory": "create-fotobogen"
+  },
+  "bugs": "https://github.com/cschweda/fotobogen/issues",
+  "keywords": ["fotobogen", "photo", "gallery", "self-hosted", "installer", "create"],
+  "bin": {
+    "create-fotobogen": "bin/create-fotobogen.mjs"
+  },
+  "files": ["bin", "lib", "CHANGELOG.md"],
+  "engines": {
+    "node": ">=18"
+  }
+}

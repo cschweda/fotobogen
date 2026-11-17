@@ -11,7 +11,7 @@ is built from this file.
 
 ## [Unreleased]
 
-Nothing yet.
+- A one-line installer, `npx create-fotobogen@latest`, in [`create-fotobogen/`](create-fotobogen): it checks the tools, asks for a folder, fetches the newest release, installs, builds, and offers to start it. It is its own npm package with its own version numbers and changelog, published with `./publish.sh`. It changes nothing in Fotobogen itself.
 
 ## [1.7.0] - 2026-11-17
 
