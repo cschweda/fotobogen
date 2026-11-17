@@ -15,6 +15,10 @@ is built from this file.
 
 - **A trash.** Deleting a photo, in the library or on its own page, now moves it to the trash: it is off the site at once and kept for 30 days, with the file that was uploaded, then removed for good. Under **Admin, Library, Show, Trash** a photo can be restored, which puts it back as it was (same address, albums, tags, and place in the order), or deleted for good straight away, which asks first. The library says how many photos are in the trash, and each one there shows the day it will go.
 - Uploading a file that is in the trash is refused, with a note saying where it is.
+- **Pages.** A new page in the admin, **Pages**, for pages of words beside your photographs: About, Contact, anything. Each has an address of its own at the top of the site (`/about`) and, unless you take it out, a place in the menu. The text is plain text with a little marking (paragraphs, headings, lists, bold, italic, links), with a preview as you type; web and email addresses become links by themselves. It is never used as HTML, and a link goes only to a web address, an email address, or a page of the site. A page can be hidden while it is written. Up to 50.
+- **Links in your menu.** On the same page, up to eight links of your own, shown in the menu after your pages.
+- For other programs: `GET /api/pages/<slug>` gives a page's title and text, and `/api/site` lists the menu under `menu`.
+- For skins: a page is `<article class="fb-page">` with its text in `.fb-page-body`, and the menu may now hold more links. The four bundled skins are updated; a skin of your own should style `.fb-page-body` and let `.fb-nav` wrap (docs/SKINS.md).
 
 ### Changed
 

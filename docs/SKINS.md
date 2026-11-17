@@ -237,7 +237,8 @@ These class names are stable. A skin may rely on them.
   <header class="fb-site-header">
     <p class="fb-site-title"><a>Site title</a></p>
     <p class="fb-site-tagline">Tagline</p>
-    <nav class="fb-nav"><a>Photos</a><a>Albums</a><a>Slideshow</a></nav>
+    <!-- After Slideshow come the owner's pages and links, as many as they add: let the menu wrap. -->
+    <nav class="fb-nav"><a>Photos</a><a>Albums</a><a>Slideshow</a><a>About</a></nav>
   </header>
   <main class="fb-main">
 
@@ -272,6 +273,13 @@ These class names are stable. A skin may rely on them.
     <!-- An album or tag page: a heading, then the same grid -->
     <h1 class="fb-page-title">Album name</h1>
     <p class="fb-page-description">Description</p>
+
+    <!-- A page the owner wrote (About, Contact): a heading, then its text.
+         Inside fb-page-body there are only p, h2, h3, ul, li, strong, em, a, and br. -->
+    <article class="fb-page">
+      <h1 class="fb-page-title">About</h1>
+      <div class="fb-page-body"><p>Words.</p><h2>A heading</h2><ul><li>An item</li></ul></div>
+    </article>
 
     <!-- The list of albums -->
     <ul class="fb-albums">

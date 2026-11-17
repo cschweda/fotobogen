@@ -37,6 +37,7 @@ Visit counting is left to Plausible, which already tracks fotobogen.com. The pag
 | API tokens for uploading from a script or another program | Done |
 | A slideshow that other sites can show in their own pages | Done |
 | A trash: deleted photos are kept for 30 days and can be restored | Done (after 1.7.0) |
+| Pages of words (About, Contact) and the owner's own links in the menu | Done (after 1.7.0) |
 | A picture-quality setting for the web copies | Done |
 | Demo mode: a read-only login for a site that shows Fotobogen off | Done |
 | Update from the admin, for a copy installed with git | Done, in 1.1.0 |

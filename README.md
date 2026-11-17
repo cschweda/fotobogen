@@ -694,6 +694,27 @@ What that means in practice:
   pasting script would let anyone who got your password put code in every
   visitor's browser.
 
+**Admin, Pages.** Pages of words beside your photographs: About, Contact,
+anything. Give a page a title and it gets an address of its own at the top
+of your site (`/about`), which you can change, and a place in your site's
+menu unless you take it out. A page can be hidden while you write it.
+
+- **Its text is plain text with a little marking.** An empty line between
+  paragraphs; `## ` at the start of a line for a heading; `- ` for a list
+  item; `**bold**`, `*italic*`, and `[words](https://example.com)` for a
+  link. A web address or an email address written out becomes a link by
+  itself, so a contact page can be as simple as your email address. A
+  preview under the box shows how it will look.
+- **It is never HTML.** Anything typed is shown as text, and a link goes
+  only to a web address, an email address, or a page of your site. Someone
+  who got your password could not use a page to put a script on your site.
+- **Links in your menu.** On the same page, add links of your own after
+  your pages: a shop, another site, `mailto:` and your address, or a page of
+  this site such as `/album/road-trip`. Up to eight.
+- A page cannot take an address the site itself uses (`/albums`, `/admin`,
+  and so on). Up to 50 pages. Pages are in the sitemap, and in every backup.
+- Only the logged-in owner can change pages and the menu. No API token can.
+
 **Admin, Embed on another site.** Other sites can show a slideshow of your
 photos inside their own pages: a blog, a club's site, a portfolio. Switch it
 on, choose every photo, one album, or one tag, and a size, and copy the one
@@ -764,7 +785,7 @@ upload to your site without your password. A token is shown once, when it
 is made, and only a hash of it is stored. There are two kinds: **Upload
 only** (upload, list, and check photos, and retry one that failed) and **Manage photos** (also edit,
 reorder, hide, and delete photos and manage albums). No token can change
-visitor statistics, embedding, settings, skins, or site text, reach a backup, restore one, or make or
+visitor statistics, embedding, pages, the menu, settings, skins, or site text, reach a backup, restore one, or make or
 revoke tokens. Revoking a token stops it at once, and the page shows when
 each was last used.
 

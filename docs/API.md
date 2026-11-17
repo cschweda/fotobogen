@@ -5,7 +5,7 @@ Every Fotobogen site answers a small read-only JSON API: the same data its own p
 - **Read-only.** There is nothing to log in to and nothing can be changed through it.
 - **Public only.** It returns exactly what a visitor can see: processed, public photos whose publication time has come. Hidden photos, drafts, scheduled photos, and hidden albums never appear. Camera details and location follow the site's privacy settings.
 - **Open to browsers on other sites.** Responses carry `Access-Control-Allow-Origin: *`.
-- **Versioned.** Every answer from an address under `/api/photos`, `/api/albums`, `/api/tags`, `/api/slideshow`, and `/api/site` carries `X-Fotobogen-API: 1` (the health check and the feeds do not, nor does the `503` before setup). Fields may be added at any time; a field is removed or changes meaning only with a new number, noted in the [changelog](../CHANGELOG.md).
+- **Versioned.** Every answer from an address under `/api/photos`, `/api/albums`, `/api/tags`, `/api/slideshow`, `/api/pages`, and `/api/site` carries `X-Fotobogen-API: 1` (the health check and the feeds do not, nor does the `503` before setup). Fields may be added at any time; a field is removed or changes meaning only with a new number, noted in the [changelog](../CHANGELOG.md).
 
 The admin's own endpoints under `/api/admin/` are not part of this; they need a login and may change between versions.
 
@@ -18,6 +18,7 @@ The admin's own endpoints under `/api/admin/` are not part of this; they need a 
 - [One album](#one-album)
 - [One tag](#one-tag)
 - [Slideshow](#slideshow)
+- [One page](#one-page)
 - [Images](#images)
 - [Feeds](#feeds)
 - [Health](#health)
@@ -39,6 +40,7 @@ The admin's own endpoints under `/api/admin/` are not part of this; they need a 
   "language": "en",
   "text": { "navPhotos": "Fotografias" },
   "seo": { "homeTitle": "", "titlePattern": "{page} | {site}", "description": "", "indexing": true, "siteUrl": "", "author": "", "twitter": "", "googleVerification": "", "bingVerification": "", "card": null },
+  "menu": [{ "label": "About", "href": "/about", "external": false }],
   "hasAlbums": true
 }
 ```
@@ -162,6 +164,18 @@ Image addresses are relative to the site (`/media/<name>.webp`). Each name conta
 
 All images are WebP. Sizes: `thumb` 480 px wide, `square` 480 × 480, `medium` 1280 px on the long edge, `large` 2560 px. Nothing is enlarged, so a small photo has smaller copies.
 
+## One page
+
+`GET /api/pages/<slug>`
+
+A page the owner wrote, such as About. `/api/site` lists the ones in the menu, under `menu`, followed by the owner's own links (`external` is `true` for a link to another site).
+
+```json
+{ "slug": "about", "title": "About", "body": "I photograph the **coast**.\n\n## Contact\n\nWrite to me@example.com." }
+```
+
+`body` is plain text with a little marking, never HTML: an empty line between paragraphs, `## ` and `### ` for headings, `- ` for list items, `**bold**`, `*italic*`, and `[words](address)` for links. Web and email addresses written out are links too. If you draw it yourself, treat it as text; [`shared/page-text.ts`](../shared/page-text.ts) reads it into pieces and allows a link only to an `http(s)` address, a `mailto:` address, or a path on the site. A hidden page answers `404`.
+
 ## Feeds
 
 - `GET /feed.xml`: RSS of the thirty newest photos.
@@ -196,7 +210,7 @@ A request with a token needs no cookie and no `Origin` header, and is judged by 
 | `upload` | `POST /api/admin/photos` (upload), `GET /api/admin/photos` (list), `GET /api/admin/photos/<id>`, `POST /api/admin/photos/<id>/retry` |
 | `manage` | Everything under `/api/admin/photos` and `/api/admin/albums`, and `GET /api/admin/overview` |
 
-Anything else answers `403`. No token can reach settings, skins, site text, visitor statistics, embedding, backups, restore, or the tokens themselves. A wrong or revoked token answers `401`. A header that is not in the form `Bearer fb_…` is not taken for a token at all: a request that changes something then answers `403`, and one that reads answers `401` asking for a login.
+Anything else answers `403`. No token can reach settings, skins, site text, pages, the menu, visitor statistics, embedding, backups, restore, or the tokens themselves. A wrong or revoked token answers `401`. A header that is not in the form `Bearer fb_…` is not taken for a token at all: a request that changes something then answers `403`, and one that reads answers `401` asking for a login.
 
 Uploading:
 
