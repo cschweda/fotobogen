@@ -9,7 +9,7 @@ installs whatever release of Fotobogen is newest when it is run.
 
 ## [1.0.0] - 2026-11-17
 
-The first release under the name `fotobogen`. (The same installer was published earlier the same day as `create-fotobogen` 1.0.0, before the name was settled.)
+The first release under the name `fotobogen`. (The same installer was published earlier the same day as `create-fotobogen` 1.0.0, before the name was settled. That package is retired: it is marked on npm as replaced by this one, and gets no further versions.)
 
 - `npx fotobogen@latest` (or `npx fotobogen@latest install`) checks for Node.js 24, git, and pnpm 10, asks for a folder, fetches the newest release of Fotobogen with git, installs its packages, builds it, and offers to start it.
 - `--release` installs a particular version; `--yes` asks nothing; `--no-start` does not offer to start it.
