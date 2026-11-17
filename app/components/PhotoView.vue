@@ -21,7 +21,8 @@ export interface PublicPhoto {
   next: string | null
 }
 
-const props = defineProps<{ photo: PublicPhoto, headingLevel?: 'h1' | 'h2' }>()
+/** `photoBase`: where a photo's own page is; /photo, unless it is shown in a private album. */
+const props = withDefaults(defineProps<{ photo: PublicPhoto, headingLevel?: 'h1' | 'h2', photoBase?: string }>(), { photoBase: '/photo' })
 const { t } = useSiteText()
 /** In the modal, moving to a neighbour swaps the photo in place instead of loading a page. */
 const emit = defineEmits<{ go: [slug: string, event: MouseEvent] }>()
@@ -97,8 +98,8 @@ const settings = computed(() => {
         <a :href="photo.download.url" download>{{ photo.download.original ? t('downloadOriginal') : t('download') }}</a>
       </p>
       <nav v-if="photo.previous || photo.next" class="fb-photo__nav" :aria-label="t('otherPhotos')">
-        <a v-if="photo.previous" class="fb-photo__prev" :href="`/photo/${photo.previous}`" rel="prev" @click="emit('go', photo.previous, $event)">{{ t('previous') }}</a>
-        <a v-if="photo.next" class="fb-photo__next" :href="`/photo/${photo.next}`" rel="next" @click="emit('go', photo.next, $event)">{{ t('next') }}</a>
+        <a v-if="photo.previous" class="fb-photo__prev" :href="`${photoBase}/${photo.previous}`" rel="prev" @click="emit('go', photo.previous, $event)">{{ t('previous') }}</a>
+        <a v-if="photo.next" class="fb-photo__next" :href="`${photoBase}/${photo.next}`" rel="next" @click="emit('go', photo.next, $event)">{{ t('next') }}</a>
       </nav>
     </div>
   </article>

@@ -4,7 +4,13 @@
 definePageMeta({ middleware: 'admin' })
 useHead({ title: 'Albums | Fotobogen' })
 
-interface Album { id: string, slug: string, title: string, description: string | null, visibility: 'public' | 'hidden', count: number, cover: string | null }
+import type { HostHalves } from '~/plugins/hosts'
+
+interface Album { id: string, slug: string, title: string, description: string | null, visibility: 'public' | 'hidden' | 'private', count: number, cover: string | null, privateLink: string | null }
+// A private album's link is given out in full: the public site's address, then the link.
+const halves = useState<HostHalves | null>('fb-hosts')
+const siteAddress = halves.value?.here === 'admin' ? halves.value.site : useRequestURL().origin
+const renewing = ref<string | null>(null)
 const { data, refresh } = await useFetch<{ albums: Album[] }>('/api/admin/albums')
 const albums = computed(() => data.value?.albums ?? [])
 const title = ref('')
@@ -13,7 +19,7 @@ const errors = ref<Record<string, string>>({})
 const message = ref('')
 const problem = ref('')
 const editing = ref<string | null>(null)
-const draft = reactive({ title: '', description: '', visibility: 'public' as 'public' | 'hidden' })
+const draft = reactive({ title: '', description: '', visibility: 'public' as 'public' | 'hidden' | 'private' })
 const draftErrors = ref<Record<string, string>>({})
 const deleting = ref<string | null>(null)
 
@@ -55,6 +61,20 @@ async function save(album: Album) {
   }
 }
 
+/** Gives a private album a new link. The old one stops working at once. */
+async function newLink(album: Album) {
+  problem.value = ''
+  try {
+    await $fetch(`/api/admin/albums/${album.id}`, { method: 'PATCH', body: { newPrivateLink: true } })
+    message.value = `"${album.title}" has a new link. The old one no longer works.`
+    await refresh()
+  }
+  catch (caught) {
+    problem.value = failed(caught)?.message ?? 'A new link could not be made.'
+  }
+  renewing.value = null
+}
+
 async function remove(album: Album) {
   try {
     await $fetch(`/api/admin/albums/${album.id}`, { method: 'DELETE' })
@@ -91,13 +111,24 @@ async function remove(album: Album) {
           <div v-if="editing !== album.id" class="album__text">
             <h3 class="album__name">{{ album.title }}</h3>
             <p class="album__meta">
-              {{ album.count }} {{ album.count === 1 ? 'photo' : 'photos' }}<template v-if="album.visibility === 'hidden'">, hidden</template>
+              {{ album.count }} {{ album.count === 1 ? 'photo' : 'photos' }}<template v-if="album.visibility === 'hidden'">, hidden</template><template v-if="album.visibility === 'private'">, private</template>
             </p>
             <p v-if="album.description" class="album__about">{{ album.description }}</p>
+            <div v-if="album.privateLink" class="private">
+              <CopyField :id="`link-${album.id}`" :label="`Link to ${album.title}, to give to the people who may see it`" :value="siteAddress + album.privateLink" />
+              <p class="private__note">Anyone who has this link can see the album, hidden photos in it included, and can pass the link on. It is listed nowhere on your site.</p>
+              <button v-if="renewing !== album.id" type="button" class="fb-button fb-button--quiet small" :aria-label="`Make a new link for ${album.title}`" @click="renewing = album.id">Make a new link</button>
+              <template v-else>
+                <span>Make a new link? The one above stops working at once, for everyone who has it.</span>
+                <button type="button" class="fb-button small" @click="newLink(album)">Yes, make a new link</button>
+                <button type="button" class="fb-button fb-button--quiet small" @click="renewing = null">Keep this one</button>
+              </template>
+            </div>
             <div class="album__actions">
               <button type="button" class="fb-button fb-button--quiet small" :aria-label="`Edit ${album.title}`" @click="edit(album)">Edit</button>
               <NuxtLink class="fb-button fb-button--quiet small" :to="`/admin/photos?album=${album.id}`" :aria-label="`Photos in ${album.title}`">Photos</NuxtLink>
               <a v-if="album.visibility === 'public' && album.count > 0" class="fb-button fb-button--quiet small" :href="`/album/${album.slug}`" :aria-label="`View ${album.title} on site`">View</a>
+              <a v-if="album.privateLink" class="fb-button fb-button--quiet small" :href="siteAddress + album.privateLink" :aria-label="`View ${album.title} at its link`">View</a>
               <button v-if="deleting !== album.id" type="button" class="fb-button fb-button--quiet small" :aria-label="`Delete ${album.title}`" @click="deleting = album.id">Delete</button>
               <template v-else>
                 <span>Delete this album? Its photos stay in your library.</span>
@@ -113,6 +144,7 @@ async function remove(album: Album) {
               <legend class="scope__legend">Visibility</legend>
               <label class="scope__choice"><input v-model="draft.visibility" type="radio" :name="`visibility-${album.id}`" value="public"><span>Public: has a page on your site</span></label>
               <label class="scope__choice"><input v-model="draft.visibility" type="radio" :name="`visibility-${album.id}`" value="hidden"><span>Hidden: only you see it</span></label>
+              <label class="scope__choice"><input v-model="draft.visibility" type="radio" :name="`visibility-${album.id}`" value="private"><span>Private: only people you give its link to see it. It can hold hidden photos, which stay off your site.</span></label>
             </fieldset>
             <div class="album__actions">
               <button type="submit" class="fb-button small">Save album</button>
@@ -126,6 +158,8 @@ async function remove(album: Album) {
 </template>
 
 <style scoped>
+.private { margin: 0.75rem 0 0.25rem; padding: 0.9rem 1rem; border-left: 4px solid var(--fb-text); background: var(--fb-panel); }
+.private__note { max-width: 36rem; margin: 0 0 0.75rem; color: var(--fb-muted); font-size: 0.875rem; }
 .back { margin: 0 0 1.5rem; font-size: 0.875rem; }
 .new, .list { max-width: 44rem; margin-top: 2.5rem; }
 .heading { margin: 0 0 1.25rem; font-size: 1.25rem; font-weight: 700; letter-spacing: -0.015em; }

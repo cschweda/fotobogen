@@ -105,7 +105,10 @@ export const albums = sqliteTable('albums', {
   description: text('description'),
   // The photo shown for the album in lists; the first photo when not set.
   coverPhotoId: text('cover_photo_id').references(() => photos.id, { onDelete: 'set null' }),
-  visibility: text('visibility', { enum: ['public', 'hidden'] }).notNull().default('public'),
+  // 'private': not listed anywhere, and shown only at a link that cannot be guessed (/private/<token>).
+  visibility: text('visibility', { enum: ['public', 'hidden', 'private'] }).notNull().default('public'),
+  // The secret part of a private album's link; null unless the album is private.
+  privateToken: text('private_token').unique(),
   sortOrder: integer('sort_order').notNull().default(0),
   createdAt: integer('created_at').notNull(),
   updatedAt: integer('updated_at').notNull(),

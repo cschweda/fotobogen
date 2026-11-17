@@ -36,6 +36,9 @@ interface Row {
  * scheduled, past its time. Worked out at the moment of the query, so a
  * scheduled photo appears by itself when its time comes.
  */
+/** What a private album shows of the photos in it: every one that is finished and not in the trash. */
+const IN_PRIVATE_ALBUM = `p.status = 'ready'`
+
 const visible = (): string => `p.status = 'ready' and p.visibility = 'public' and (p.publish_at is null or p.publish_at <= ${Date.now()})`
 
 function placeholder(thumbhash: string | null): string | null {
@@ -66,25 +69,28 @@ export function searchWords(input: unknown): { query: string, words: string[] } 
 }
 
 /** Which photos a grid shows: all of them, one album's, one tag's, or those a search finds. */
-export type Scope = { album: string } | { tag: string } | { search: string[] } | undefined
+export type Scope = { album: string } | { tag: string } | { search: string[] } | { privateAlbum: string } | undefined
 
 export function publicTiles(page: number, scope?: Scope): { tiles: Tile[], total: number, pages: number } {
   const { sqlite, storage } = getPipeline()
   // An album keeps its own order; everything else follows the library's.
-  const from = scope && 'album' in scope
+  const inAlbum = scope && ('album' in scope || 'privateAlbum' in scope)
+  const from = inAlbum
     ? `from photos p join album_photos ap on ap.photo_id = p.id and ap.album_id = ?`
     : scope && 'tag' in scope
       ? `from photos p join photo_tags pt on pt.photo_id = p.id and pt.tag_id = ?`
       : `from photos p`
-  const order = scope && 'album' in scope ? `ap.position` : `p.sort_order desc`
+  const order = inAlbum ? `ap.position` : `p.sort_order desc`
+  // A private album shows every finished photo in it, hidden ones included: that is what it is for.
+  const shown = scope && 'privateAlbum' in scope ? IN_PRIVATE_ALBUM : visible()
   // A search: every word must be found somewhere in what a visitor can read about the photo.
   const words = scope && 'search' in scope ? scope.search : []
   const matching = words.map(() => `and (${SEARCHED})`).join(' ')
   const key = scope && 'search' in scope
     ? words.flatMap(word => Array.from({ length: SEARCHED_PLACES }, () => `%${word.replace(/[\\%_]/g, character => `\\${character}`)}%`))
-    : scope ? ['album' in scope ? scope.album : scope.tag] : []
+    : scope ? ['album' in scope ? scope.album : 'privateAlbum' in scope ? scope.privateAlbum : scope.tag] : []
 
-  const { total } = sqlite.prepare(`select count(*) as total ${from} where ${visible()} ${matching}`).get(...key) as { total: number }
+  const { total } = sqlite.prepare(`select count(*) as total ${from} where ${shown} ${matching}`).get(...key) as { total: number }
   const rows = sqlite.prepare(`
     select p.slug, p.title, p.alt, p.thumbhash,
       t.path as thumbPath, t.width as thumbWidth, t.height as thumbHeight,
@@ -92,7 +98,7 @@ export function publicTiles(page: number, scope?: Scope): { tiles: Tile[], total
     ${from}
     join derivatives t on t.photo_id = p.id and t.kind = 'thumb'
     join derivatives s on s.photo_id = p.id and s.kind = 'square'
-    where ${visible()} ${matching}
+    where ${shown} ${matching}
     order by ${order}
     limit ? offset ?
   `).all(...key, PAGE_SIZE, (page - 1) * PAGE_SIZE) as Row[]
@@ -144,6 +150,18 @@ export function publicAlbums(): PublicAlbum[] {
   })
 }
 
+/** A private album, by the secret part of its link. Null for a wrong one, or an album that is no longer private. */
+export function privateAlbum(token: string): { id: string, title: string, description: string | null, count: number } | null {
+  if (!/^[A-Za-z0-9_-]{32}$/.test(token)) return null
+  const { sqlite } = getPipeline()
+  const album = sqlite.prepare(`
+    select a.id, a.title, a.description,
+      (select count(*) from album_photos ap join photos p on p.id = ap.photo_id where ap.album_id = a.id and ${IN_PRIVATE_ALBUM}) as count
+    from albums a where a.private_token = ? and a.visibility = 'private'
+  `).get(token) as { id: string, title: string, description: string | null, count: number } | undefined
+  return album ?? null
+}
+
 export const publicAlbum = (slug: string): PublicAlbum | null => publicAlbums().find(album => album.slug === slug) ?? null
 
 /** A tag, if any photo a visitor may see carries it. */
@@ -189,14 +207,26 @@ export interface PublicPhoto {
   next: string | null
 }
 
-export function publicPhoto(slug: string): PublicPhoto | null {
+/** A photo a visitor may see, by its address. */
+export const publicPhoto = (slug: string): PublicPhoto | null => photoDetail(slug, null)
+
+/**
+ * A photo as a private album shows it: any finished photo in that album,
+ * hidden or not. It says nothing of the photo's tags or other albums, offers
+ * no download and no location, and its neighbours are the album's.
+ */
+export const privatePhoto = (albumId: string, slug: string): PublicPhoto | null => photoDetail(slug, albumId)
+
+function photoDetail(slug: string, privateAlbumId: string | null): PublicPhoto | null {
   const { sqlite, storage } = getPipeline()
+  const inPrivate = privateAlbumId !== null
+  const allowed = inPrivate ? `${IN_PRIVATE_ALBUM} and exists (select 1 from album_photos m where m.photo_id = p.id and m.album_id = ?)` : visible()
   const photo = sqlite.prepare(`
     select p.id, p.slug, p.title, p.description, p.alt, p.thumbhash, p.taken_at as takenAt, p.sort_order as sortOrder,
       p.camera, p.lens, p.focal_length as focalLength, p.aperture, p.shutter, p.iso, p.lat, p.lng,
       p.license, p.allow_download as allowDownload, p.width, p.height
-    from photos p where p.slug = ? and ${visible()}
-  `).get(slug) as (Record<string, never> & {
+    from photos p where p.slug = ? and ${allowed}
+  `).get(...(inPrivate ? [slug, privateAlbumId] : [slug])) as (Record<string, never> & {
     id: string, slug: string, title: string | null, description: string | null, alt: string | null, thumbhash: string | null
     takenAt: number | null, sortOrder: number, camera: string | null, lens: string | null, focalLength: string | null
     aperture: string | null, shutter: string | null, iso: number | null, lat: number | null, lng: number | null
@@ -210,6 +240,11 @@ export function publicPhoto(slug: string): PublicPhoto | null {
   const neighbour = (comparison: '>' | '<', direction: 'asc' | 'desc') => (sqlite
     .prepare(`select p.slug from photos p where ${visible()} and p.sort_order ${comparison} ? order by p.sort_order ${direction} limit 1`)
     .get(photo.sortOrder) as { slug: string } | undefined)?.slug ?? null
+  // In a private album the neighbours are the album's, in the album's order.
+  const place = inPrivate ? (sqlite.prepare(`select position from album_photos where album_id = ? and photo_id = ?`).get(privateAlbumId, photo.id) as { position: number }).position : 0
+  const albumNeighbour = (comparison: '>' | '<', direction: 'asc' | 'desc') => (sqlite
+    .prepare(`select p.slug from photos p join album_photos ap on ap.photo_id = p.id and ap.album_id = ? where ${IN_PRIVATE_ALBUM} and ap.position ${comparison} ? order by ap.position ${direction} limit 1`)
+    .get(privateAlbumId, place) as { slug: string } | undefined)?.slug ?? null
 
   return {
     slug: photo.slug,
@@ -223,16 +258,16 @@ export function publicPhoto(slug: string): PublicPhoto | null {
       : null,
     // The size of the photograph as uploaded, in pixels. Part of the camera details: shown when they are.
     size: getSetting('privacy.show_exif', true) ? { width: photo.width, height: photo.height } : null,
-    location: getSetting('privacy.show_location', false) && photo.lat !== null && photo.lng !== null ? { lat: photo.lat, lng: photo.lng } : null,
+    location: !inPrivate && getSetting('privacy.show_location', false) && photo.lat !== null && photo.lng !== null ? { lat: photo.lat, lng: photo.lng } : null,
     images: images.map(image => ({ url: storage.publicUrl(image.path), width: image.width, height: image.height })),
-    tags: sqlite.prepare(`select t.slug, t.name from tags t join photo_tags pt on pt.tag_id = t.id where pt.photo_id = ? order by t.name collate nocase`).all(photo.id) as { slug: string, name: string }[],
-    albums: sqlite.prepare(`select a.slug, a.title from albums a join album_photos ap on ap.album_id = a.id where ap.photo_id = ? and a.visibility = 'public' order by a.title collate nocase`).all(photo.id) as { slug: string, title: string }[],
+    tags: inPrivate ? [] : sqlite.prepare(`select t.slug, t.name from tags t join photo_tags pt on pt.tag_id = t.id where pt.photo_id = ? order by t.name collate nocase`).all(photo.id) as { slug: string, name: string }[],
+    albums: inPrivate ? [] : sqlite.prepare(`select a.slug, a.title from albums a join album_photos ap on ap.album_id = a.id where ap.photo_id = ? and a.visibility = 'public' order by a.title collate nocase`).all(photo.id) as { slug: string, title: string }[],
     licence: (({ label, url }) => ({ label, url }))(licenceFor(photo.license ?? getSetting('site.license', DEFAULT_LICENCE))),
-    download: downloadAllowed(photo.allowDownload)
+    download: !inPrivate && downloadAllowed(photo.allowDownload)
       ? { url: `/api/photos/${encodeURIComponent(photo.slug)}/download`, original: originalIsServed() }
       : null,
-    previous: neighbour('>', 'asc'),
-    next: neighbour('<', 'desc'),
+    previous: inPrivate ? albumNeighbour('<', 'desc') : neighbour('>', 'asc'),
+    next: inPrivate ? albumNeighbour('>', 'asc') : neighbour('<', 'desc'),
   }
 }
 
@@ -251,7 +286,7 @@ export interface Slide {
 const SLIDE_LIMIT = 500
 
 /** The photos a slideshow plays: everything a visitor may see, or one album's or tag's. Never a location. */
-export function publicSlides(scope?: Exclude<Scope, { search: string[] }>): Slide[] {
+export function publicSlides(scope?: { album: string } | { tag: string }): Slide[] {
   const { sqlite, storage } = getPipeline()
   const from = scope && 'album' in scope
     ? `from photos p join album_photos ap on ap.photo_id = p.id and ap.album_id = ?`
