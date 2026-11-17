@@ -5,6 +5,8 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import yazl from 'yazl'
 import { applyRestore, inspectBackup, writeBackup } from '../../server/core/backup.ts'
+import { fileURLToPath } from 'node:url'
+import { applyMigrations, readMigrationsFromDir } from '../../server/core/migrate.ts'
 import { dataPaths } from '../../server/core/paths.ts'
 import { acceptUpload } from '../../server/pipeline/accept.ts'
 import { createAlbum, addToAlbum, setPhotoTags } from '../../server/pipeline/collections.ts'
@@ -13,7 +15,8 @@ import { processPhoto } from '../../server/pipeline/render.ts'
 import { imageFile } from '../helpers/images.ts'
 import { rows, testContext } from '../helpers/pipeline.ts'
 
-const KNOWN = ['0000_initial', '0001_albums_and_tags', '0002_scheduled_publishing', '0003_licence_and_download', '0004_api_tokens', '0005_trash', '0006_pages', '0007_private_albums', '0008_front_page']
+const migrationsDir = fileURLToPath(new URL('../../server/db/migrations', import.meta.url))
+const KNOWN = ['0000_initial', '0001_albums_and_tags', '0002_scheduled_publishing', '0003_licence_and_download', '0004_api_tokens', '0005_trash', '0006_pages', '0007_private_albums', '0008_front_page', '0009_two_step']
 
 async function site() {
   const ctx = testContext()
@@ -38,6 +41,20 @@ async function backupOf(ctx: Awaited<ReturnType<typeof site>>['ctx'], paths: Ret
   const file = join(mkdtempSync(join(tmpdir(), 'fb-backup-')), 'backup.zip')
   const manifest = await writeBackup(ctx.sqlite, paths, '0.1.0', createWriteStream(file))
   return { file, manifest }
+}
+const TWO_STEP_KEY = 'GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ'
+const TWO_STEP_CODES = '[{"code":"abcde-fghjk","usedAt":null}]'
+/** Gives the site its owner, with two-step login as described. */
+function owner(sqlite: Database.Database, options: { password?: string, secret?: string, codes?: string, lastStep?: number }) {
+  sqlite.prepare(`insert into users (id, username, password_hash, role, session_version, created_at, totp_secret, totp_last_step, backup_codes) values ('u1', 'ansel', ?, 'admin', 1, 1, ?, ?, ?)`)
+    .run(options.password ?? 'hash', options.secret ?? null, options.lastStep ?? null, options.codes ?? null)
+}
+function zipOfFiles(entries: Record<string, string>): Promise<string> {
+  const file = join(mkdtempSync(join(tmpdir(), 'fb-zip-')), 'x.zip')
+  const zip = new yazl.ZipFile()
+  for (const [name, path] of Object.entries(entries)) zip.addFile(path, name)
+  zip.end()
+  return new Promise(done => zip.outputStream.pipe(createWriteStream(file)).on('close', () => done(file)))
 }
 function zipOf(entries: Record<string, string>): Promise<string> {
   const file = join(mkdtempSync(join(tmpdir(), 'fb-zip-')), 'x.zip')
@@ -67,6 +84,63 @@ describe('a backup', () => {
     await applyRestore(restored, file)
     expect(existsSync(restored.secret)).toBe(false)
     expect(readdirSync(restored.derivatives)).toEqual([])
+  })
+
+  // Found after the audit of 17 November 2026: a backup carried the two-step key and codes, so a browser
+  // that was merely logged in could fetch them without the password the admin asks for before showing them.
+  it('never contains the two-step login key or the backup codes', async () => {
+    const { ctx, paths } = await site()
+    owner(ctx.sqlite, { secret: TWO_STEP_KEY, codes: TWO_STEP_CODES })
+    const { file } = await backupOf(ctx, paths)
+    const restored = dataPaths(join(mkdtempSync(join(tmpdir(), 'fb-restore-')), 'data'))
+    mkdirSync(restored.root, { recursive: true })
+    await applyRestore(restored, file)
+    // Not in the row, and not left behind anywhere else in the file.
+    const bytes = readFileSync(restored.db)
+    expect(bytes.includes(TWO_STEP_KEY)).toBe(false)
+    expect(bytes.includes('abcde-fghjk')).toBe(false)
+    const db = new Database(restored.db)
+    expect(db.prepare(`select username, totp_secret, totp_last_step, backup_codes from users`).all()).toEqual([{ username: 'ansel', totp_secret: null, totp_last_step: null, backup_codes: null }])
+    db.close()
+    // The site that was backed up is untouched.
+    expect(ctx.sqlite.prepare(`select totp_secret from users`).get()).toEqual({ totp_secret: TWO_STEP_KEY })
+  })
+
+  it('leaves two-step login as the site has it when a backup is restored, whatever the backup says', async () => {
+    // The backup: from a site whose owner has another password. As made by a hand that wants in, it also
+    // carries a key of its own; and a second one is from before two-step login existed at all.
+    const source = await site()
+    owner(source.ctx.sqlite, { password: 'hash-from-the-backup', secret: 'MFRGGZDFMZTWQ2LKMFRGGZDFMZTWQ2LK', codes: '[{"code":"zzzzz-zzzzz","usedAt":null}]' })
+    const unscrubbed = join(mkdtempSync(join(tmpdir(), 'fb-crafted-')), 'fotobogen.db')
+    source.ctx.sqlite.prepare(`vacuum into ?`).run(unscrubbed)
+    const older = join(mkdtempSync(join(tmpdir(), 'fb-older-')), 'fotobogen.db')
+    source.ctx.sqlite.prepare(`vacuum into ?`).run(older)
+    const old = new Database(older)
+    for (const column of ['totp_secret', 'totp_last_step', 'backup_codes']) old.exec(`alter table users drop column ${column}`)
+    old.prepare(`delete from __migrations where name = '0009_two_step'`).run()
+    old.close()
+
+    for (const database of [unscrubbed, older]) {
+      const target = await site()
+      owner(target.ctx.sqlite, { secret: TWO_STEP_KEY, codes: TWO_STEP_CODES, lastStep: 57 })
+      target.ctx.sqlite.close()
+      await applyRestore(target.paths, await zipOfFiles({ 'fotobogen.db': database }))
+      const db = new Database(target.paths.db)
+      // The password is the backup's, as it always was after a restore; the second step is still the site's own.
+      expect(db.prepare(`select password_hash, totp_secret, totp_last_step, backup_codes from users`).all(), database).toEqual([{ password_hash: 'hash-from-the-backup', totp_secret: TWO_STEP_KEY, totp_last_step: 57, backup_codes: TWO_STEP_CODES }])
+      // And the database is one this version starts on: nothing is left for it to trip over.
+      expect(applyMigrations(db, readMigrationsFromDir(migrationsDir)), database).toEqual([])
+      db.close()
+    }
+
+    // A site with two-step login off stays off, too: a backup cannot switch it on with a key of its choosing.
+    const plain = await site()
+    owner(plain.ctx.sqlite, {})
+    plain.ctx.sqlite.close()
+    await applyRestore(plain.paths, await zipOfFiles({ 'fotobogen.db': unscrubbed }))
+    const db = new Database(plain.paths.db)
+    expect(db.prepare(`select totp_secret, backup_codes from users`).get()).toEqual({ totp_secret: null, backup_codes: null })
+    db.close()
   })
 
   it('restores into an empty data directory and queues every photo to be rendered again', async () => {

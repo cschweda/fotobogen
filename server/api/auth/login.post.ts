@@ -9,6 +9,7 @@ import { failureLimiter, limiterKey, tooManyAttempts } from '../../utils/limiter
 import { fail } from '../../utils/respond.ts'
 import { DEMO_PASSWORD, DEMO_USERNAME, demoModeOn } from '../../utils/demo.ts'
 import { signIn, signInDemo } from '../../utils/session.ts'
+import { codeLimiter, useLoginCode } from '../../utils/two-step.ts'
 
 // Checked when the username is unknown, so that case takes as long as a
 // wrong password and the response does not reveal which names exist.
@@ -52,6 +53,24 @@ export default defineEventHandler(async (event) => {
   const passwordOk = await verifyPassword(user?.passwordHash ?? await decoyHash, parsed.success ? parsed.data.password : '')
 
   if (!user || !passwordOk) return fail(event, 401, 'Wrong username or password.')
+
+  // Two-step login, when the owner has switched it on. The password was right, and the page is
+  // told so, because it must now ask for the code; each wrong code counts against the same limit.
+  if (user.totpSecret) {
+    const code = parsed.data!.code?.trim() ?? ''
+    if (!code) return fail(event, 401, 'Enter the code from your authenticator app.', { needsCode: true })
+    const account = `code:${user.id}`
+    if (codeLimiter.isBlocked(account)) {
+      const seconds = codeLimiter.retryAfterSeconds(account)
+      event.res.headers.set('retry-after', String(seconds))
+      const minutes = Math.max(1, Math.ceil(seconds / 60))
+      return fail(event, 429, `Too many wrong codes. Try again in ${minutes} ${minutes === 1 ? 'minute' : 'minutes'}.`, { needsCode: true })
+    }
+    if (!useLoginCode(user, code)) {
+      codeLimiter.recordFailure(account)
+      return fail(event, 401, 'That code is not right. Enter the six digits your authenticator app shows now, or one of your backup codes. Each code works once.', { needsCode: true })
+    }
+  }
 
   failureLimiter.clear(key)
   getDb().update(users).set({ lastLoginAt: Date.now() }).where(eq(users.id, user.id)).run()

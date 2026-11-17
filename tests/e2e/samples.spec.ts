@@ -63,8 +63,9 @@ test('when the download fails, setup offers another try, and after two failures 
     await expect(page.getByText('No sample photos. You can download them from the admin whenever you like.')).toBeVisible()
     // Setup itself was never held up: the admin opens.
     await page.getByRole('link', { name: 'Open admin' }).click()
-    await page.getByRole('button', { name: 'I understand' }).click() // the one-time backup notice
-    await expect(heading(page, 'Overview')).toBeVisible()
+    // The one-time backup notice. The press is saved before the admin opens; on a slow machine that takes a moment.
+    await Promise.all([page.waitForResponse(response => response.url().endsWith('/api/admin/acknowledge')), page.getByRole('button', { name: 'I understand' }).click()])
+    await expect(heading(page, 'Overview')).toBeVisible({ timeout: 15_000 })
 
     // The admin can always download them later.
     picsum.down = false

@@ -147,6 +147,19 @@ docker compose logs app   # the new setup token</code></pre>
 docker compose exec app node scripts/fotobogen.mjs reset-admin    # with Docker</code></pre>
 <p>It asks for a new password of at least 12 characters and signs out every session. Fotobogen does not need to be stopped.</p>
 
+<h3 id="two-step">Can I ask for a code from my phone as well as the password?</h3>
+<p>Yes: <strong>Admin, Two-step login</strong>. It is an option, off until you switch it on. You scan a QR code with an authenticator app (Google Authenticator, or any other), enter the six digits it shows, and are given ten backup codes to download. From then on, logging in takes the password and then a code. Nothing is sent by text message or email. <a href="https://github.com/cschweda/fotobogen#two-step-login">The README has every detail.</a></p>
+
+<h3 id="lost-phone">I lost my phone, and the site asks for a code</h3>
+<p>Type one of your backup codes where the login page asks for the code. Each works once. Once in, <strong>Admin, Two-step login</strong> shows the QR code again for a new phone, and shows your backup codes again.</p>
+<p>With no backup codes either, on the server:</p>
+<pre tabindex="0"><code>pnpm fotobogen two-step off                                        # without Docker
+docker compose exec app node scripts/fotobogen.mjs two-step off    # with Docker</code></pre>
+<p>It switches two-step login off and signs out every session. Log in with your password and switch it on again.</p>
+
+<h3 id="one-entry">Will my authenticator app fill up with an entry for every site I install?</h3>
+<p>No. The key is kept once for the server, in <code>.fotobogen</code> in your home folder, and every Fotobogen you install there uses it. A site you delete and install again, or a second site beside the first, finds the key and asks only for a code from the entry you already have. The entry is named after the server, <code>Fotobogen (your-server-name)</code>, so one from a server you no longer use is easy to recognise and delete. In Docker each site has a key of its own unless you give them the same <code>TWO_STEP_KEY</code>.</p>
+
 <h3>I lost the setup token</h3>
 <p>It is printed every time Fotobogen starts, until setup is finished: restart it and read the output (<code>docker compose logs app</code>, or <code>pm2 logs fotobogen</code>). It is also in the file <code>data/setup-token</code>.</p>
 

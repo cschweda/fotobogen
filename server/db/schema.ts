@@ -14,6 +14,11 @@ export const users = sqliteTable('users', {
   sessionVersion: integer('session_version').notNull().default(1),
   createdAt: integer('created_at').notNull(),
   lastLoginAt: integer('last_login_at'),
+  // Two-step login. The key is set while it is switched on, and is this site's own copy of the server's key.
+  totpSecret: text('totp_secret'),
+  /** The half minute the last accepted code belonged to; no code from then or earlier is accepted again. */
+  totpLastStep: integer('totp_last_step'),
+  backupCodes: text('backup_codes', { mode: 'json' }).$type<{ code: string, usedAt: number | null }[]>(),
 })
 
 export const settings = sqliteTable('settings', {

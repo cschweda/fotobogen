@@ -4,6 +4,9 @@ useHead({ title: 'Log in | Fotobogen' })
 const username = ref('')
 const password = ref('')
 const message = ref('')
+// With two-step login on, the server answers a right password by asking for a code.
+const code = ref('')
+const needsCode = ref(false)
 const busy = ref(false)
 // On a demo site, anyone may log in to look round. The page says so and offers the way in.
 const { data: demo } = await useFetch<{ enabled: boolean, username?: string, password?: string }>('/api/auth/demo')
@@ -23,11 +26,15 @@ async function submit() {
   }
   busy.value = true
   try {
-    await $fetch('/api/auth/login', { method: 'POST', body: { username: username.value, password: password.value } })
+    await $fetch('/api/auth/login', { method: 'POST', body: { username: username.value, password: password.value, ...(needsCode.value ? { code: code.value } : {}) } })
   }
   catch (error) {
-    const response = error as { data?: { message?: string } }
-    message.value = response.data?.message ?? 'Logging in did not work. Try again.'
+    const response = error as { data?: { message?: string, needsCode?: boolean } }
+    // The first time a code is asked for is a question, not a mistake: the field appears, with the keyboard in it.
+    const asking = response.data?.needsCode === true && !needsCode.value
+    needsCode.value = response.data?.needsCode === true
+    message.value = asking ? '' : response.data?.message ?? 'Logging in did not work. Try again.'
+    if (asking) nextTick(() => document.getElementById('code')?.focus())
     return
   }
   finally { busy.value = false }
@@ -61,11 +68,13 @@ async function submit() {
         <div class="fb-alert" role="alert">{{ message }}</div>
         <FbField id="username" v-model="username" label="Username" autocomplete="username" />
         <FbField id="password" v-model="password" label="Password" type="password" autocomplete="current-password" />
+        <FbField v-if="needsCode" id="code" v-model="code" label="Code from your authenticator app, or a backup code" autocomplete="one-time-code" :maxlength="20" hint="Your password was right. This site also asks for a code: the six digits your app shows now." />
         <button type="submit" class="fb-button" :aria-disabled="busy">Log in</button>
       </form>
       <p class="fb-small login__help">
         Forgot the password? Run <code>pnpm fotobogen reset-admin</code> on the server, or with Docker,
         <code>docker compose exec app node scripts/fotobogen.mjs reset-admin</code>.
+        Lost the phone and the backup codes? The same, with <code>two-step off</code> in place of <code>reset-admin</code>.
       </p>
     </div>
   </FbShell>
