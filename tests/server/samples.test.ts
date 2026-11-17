@@ -59,6 +59,35 @@ describe('sample photos', () => {
     expect(query(server, `select count(*) as described from photos where title <> '' and alt <> ''`)).toEqual([{ described: 25 }])
   })
 
+  it('puts the samples into two sample albums, to show how albums work', async () => {
+    const { albums } = await (await get(server, '/api/admin/albums', { cookie })).json() as { albums: { id: string, title: string, description: string, count: number, onFront: boolean, visibility: string }[] }
+    expect(albums.map(album => [album.title, album.count, album.onFront, album.visibility]).sort()).toEqual([
+      ['Coast and mountains', 13, true, 'public'],
+      ['Desk and table', 8, true, 'public'],
+    ])
+    expect(albums.every(album => album.description.startsWith('A sample album'))).toBe(true)
+    // Visitors see them: on the albums page, and to choose from on the front page.
+    expect((await (await get(server, '/api/albums')).json() as { albums: unknown[] }).albums).toHaveLength(2)
+    expect((await (await get(server, '/api/site')).json() as { frontAlbums: { title: string }[] }).frontAlbums.map(album => album.title).sort()).toEqual(['Coast and mountains', 'Desk and table'])
+    // Asking for the samples again makes no second pair.
+    expect((await send(server, cookie, 'POST')).status).toBe(202)
+    await whenFetched(server, cookie)
+    expect(query(server, 'select count(*) as n from albums')).toEqual([{ n: 2 }])
+    expect(query(server, 'select count(*) as n from album_photos')).toEqual([{ n: 21 }])
+  })
+
+  it('leaves every photo untouched when a sample album is deleted', async () => {
+    const { albums } = await (await get(server, '/api/admin/albums', { cookie })).json() as { albums: { id: string, title: string }[] }
+    const desk = albums.find(album => album.title === 'Desk and table')!
+    const gone = await fetch(`${server.url}/api/admin/albums/${desk.id}`, { method: 'DELETE', headers: { origin: server.url, cookie } })
+    expect(gone.status).toBe(200)
+    expect(query(server, 'select count(*) as n from albums')).toEqual([{ n: 1 }])
+    expect(query(server, `select count(*) as n from photos where status = 'ready'`)).toEqual([{ n: 25 }])
+    expect(await samples(server, cookie)).toMatchObject({ inLibrary: 25 })
+    expect((await (await get(server, '/api/photos')).json() as { total: number }).total).toBe(25)
+    expect(readdirSync(join(server.dataDir, 'originals'))).toHaveLength(25)
+  })
+
   it('requires a logged-in admin', async () => {
     expect((await get(server, '/api/admin/samples')).status).toBe(401)
     expect((await send(server, '', 'POST')).status).toBe(401)
@@ -72,6 +101,8 @@ describe('sample photos', () => {
     expect(query(server, 'select count(*) as n from photos')).toEqual([{ n: 0 }])
     expect(query(server, 'select count(*) as n from derivatives')).toEqual([{ n: 0 }])
     expect(query(server, 'select count(*) as n from jobs')).toEqual([{ n: 0 }])
+    // The sample album that was left goes with them: it has nothing in it now.
+    expect(query(server, 'select count(*) as n from albums')).toEqual([{ n: 0 }])
     expect(readdirSync(join(server.dataDir, 'originals'))).toEqual([])
     expect(readdirSync(join(server.dataDir, 'derivatives'))).toEqual([])
     expect(await samples(server, cookie)).toMatchObject({ state: 'idle', inLibrary: 0 })
@@ -133,9 +164,16 @@ describe('sample photos', () => {
   it('keeps photos the admin uploaded when samples are removed', async () => {
     const { upload } = await import('../helpers/photos.ts')
     const { imageBuffer } = await import('../helpers/images.ts')
-    expect((await upload(server, cookie, await imageBuffer({ seed: 999, width: 320, height: 240 }), 'mine.jpg')).status).toBe(200)
+    const mine = await upload(server, cookie, await imageBuffer({ seed: 999, width: 320, height: 240 }), 'mine.jpg')
+    expect(mine.status).toBe(200)
     await whenProcessed(server, cookie)
+    // The owner puts a photo of their own into one of the sample albums: that album is theirs now.
+    const { albums } = await (await get(server, '/api/admin/albums', { cookie })).json() as { albums: { id: string, title: string }[] }
+    const coast = albums.find(album => album.title === 'Coast and mountains')!
+    await fetch(`${server.url}/api/admin/photos/bulk`, { method: 'POST', headers: { 'origin': server.url, cookie, 'content-type': 'application/json' }, body: JSON.stringify({ ids: [(await mine.json() as { photo: { id: string } }).photo.id], action: 'add-to-album', album: coast.id }) })
     expect(await (await send(server, cookie, 'DELETE')).json()).toEqual({ removed: 25 })
+    // It is kept, with their photo in it; the other sample album, now empty, is gone.
+    expect(query(server, 'select a.title, (select count(*) from album_photos ap where ap.album_id = a.id) as n from albums a')).toEqual([{ title: 'Coast and mountains', n: 1 }])
     expect(query(server, 'select original_filename from photos')).toEqual([{ original_filename: 'mine.jpg' }])
     expect(readdirSync(join(server.dataDir, 'originals'))).toHaveLength(1)
   })

@@ -56,7 +56,10 @@ export function safeHref(input: string): { href: string, external: boolean } | n
 }
 
 // One pass, left to right: a marked link, bold, italic, a bare web address, a bare email address.
-const MARKS = /\[([^\]\n]{1,200})\]\(([^)\s]{1,500})\)|\*\*([^*\n]{1,500})\*\*|\*([^*\n]{1,500})\*|(https?:\/\/[^\s<>"'`]*[^\s<>"'`.,;:!?)\]])|([A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,})/g
+// A bare address and an email address are looked for only where a word begins, and an email
+// address's first part is at most 64 characters (its limit), so text with no spaces in it is
+// read in one pass and not once from every letter.
+const MARKS = /\[([^\]\n]{1,200})\]\(([^)\s]{1,500})\)|\*\*([^*\n]{1,500})\*\*|\*([^*\n]{1,500})\*|(?<![A-Za-z0-9._%+-])(https?:\/\/[^\s<>"'`]{0,499}[^\s<>"'`.,;:!?)\]])|(?<![A-Za-z0-9._%+-])([A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9-]{1,63}(?:\.[A-Za-z0-9-]{1,63}){0,8}\.[A-Za-z]{2,24})/g
 
 function inline(text: string): Inline[] {
   const pieces: Inline[] = []

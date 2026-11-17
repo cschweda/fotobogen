@@ -11,6 +11,12 @@ is built from this file.
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [1.8.0] - 2026-11-17
+
+Pages, search, private albums, a trash, albums to choose from on the front page, a one-line installer, and the third [security audit](https://fotobogen.com/docs/security-audits/). Updating changes nothing about how your site looks or behaves until you use the new things, with one exception: deleting a photo now moves it to the trash.
+
 ### Added
 
 - **A trash.** Deleting a photo, in the library or on its own page, now moves it to the trash: it is off the site at once and kept for 30 days, with the file that was uploaded, then removed for good. Under **Admin, Library, Show, Trash** a photo can be restored, which puts it back as it was (same address, albums, tags, and place in the order), or deleted for good straight away, which asks first. The library says how many photos are in the trash, and each one there shows the day it will go.
@@ -20,6 +26,8 @@ is built from this file.
 - **Albums on the front page.** Each album has a switch, **Offer it on the front page**. The albums switched on appear as a row of names over the photos on the front page; a visitor who chooses one sees that album alone, and All brings everything back. It works with JavaScript switched off. A new album is offered unless you switch it off; your existing albums are not, until you switch them on.
 - **A shuffled front page.** Under **Admin, Settings**, the front page's photos can be shuffled, a new order for each visit, or kept in the order of your library. A new site starts shuffled. **A site you already have keeps the order of its library** until you change it. For other programs, `/api/photos` stays in the library's order and takes `order=random&seed=`.
 - **Private albums.** An album can be made **Private** under **Admin, Albums**. It then has a link that cannot be guessed, to give to the people who may see it; they need no login. A private album is listed nowhere on the site and can hold hidden photos, which stay off the site: the way to share a client's or a family's photographs. **Make a new link** replaces the link at once and ends the old one. Search engines are told to keep away, the pages are never stored by browsers or proxies, and no counting script is put on them.
+- **Sample albums.** When you choose the sample photos, they come in two sample albums, "Coast and mountains" and "Desk and table", so a new site shows how albums work, on the albums page and on the front page. Deleting an album never touches its photos, and removing the sample photos takes the sample albums with them unless you have put photos of your own into one.
+- A one-line installer, `npx fotobogen@latest`, in [`installer/`](installer): it checks the tools, asks for a folder, fetches the newest release, installs, builds, and offers to start it. It is published to npm as `fotobogen`, with its own version numbers and changelog, by `./publish.sh`. The README and the installation guide now begin with it.
 - **Links in your menu.** On the same page, up to eight links of your own, shown in the menu after your pages.
 - For other programs: `GET /api/pages/<slug>` gives a page's title and text, and `/api/site` lists the menu under `menu`.
 - For skins: a page is `<article class="fb-page">` with its text in `.fb-page-body`, and the menu may now hold more links. The search page is `.fb-search` with a form inside, and the row of albums on the front page is `.fb-chooser`. The four bundled skins are updated; a skin of your own should style `.fb-page-body` and `.fb-search__form`, and let `.fb-nav` wrap (docs/SKINS.md).
@@ -30,7 +38,20 @@ is built from this file.
 - Webhooks: `photo.deleted` is sent when a photo goes to the trash, which is when it leaves the site. Restoring it sends `photo.published`.
 - While a photo is in the trash, its picture files still exist: an address someone already has keeps working until the photo is deleted for good.
 
-- A one-line installer, `npx fotobogen@latest`, in [`installer/`](installer): it checks the tools, asks for a folder, fetches the newest release, installs, builds, and offers to start it. It is published to npm as `fotobogen`, with its own version numbers and changelog, by `./publish.sh`. It changes nothing in Fotobogen itself. The README and the installation guide now begin with it.
+### Security
+
+- **A third audit**, of everything new in this version: 11 findings, none above low; 4 fixed, 6 accepted, 1 open. The whole record is in the README and at [fotobogen.com/docs/security-audits](https://fotobogen.com/docs/security-audits/). No way was found to see a photo, page, or album a visitor may not see, to change anything without being the owner, or to make text an owner types run as script.
+- A counting script can no longer come along into a private album from another page, where it would have told its service the album's link.
+- A photo in the trash can no longer be changed through the admin's API.
+- A page of text with no spaces in it is read quickly; before, it took a third of a second on every view.
+- The installer treats a link that leads nowhere as a folder that is already there. This is in installer 1.0.1.
+
+### Updating
+
+**Admin, System, Update to version 1.8.0**, or `pnpm fotobogen update`. Docker: `docker compose pull`, then `docker compose up -d`. The update adds to the database by itself. Your front page keeps the order of your library, your existing albums are not put on the front page, and nothing is private or hidden that was not before.
+
+If you made a skin of your own, add styles for `.fb-page-body`, `.fb-search__form`, and `.fb-chooser`, and let `.fb-nav` wrap: see `docs/SKINS.md`, or copy the rules from a bundled skin.
+
 
 ## [1.7.0] - 2026-11-17
 
@@ -338,6 +359,7 @@ Later entries list only what changed.
 - One admin account only. No comments, no shop, no storage outside the server's own disk.
 
 [Unreleased]: https://github.com/cschweda/fotobogen/commits/staging
+[1.8.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.8.0
 [1.7.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.7.0
 [1.6.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.6.0
 [1.5.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.5.0

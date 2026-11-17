@@ -3,6 +3,10 @@
 The installer has version numbers of its own, apart from Fotobogen's: it
 installs whatever release of Fotobogen is newest when it is run.
 
+## [1.0.1] - 2026-11-17
+
+- A link that leads nowhere, named like the folder to install into, is now treated as a folder that is already there. Before, the check followed the link, found nothing, and git would have written through it to wherever it pointed. Found by the third security audit.
+
 ## [1.0.0] - 2026-11-17
 
 The first release under the name `fotobogen`. (The same installer was published earlier the same day as `create-fotobogen` 1.0.0, before the name was settled.)

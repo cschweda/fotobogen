@@ -58,6 +58,18 @@ describe('the trash', () => {
     expect(originals()).toBe(3)
   })
 
+  it('lets nothing be changed about a photo while it is in the trash', async () => {
+    // Found by the third audit, of 17 November 2026: these were accepted, though the photo is meant to be left as it was.
+    expect((await send('PATCH', `/api/admin/photos/${ids.a}`, { title: 'Changed in the trash', visibility: 'hidden' })).status).toBe(404)
+    expect((await send('POST', `/api/admin/photos/${ids.a}/move`, { to: 'top' })).status).toBe(404)
+    expect((await send('PUT', `/api/admin/photos/${ids.a}/recipe`, { recipe: [] })).status).not.toBe(200)
+    expect(await (await send('POST', '/api/admin/photos/bulk', { ids: [ids.a], action: 'hide' })).json()).toMatchObject({ changed: 0 })
+    expect(await (await send('POST', '/api/admin/photos/bulk', { ids: [ids.a], action: 'add-tag', tag: 'added-in-trash' })).json()).toMatchObject({ changed: 0 })
+    const db = new Database(join(server.dataDir, 'fotobogen.db'), { readonly: true })
+    expect(db.prepare(`select title, visibility from photos where id = ?`).get(ids.a)).toEqual({ title: null, visibility: 'public' })
+    db.close()
+  })
+
   it('lists what is in the trash, with the day each photo will be removed for good', async () => {
     const trash = await list('?trash=1')
     expect(trash.photos).toHaveLength(1)

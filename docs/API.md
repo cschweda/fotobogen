@@ -212,7 +212,7 @@ Go by the HTTP status. `message` is for people, is not on every error (the `503`
 
 ## The admin API, with a token
 
-Everything above is public and read-only. The admin's own API, under `/api/admin/`, needs a login, or an **API token** made under **Admin, API tokens**. A token is sent in a header:
+Everything above is public and read-only. The admin's own API, under `/api/admin/`, needs a login, or an **API token** made under **Admin, API tokens**. A `manage` token reaches everything about albums, a private album's link included, so give one only to a program of your own. A token is sent in a header:
 
 ```
 Authorization: Bearer fb_…

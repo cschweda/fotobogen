@@ -47,6 +47,19 @@ describe('the text of a page', () => {
     for (const piece of (block as { lines: Record<string, unknown>[][] }).lines.flat()) expect(Object.keys(piece).some(key => ['text', 'bold', 'italic', 'link'].includes(key))).toBe(true)
   })
 
+  it('reads the longest page a site can hold quickly, whatever it is made of', () => {
+    // Found by the third audit, of 17 November 2026: text with no spaces took a third of a second to read, on every view.
+    const awkward = ['a'.repeat(20_000), 'a.'.repeat(9_999) + '@', `https://${'.'.repeat(19_990)}`, 'a@'.repeat(10_000), '['.repeat(20_000), '*'.repeat(20_000), '[a]('.repeat(5_000), 'a-'.repeat(9_990) + '@b.co']
+    for (const text of awkward) {
+      const start = performance.now()
+      parsePageText(text)
+      expect(performance.now() - start, text.slice(0, 12)).toBeLessThan(50)
+    }
+    // And still finds an address at the end of a long run of words.
+    expect(JSON.stringify(parsePageText(`${'word '.repeat(3000)}me@example.com`))).toContain('mailto:me@example.com')
+    expect(JSON.stringify(parsePageText('(me@example.com)'))).toContain('mailto:me@example.com')
+  })
+
   it('reserves the addresses the site itself uses', () => {
     for (const name of ['admin', 'login', 'setup', 'api', 'album', 'albums', 'photo', 'tag', 'slideshow', 'embed', 'media', 'brand', 'search', 'feed', 'sitemap']) expect(RESERVED_SLUGS.has(name), name).toBe(true)
     expect(RESERVED_SLUGS.has('about')).toBe(false)
