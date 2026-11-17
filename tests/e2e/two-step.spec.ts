@@ -97,6 +97,8 @@ test('the key and the backup codes can be seen again for the password, and it ca
   await page.getByRole('button', { name: 'Switch off two-step login' }).click()
   await expect(page.getByText('Now: off. Your password alone logs in.')).toBeVisible()
   await page.getByRole('button', { name: 'Log out' }).click()
+  // Logging out leads to the login page by itself; going there before it has would cut that short.
+  await expect(page).toHaveURL(server.url + '/login')
   await enterPassword(page)
   await expect(page).toHaveURL(server.url + '/admin')
 })
