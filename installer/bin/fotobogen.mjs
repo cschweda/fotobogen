@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// npx create-fotobogen@latest
+// npx fotobogen@latest
 //
 // Installs Fotobogen in one command: checks the tools, asks where to put it,
 // fetches the newest release with git, installs its packages, builds it, and
@@ -21,7 +21,7 @@ import { BANNER, DEFAULT_FOLDER, HELP, NEEDS, REPO, folderProblem, freeName, isO
 const windows = process.platform === 'win32'
 const own = JSON.parse(readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), '..', 'package.json'), 'utf8'))
 // Another place to fetch from: a fork, or a copy on this machine.
-const repo = process.env.CREATE_FOTOBOGEN_REPO || REPO
+const repo = process.env.FOTOBOGEN_INSTALL_REPO || REPO
 
 const say = text => process.stdout.write(`${text}\n`)
 const step = text => say(`\n› ${text}`)
@@ -93,7 +93,7 @@ function folderTaken(name) {
     if (found.name === 'fotobogen') what += ` It holds Fotobogen ${found.version}. To update that copy, use Admin, System in its admin, or run "pnpm fotobogen update" in that folder.`
   }
   catch { /* not an install of Fotobogen, or not a folder: the first sentence says enough */ }
-  return `${what}\nNothing was changed. To install a new copy beside it, give another name:\n  npx create-fotobogen@latest ${freeName(name, other => existsSync(resolve(other)))}`
+  return `${what}\nNothing was changed. To install a new copy beside it, give another name:\n  npx fotobogen@latest ${freeName(name, other => existsSync(resolve(other)))}`
 }
 
 const options = parseArgs(process.argv.slice(2))

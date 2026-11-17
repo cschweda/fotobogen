@@ -7,9 +7,9 @@ import { tmpdir } from 'node:os'
 import { delimiter, join } from 'node:path'
 import { beforeAll, describe, expect, it } from 'vitest'
 
-const BIN = join(import.meta.dirname, '..', '..', 'create-fotobogen', 'bin', 'create-fotobogen.mjs')
+const BIN = join(import.meta.dirname, '..', '..', 'installer', 'bin', 'fotobogen.mjs')
 
-describe.skipIf(process.platform === 'win32')('create-fotobogen, run', () => {
+describe.skipIf(process.platform === 'win32')('the installer, run', () => {
   let source: string
   let tools: string
   const git = (cwd: string, ...args: string[]) => {
@@ -33,7 +33,7 @@ describe.skipIf(process.platform === 'win32')('create-fotobogen, run', () => {
     }
     // git and node come from where they really are; pnpm only from the stand-in's folder.
     const path = [bin, tools].join(delimiter)
-    const result = spawnSync(process.execPath, [BIN, ...args], { cwd, encoding: 'utf8', env: { PATH: path, HOME: cwd, CREATE_FOTOBOGEN_REPO: source, ...options.env } })
+    const result = spawnSync(process.execPath, [BIN, ...args], { cwd, encoding: 'utf8', env: { PATH: path, HOME: cwd, FOTOBOGEN_INSTALL_REPO: source, ...options.env } })
     return { cwd, npmEnv: existsSync(`${log}.env`) ? readFileSync(`${log}.env`, 'utf8') : '', code: result.status, out: result.stdout + result.stderr, pnpm: existsSync(log) ? readFileSync(log, 'utf8').trim().split('\n') : [] }
   }
 
@@ -104,14 +104,14 @@ describe.skipIf(process.platform === 'win32')('create-fotobogen, run', () => {
     mkdirSync(join(cwd, 'fotobogen'))
     writeFileSync(join(cwd, 'a-file'), 'x')
     // No pnpm at all on the path: the folder is looked at first, so that is what is reported.
-    const again = (args: string[]) => spawnSync(process.execPath, [BIN, ...args], { cwd, encoding: 'utf8', env: { PATH: tools, HOME: cwd, CREATE_FOTOBOGEN_REPO: source } })
+    const again = (args: string[]) => spawnSync(process.execPath, [BIN, ...args], { cwd, encoding: 'utf8', env: { PATH: tools, HOME: cwd, FOTOBOGEN_INSTALL_REPO: source } })
 
     const taken = again(['site', '--yes'])
     expect(taken.status).toBe(1)
     expect(taken.stderr).toContain('already exists')
     // It is an install of Fotobogen: say which, and how to update it instead.
     expect(taken.stderr).toContain('It holds Fotobogen 1.10.0')
-    expect(taken.stderr).toContain('npx create-fotobogen@latest site-2')
+    expect(taken.stderr).toContain('npx fotobogen@latest site-2')
     expect(taken.stdout).not.toContain('Checking for')
     expect(readFileSync(join(cwd, 'site', 'my-notes.txt'), 'utf8')).toBe('keep me')
 
@@ -144,7 +144,7 @@ describe.skipIf(process.platform === 'win32')('create-fotobogen, run', () => {
   it('prints its help and its version without doing anything', () => {
     const help = install(['--help'])
     expect(help.code).toBe(0)
-    expect(help.out).toContain('npx create-fotobogen@latest [folder] [options]')
+    expect(help.out).toContain('npx fotobogen@latest [folder] [options]')
     const own = JSON.parse(readFileSync(join(BIN, '..', '..', 'package.json'), 'utf8')).version
     expect(install(['--version']).out.trim()).toBe(own)
     expect(install(['a', 'b'])).toMatchObject({ code: 1 })
