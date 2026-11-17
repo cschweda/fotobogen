@@ -194,7 +194,7 @@ A request with a token needs no cookie and no `Origin` header, and is judged by 
 | `upload` | `POST /api/admin/photos` (upload), `GET /api/admin/photos` (list), `GET /api/admin/photos/<id>`, `POST /api/admin/photos/<id>/retry` |
 | `manage` | Everything under `/api/admin/photos` and `/api/admin/albums`, and `GET /api/admin/overview` |
 
-Anything else answers `403`. No token can reach settings, skins, site text, backups, restore, or the tokens themselves. A wrong or revoked token answers `401`. A header that is not in the form `Bearer fb_…` is not taken for a token at all: a request that changes something then answers `403`, and one that reads answers `401` asking for a login.
+Anything else answers `403`. No token can reach settings, skins, site text, visitor statistics, backups, restore, or the tokens themselves. A wrong or revoked token answers `401`. A header that is not in the form `Bearer fb_…` is not taken for a token at all: a request that changes something then answers `403`, and one that reads answers `401` asking for a login.
 
 Uploading:
 

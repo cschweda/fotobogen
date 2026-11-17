@@ -13,6 +13,8 @@ describe('demo mode', () => {
     for (const path of ['overview', 'system', 'settings', 'site-text', 'seo', 'brand', 'skins', 'modules', 'albums', 'samples', 'updates', 'photos', 'photos/abc123', 'albums/xyz']) {
       expect(demoAllows('GET', `/api/admin/${path}`), path).toBe('yes')
     }
+    // Which counting service the pages load is in every page's source anyway.
+    expect(demoAllows('GET', '/api/admin/stats')).toBe('yes')
     // Trying a look draws a preview and saves nothing.
     expect(demoAllows('POST', '/api/admin/photos/abc123/preview')).toBe('yes')
   })
@@ -20,7 +22,7 @@ describe('demo mode', () => {
   it('refuses every request that would change something', () => {
     const changes: [string, string][] = [
       ['POST', 'photos'], ['PATCH', 'photos/abc'], ['DELETE', 'photos/abc'], ['POST', 'photos/bulk'], ['POST', 'photos/abc/move'], ['PUT', 'photos/abc/recipe'], ['POST', 'photos/abc/retry'],
-      ['POST', 'albums'], ['PATCH', 'albums/x'], ['DELETE', 'albums/x'], ['PUT', 'settings'], ['PUT', 'site-text'], ['PUT', 'seo'], ['PUT', 'skins'], ['PUT', 'modules/filmlooks'],
+      ['POST', 'albums'], ['PATCH', 'albums/x'], ['DELETE', 'albums/x'], ['PUT', 'settings'], ['PUT', 'site-text'], ['PUT', 'seo'], ['PUT', 'stats'], ['PUT', 'skins'], ['PUT', 'modules/filmlooks'],
       ['PUT', 'site-recipe'], ['PUT', 'brand'], ['PUT', 'brand/icon'], ['DELETE', 'brand/icon'], ['POST', 'samples'], ['DELETE', 'samples'], ['POST', 'updates'],
       ['POST', 'tokens'], ['DELETE', 'tokens/x'], ['POST', 'webhooks'], ['DELETE', 'webhooks/x'], ['PUT', 'restore'], ['DELETE', 'restore'], ['POST', 'acknowledge'],
       // A preview is allowed only at its own address.
