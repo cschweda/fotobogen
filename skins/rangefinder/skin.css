@@ -147,7 +147,8 @@
 .fb-modal::backdrop { background: rgb(0 0 0 / 0.86); }
 .fb-modal__close { float: right; min-height: 2.75rem; margin: 0 0 1rem 1rem; padding: 0 1rem; border: 1px solid var(--fb-muted); background: none; color: var(--fb-text); font: inherit; cursor: pointer; }
 .fb-modal__close:hover { border-color: var(--fb-text); }
-.fb-modal .fb-photo { clear: both; }
+/* The picture and its words sit together in the middle of the window, not against its left edge. */
+.fb-modal .fb-photo { clear: both; justify-content: center; }
 .fb-modal .fb-photo__image { max-height: 76vh; }
 .fb-modal .fb-photo__figure--expanded .fb-photo__image { max-height: 100vh; }
 

@@ -9,7 +9,7 @@ A self-hosted publishing platform for photographs: install it on a small
 server, answer a few first-run questions, and get a public photo site with an
 admin backend. Think "WordPress for photos".
 
-**Version 1.6.0** (17 November 2026). It installs on macOS, Windows, and
+**Version 1.6.1** (17 November 2026). It installs on macOS, Windows, and
 Linux; takes your photographs, resizes them for every screen, and publishes
 them on a site you can restyle, reword, and put under your own name, with an
 admin behind a login. Version 1.0.0 was the first release; 1.1.0 added
@@ -17,7 +17,8 @@ updating from the admin; 1.2.0 tells you in the admin when a new version
 is out; 1.3.0 asks a few questions at the first start; 1.3.3 followed the
 first [security audit](#security-audits); 1.4.0 adds optional visitor
 statistics; 1.5.0 lets the admin live at an address of its own; 1.6.0 lets
-other sites show a slideshow of your photos.
+other sites show a slideshow of your photos; 1.6.1 makes the full-screen
+buttons work and centres the photo window.
 
 - **What is in it:** [CHANGELOG.md](CHANGELOG.md), also published as
   [Releases](https://fotobogen.com/docs/changelog/).
@@ -392,7 +393,7 @@ distributions may well work, but are reported as untested.
 `/api/health` needs no login and answers `GET` and `HEAD`:
 
 ```json
-{ "status": "ok", "version": "1.6.0", "database": "ok", "queue": { "depth": 0 }, "uptime": 86400 }
+{ "status": "ok", "version": "1.6.1", "database": "ok", "queue": { "depth": 0 }, "uptime": 86400 }
 ```
 
 It returns `200` when the app and its database are working and `503` when

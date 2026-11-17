@@ -13,6 +13,18 @@ is built from this file.
 
 Nothing yet.
 
+## [1.6.1] - 2026-11-17
+
+### Fixed
+
+- **Full screen works.** The full-screen button over a photo and the one in the slideshow (and the F key there) did nothing: the browser refused, and its console said "Permissions policy violation: fullscreen is not allowed in this document". A header Fotobogen sends with every page forbade full screen outright. The site's own pages are now allowed it. Camera, microphone, location, and screen capture stay refused, and a page framed inside the site gets no full screen.
+- **The photo that opens over the grid is centred.** It sat in the top-left corner of the window, with its picture and words against its left edge. It now sits in the middle, with the picture and words in the middle of it, in all four skins. A skin of your own gets the first part without any change; for the second, add `justify-content: center` to `.fb-modal .fb-photo`.
+- The tests stood in for the browser's part of full screen, which is why this was missed. A new test asks a real browser whether full screen is allowed, and another measures where the photo window sits.
+
+### Updating
+
+**Admin, System, Update to version 1.6.1**, or `pnpm fotobogen update`. Docker: `docker compose pull`, then `docker compose up -d`.
+
 ## [1.6.0] - 2026-11-17
 
 ### Added
@@ -291,6 +303,7 @@ Later entries list only what changed.
 - One admin account only. No comments, no shop, no storage outside the server's own disk.
 
 [Unreleased]: https://github.com/cschweda/fotobogen/commits/staging
+[1.6.1]: https://github.com/cschweda/fotobogen/releases/tag/v1.6.1
 [1.6.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.6.0
 [1.5.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.5.0
 [1.4.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.4.0

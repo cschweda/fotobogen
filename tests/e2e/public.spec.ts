@@ -78,6 +78,25 @@ test('a photo opens over the grid, can be worked by keyboard, and closing return
   await expect(page).toHaveURL(server.url + '/')
 })
 
+test('a photo opened over the grid sits in the middle of the window, with its picture and words in the middle of it', async ({ page }) => {
+  await page.setViewportSize({ width: 1500, height: 900 })
+  await page.goto(server.url + '/')
+  await page.locator('.fb-tile__link').first().click()
+  const dialog = page.getByRole('dialog')
+  await expect(dialog.locator('.fb-photo__image')).toBeVisible()
+  const box = (await dialog.boundingBox())!
+  // The same room on the left as on the right, and above as below.
+  expect(Math.abs(box.x - (1500 - box.x - box.width))).toBeLessThanOrEqual(2)
+  expect(Math.abs(box.y - (900 - box.y - box.height))).toBeLessThanOrEqual(2)
+  expect(box.x).toBeGreaterThan(10)
+  // Inside it, the picture and its words together are centred, not pushed to the left.
+  const picture = (await dialog.locator('.fb-photo__figure').boundingBox())!
+  const words = (await dialog.locator('.fb-photo__text').boundingBox())!
+  const left = picture.x - box.x
+  const right = box.x + box.width - (words.x + words.width)
+  expect(Math.abs(left - right)).toBeLessThanOrEqual(4)
+})
+
 test('the photo page stands on its own, with neighbours and arrow keys', async ({ page }) => {
   await page.goto(server.url + '/photo/tower')
   await expect(page.locator('.fb-photo__image')).toBeVisible()
@@ -149,6 +168,14 @@ test('a site set to open photos on their own page uses plain links, and the squa
   await expect(page.getByRole('dialog')).toBeHidden()
   await expect(page.getByRole('link', { name: 'All photos' })).toBeVisible()
   await expectNoAxeViolations(page)
+})
+
+test('the browser is allowed to show a photo and the slideshow full screen', async ({ page }) => {
+  // Asked of the real browser, with nothing stood in: a page whose headers forbid full screen answers false.
+  for (const path of ['/photo/tower', '/slideshow']) {
+    await page.goto(server.url + path)
+    expect(await page.evaluate(() => document.fullscreenEnabled), path).toBe(true)
+  }
 })
 
 test('a photo shows its size, sits beside its words, and opens full screen from a button over it', async ({ page }) => {

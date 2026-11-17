@@ -48,6 +48,14 @@ body {
 }
 h1:focus { outline: none; } /* focused by script on step change, not by the user */
 
+/*
+  The photo that opens over the grid is a <dialog>. A browser centres an open
+  dialog with margin: auto, and the reset above takes every margin away, which
+  left it in the top-left corner. Put back here, for every skin, so a skin
+  need not know about it.
+*/
+dialog.fb-modal { margin: auto; }
+
 .fb-visually-hidden {
   position: absolute;
   width: 1px;
