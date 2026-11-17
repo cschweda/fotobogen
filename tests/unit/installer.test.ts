@@ -1,13 +1,18 @@
 import { describe, expect, it } from 'vitest'
-// The one-line installer (npx create-fotobogen): the decisions it makes.
-import { BANNER, compareVersions, folderProblem, freeName, isOnPath, looksLikeForge, serverNotes, majorOf, newestRelease, parseArgs, releaseVersion, saysYes, toolProblems } from '../../create-fotobogen/lib/plan.mjs'
+// The one-line installer (npx fotobogen): the decisions it makes.
+import { BANNER, compareVersions, folderProblem, freeName, isOnPath, looksLikeForge, serverNotes, majorOf, newestRelease, parseArgs, releaseVersion, saysYes, toolProblems } from '../../installer/lib/plan.mjs'
 
-describe('create-fotobogen', () => {
+describe('the installer (npx fotobogen)', () => {
   it('reads the command line', () => {
     expect(parseArgs([])).toMatchObject({ folder: null, release: null, yes: false, start: true, help: false, version: false, problem: null })
     expect(parseArgs(['fotobogen-live', '--yes'])).toMatchObject({ folder: 'fotobogen-live', yes: true, problem: null })
     expect(parseArgs(['-y', '--no-start', '--release', 'v1.6.0'])).toMatchObject({ yes: true, start: false, release: '1.6.0' })
     expect(parseArgs(['--release=1.7.0'])).toMatchObject({ release: '1.7.0', problem: null })
+    // "install" may be said first, as in "npx fotobogen install": it is the only thing this does.
+    expect(parseArgs(['install'])).toMatchObject({ folder: null, problem: null })
+    expect(parseArgs(['install', 'fotobogen-live', '-y'])).toMatchObject({ folder: 'fotobogen-live', yes: true, problem: null })
+    expect(parseArgs(['install', 'install'])).toMatchObject({ folder: 'install', problem: null })
+    expect(parseArgs(['-y', 'install'])).toMatchObject({ folder: 'install' }) // only the first word is the command
     expect(parseArgs(['-h']).help).toBe(true)
     expect(parseArgs(['--version']).version).toBe(true)
   })

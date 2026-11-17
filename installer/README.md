@@ -1,10 +1,14 @@
-# create-fotobogen
+# fotobogen
+
+This npm package is the installer for Fotobogen. Fotobogen itself is not an
+npm package: the installer fetches it from GitHub. So this package has
+version numbers of its own, apart from Fotobogen's.
 
 Installs [Fotobogen](https://fotobogen.com), a photo website you host
 yourself, in one command:
 
 ```bash
-npx create-fotobogen@latest
+npx fotobogen@latest
 ```
 
 It asks which folder to put it in, fetches the newest release, installs its
@@ -19,9 +23,10 @@ install it.
 ## Options
 
 ```bash
-npx create-fotobogen@latest fotobogen-live       # name the folder
-npx create-fotobogen@latest --release 1.7.0      # a particular version
-npx create-fotobogen@latest my-photos --yes      # ask nothing, do not start it
+npx fotobogen@latest fotobogen-live       # name the folder
+npx fotobogen@latest install              # the same as with no word at all
+npx fotobogen@latest --release 1.7.0      # a particular version
+npx fotobogen@latest my-photos --yes      # ask nothing, do not start it
 ```
 
 | Option | What it does |
