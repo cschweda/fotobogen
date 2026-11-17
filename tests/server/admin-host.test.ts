@@ -45,6 +45,23 @@ describe('the admin at an address of its own', () => {
     }
   })
 
+  it('shows the slideshow for other sites at the site\'s address only, never at the admin\'s', async () => {
+    const on = await fetch(`${admin.url}/api/admin/embed`, { method: 'PUT', headers: { 'content-type': 'application/json', 'origin': admin.url, cookie }, body: '{"enabled":true}' })
+    expect(on.status).toBe(200)
+    // The code the admin page gives points at the public site.
+    expect(await (await get(admin, '/api/admin/embed', { cookie })).json()).toMatchObject({ enabled: true, address: site.url })
+    const atSite = await get(site, '/embed/slideshow')
+    expect(atSite.status).toBe(200)
+    expect(atSite.headers.get('content-security-policy')).toMatch(/frame-ancestors \*(;|$)/)
+    // Nothing that can be framed by another site is ever served from the address that holds the login.
+    const atAdmin = await get(admin, '/embed/slideshow')
+    expect(atAdmin.status).toBe(302)
+    expect(atAdmin.headers.get('location')).toBe(`${site.url}/embed/slideshow`)
+    expect(atAdmin.headers.get('content-security-policy') ?? '').not.toContain('frame-ancestors *')
+    // And it cannot be switched from the public address.
+    expect((await fetch(`${site.url}/api/admin/embed`, { method: 'PUT', headers: { 'content-type': 'application/json', 'origin': site.url, cookie }, body: '{"enabled":false}' })).status).toBe(404)
+  })
+
   it('keeps the login for the admin\'s address alone', async () => {
     const response = await post(admin, '/api/auth/login', ADMIN)
     expect(response.status).toBe(200)

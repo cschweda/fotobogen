@@ -161,3 +161,32 @@ test('another site still cannot frame any other page, nor the slideshow once it 
   await expect(page.frameLocator('iframe').getByText(/\d \/ 3/)).toHaveCount(0)
   expect((await fetch(server.url + '/embed/slideshow')).status).toBe(404)
 })
+
+test('nothing done inside the frame, or to it from outside, makes it show another page of the site', async ({ page }) => {
+  // The audit of 17 November 2026 tried each of these from a hostile site.
+  await switchOn()
+  await otherSite(page, `<iframe src="${server.url}/embed/slideshow" width="600" height="400" title="x"></iframe>`)
+  const shown = async () => (await page.frames().find(frame => frame !== page.mainFrame())?.locator('body').innerText().catch(() => '')) ?? ''
+  await expect(page.frameLocator('iframe').getByText('1 / 3')).toBeVisible()
+
+  // The embedding page points the frame somewhere else: the home page, the login, the admin, a wrong album.
+  for (const path of ['/', '/login', '/admin', '/slideshow', '/embed/slideshow?album=no-such-album', '/embed/slideshow/../login']) {
+    await page.evaluate(address => { document.querySelector('iframe')!.src = address }, server.url + path)
+    await page.waitForTimeout(400)
+    expect(await shown(), path).not.toMatch(/Test Photos|Log in|Page not found|Photos/)
+  }
+
+  // The site's own router is told, inside the frame, to go to the home page, as a stray link would.
+  // It must ask the server for that page afresh, and the server's answer cannot be framed.
+  await page.evaluate(address => { document.querySelector('iframe')!.src = address }, server.url + '/embed/slideshow')
+  await expect(page.frameLocator('iframe').getByText('1 / 3')).toBeVisible()
+  const frame = page.frames().find(one => one !== page.mainFrame())!
+  await frame.evaluate(() => {
+    const app = (document.querySelector('#__nuxt') as unknown as { __vue_app__: { config: { globalProperties: { $router: { push(to: string): unknown } } } } }).__vue_app__
+    void app.config.globalProperties.$router.push('/')
+  }).catch(() => undefined) // the frame goes away under the call
+  await page.waitForTimeout(800)
+  expect(await shown()).not.toMatch(/Test Photos|Photos|RSS/)
+  // The page that embeds it is where it was.
+  await expect(page.getByRole('heading', { name: 'A blog' })).toBeVisible()
+})

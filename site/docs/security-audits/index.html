@@ -52,6 +52,13 @@
       <li><a href="/docs/security-audits/" aria-current="page">Security audits</a></li>
       <li><a href="/docs/changelog/">Releases</a></li>
     </ul>
+    <div class="pages__here">
+      <h2>On this page</h2>
+      <ul>
+        <li><a href="#audit-2026-11-17">17 November 2026</a></li>
+        <li><a href="#audit-2026-11-16">16 November 2026</a></li>
+      </ul>
+    </div>
   </nav>
   <main id="main" class="doc">
 <h1>Security audits</h1>
@@ -61,6 +68,36 @@
 <p>The newest audit is open below; older ones are folded under it. To report a problem, <a href="https://github.com/cschweda/fotobogen/issues">open an issue on GitHub</a>. If the details should not be public yet, say only that in the issue and ask for a private way to send them.</p>
 
 <details class="audit" open>
+<summary><strong>17 November 2026, version 1.7.0.</strong> 7 findings, none critical, high, or medium: 4 low, 3 informational. Outcome: 3 fixed, 1 reduced, 3 accepted, none open.</summary>
+<h2 id="audit-2026-11-17">17 November 2026</h2>
+<p>This audit covered what is new since the last one, above all the slideshow for other sites (version 1.6.0), the one place where Fotobogen lets another site put one of its pages in a frame. One attacker, with a running copy on this machine and the source code, tried to get any other page into a frame, to steer the frame elsewhere, to switch the slideshow on or off without being the owner, and to make it show something a visitor may not see. It also looked at the changes in 1.7.0: full screen allowed again, and the date read from a photo. Each finding was shown against the running copy. The fixes were made with a test for each and are in version 1.7.0.</p>
+<p>Fixed: closed in this release. Reduced: made harder or documented, not closed. Accepted: left as it is, for the reason given. Open: not yet dealt with.</p>
+<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
+  <thead><tr><th>#</th><th>Severity</th><th>What was found</th><th>Outcome</th><th>What was done</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>Low</td><td>At the slideshow&#x27;s address, a wrong album or tag, a hidden album, an album named twice, and some odd spellings of the address (extra slashes, capital letters) were answered with the site&#x27;s own &quot;not found&quot; page, menu and links included, or with the slideshow itself. That address is the one whose rules allow framing by other sites. No other site could in fact frame the result, but only because the security layer happens not to apply an address&#x27;s rules to error pages, which nothing in Fotobogen guaranteed.</td><td><strong>Fixed</strong></td><td>The address is decided before any page is made. It must be spelled exactly, and an album or tag must be one a visitor may see; anything else gets a bare &quot;not available&quot; that cannot be framed. A hidden album answers exactly as a missing one.</td></tr>
+    <tr><td>2</td><td>Low</td><td>The slideshow&#x27;s page carried no instruction against being stored. A cache between the server and a viewer could have gone on showing it after the owner switched it off.</td><td><strong>Fixed</strong></td><td>It is marked never to be stored, so switching it off takes effect at once.</td></tr>
+    <tr><td>3</td><td>Low</td><td>Once switched on, any site can embed the slideshow, and every viewer&#x27;s browser fetches it from this server. A busy site that embeds it adds its visitors to this server&#x27;s load, and there is no limit.</td><td><strong>Accepted</strong></td><td>The photos are public already, and a list of allowed sites was left out on purpose. Switching it off stops it everywhere at once. The admin page and the docs now say this.</td></tr>
+    <tr><td>4</td><td>Low</td><td>Version 1.7.0 allows the site&#x27;s own pages to go full screen again, which the photo and slideshow buttons need. A counting service&#x27;s script on a public page could, after a click, put that page full screen and draw anything there, a false login for one.</td><td><strong>Accepted</strong></td><td>It is within the trust already described for a counting service, which is off unless the owner chooses one. Pages framed inside the site get no full screen, and camera, microphone, location, and screen capture stay refused.</td></tr>
+    <tr><td>5</td><td>Informational</td><td>Switching the slideshow off stops the framed page only. The public API stays readable from any site, as documented, so someone can still build their own slideshow of the public photos.</td><td><strong>Reduced</strong></td><td>The admin page and the docs now say so in plain words.</td></tr>
+    <tr><td>6</td><td>Informational</td><td>A photo whose camera data claimed a year below 100 had 1900 added to it.</td><td><strong>Fixed</strong></td><td>The date is kept as written.</td></tr>
+    <tr><td>7</td><td>Informational</td><td>The server&#x27;s log shows which pages embed the slideshow and the addresses of the people who view it there, as for any frame.</td><td><strong>Accepted</strong></td><td>It is how a frame works. The docs now mention it.</td></tr>
+  </tbody>
+</table></div>
+<h3>What was attacked and held</h3>
+<ul>
+  <li><strong>Putting any other page in a frame.</strong> Twenty-seven spellings of addresses under /embed were tried as raw requests: dot segments, encoded dots and slashes, doubled slashes, capitals, semicolons, extra path, a null byte, a line break, a payload file. None returned anything another site can frame except the slideshow itself. The home page, the site&#x27;s slideshow, a photo page, the login, and the admin kept their refusals.</li>
+  <li><strong>Steering the frame.</strong> From a second site in a real browser, the frame was pointed at the home page, the login, the admin, the site&#x27;s slideshow, a wrong album, and a dot-segment address: each time it showed nothing. The site&#x27;s own router, told inside the frame to go to the home page, asked the server afresh and was refused. Taking that guard out made the home page appear in the frame, so a test now keeps it in.</li>
+  <li><strong>Switching it on or off.</strong> Refused: a request from another site, with a &quot;null&quot; origin, with no origin, from a lookalike name, sent as plain text, with an API token, and with no login. A plain visit to an address changes nothing. Anything but true or false is refused.</li>
+  <li><strong>What it shows.</strong> A hidden album cannot be told from one that does not exist. With the owner&#x27;s login sent along, the page is the same and sets no cookie. Hostile markup in a title and alt text came out as text.</li>
+  <li><strong>Counting.</strong> With a counting service switched on, the slideshow page carried no script of it and no permission to report to it.</li>
+  <li><strong>The admin at its own address.</strong> The slideshow is served only at the public address; at the admin&#x27;s it is sent on, and it cannot be switched from the public address. The code the admin gives points at the public site.</li>
+</ul>
+<h3>Not tested</h3>
+<p>Pasting the code into real site builders; browsers other than Chromium; a real proxy or CDN in front; heavy load from a busy embedding site. The seven findings left open by the audit of 16 November 2026 are still open.</p>
+</details>
+
+<details class="audit">
 <summary><strong>16 November 2026, version 1.3.3.</strong> 36 findings, none critical: 1 high, 5 medium, 19 low, 11 informational. Outcome: 20 fixed, 3 reduced, 6 accepted, 7 open.</summary>
 <h2 id="audit-2026-11-16">16 November 2026</h2>
 <p>Four separate attackers, each with its own running copy of version 1.3.3 and the source code, took one area each: login and permissions; files going in and out (uploads, backups, skins, modules); injected text and outbound requests (pages, the feed, webhooks); and the updater, the command line, and the deployment files. Each finding had to be shown working against the running copy or proven from the code. The fixes were then made, with a test for each where one could be written, and released in version 1.3.3.</p>

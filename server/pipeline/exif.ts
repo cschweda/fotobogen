@@ -58,7 +58,11 @@ export function datesAsWritten(parsed: Record<string, unknown>): Record<string, 
   for (const key of ['DateTimeOriginal', 'CreateDate', 'ModifyDate']) {
     const date = kept[key]
     if (date instanceof Date && !Number.isNaN(date.getTime())) {
-      kept[key] = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), date.getHours(), date.getMinutes(), date.getSeconds()))
+      const written = new Date(0)
+      // Set in two steps: given a year below 100 in one go, JavaScript adds 1900 to it.
+      written.setUTCFullYear(date.getFullYear(), date.getMonth(), date.getDate())
+      written.setUTCHours(date.getHours(), date.getMinutes(), date.getSeconds(), 0)
+      kept[key] = written
     }
   }
   return kept

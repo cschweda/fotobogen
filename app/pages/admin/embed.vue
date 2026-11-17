@@ -127,7 +127,8 @@ const previewPath = computed(() => embedAddress('', source.value))
           <li><strong>Only this slideshow can be shown on other sites.</strong> Every other page of your site still refuses to be put in a frame by anyone else, and the admin refuses even your own site.</li>
           <li><strong>Pressing a photo opens its page on your site,</strong> in a new tab. "Powered by Fotobogen" at the end of the bar leads to fotobogen.com.</li>
           <li><strong>Visits to it are not counted.</strong> It loads no counting script, whatever you chose under Visitor statistics.</li>
-          <li><strong>Switching this off stops it everywhere at once,</strong> on every site that has the code.</li>
+          <li><strong>Switching this off stops it everywhere at once,</strong> on every site that has the code. It does not hide your photos: they stay public on your site, and anyone who writes their own code can still read them from your site's public API.</li>
+          <li><strong>It plays from your server.</strong> Each person who sees it on another site fetches it from here, so a busy site that embeds it adds to your server's work, and your server's log shows which pages embed it.</li>
         </ul>
       </div>
     </section>
