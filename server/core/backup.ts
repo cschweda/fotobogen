@@ -2,7 +2,11 @@
 // be made again: the database, the photos exactly as they were uploaded,
 // and any skins and modules the owner installed. Resized copies are left
 // out; they are rebuilt from the originals after a restore. The session
-// secret is left out too, so a backup file is not a key to the site.
+// secret is left out too, so a backup file is not a key to the site. For the
+// same reason the two-step login key and backup codes are taken out of the
+// copy of the database: the admin shows them only after the password is
+// given again, and a backup is fetched without that. A restore, in turn,
+// leaves two-step login exactly as the site has it.
 //
 // Plain TypeScript, shared by the server and the command-line tool.
 import Database from 'better-sqlite3'
@@ -62,6 +66,7 @@ export async function writeBackup(sqlite: Database.Database, paths: DataPaths, a
   const snapshot = join(paths.tmp, `backup-${newId()}.db`)
   try {
     sqlite.prepare(`vacuum into ?`).run(snapshot)
+    withoutTwoStep(snapshot)
     const originals = filesUnder(paths.originals)
     const { photos } = sqlite.prepare(`select count(*) as photos from photos`).get() as { photos: number }
     const manifest: BackupManifest = {
@@ -89,6 +94,70 @@ export async function writeBackup(sqlite: Database.Database, paths: DataPaths, a
   finally {
     rmSync(snapshot, { force: true })
   }
+}
+
+const TWO_STEP_COLUMNS = ['totp_secret', 'totp_last_step', 'backup_codes'] as const
+const TWO_STEP_MIGRATION = '0009_two_step'
+type TwoStep = { totp_secret: string | null, totp_last_step: number | null, backup_codes: string | null }
+
+function hasTwoStepColumns(db: Database.Database): boolean {
+  const columns = new Set((db.prepare(`pragma table_info(users)`).all() as { name: string }[]).map(column => column.name))
+  return TWO_STEP_COLUMNS.every(column => columns.has(column))
+}
+
+/** Takes the two-step login key and codes out of a copy of the database, leaving no trace of them in the file. */
+function withoutTwoStep(snapshot: string): void {
+  const db = new Database(snapshot, { fileMustExist: true })
+  try {
+    if (!hasTwoStepColumns(db)) return
+    // Overwrite what is removed, then rebuild the file, so the old values are not left in unused pages.
+    db.pragma('secure_delete = ON')
+    db.prepare(`update users set totp_secret = null, totp_last_step = null, backup_codes = null`).run()
+    db.exec('vacuum')
+  }
+  finally {
+    db.close()
+  }
+}
+
+/**
+ * Two-step login as the site has it now, before its database is replaced.
+ * Null when there is no site yet, or it has no owner. 'unknown' when there is
+ * a database that cannot be read: the restore still goes ahead, because
+ * restoring is how a damaged site is mended, but the caller is told, and says so.
+ */
+function currentTwoStep(file: string): TwoStep | null | 'unknown' {
+  if (!existsSync(file)) return null
+  let db: Database.Database | undefined
+  try {
+    db = new Database(file, { readonly: true, fileMustExist: true })
+    if (!hasTwoStepColumns(db)) return null
+    return (db.prepare(`select totp_secret, totp_last_step, backup_codes from users order by created_at limit 1`).get() as TwoStep | undefined) ?? null
+  }
+  catch {
+    return 'unknown'
+  }
+  finally {
+    db?.close()
+  }
+}
+
+/**
+ * Puts the site's own two-step login into the database about to replace it,
+ * whatever that database holds: the key and codes when it is on, nothing when
+ * it is off. A backup therefore cannot switch it off, and cannot bring a key
+ * of its own. A backup from before two-step login existed is given the three
+ * columns here, exactly as that version's change would add them, and the
+ * change is recorded as made.
+ */
+function carryTwoStep(db: Database.Database, kept: TwoStep | null): void {
+  if (!hasTwoStepColumns(db)) {
+    if (!kept?.totp_secret) return
+    db.exec(`alter table users add totp_secret text; alter table users add totp_last_step integer; alter table users add backup_codes text`)
+    db.prepare(`insert or ignore into __migrations (name, applied_at) values (?, ?)`).run(TWO_STEP_MIGRATION, Date.now())
+  }
+  db.prepare(`update users set totp_secret = ?, totp_last_step = ?, backup_codes = ?`)
+    .run(kept?.totp_secret ?? null, kept?.totp_last_step ?? null, kept?.backup_codes ?? null)
 }
 
 function openZip(file: string): Promise<yauzl.ZipFile> {
@@ -193,9 +262,10 @@ async function extractBackup(file: string, target: string, withModules: boolean)
  * With `modules: false` the backup's modules are left out and the site's own
  * stay as they are.
  */
-export async function applyRestore(paths: DataPaths, file: string, options: { modules: boolean } = { modules: true }): Promise<{ photos: number, keptIn: string }> {
+export async function applyRestore(paths: DataPaths, file: string, options: { modules: boolean } = { modules: true }): Promise<{ photos: number, keptIn: string, twoStep: 'kept' | 'unknown' }> {
   const staging = join(paths.root, `restore-${newId()}`)
   let photos: number
+  const twoStep = currentTwoStep(paths.db)
   // Everything that can fail happens here, in a staging folder, before any
   // of the site's own data is moved. A backup that turns out to be unusable
   // leaves the site exactly as it was.
@@ -227,6 +297,8 @@ export async function applyRestore(paths: DataPaths, file: string, options: { mo
         db.prepare(`delete from jobs`).run()
         // Every login from before is ended: a backup must not bring a signed-out session back to life.
         db.prepare(`update users set session_version = session_version + 1`).run()
+        // How the owner logs in at the second step is the site's own business, never the backup's.
+        carryTwoStep(db, twoStep === 'unknown' ? null : twoStep)
         // What was in the trash stays there; it is made again if it is ever restored.
         const ids = (db.prepare(`select id from photos where status <> 'trashed'`).all() as { id: string }[]).map(row => row.id)
         for (const id of ids) {
@@ -257,5 +329,8 @@ export async function applyRestore(paths: DataPaths, file: string, options: { mo
   for (const name of replaced) move(join(staging, name), join(paths.root, name))
   rmSync(staging, { recursive: true, force: true })
   for (const dir of [paths.originals, paths.derivatives, paths.skins, paths.modules]) mkdirSync(dir, { recursive: true })
-  return { photos, keptIn }
+  return { photos, keptIn, twoStep: twoStep === 'unknown' ? 'unknown' : 'kept' }
 }
+
+/** What to tell the owner when a restore could not read how the site logged in before. */
+export const TWO_STEP_UNKNOWN = 'The database that was here could not be read, so it is not known whether two-step login was on. It is now OFF: the password alone logs in. If you use two-step login, switch it on again under Admin, Two-step login.'

@@ -88,7 +88,7 @@
     <tr><td><strong><code>.env</code> on the server</strong></td><td>How the app runs: port, address, data folder, upload limits</td><td>Whoever can log in to the server</td><td>After a restart</td></tr>
   </tbody>
 </table></div>
-<p>Nothing in the admin needs a rebuild, a restart, or any knowledge of code. What is set in the admin is stored in the site's database, so it is included in every <a href="/docs/faq/#backups">backup</a> and survives updates.</p>
+<p>Nothing in the admin needs a rebuild, a restart, or any knowledge of code. What is set in the admin is stored in the site's database, so it is included in every <a href="/docs/faq/#backups">backup</a> and survives updates. The one exception is two-step login, whose key and codes are never in a backup.</p>
 
 <h2 id="menu">Finding your way round the admin</h2>
 <p>Every admin page is in the menu down the left side (behind a <strong>Menu</strong> button on a phone):</p>
@@ -103,11 +103,15 @@
     <tr><td><strong>Modules</strong></td><td>Looks applied to photos: film, frames, watermark, sharpening</td></tr>
     <tr><td><strong>Site text</strong></td><td>The site's name, tagline, language, and every word on it</td></tr>
     <tr><td><strong>Icon and logo</strong></td><td>The picture in the browser tab, and a logo in place of the site's name</td></tr>
-    <tr><td rowspan="2">Site</td><td><strong>Settings</strong></td><td>Layout, privacy, licence, downloads, drafts, slideshow</td></tr>
+    <tr><td rowspan="5">Site</td><td><strong>Pages</strong></td><td>Pages of words (About, Contact) and links of your own in the site's menu</td></tr>
+    <tr><td><strong>Settings</strong></td><td>Layout, the front page's order, privacy, licence, downloads, drafts, slideshow</td></tr>
     <tr><td><strong>Search and sharing</strong></td><td>Titles, description, sharing picture, search engines, the site's address</td></tr>
-    <tr><td rowspan="3">Server</td><td><strong>System</strong></td><td>Backup, restore, updates</td></tr>
+    <tr><td><strong>Visitor statistics</strong></td><td>Counting visits with a service you choose; off to begin with</td></tr>
+    <tr><td><strong>Embed on another site</strong></td><td>A slideshow of your photos for other sites to show; off to begin with</td></tr>
+    <tr><td rowspan="4">Server</td><td><strong>System</strong></td><td>Backup, restore, updates</td></tr>
     <tr><td><strong>Webhooks</strong></td><td>Messages sent to other services when photos change</td></tr>
     <tr><td><strong>API tokens</strong></td><td>Lets a script or another program upload without your password</td></tr>
+    <tr><td><strong>Two-step login</strong></td><td>A code from your phone after the password; off to begin with</td></tr>
   </tbody>
 </table></div>
 
@@ -120,7 +124,7 @@
     <tr><td>Site title</td><td>The <strong>Site title</strong> field</td><td>At the top of every page, in the browser tab, in search results, and in the feed. Up to 80 characters.</td></tr>
     <tr><td>Tagline</td><td>The <strong>Tagline</strong> field</td><td>A short line beside the title. Optional. Also the site's description unless you write one.</td></tr>
     <tr><td>Language</td><td>The <strong>Language</strong> field: a code such as <code>en</code>, <code>de</code>, <code>pt-BR</code></td><td>Tells screen readers how to pronounce the site and search engines what language it is in. It does not translate anything.</td></tr>
-    <tr><td>Every label, link, button, and message</td><td>The fields under <strong>Words on the site</strong>, grouped by where they appear</td><td>About fifty pieces of text. Each field shows the wording used now; type your own to replace it. Up to 200 characters each.</td></tr>
+    <tr><td>Every label, link, button, and message</td><td>The fields under <strong>Words on the site</strong>, grouped by where they appear</td><td>About seventy pieces of text. Each field shows the wording used now; type your own to replace it. Up to 200 characters each.</td></tr>
     <tr><td>A footer line of your own</td><td><strong>A line of your own in the footer</strong>, under Header and footer</td><td>Empty to begin with. A copyright notice, for instance.</td></tr>
     <tr><td>Back to the original wording</td><td>Empty a field, or press <strong>Use the default wording everywhere</strong></td><td></td></tr>
   </tbody>
@@ -179,6 +183,7 @@
   <tbody>
     <tr><td>The grid</td><td>Masonry (each photo keeps its shape) or square</td><td>As chosen in setup</td></tr>
     <tr><td>Opening a photo</td><td>Over the grid, or on a page of its own</td><td>As chosen in setup</td></tr>
+    <tr><td>Order of the front page</td><td>Shuffled afresh for each visit, or the library's order</td><td>Shuffled on a new site; a site set up before version 1.8.0 keeps the library's order</td></tr>
     <tr><td>Camera details beside a photo</td><td>Shown or not</td><td>Shown</td></tr>
     <tr><td>Where a photo was taken</td><td>Shown or not</td><td>Not shown</td></tr>
     <tr><td>The licence under each photo</td><td>All rights reserved, or a Creative Commons licence</td><td>All rights reserved</td></tr>
@@ -189,7 +194,7 @@
   </tbody>
 </table></div>
 <p>Changing the picture quality makes every photo's copies again in the background, which takes a while on a large site. Your uploaded files are never changed, so you can change your mind.</p>
-<p>The order of photos on the site is the order in the <strong>Library</strong>: drag them, or use the Up, Down, and To top buttons.</p>
+<p>The library's order is the order in the <strong>Library</strong>: drag them, or use the Up, Down, and To top buttons. Albums, tags, and a photo's Previous and Next always follow it; the front page follows it unless it is set to shuffle.</p>
 
 <h2 id="each-photo">Each photograph</h2>
 <p><strong>Where:</strong> Admin, Photos, <strong>Library</strong>, then open a photo.</p>
@@ -295,7 +300,7 @@
     <tr><td><strong>Manage photos</strong></td><td>All of that, and edit, reorder, hide, and delete photos, set their looks, and manage albums</td><td>Change anything about the site itself</td></tr>
   </tbody>
 </table></div>
-<p>No token can change settings, skins, site text, pages, the menu, visitor statistics, or embedding, make or revoke tokens, download a backup, or restore one. The token is shown once, when it is made; copy it then. Revoking a token stops it at once. <a href="/docs/usage/#tokens">How to use one.</a></p>
+<p>No token can change settings, skins, site text, pages, the menu, visitor statistics, or embedding, read or change two-step login, install an update, make or revoke tokens, download a backup, or restore one. The token is shown once, when it is made; copy it then. Revoking a token stops it at once. <a href="/docs/usage/#tokens">How to use one.</a></p>
 
 <h2 id="address">Its address</h2>
 <p>The site answers at whatever address reaches the server. To use your own domain:</p>
@@ -321,12 +326,12 @@
 <h2 id="cannot">What cannot be customized</h2>
 <ul>
   <li><strong>The admin's own appearance.</strong> It is dark and says "Fotobogen". Only you see it.</li>
-  <li><strong>The structure of the public pages.</strong> A skin restyles them thoroughly but cannot rearrange or add to them. There are no custom pages (an "About" page, say) yet.</li>
-  <li><strong>The menu at the top of the site.</strong> Its links can be reworded, but not removed, reordered, or added to.</li>
+  <li><strong>The structure of the public pages.</strong> A skin restyles them thoroughly but cannot rearrange them. Pages of your own are words only: headings, paragraphs, lists, and links.</li>
+  <li><strong>The built-in links in the menu.</strong> Photos, Albums, Slideshow, and Search can be reworded but not removed or reordered. Your own pages and up to eight links of your own are added after them.</li>
   <li><strong>The sizes of the resized copies.</strong> They are fixed; see <a href="/docs/configuration/#derivatives">why</a>.</li>
   <li><strong>More than one account.</strong> There is one admin.</li>
 </ul>
-<p>Several of these are planned. The <a href="https://github.com/cschweda/fotobogen/blob/main/docs/ROADMAP.md">roadmap</a> says which.</p>
+<p>What is planned is in the <a href="https://github.com/cschweda/fotobogen/blob/main/docs/ROADMAP.md">roadmap</a>.</p>
     <p class="next">
       <a href="/docs/updating/">Back: Updating</a>
       <a href="/docs/skins/">Next: Skins</a>

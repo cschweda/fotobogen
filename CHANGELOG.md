@@ -13,6 +13,30 @@ is built from this file.
 
 Nothing yet.
 
+## [1.9.0] - 2026-11-17
+
+Optional two-step login, and the fourth [security audit](https://fotobogen.com/docs/security-audits/). Updating changes nothing about how you log in until you switch it on.
+
+### Added
+
+- **Two-step login**, as an option under **Admin, Two-step login**. Switched on, logging in takes your password and then a six-digit code from an authenticator app such as Google Authenticator. Nothing is sent by text message or email. It is off until you switch it on, and updating changes nothing about how you log in.
+- **Ten backup codes**, given when you switch it on, each good for one login when the phone is not to hand. The page shows them again whenever you ask, marks the used ones, lets you download them, and makes ten new ones on request.
+- **One entry in the authenticator app for a whole server.** The key is kept once for the account Fotobogen runs under, so a site you delete and install again, or a second site on the same server, uses the entry the app already has. The entry is named after the server. In Docker each site has its own key unless `TWO_STEP_KEY` is set.
+- **`pnpm fotobogen two-step off`** switches it off from the server, for an owner who has lost both the phone and the backup codes; **`pnpm fotobogen two-step key`** shows the server's key, to add to a new phone.
+- The key and the backup codes are shown only after the password is given again, and no API token can read or change them. Switching two-step login on signs out every other browser.
+
+### Security
+
+- The fourth [security audit](https://fotobogen.com/docs/security-audits/), of two-step login: 6 findings, 2 low and 4 informational; 2 fixed, 4 accepted. Wrong codes are counted for the account as well as for each address, so guessing from many addresses at once is stopped after ten. A backup file never holds the two-step key or the backup codes, and restoring a backup leaves two-step login as the site has it.
+
+### Fixed
+
+- A browser test of the sample photos that could fail on a slow Windows machine.
+
+### Updating
+
+**Admin, System, Update to version 1.9.0**, or `pnpm fotobogen update`. Docker: `docker compose pull`, then `docker compose up -d`. The update adds to the database by itself. Two-step login stays off until you switch it on under **Admin, Two-step login**.
+
 ## [1.8.0] - 2026-11-17
 
 Pages, search, private albums, a trash, albums to choose from on the front page, a one-line installer, and the third [security audit](https://fotobogen.com/docs/security-audits/). Updating changes nothing about how your site looks or behaves until you use the new things, with one exception: deleting a photo now moves it to the trash.
@@ -359,6 +383,7 @@ Later entries list only what changed.
 - One admin account only. No comments, no shop, no storage outside the server's own disk.
 
 [Unreleased]: https://github.com/cschweda/fotobogen/commits/staging
+[1.9.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.9.0
 [1.8.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.8.0
 [1.7.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.7.0
 [1.6.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.6.0

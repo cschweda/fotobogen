@@ -19,6 +19,9 @@ const USAGE = `Usage: fotobogen <command>
 
 Commands:
   reset-admin [--username <name>]   Set a new admin password and sign out all sessions
+  two-step off [--username <name>]  Switch two-step login off, for an owner who has lost both
+                                    the phone and the backup codes. The password still applies.
+  two-step key                      Show this server's two-step login key, to add to a new phone
   preflight                         Check that this machine can run Fotobogen
   init                              Ask for the port, the site's address, and demo mode,
                                     and save the answers to .env. Restart afterwards.
@@ -198,7 +201,7 @@ async function restore(args) {
   const file = args[0]
   if (!file) throw new CliError('Say which backup to restore: fotobogen restore backup.zip')
   if (!existsSync(file)) throw new CliError(`There is no file at ${file}.`)
-  const { applyRestore, inspectBackup } = await import('../server/core/backup.ts')
+  const { applyRestore, inspectBackup, TWO_STEP_UNKNOWN } = await import('../server/core/backup.ts')
   const { runningInstances } = await import('../server/core/instances.ts')
   const { resolve } = await import('node:path')
   const { mkdirSync } = await import('node:fs')
@@ -211,6 +214,7 @@ async function restore(args) {
   const result = await applyRestore(paths, file)
   console.log(`Restored ${result.photos} photos from a backup made ${inspected.manifest.createdAt.slice(0, 10)}.`)
   console.log(`What was here before is kept in ${result.keptIn}.`)
+  if (result.twoStep === 'unknown') console.warn(`WARNING: ${TWO_STEP_UNKNOWN}`)
   console.log('Start Fotobogen; it will make the resized copies again.')
 }
 
@@ -296,6 +300,50 @@ async function update(args) {
   console.log('Restart Fotobogen to start using it: stop it and run "pnpm start", or "pm2 restart fotobogen".')
 }
 
+/** Two-step login from the server itself: the way back in when the phone and the backup codes are both gone. */
+async function twoStep(args) {
+  const paths = dataPaths(resolveDataDir(process.env, process.cwd()))
+  if (args[0] === 'key') {
+    const { homedir, hostname } = await import('node:os')
+    const { keyFileFor, loadServerKey } = await import('../server/core/two-step-key.ts')
+    const { otpauthUri } = await import('../server/core/totp.ts')
+    const file = keyFileFor(process.env, homedir(), paths.root)
+    if (!process.env.TWO_STEP_KEY?.trim() && !existsSync(file)) {
+      throw new CliError(`This server has no two-step login key yet (looked in ${file}). One is made the first time two-step login is set up under Admin, Two-step login.`)
+    }
+    const { key, fromSetting } = loadServerKey(file, process.env)
+    console.log(`Two-step login key for Fotobogen on this server${fromSetting ? ' (from TWO_STEP_KEY)' : `, kept in ${file}`}:\n`)
+    console.log(`  ${key.replace(/(.{4})(?=.)/g, '$1 ')}\n`)
+    console.log('In your authenticator app, add an entry and choose to type a key ("Enter a setup key" in Google Authenticator). Give it this key; the kind is "time based".')
+    console.log(`\nAs an address, for apps that take one: ${otpauthUri(key, hostname())}`)
+    console.log('\nAnyone who has this key and your password can log in. Do not paste it anywhere.')
+    return
+  }
+  if (args[0] !== 'off') throw new CliError('Say which: "fotobogen two-step off" or "fotobogen two-step key".')
+  const flag = args.indexOf('--username')
+  const wanted = flag >= 0 ? args[flag + 1] : undefined
+  if (flag >= 0 && !wanted) throw new CliError('--username needs a name.')
+  if (!existsSync(paths.db)) throw new CliError(`No Fotobogen database found at ${paths.db}. Check DATA_DIR.`)
+  const db = new Database(paths.db, { fileMustExist: true })
+  db.pragma('busy_timeout = 5000')
+  try {
+    const admins = db.prepare(`select id, username, totp_secret from users order by created_at`).all()
+    if (admins.length === 0) throw new CliError('There is no admin account yet. Finish setup in the browser first.')
+    const user = wanted ? admins.find(row => row.username === wanted) : admins[0]
+    if (!user) throw new CliError(`No user named "${wanted}".`)
+    if (!user.totp_secret) {
+      console.log(`Two-step login is already off for ${user.username}. Nothing was changed.`)
+      return
+    }
+    // A new session version signs out every browser: whoever is in must log in again.
+    db.prepare(`update users set totp_secret = null, totp_last_step = null, backup_codes = null, session_version = session_version + 1 where id = ?`).run(user.id)
+    console.log(`Two-step login is now off for ${user.username}, and all sessions were signed out. Log in with the password, then switch it on again under Admin, Two-step login.`)
+  }
+  finally {
+    db.close()
+  }
+}
+
 const [command, ...args] = process.argv.slice(2)
 // The settings the server uses, DATA_DIR above all: a backup, a restore, or a
 // new password must go to the same data folder the site is running on.
@@ -304,6 +352,9 @@ if (existsSync('.env')) process.loadEnvFile('.env')
 try {
   if (command === 'reset-admin') {
     await resetAdmin(args)
+  }
+  else if (command === 'two-step') {
+    await twoStep(args)
   }
   else if (command === 'seed-fetch') {
     await seedFetch()

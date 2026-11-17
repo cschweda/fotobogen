@@ -61,7 +61,7 @@ So: **never write a colour for the page into `skin.css`.** Write `var(--fb-…)`
 
 ## A look for every photo
 
-A skin can bring a look with it: transforms from the [modules](MODULES.md), applied to every photo. **Rangefinder Dreams** does this. Choosing it sets the Film look module to black and white, crisply sharpened, for the whole site.
+A skin can bring a look with it: transforms from the [modules](MODULES.md), applied to every photo. **Rangefinder Dreams** does this. Choosing it sets the Film looks module to black and white, crisply sharpened, for the whole site.
 
 What happens when the owner chooses such a skin:
 

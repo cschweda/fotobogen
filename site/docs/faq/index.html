@@ -73,7 +73,7 @@
 </div>
 
 <h3>What is in a backup?</h3>
-<p>One zip file holding everything that cannot be made again: the database (titles, albums, tags, settings, your login), your photographs exactly as you uploaded them, and any skins and modules you installed. The resized copies are left out, because they are rebuilt from the originals. The secret key that seals logins is left out too, so a backup file cannot be used to log in as it stands.</p>
+<p>One zip file holding everything that cannot be made again: the database (titles, albums, tags, settings, your login), your photographs exactly as you uploaded them, and any skins and modules you installed. The resized copies are left out, because they are rebuilt from the originals. The secret key that seals logins is left out too, so a backup file cannot be used to log in as it stands. The two-step login key and backup codes are left out as well.</p>
 <p><strong>Keep a backup as private as the server.</strong> It holds every photo, hidden ones included, your settings, your webhooks' secrets, and your password in scrambled form. And <strong>only restore a backup you made yourself</strong>: it replaces the login and the API tokens with its own, and its modules are code. For that reason a backup uploaded through the admin is restored without its modules; restored on the server it installs them.</p>
 
 <h3>How do I make one?</h3>
@@ -89,7 +89,7 @@ pnpm fotobogen backup /mnt/disk/site.zip   # or to a place you name</code></pre>
 <p>After every batch of uploads you would not want to do again. The backup is about as large as your original files, so on a large site, download it over a good connection or use the command on the server.</p>
 
 <h3>How do I restore?</h3>
-<p>A restore replaces everything on the site with the backup, including the login.</p>
+<p>A restore replaces the site's photos, database, and skins with the backup's, including the username and password. Two things stay as the site has them: two-step login (still on with the same key and codes, or still off), and, for a backup uploaded through the admin, the installed modules.</p>
 <ul>
   <li><strong>In the admin:</strong> <strong>Admin, System</strong>, choose the zip, and <strong>Upload and prepare restore</strong>. The file is checked and set aside. The restore happens the next time Fotobogen starts; until then nothing changes and it can be cancelled. Then restart Fotobogen.</li>
   <li><strong>On the server, without Docker,</strong> with Fotobogen stopped:
@@ -106,10 +106,10 @@ docker compose restart app</code></pre></li>
 <p>There are several ways, from mild to complete. Pick the mildest one that does what you want.</p>
 
 <h3>Remove only the sample photos</h3>
-<p>On <strong>Overview</strong>, <strong>Remove sample photos</strong> deletes the 25 samples and nothing else.</p>
+<p>On <strong>Overview</strong>, <strong>Remove sample photos</strong> deletes the 25 samples for good (they do not go to the trash), and the two sample albums if nothing else is in them. Nothing of yours is touched.</p>
 
 <h3>Remove all photos, keep the site</h3>
-<p>In the <strong>Library</strong>, press <strong>Select all</strong>, then <strong>Delete</strong>. Your account, settings, skin, and albums stay.</p>
+<p>In the <strong>Library</strong>, press <strong>Select all</strong>, then <strong>Delete</strong>. That moves them to the trash, where they are kept for 30 days. To remove them now, choose <strong>Trash</strong> under <strong>Show</strong>, press <strong>Select all</strong>, then <strong>Delete for good</strong>. Your account, settings, skin, and albums stay.</p>
 
 <h3>Go back to an earlier state</h3>
 <p><a href="#backups">Restore a backup.</a></p>
@@ -137,7 +137,7 @@ docker compose logs app   # the new setup token</code></pre>
 <p>The software and the site are separate. Updating, rebuilding, or cloning the source again does not touch <code>data</code>. To move to a fresh copy of the software, install it as new, stop it, and put your <code>data</code> folder in place of its empty one.</p>
 
 <h3>Remove Fotobogen completely</h3>
-<p>Take a backup if you want one. Stop Fotobogen (<code>docker compose down</code>, or <code>pm2 delete fotobogen</code>, or <kbd>Control</kbd> + <kbd>C</kbd>), then delete its folder. Nothing is installed anywhere else, apart from Docker's own images and volumes (<code>docker compose down --volumes --rmi all</code> removes those too) and a small record of running copies in a folder named <code>.fotobogen</code> in your home folder, which can be deleted too.</p>
+<p>Take a backup if you want one. Stop Fotobogen (<code>docker compose down</code>, or <code>pm2 delete fotobogen</code>, or <kbd>Control</kbd> + <kbd>C</kbd>), then delete its folder. Nothing is installed anywhere else, apart from Docker's own images and volumes (<code>docker compose down --volumes --rmi all</code> removes those too) and a folder named <code>.fotobogen</code> in your home folder. It holds a small record of running copies and, if you ever set up two-step login, the server's key for it. It can be deleted too; the next Fotobogen you install there will then make a new key, and need a new entry in your authenticator app.</p>
 
 <h2 id="access">Getting in</h2>
 
@@ -145,7 +145,21 @@ docker compose logs app   # the new setup token</code></pre>
 <p>There is no reset by email, because Fotobogen sends no email. On the server:</p>
 <pre tabindex="0"><code>pnpm fotobogen reset-admin                                        # without Docker
 docker compose exec app node scripts/fotobogen.mjs reset-admin    # with Docker</code></pre>
-<p>It asks for a new password of at least 12 characters and signs out every session. Fotobogen does not need to be stopped.</p>
+<p>It asks for a new password of at least 12 characters and signs out every session. Fotobogen does not need to be stopped. It changes the password only: if two-step login is on, it stays on.</p>
+
+<h3 id="two-step">Can I ask for a code from my phone as well as the password?</h3>
+<p>Yes: <strong>Admin, Two-step login</strong>. It is an option, off until you switch it on. You scan a QR code with an authenticator app (Google Authenticator, or any other), enter the six digits it shows, and are given ten backup codes to download. From then on, logging in takes the password and then a code. Nothing is sent by text message or email. <a href="https://github.com/cschweda/fotobogen#two-step-login">The README has every detail.</a></p>
+
+<h3 id="lost-phone">I lost my phone, and the site asks for a code</h3>
+<p>Type one of your backup codes where the login page asks for the code. Each works once. Once in, <strong>Admin, Two-step login</strong> shows the QR code again for a new phone, and shows your backup codes again.</p>
+<p>With no backup codes either, on the server:</p>
+<pre tabindex="0"><code>pnpm fotobogen two-step off                                        # without Docker
+docker compose exec app node scripts/fotobogen.mjs two-step off    # with Docker</code></pre>
+<p>It switches two-step login off and signs out every session. Log in with your password and switch it on again.</p>
+<p>There is also <code>pnpm fotobogen two-step key</code> (with Docker, <code>docker compose exec app node scripts/fotobogen.mjs two-step key</code>), which prints the key this server keeps, to add to a new phone without logging in. A site whose <code>data</code> folder was copied here from another server still uses the key it came with; use <code>two-step off</code> there.</p>
+
+<h3 id="one-entry">Will my authenticator app fill up with an entry for every site I install?</h3>
+<p>No. The key is kept once for the server, in <code>.fotobogen</code> in your home folder, and every Fotobogen you install there uses it. A site you delete and install again, or a second site beside the first, finds the key and asks only for a code from the entry you already have. The entry is named after the server, <code>Fotobogen (your-server-name)</code>, so one from a server you no longer use is easy to recognise and delete. In Docker each site has a key of its own, and its entry is named after the site, unless you give the sites the same <code>TWO_STEP_KEY</code> in each one's <code>.env</code>.</p>
 
 <h3>I lost the setup token</h3>
 <p>It is printed every time Fotobogen starts, until setup is finished: restart it and read the output (<code>docker compose logs app</code>, or <code>pm2 logs fotobogen</code>). It is also in the file <code>data/setup-token</code>.</p>
@@ -155,6 +169,7 @@ docker compose exec app node scripts/fotobogen.mjs reset-admin    # with Docker<
 
 <h3>It says too many attempts</h3>
 <p>Five wrong passwords in 15 minutes from one address locks that address out until the 15 minutes pass. Wait, or restart Fotobogen, which forgets the count. Resetting the password does not lift the lock.</p>
+<p>With two-step login on there is a second limit: ten wrong codes for the account in 15 minutes, from any address, and no code is accepted until the 15 minutes pass. The message is "Too many wrong codes".</p>
 
 <h2 id="running">Running it</h2>
 
@@ -193,6 +208,7 @@ docker compose exec app node scripts/fotobogen.mjs reset-admin    # with Docker<
 
 <h3>How do I move to another server?</h3>
 <p>Install Fotobogen on the new server, stop it, copy your <code>data</code> folder over its empty one, and start. Or download a backup from the old site and restore it on the new one; you will log in with the old site's account. Then point your domain at the new server.</p>
+<p>Two-step login moves with a copied <code>data</code> folder. A site restored from a backup on a new server starts with it off, because a backup never holds the key: switch it on again there.</p>
 
 <h3>Can I run two sites on one server?</h3>
 <p>Yes: two copies of Fotobogen, each in its own folder with its own <code>data</code>, on different ports. Two copies must not share a data folder. <code>pnpm start</code> refuses a folder that another copy you started is using; it cannot see a copy run by another user, or two Docker containers given the same folder, so that part is up to you. Under pm2, give the second site its own <code>PORT</code> in its <code>.env</code> and its own <code>name</code> in its <code>ecosystem.config.cjs</code>.</p>

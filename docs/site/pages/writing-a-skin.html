@@ -217,6 +217,14 @@ cp -R skins/swiss data/skins/harbour</code></pre>
   &lt;/footer&gt;
 &lt;/html&gt;</code></pre>
 <p>The words shown here are the defaults; an owner can change any of them, so never rely on a piece of text or its length. A site title may be three letters or forty.</p>
+<p>Newer parts of the site are not in the outline above. A skin should also style them:</p>
+<ul>
+  <li><strong>The menu</strong> (<code>.fb-nav</code>) also holds a Search link, the owner's pages, and up to eight links of the owner's own, so it must wrap onto a second line without breaking.</li>
+  <li><strong>The album chooser on the front page</strong>: <code>nav.fb-chooser</code> holding <code>a.fb-chooser__link</code> for "All" and each album. The chosen one has <code>aria-current="page"</code>.</li>
+  <li><strong>The search page</strong>: <code>.fb-search</code> and the classes that begin <code>.fb-search__</code>, for the form, its field and button, and the line that says how many photos were found.</li>
+  <li><strong>The owner's pages</strong>: <code>.fb-page</code> around <code>.fb-page-body</code>, which holds plain headings, paragraphs, lists, and links.</li>
+</ul>
+<p>The <a href="https://github.com/cschweda/fotobogen/blob/main/docs/SKINS.md">skin guide on GitHub</a> lists every class, and the bundled skins show each one styled.</p>
 
 <h3>The owner's logo</h3>
 <p>If the owner uploads a logo, the title holds pictures in place of text:</p>
@@ -282,7 +290,7 @@ cp -R skins/swiss data/skins/harbour</code></pre>
     <tr><td>Nothing scrolls sideways on a phone</td><td>Size large type with <code>clamp()</code> and a viewport unit; add <code>overflow-wrap: anywhere</code> to anything that could be one long word, such as the site title.</td></tr>
     <tr><td>A visible focus ring</td><td><code>.fb-public :focus-visible { outline: 2px solid var(--fb-text); outline-offset: 3px; }</code> The text colour contrasts with the page in both modes.</td></tr>
     <tr><td>Reduced motion</td><td>Keep the <code>@media (prefers-reduced-motion: reduce)</code> block at the end of Swiss.</td></tr>
-    <tr><td>Things to press are big enough</td><td>Buttons and links in the bundled skins are at least 2.25rem tall.</td></tr>
+    <tr><td>Things to press are big enough</td><td>Buttons in the bundled skins are at least 2.25rem tall.</td></tr>
     <tr><td>The skip link</td><td>Keep <code>.fb-skip</code> off screen until it has focus, then on screen.</td></tr>
     <tr><td>Do not hide things</td><td>Never <code>display: none</code> a part of the page to tidy it. The switch, the footer, and the photo's details are there for a reason.</td></tr>
   </tbody>
