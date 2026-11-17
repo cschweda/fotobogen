@@ -4,6 +4,8 @@ import Database from 'better-sqlite3'
 import { chmodSync, existsSync, mkdirSync, renameSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { drizzle, type BetterSQLite3Database } from 'drizzle-orm/better-sqlite3'
+import { resolveSettings } from '../core/config.ts'
+import { adminHostProblem } from '../core/hosts.ts'
 import { applyRestore, inspectBackup, PENDING_ADMIN_RESTORE, PENDING_RESTORE } from '../core/backup.ts'
 import { applyMigrations, type Migration } from '../core/migrate.ts'
 import { dataPaths, ensureDataDirs, resolveDataDir, type DataPaths } from '../core/paths.ts'
@@ -42,6 +44,9 @@ let ready: Promise<void> | undefined
  */
 async function boot(loadMigrations: () => Promise<Migration[]>, loadSkins: () => Promise<SkinFiles[]>): Promise<void> {
   const paths = dataPaths(resolveDataDir(process.env, process.cwd()))
+  // Two settings that only make sense together; said before anything is opened.
+  const hostsProblem = adminHostProblem(resolveSettings(process.env).adminHost, resolveSettings(process.env).siteUrl)
+  if (hostsProblem) throw new Error(hostsProblem)
   ensureDataDirs(paths)
   const secret = loadOrCreateSecret(paths.secret)
 

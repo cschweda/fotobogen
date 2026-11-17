@@ -54,7 +54,7 @@ async function save() {
 </script>
 
 <template>
-  <FbShell context="Admin" wordmark-href="/" nav>
+  <FbShell context="Admin" :wordmark-href="$siteHome" nav>
     <h1 class="fb-h1">Visitor statistics</h1>
     <p class="fb-lead">Count the visits to your site with a service of your choice. Fotobogen does no counting of its own, and until you choose a service here your pages load nothing from anywhere else.</p>
 
@@ -117,7 +117,7 @@ async function save() {
       <div v-if="form.provider !== 'off'" class="know">
         <h2 class="know__heading">Before you switch this on</h2>
         <ul>
-          <li><strong>You are trusting the service, with your visitors and with your site.</strong> Its script runs on every visitor's page and can see what they see. It also runs on your site's own address: if the service were ever hostile or broken into, a public page of your site left open in a browser where you are logged in could be used to act as you. Choose a service you would trust that far.</li>
+          <li><strong>You are trusting the service, with your visitors and with your site.</strong> Its script runs on every visitor's page and can see what they see. It also runs on your site's own address: if the service were ever hostile or broken into, a public page of your site left open in a browser where you are logged in could be used to act as you. Choose a service you would trust that far; or close the gap altogether by giving the admin an address of its own (<code>ADMIN_HOST</code>; the installation guide has the steps).</li>
           <li><strong>It is only on your public pages,</strong> never on the admin or the login, and not on pages you open while logged in, so your own visits are not counted.</li>
           <li><strong>Your pages may talk to that one service</strong> and nowhere else. Everything else stays blocked.</li>
           <li><strong>What you owe your visitors is yours to decide:</strong> a privacy note, or asking first, depending on the service and where your visitors are.</li>

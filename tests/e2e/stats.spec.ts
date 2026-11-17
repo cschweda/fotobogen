@@ -82,3 +82,21 @@ test('the owner chooses a counting service; visitors get its script, the owner a
   expect(own.scripts).toEqual([])
   expect(own.hits).toEqual([])
 })
+
+test('a public page left open in another tab loads itself again, without the script, when the owner logs in', async ({ browser }) => {
+  const context = await browser.newContext()
+  const left = await context.newPage()
+  await standIn(left)
+  await left.goto(server.url + '/')
+  await expect(left.locator('script[data-fb-stats]')).toHaveCount(1)
+
+  const login = await context.newPage()
+  await login.goto(server.url + '/login')
+  await login.getByLabel('Username').fill(ADMIN.username)
+  await login.getByLabel('Password', { exact: true }).fill(ADMIN.password)
+  await login.getByRole('button', { name: 'Log in' }).click()
+  await expect(heading(login, 'Overview')).toBeVisible()
+
+  await expect(left.locator('script[data-fb-stats]')).toHaveCount(0)
+  await context.close()
+})

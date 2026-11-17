@@ -40,7 +40,7 @@ async function logOut() {
         </ul>
       </div>
       <ul class="nav__list nav__end">
-        <li><a class="nav__link" href="/">View your site</a></li>
+        <li><a class="nav__link" :href="$siteHome">View your site</a></li>
         <li><button type="button" class="nav__link nav__button" @click="logOut">Log out</button></li>
       </ul>
     </div>

@@ -16,7 +16,7 @@ function size(bytes: number): string {
 </script>
 
 <template>
-  <FbShell context="Admin" wordmark-href="/" nav>
+  <FbShell context="Admin" :wordmark-href="$siteHome" nav>
     <h1 class="fb-h1">Overview</h1>
     <p class="fb-lead">Your site and the server it runs on, at a glance.</p>
 
@@ -34,7 +34,7 @@ function size(bytes: number): string {
       </dl>
       <div class="actions">
         <NuxtLink class="fb-button" to="/admin/upload">Upload photos</NuxtLink>
-        <a class="fb-button fb-button--quiet" href="/">View your site</a>
+        <a class="fb-button fb-button--quiet" :href="$siteHome">View your site</a>
       </div>
     </section>
 

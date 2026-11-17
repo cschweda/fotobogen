@@ -54,7 +54,7 @@ async function applyToAll() {
 </script>
 
 <template>
-  <FbShell context="Admin" wordmark-href="/" nav>
+  <FbShell context="Admin" :wordmark-href="$siteHome" nav>
     <h1 class="fb-h1">Modules</h1>
     <p class="fb-lead">
       Modules change how photos look without touching the files you uploaded. Every module starts switched off, and switching one off puts your photos back as they were.

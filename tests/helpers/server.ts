@@ -42,7 +42,7 @@ function freePort(): Promise<number> {
   })
 }
 
-export async function startServer(options: { env?: Record<string, string>, dataDir?: string, waitForHealth?: boolean } = {}): Promise<TestServer> {
+export async function startServer(options: { env?: Record<string, string> | ((port: number) => Record<string, string>), dataDir?: string, waitForHealth?: boolean } = {}): Promise<TestServer> {
   const dataDir = options.dataDir ?? join(mkdtempSync(join(tmpdir(), 'fotobogen-test-')), 'data')
   const port = await freePort()
   const url = `http://localhost:${port}`
@@ -58,7 +58,7 @@ export async function startServer(options: { env?: Record<string, string>, dataD
         // The test servers run from this repository. Telling them they are in Docker means no test
         // can ever start a real update of the repository itself; the update logic is tested on
         // repositories made for the purpose (tests/unit/updater.test.ts).
-        FOTOBOGEN_IN_DOCKER: '1', ...options.env },
+        FOTOBOGEN_IN_DOCKER: '1', ...(typeof options.env === 'function' ? options.env(port) : options.env) },
       stdio: ['ignore', 'pipe', 'pipe'],
     })
     child.stdout!.on('data', chunk => { printed += chunk })

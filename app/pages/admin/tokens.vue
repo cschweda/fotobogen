@@ -63,7 +63,7 @@ const example = computed(() => `curl -H "Authorization: Bearer ${made.value?.tok
 </script>
 
 <template>
-  <FbShell context="Admin" wordmark-href="/" nav>
+  <FbShell context="Admin" :wordmark-href="$siteHome" nav>
     <h1 class="fb-h1">API tokens</h1>
     <p class="fb-lead">A token lets a script or another program upload to your site without your password. Each token does only what its kind allows, and can be revoked on its own.</p>
     <p class="status" role="status">{{ message }}</p>

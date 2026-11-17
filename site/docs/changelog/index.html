@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Releases | Fotobogen documentation</title>
-<meta name="description" content="What is in each version of Fotobogen. The current version is 1.4.0.">
+<meta name="description" content="What is in each version of Fotobogen. The current version is 1.5.0.">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#f5f5f2" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0a0a0b" media="(prefers-color-scheme: dark)">
@@ -12,7 +12,7 @@
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://fotobogen.com/docs/changelog/">
 <meta property="og:title" content="Releases | Fotobogen documentation">
-<meta property="og:description" content="What is in each version of Fotobogen. The current version is 1.4.0.">
+<meta property="og:description" content="What is in each version of Fotobogen. The current version is 1.5.0.">
 <meta property="og:image" content="https://fotobogen.com/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -55,6 +55,7 @@
     <div class="pages__here">
       <h2>On this page</h2>
       <ul>
+        <li><a href="#v1-5-0">Version 1.5.0, 16 November 2026</a></li>
         <li><a href="#v1-4-0">Version 1.4.0, 16 November 2026</a></li>
         <li><a href="#v1-3-3">Version 1.3.3, 16 November 2026</a></li>
         <li><a href="#v1-3-2">Version 1.3.2, 16 November 2026</a></li>
@@ -70,6 +71,24 @@
 <h1>Releases</h1>
 <p class="lead">What is in each version of Fotobogen, newest first. This page is made from <a href="https://github.com/cschweda/fotobogen/blob/main/CHANGELOG.md">CHANGELOG.md</a> in the source, so the two always agree.</p>
 <p>Version numbers follow <a href="https://semver.org">semantic versioning</a>: a change in the first number means something you rely on changed, the second adds features, and the third only fixes. <a href="https://github.com/cschweda/fotobogen/blob/main/docs/UPGRADING.md">What a version number promises, and how to upgrade.</a></p>
+<h2 id="v1-5-0">Version 1.5.0, 16 November 2026</h2>
+<h3>Added</h3>
+<ul>
+  <li><strong>The admin at its own address.</strong> Set <code>ADMIN_HOST=admin.photos.example.com</code> (with <code>SITE_URL</code>) and the admin, the login, and their API answer only at that name, and the public pages only at the site's. A browser keeps the login for the admin's name and never sends it to the public one, so a script on a public page, such as a counting service's, can neither read from the admin nor send to it. This closes the limit described under visitor statistics in 1.4.0. It is optional; without it everything works as before. The README and the installation page have the four steps: DNS, <code>.env</code>, the web server, the certificate.</li>
+  <li>A test in a real browser: the owner logged in at the admin's address, a hostile script on a public page next door, trying five ways to reach the admin. All five fail.</li>
+</ul>
+<h3>Security</h3>
+<ul>
+  <li>The admin, the login, and setup can no longer be shown inside a frame, not even by one of the site's own pages.</li>
+  <li>When the owner logs in, pages of the site open in other tabs that carry a counting script load themselves again, without it. This covers a tab left open; it is not proof against a script written to get round it, which is what <code>ADMIN_HOST</code> is for.</li>
+</ul>
+<h3>Changed</h3>
+<ul>
+  <li>Any name ending in <code>.localhost</code> counts as this computer, as browsers treat it, so logging in over plain http works at such a name.</li>
+  <li>&quot;View your site&quot; in the admin leads to the site's own address when the admin has another.</li>
+</ul>
+<h3>Upgrading from 1.4.0</h3>
+<p><strong>Admin, System, Update to version 1.5.0</strong>, or <code>pnpm fotobogen update</code>. Docker: <code>docker compose pull</code>, then <code>docker compose up -d</code>; to use <code>ADMIN_HOST</code> with Docker, also fetch the new <code>docker-compose.yml</code> (<code>git pull</code>), which passes the setting on. Nothing changes unless you set <code>ADMIN_HOST</code>.</p>
 <h2 id="v1-4-0">Version 1.4.0, 16 November 2026</h2>
 <h3>Added</h3>
 <ul>

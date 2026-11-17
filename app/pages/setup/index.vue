@@ -274,7 +274,7 @@ async function submit() {
           <SampleDownload v-if="answers.samples" variant="setup" />
           <div class="setup__actions">
             <a class="fb-button" href="/admin">Open admin</a>
-            <a class="fb-button fb-button--quiet" href="/">View your site</a>
+            <a class="fb-button fb-button--quiet" :href="$siteHome">View your site</a>
           </div>
         </div>
       </div>

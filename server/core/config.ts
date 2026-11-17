@@ -23,6 +23,8 @@ export interface Settings {
   demoMode: boolean
   /** The site's proper address (an origin such as https://photos.example.com), or '' when none is set here. */
   siteUrl: string
+  /** The admin's own name (admin.photos.example.com), or '' when the admin lives at the site's address. See core/hosts.ts. */
+  adminHost: string
   maxUploadMb: number
   maxMegapixels: number
   /** Whether webhooks may call private and loopback addresses. */
@@ -51,6 +53,7 @@ export function resolveSettings(env: Env): Settings {
     trustProxy: env.TRUST_PROXY !== undefined ? env.TRUST_PROXY === '1' : config.server.trustProxy,
     demoMode: env.DEMO_MODE !== undefined ? env.DEMO_MODE === '1' : config.server.demoMode === true,
     siteUrl: siteAddress(env.SITE_URL?.trim() || config.server.siteUrl || ''),
+    adminHost: env.ADMIN_HOST?.trim().toLowerCase() ?? '',
     maxUploadMb: positive(env.MAX_UPLOAD_MB) ?? config.uploads.maxUploadMb,
     maxMegapixels: positive(env.MAX_MEGAPIXELS) ?? config.uploads.maxMegapixels,
     webhooksAllowPrivate: env.WEBHOOKS_ALLOW_PRIVATE !== undefined ? env.WEBHOOKS_ALLOW_PRIVATE === '1' : config.webhooks.allowPrivate,

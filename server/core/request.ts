@@ -10,7 +10,8 @@
 export function isLoopbackHost(host: string | undefined): boolean {
   if (!host) return false
   const name = host.toLowerCase().replace(/:\d+$/, '')
-  return ['localhost', '127.0.0.1', '[::1]', '0.0.0.0', '[::]'].includes(name)
+  // Any name ending in .localhost is this computer too, by standard, and browsers treat it so.
+  return ['localhost', '127.0.0.1', '[::1]', '0.0.0.0', '[::]'].includes(name) || name.endsWith('.localhost')
 }
 
 /**

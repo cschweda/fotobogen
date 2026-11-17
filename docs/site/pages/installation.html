@@ -292,6 +292,21 @@ location / {
 </table></div>
 <p><strong>Room on the droplet.</strong> Running, Fotobogen used about 130 MB of memory when measured idle, and uses more while it resizes photos (the pm2 file restarts it at 600 MB). Building it (an install or update without Docker) needs about 2 GB counting swap, for a few minutes; on a small droplet, <a href="#swap">add swap</a> first, or use the Docker image, which is already built.</p>
 
+<h2 id="admin-address">The admin at its own address</h2>
+<p>Normally the admin is part of the site, at <code>/admin</code>. It can instead be given a name of its own, such as <code>admin.photos.example.com</code>, with the public site staying at <code>photos.example.com</code>. It is optional, and worth doing if you switch on <a href="/docs/customization/#statistics">visitor statistics</a>.</p>
+<p><strong>Why.</strong> A script from a counting service runs on your public pages, at your site's address. With the admin at the same address, a hostile or broken-into service could use a public page, open in a browser where you are logged in, to act as you. With the admin at its own name the browser keeps the two apart: your login is kept for the admin's name and never sent to the public one, and a script on a public page can neither read from the admin nor send to it.</p>
+<ol>
+  <li><strong>DNS:</strong> point <code>admin.photos.example.com</code> at the server, like the site's own name.</li>
+  <li><strong><code>.env</code>:</strong> set both, then restart.
+<pre><code>SITE_URL=https://photos.example.com
+ADMIN_HOST=admin.photos.example.com</code></pre></li>
+  <li><strong>The web server:</strong> make it answer for both names. In nginx: <code>server_name photos.example.com admin.photos.example.com;</code>. On Laravel Forge: add <code>admin.photos.example.com</code> as an alias of the site. With the Docker quick start: in <code>.env</code>, give both names, <code>DOMAIN=photos.example.com, admin.photos.example.com</code>, then <code>docker compose up -d</code>.</li>
+  <li><strong>The certificate:</strong> issue it again so that it covers both names. Forge and Certbot both ask which names; Caddy does it by itself.</li>
+</ol>
+<p><strong>What changes.</strong> You log in at <code>https://admin.photos.example.com/login</code>. <code>/admin</code> and <code>/login</code> at the public address lead there. The admin's API (<code>/api/admin/…</code>, used by API tokens) is at the admin's name too, so point any upload script at it. Public pages asked for at the admin's name lead back to the site. Photo addresses, the public API, and the feed do not change.</p>
+<p>Fotobogen will not start with <code>ADMIN_HOST</code> set and <code>SITE_URL</code> missing, or with the two naming the same place, and says which.</p>
+<p>Two smaller protections apply whether or not you do this: the admin and the login cannot be shown inside a frame, and when you log in, pages of your site open in other tabs load themselves again without the counting script.</p>
+
 <h2 id="docker-local">Docker on your own computer</h2>
 <p>If you already use Docker Desktop, OrbStack, or Colima and would rather not install Node.js:</p>
 <pre><code>git clone https://github.com/cschweda/fotobogen.git
@@ -339,6 +354,7 @@ docker compose logs app</code></pre>
   <tbody>
     <tr><td><code>PORT</code></td><td><code>5150</code></td><td>The port. Left unset, a busy 5150 moves up to the next free port. Set, it is used exactly, and Fotobogen stops if it is taken. Under pm2 it is always set.</td></tr>
     <tr><td><code>DATA_DIR</code></td><td><code>./data</code></td><td>Where the site keeps everything.</td></tr>
+    <tr><td><code>ADMIN_HOST</code></td><td>none</td><td>A name of its own for the admin, such as <code>admin.photos.example.com</code>. Needs <code>SITE_URL</code> too. <a href="#admin-address">The admin at its own address</a> has the steps.</td></tr>
     <tr><td><code>SITE_URL</code></td><td>none</td><td>Your site's proper address, such as <code>https://photos.example.com</code>. Used wherever a full address is written out: a photo's links in the admin, the feed, the sitemap, and what search engines are told. Without it, links made on your own machine begin with <code>http://localhost:5150</code>. It can also be set in the admin, under <strong>Search and sharing</strong>.</td></tr>
     <tr><td><code>DOMAIN</code></td><td>none</td><td>Docker quick start only: the domain Caddy gets a certificate for.</td></tr>
     <tr><td><code>PUID</code>, <code>PGID</code></td><td><code>1000</code></td><td>Docker only: the user and group that own the files in <code>data</code>.</td></tr>
