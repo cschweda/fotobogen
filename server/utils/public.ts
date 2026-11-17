@@ -134,6 +134,16 @@ export function publicTag(slug: string): { id: string, slug: string, name: strin
   return tag ?? null
 }
 
+/** Every tag that a photo a visitor may see carries, by name. */
+export function publicTags(): { slug: string, name: string }[] {
+  const { sqlite } = getPipeline()
+  return sqlite.prepare(`
+    select t.slug, t.name from tags t
+    where exists (select 1 from photo_tags pt join photos p on p.id = pt.photo_id where pt.tag_id = t.id and ${visible()})
+    order by t.name collate nocase
+  `).all() as { slug: string, name: string }[]
+}
+
 export interface PublicPhoto {
   slug: string
   title: string | null

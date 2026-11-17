@@ -11,14 +11,9 @@
      contract (docs/SKINS.md). -->
 <script setup lang="ts">
 import { pageTitle } from '~~/shared/seo'
+import type { Show, Slide } from '~/composables/useSlideshow'
 
 definePageMeta({ layout: false })
-
-interface Slide {
-  slug: string, title: string | null, description: string | null, alt: string, takenAt: number | null, camera: string | null
-  images: { url: string, width: number, height: number }[]
-}
-interface Show { title: string | null, back: string, seconds: number, order: 'sequence' | 'random', slides: Slide[] }
 
 const route = useRoute()
 const scope = typeof route.query.album === 'string' ? { album: route.query.album } : typeof route.query.tag === 'string' ? { tag: route.query.tag } : {}
@@ -37,86 +32,13 @@ useHead({
   meta: [{ name: 'robots', content: 'noindex' }],
 })
 
-// The running order: positions into `slides`. Random order is reshuffled every lap.
-const slides = computed(() => show.value!.slides)
-const order = ref<number[]>(slides.value.map((_, index) => index))
-const position = ref(0)
-const current = computed<Slide | undefined>(() => slides.value[order.value[position.value] ?? 0])
-
-// Two layers, cross-faded: the one on top is `front`.
-const layers = ref<[Slide | undefined, Slide | undefined]>([current.value, undefined])
-const front = ref(0)
-const playing = ref(true)
 const details = ref(false)
 const fullscreen = ref(false)
-const announcement = ref('')
 const stage = ref<HTMLElement>()
-let timer: ReturnType<typeof setTimeout> | undefined
 let wakeLock: { release(): Promise<void> } | null = null
-let token = 0
-
-const srcset = (slide: Slide) => slide.images.map(image => `${image.url} ${image.width}w`).join(', ')
+// The playing itself (the order, the cross-fade, the timer) is shared with the slideshow made for other sites.
+const { slides, position, current, layers, front, playing, announcement, srcset, step, togglePlaying, schedule } = useSlideshow(show, { held: details })
 const taken = (slide: Slide) => slide.takenAt === null ? null : new Intl.DateTimeFormat('en', { dateStyle: 'long', timeZone: 'UTC' }).format(new Date(slide.takenAt))
-
-function shuffle() {
-  const next = slides.value.map((_, index) => index)
-  for (let i = next.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[next[i], next[j]] = [next[j]!, next[i]!]
-  }
-  order.value = next
-}
-
-/** Fetch a photo before it is shown, so the fade never reveals a half-loaded picture. */
-function preload(slide: Slide): Promise<boolean> {
-  return new Promise((done) => {
-    const image = new Image()
-    image.onload = () => done(true)
-    image.onerror = () => done(false)
-    image.sizes = '100vw'
-    image.srcset = srcset(slide)
-    image.src = slide.images.at(-1)!.url
-  })
-}
-
-function schedule() {
-  clearTimeout(timer)
-  if (playing.value && !details.value && slides.value.length > 1) timer = setTimeout(() => step(1, false), show.value!.seconds * 1000)
-}
-
-async function step(by: number, byHand: boolean) {
-  const request = ++token
-  clearTimeout(timer)
-  let next = position.value + by
-  if (next >= order.value.length) {
-    // Round again. A random order is dealt afresh each time.
-    if (show.value!.order === 'random') shuffle()
-    next = 0
-  }
-  else if (next < 0) {
-    next = order.value.length - 1
-  }
-  const slide = slides.value[order.value[next]!]!
-  const loaded = await preload(slide)
-  if (request !== token) return // overtaken by another step
-  position.value = next
-  if (!loaded) {
-    // Gone or unreachable: move on rather than show a broken picture.
-    timer = setTimeout(() => step(by >= 0 ? 1 : -1, false), 500)
-    return
-  }
-  const back = front.value === 0 ? 1 : 0
-  layers.value[back] = slide
-  front.value = back
-  if (byHand) announcement.value = t('slidePosition', { title: slide.title ?? t('untitledPhoto'), n: next + 1, total: order.value.length })
-  schedule()
-}
-
-function togglePlaying() {
-  playing.value = !playing.value
-  announcement.value = playing.value ? t('slideshowPlaying') : t('slideshowPaused')
-  schedule()
-}
 
 /** A click on the photo shows its details and holds it; another carries on. */
 function toggleDetails() {
@@ -161,18 +83,12 @@ async function stayAwake() {
 const onVisible = () => { if (document.visibilityState === 'visible') void stayAwake() }
 
 onMounted(() => {
-  if (show.value!.order === 'random') {
-    shuffle()
-    layers.value[0] = current.value
-  }
   window.addEventListener('keydown', onKey)
   document.addEventListener('fullscreenchange', onFullscreenChange)
   document.addEventListener('visibilitychange', onVisible)
   void stayAwake()
-  schedule()
 })
 onBeforeUnmount(() => {
-  clearTimeout(timer)
   window.removeEventListener('keydown', onKey)
   document.removeEventListener('fullscreenchange', onFullscreenChange)
   document.removeEventListener('visibilitychange', onVisible)

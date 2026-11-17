@@ -52,8 +52,13 @@ export default defineNuxtConfig({
 
   // The admin, the login, and setup are never shown inside a frame, not even one of the site's own
   // pages: a script on a public page must not be able to open the admin in a hidden frame and read it.
-  routeRules: Object.fromEntries(['/admin', '/admin/**', '/login', '/setup', '/setup/**'].map(route =>
-    [route, { security: { headers: { xFrameOptions: 'DENY' as const, contentSecurityPolicy: { 'frame-ancestors': ['\'none\''] } } } }])),
+  routeRules: {
+    ...Object.fromEntries(['/admin', '/admin/**', '/login', '/setup', '/setup/**'].map(route =>
+      [route, { security: { headers: { xFrameOptions: 'DENY' as const, contentSecurityPolicy: { 'frame-ancestors': ['\'none\''] } } } }])),
+    // The one page made to be shown inside other sites' pages: the slideshow under /embed. It exists only
+    // when the owner has switched it on (server/middleware/05.embed.ts); every other page keeps refusing.
+    '/embed/**': { security: { headers: { xFrameOptions: false as const, contentSecurityPolicy: { 'frame-ancestors': ['*'] } } } },
+  },
 
   // nuxt-security is used for response headers and CSP only (DESIGN.md section 6).
   security: {

@@ -154,6 +154,8 @@ Up to 500 photos with what a slideshow needs, plus the timing and order set in t
 }
 ```
 
+To show the slideshow inside another site's page without writing any code, use the ready-made one: **Admin, Embed on another site** gives an `<iframe>` to paste (see the [README](../README.md#making-the-site-your-own)).
+
 ## Images
 
 Image addresses are relative to the site (`/media/<name>.webp`). Each name contains a hash of the file's contents, so an address never changes what it shows and can be cached for good; when a photo is re-rendered (a new film look, say) it gets new addresses. Fetch the JSON again rather than storing image addresses for long.
@@ -194,7 +196,7 @@ A request with a token needs no cookie and no `Origin` header, and is judged by 
 | `upload` | `POST /api/admin/photos` (upload), `GET /api/admin/photos` (list), `GET /api/admin/photos/<id>`, `POST /api/admin/photos/<id>/retry` |
 | `manage` | Everything under `/api/admin/photos` and `/api/admin/albums`, and `GET /api/admin/overview` |
 
-Anything else answers `403`. No token can reach settings, skins, site text, visitor statistics, backups, restore, or the tokens themselves. A wrong or revoked token answers `401`. A header that is not in the form `Bearer fb_…` is not taken for a token at all: a request that changes something then answers `403`, and one that reads answers `401` asking for a login.
+Anything else answers `403`. No token can reach settings, skins, site text, visitor statistics, embedding, backups, restore, or the tokens themselves. A wrong or revoked token answers `401`. A header that is not in the form `Bearer fb_…` is not taken for a token at all: a request that changes something then answers `403`, and one that reads answers `401` asking for a login.
 
 Uploading:
 

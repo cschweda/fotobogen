@@ -69,6 +69,8 @@ export const SITE_TEXT = {
   leaveFullScreen: { group: 'The slideshow', label: 'Button that leaves full screen', default: 'Leave full screen' },
   slideshowPlaying: { group: 'The slideshow', label: 'Announced to screen readers when it starts', default: 'Slideshow playing.' },
   slideshowPaused: { group: 'The slideshow', label: 'Announced to screen readers when it pauses', default: 'Slideshow paused.' },
+  firstPhoto: { group: 'The slideshow', label: 'Button for the first photo, in a slideshow shown on another site', default: 'First' },
+  lastPhoto: { group: 'The slideshow', label: 'Button for the last photo, in a slideshow shown on another site', default: 'Last' },
   slidePosition: { group: 'The slideshow', label: 'Announced when stepping by hand', default: '{title}, {n} of {total}', hint: 'Keep {title}, {n}, and {total}; they are filled in.' },
 
   notFoundTitle: { group: 'When a page cannot be shown', label: 'Heading when an address leads nowhere', default: 'Page not found' },

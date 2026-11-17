@@ -9,14 +9,15 @@ A self-hosted publishing platform for photographs: install it on a small
 server, answer a few first-run questions, and get a public photo site with an
 admin backend. Think "WordPress for photos".
 
-**Version 1.5.0** (16 November 2026). It installs on macOS, Windows, and
+**Version 1.6.0** (17 November 2026). It installs on macOS, Windows, and
 Linux; takes your photographs, resizes them for every screen, and publishes
 them on a site you can restyle, reword, and put under your own name, with an
 admin behind a login. Version 1.0.0 was the first release; 1.1.0 added
 updating from the admin; 1.2.0 tells you in the admin when a new version
 is out; 1.3.0 asks a few questions at the first start; 1.3.3 followed the
 first [security audit](#security-audits); 1.4.0 adds optional visitor
-statistics; 1.5.0 lets the admin live at an address of its own.
+statistics; 1.5.0 lets the admin live at an address of its own; 1.6.0 lets
+other sites show a slideshow of your photos.
 
 - **What is in it:** [CHANGELOG.md](CHANGELOG.md), also published as
   [Releases](https://fotobogen.com/docs/changelog/).
@@ -391,7 +392,7 @@ distributions may well work, but are reported as untested.
 `/api/health` needs no login and answers `GET` and `HEAD`:
 
 ```json
-{ "status": "ok", "version": "1.5.0", "database": "ok", "queue": { "depth": 0 }, "uptime": 86400 }
+{ "status": "ok", "version": "1.6.0", "database": "ok", "queue": { "depth": 0 }, "uptime": 86400 }
 ```
 
 It returns `200` when the app and its database are working and `503` when
@@ -636,6 +637,43 @@ What that means in practice:
   pasting script would let anyone who got your password put code in every
   visitor's browser.
 
+**Admin, Embed on another site.** Other sites can show a slideshow of your
+photos inside their own pages: a blog, a club's site, a portfolio. Switch it
+on, choose every photo, one album, or one tag, and a size, and copy the one
+line of code the page gives you:
+
+```html
+<iframe src="https://photos.example.com/embed/slideshow" width="800" height="600" style="border:0;max-width:100%;height:auto;aspect-ratio:800/600" title="Slideshow: Kodachrome Days" loading="lazy"></iframe>
+```
+
+Paste it where the other site lets you add HTML. The slideshow has one bar
+of controls (first, back, play or pause, forward, last) with "Powered by
+Fotobogen" at the end, linked to fotobogen.com; the arrow keys, Home, End,
+and Space work too. The width and height are the largest it will be: on a
+narrower page or a phone it shrinks to fit and keeps its shape.
+
+What that means in practice:
+
+- It is off until you switch it on. While it is off, `/embed/slideshow`
+  answers "not found"; switching it off again stops it at once on every site
+  that has the code.
+- Switched on, any site can show it, not only yours. It plays the photos
+  anyone can already see on your site and nothing else: never a hidden,
+  draft, or scheduled photo, and never where a photo was taken.
+- Only this slideshow can be shown inside another site. Every other page
+  still refuses to be framed by anyone else, and the admin and the login
+  refuse even your own site.
+- Pressing a photo opens its page on your site in a new tab.
+- It plays as your own slideshow does: the seconds per photo and the order
+  are the ones under **Admin, Settings**. It uses its own plain dark look,
+  not your skin, because it sits in a page that is not yours.
+- Visits to it are not counted: it loads no counting script, whatever is
+  set under Visitor statistics.
+- Only the logged-in owner can switch it on or off. No API token can, and a
+  demo visitor cannot.
+- Some hosted site builders remove frames from pasted code. There the
+  slideshow cannot be shown; link to its address instead.
+
 **Admin, Skins** changes how it looks ([Skins](#skins)).
 
 **Links to a photo.** The resized copies of every public photo are served
@@ -663,7 +701,7 @@ upload to your site without your password. A token is shown once, when it
 is made, and only a hash of it is stored. There are two kinds: **Upload
 only** (upload, list, and check photos, and retry one that failed) and **Manage photos** (also edit,
 reorder, hide, and delete photos and manage albums). No token can change
-visitor statistics, settings, skins, or site text, reach a backup, restore one, or make or
+visitor statistics, embedding, settings, skins, or site text, reach a backup, restore one, or make or
 revoke tokens. Revoking a token stops it at once, and the page shows when
 each was last used.
 

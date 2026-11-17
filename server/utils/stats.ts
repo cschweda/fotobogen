@@ -10,8 +10,8 @@ export function statsSettings(): StatsSettings {
   return Object.keys(errors).length > 0 ? { ...STATS_OFF, otherAttributes: [] } : settings
 }
 
-/** The pages a counting script is never put on: the admin, the login, setup, and anything that is not a page. */
-const NOT_COUNTED = /^\/+(admin|login|setup|api|_nuxt|__nuxt|media|brand)(\/|$)/i
+/** The pages a counting script is never put on: the admin, the login, setup, the slideshow made for other sites, and anything that is not a page. */
+const NOT_COUNTED = /^\/+(admin|login|setup|embed|api|_nuxt|__nuxt|media|brand)(\/|$)/i
 
 /** The tags for a page at this path, or null: statistics off, or not a public page. */
 export function statsForPath(path: string): StatsTags | null {
