@@ -208,10 +208,11 @@ SCRATCH=$(mktemp -d)
 (cd "$PACKAGE_DIR" && npm pack --ignore-scripts --pack-destination "$SCRATCH" >/dev/null)
 TARBALL=$(ls "$SCRATCH"/*.tgz)
 (
-  cd "$SCRATCH"
-  npm init -y >/dev/null
-  npm install --ignore-scripts --no-audit --no-fund "$TARBALL" >/dev/null
-  INSTALLED=$(npx --no-install create-fotobogen --version)
+  # Each step says "|| exit 1": inside "( ... ) || die", a failing command does not stop the rest by itself.
+  cd "$SCRATCH" || exit 1
+  npm init -y >/dev/null || exit 1
+  npm install --ignore-scripts --no-audit --no-fund "$TARBALL" >/dev/null || exit 1
+  INSTALLED=$(npx --no-install create-fotobogen --version) || exit 1
   [[ "$INSTALLED" == "$VERSION" ]] || {
     echo "create-fotobogen --version printed '$INSTALLED', expected '$VERSION'" >&2
     exit 1
@@ -227,14 +228,18 @@ info "The packed tarball installs, and create-fotobogen --version prints $VERSIO
 # build it. This is what someone typing the one line gets, and it takes a few minutes.
 info "Installing Fotobogen for real with the packed installer (a few minutes)..."
 (
-  cd "$SCRATCH"
-  npx --no-install create-fotobogen trial-install --yes
+  cd "$SCRATCH" || exit 1
+  # Through npx, as someone typing the one line runs it: npx changes the environment it is run in.
+  npx --no-install create-fotobogen trial-install --yes || {
+    echo "the installer stopped with an error (printed above)" >&2
+    exit 1
+  }
   [[ -f trial-install/.output/server/index.mjs ]] || {
     echo "the installer finished, but there is no built server in trial-install/.output" >&2
     exit 1
   }
   WANT=$(git -C trial-install describe --tags --exact-match 2>/dev/null || true)
-  GOT=$(node --input-type=commonjs -e "console.log(require('./trial-install/package.json').version)")
+  GOT=$(node --input-type=commonjs -e "console.log(require('./trial-install/package.json').version)") || exit 1
   [[ "$WANT" == "v$GOT" ]] || {
     echo "the install is at '$WANT' but its package.json says '$GOT'" >&2
     exit 1

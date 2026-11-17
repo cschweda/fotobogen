@@ -23,18 +23,18 @@ describe.skipIf(process.platform === 'win32')('create-fotobogen, run', () => {
     git(source, 'tag', `v${version}`)
   }
   /** Runs the installer in a new empty folder. `pnpm` says which pnpm it finds: a version, or none. */
-  const install = (args: string[], options: { pnpm?: string | null, failOn?: string } = {}) => {
+  const install = (args: string[], options: { pnpm?: string | null, failOn?: string, env?: Record<string, string> } = {}) => {
     const cwd = mkdtempSync(join(tmpdir(), 'fb-create-'))
     const bin = mkdtempSync(join(tmpdir(), 'fb-create-bin-'))
     const log = join(cwd, 'pnpm.log')
     if (options.pnpm !== null) {
-      writeFileSync(join(bin, 'pnpm'), `#!/bin/sh\nif [ "$1" = "--version" ]; then echo "${options.pnpm ?? '10.4.1'}"; exit 0; fi\necho "$1 in $(pwd)" >> "${log}"\n[ "$1" = "${options.failOn ?? 'nothing'}" ] && exit 3\nexit 0\n`)
+      writeFileSync(join(bin, 'pnpm'), `#!/bin/sh\nif [ "$1" = "--version" ]; then echo "${options.pnpm ?? '10.4.1'}"; exit 0; fi\necho "$1 in $(pwd)" >> "${log}"\nenv | grep -i '^npm_' >> "${log}.env"\n[ "$1" = "${options.failOn ?? 'nothing'}" ] && exit 3\nexit 0\n`)
       chmodSync(join(bin, 'pnpm'), 0o755)
     }
     // git and node come from where they really are; pnpm only from the stand-in's folder.
     const path = [bin, tools].join(delimiter)
-    const result = spawnSync(process.execPath, [BIN, ...args], { cwd, encoding: 'utf8', env: { PATH: path, HOME: cwd, CREATE_FOTOBOGEN_REPO: source } })
-    return { cwd, code: result.status, out: result.stdout + result.stderr, pnpm: existsSync(log) ? readFileSync(log, 'utf8').trim().split('\n') : [] }
+    const result = spawnSync(process.execPath, [BIN, ...args], { cwd, encoding: 'utf8', env: { PATH: path, HOME: cwd, CREATE_FOTOBOGEN_REPO: source, ...options.env } })
+    return { cwd, npmEnv: existsSync(`${log}.env`) ? readFileSync(`${log}.env`, 'utf8') : '', code: result.status, out: result.stdout + result.stderr, pnpm: existsSync(log) ? readFileSync(log, 'utf8').trim().split('\n') : [] }
   }
 
   beforeAll(() => {
@@ -48,7 +48,7 @@ describe.skipIf(process.platform === 'win32')('create-fotobogen, run', () => {
     git(source, 'tag', 'create-fotobogen-v9.9.9')
     // A folder holding only git and node, so that no real pnpm on this machine is found.
     tools = mkdtempSync(join(tmpdir(), 'fb-create-tools-'))
-    for (const tool of ['git', 'sh', 'dirname', 'basename', 'uname', 'sed', 'tr']) {
+    for (const tool of ['git', 'sh', 'dirname', 'basename', 'uname', 'sed', 'tr', 'env', 'grep']) {
       const where = spawnSync('/bin/sh', ['-c', `command -v ${tool}`], { encoding: 'utf8' }).stdout.trim()
       if (where) writeFileSync(join(tools, tool), `#!/bin/sh\nexec "${where}" "$@"\n`, { mode: 0o755 })
     }
@@ -67,6 +67,18 @@ describe.skipIf(process.platform === 'win32')('create-fotobogen, run', () => {
     // It is a git checkout on its branch, so updating works afterwards.
     expect(spawnSync('git', ['symbolic-ref', '--short', 'HEAD'], { cwd: folder, encoding: 'utf8' }).stdout.trim()).toBe('main')
     expect(spawnSync('git', ['status', '--porcelain'], { cwd: folder, encoding: 'utf8' }).stdout).toBe('')
+  })
+
+  it('does not hand npm\'s own settings on to pnpm when it is started with npx', () => {
+    // Found by rehearsing the publish: npx sets these, pnpm passed them on, and Fotobogen's
+    // install check, seeing npm's name, refused to install: "installed with pnpm, not npm".
+    const { code, npmEnv, pnpm } = install(['site', '--yes'], { env: {
+      npm_config_user_agent: 'npm/11.19.1 node/v24.22.3 darwin arm64', npm_execpath: '/usr/lib/node_modules/npm/bin/npx-cli.js',
+      npm_lifecycle_event: 'npx', npm_command: 'exec', npm_package_name: 'scratch', NPM_CONFIG_PREFIX: '/somewhere', INIT_CWD: '/somewhere/else',
+    } })
+    expect(code).toBe(0)
+    expect(pnpm).toHaveLength(2)
+    expect(npmEnv).toBe('')
   })
 
   it('uses the folder "fotobogen" when none is named and nothing can be asked', () => {

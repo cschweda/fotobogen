@@ -55,6 +55,11 @@ you. Because it is fetched with git, **Admin, System, Update** works
 afterwards. To install several sites on one machine, run it again with
 another folder name.
 
+The folder is a complete copy of Fotobogen, including `ecosystem.config.cjs`
+for running it under pm2 on a server (`pm2 start ecosystem.config.cjs`) and
+the Docker files; the
+[installation guide](https://fotobogen.com/docs/installation/) covers both.
+
 It has no dependencies: the package is two small files you can read in a
 minute, in [`bin`](bin) and [`lib`](lib). It collects nothing and contacts
 nothing but GitHub (to fetch Fotobogen) and the npm registry (for

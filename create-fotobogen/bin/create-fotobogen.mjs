@@ -36,10 +36,17 @@ function stop(message) {
  */
 const command = (name, args) => windows && name !== 'git' ? ['cmd.exe', ['/d', '/s', '/c', name, ...args]] : [name, args]
 
+/**
+ * The environment the tools are run in: this one, without what npm adds when
+ * the installer is started with npx. pnpm would pass those on to Fotobogen's
+ * own install check, which, seeing npm's name there, refuses to install.
+ */
+const env = Object.fromEntries(Object.entries(process.env).filter(([name]) => !/^npm_/i.test(name) && name !== 'INIT_CWD'))
+
 /** Runs a tool and gives back what it printed, or null if it would not run. */
 function printed(name, args, cwd) {
   const [file, list] = command(name, args)
-  const result = spawnSync(file, list, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 120_000 })
+  const result = spawnSync(file, list, { cwd, env, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 120_000 })
   return result.status === 0 ? result.stdout.trim() : null
 }
 
@@ -47,7 +54,7 @@ function printed(name, args, cwd) {
 function shown(name, args, cwd) {
   const [file, list] = command(name, args)
   return new Promise((done) => {
-    const child = spawn(file, list, { cwd, stdio: 'inherit' })
+    const child = spawn(file, list, { cwd, env, stdio: 'inherit' })
     child.on('error', () => done(127))
     child.on('exit', code => done(code ?? 1))
   })
@@ -209,7 +216,12 @@ say('  pnpm start')
 say('')
 say('The first start asks a few questions, then prints the address to open')
 say('and a setup token to type there. Control + C stops it.')
-say('For a public site on a server, see https://fotobogen.com/docs/installation/')
+say('')
+say('On a server, to keep it running and start it again after a restart, use pm2.')
+say('Its settings file is already in the folder:')
+say(`  cd ${folder}`)
+say('  pm2 start ecosystem.config.cjs')
+say('The rest (a domain, https, nginx) is at https://fotobogen.com/docs/installation/')
 
 if (asking && options.start && await askYes('\nStart it now? [Y/n] ', true)) {
   say('')
