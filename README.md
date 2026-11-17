@@ -18,7 +18,7 @@ is out; 1.3.0 asks a few questions at the first start; 1.3.3 followed the
 first [security audit](#security-audits); 1.4.0 adds optional visitor
 statistics; 1.5.0 lets the admin live at an address of its own; 1.6.0 lets
 other sites show a slideshow of your photos; 1.6.1 makes the full-screen
-buttons work, centres the photo window, and keeps a photo's date as the
+buttons work, gives the photo window one size in the middle of the screen, and keeps a photo's date as the
 camera wrote it.
 
 - **What is in it:** [CHANGELOG.md](CHANGELOG.md), also published as

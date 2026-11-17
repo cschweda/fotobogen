@@ -78,23 +78,45 @@ test('a photo opens over the grid, can be worked by keyboard, and closing return
   await expect(page).toHaveURL(server.url + '/')
 })
 
-test('a photo opened over the grid sits in the middle of the window, with its picture and words in the middle of it', async ({ page }) => {
+test('a photo opened over the grid sits in the middle of the window, in a card that is the same for every photo', async ({ page }) => {
   await page.setViewportSize({ width: 1500, height: 900 })
   await page.goto(server.url + '/')
   await page.locator('.fb-tile__link').first().click()
   const dialog = page.getByRole('dialog')
   await expect(dialog.locator('.fb-photo__image')).toBeVisible()
-  const box = (await dialog.boundingBox())!
+  const measure = async () => {
+    await expect(dialog.locator('.fb-photo__image')).toBeVisible()
+    await dialog.locator('.fb-photo__image').evaluate((image: HTMLImageElement) => image.decode().catch(() => undefined))
+    const card = (await dialog.boundingBox())!
+    const picture = (await dialog.locator('.fb-photo__figure').boundingBox())!
+    const words = (await dialog.locator('.fb-photo__text').boundingBox())!
+    return { card, picture, words, slug: new URL(page.url()).pathname, scrolls: await dialog.evaluate(element => element.scrollHeight > element.clientHeight + 1) }
+  }
+  const seen = [await measure()]
   // The same room on the left as on the right, and above as below.
-  expect(Math.abs(box.x - (1500 - box.x - box.width))).toBeLessThanOrEqual(2)
-  expect(Math.abs(box.y - (900 - box.y - box.height))).toBeLessThanOrEqual(2)
-  expect(box.x).toBeGreaterThan(10)
-  // Inside it, the picture and its words together are centred, not pushed to the left.
-  const picture = (await dialog.locator('.fb-photo__figure').boundingBox())!
-  const words = (await dialog.locator('.fb-photo__text').boundingBox())!
-  const left = picture.x - box.x
-  const right = box.x + box.width - (words.x + words.width)
-  expect(Math.abs(left - right)).toBeLessThanOrEqual(4)
+  const { card } = seen[0]!
+  expect(Math.abs(card.x - (1500 - card.x - card.width))).toBeLessThanOrEqual(2)
+  expect(Math.abs(card.y - (900 - card.y - card.height))).toBeLessThanOrEqual(2)
+  expect(card.x).toBeGreaterThan(10)
+
+  // Step through photos of other shapes: wide, upright. The card does not change, nor where the words begin.
+  for (let step = 0; step < 2; step++) {
+    const before = seen.at(-1)!.slug
+    await page.keyboard.press('ArrowRight')
+    await expect.poll(() => new URL(page.url()).pathname).not.toBe(before)
+    seen.push(await measure())
+  }
+  expect(new Set(seen.map(one => Math.round(one.picture.width / one.picture.height * 10))).size).toBeGreaterThan(1) // really different shapes
+  for (const one of seen) {
+    expect(one.card, one.slug).toEqual(card)
+    expect(Math.round(one.words.x), one.slug).toBe(Math.round(seen[0]!.words.x))
+    expect(Math.round(one.words.y), one.slug).toBe(Math.round(seen[0]!.words.y))
+    expect(one.scrolls, one.slug).toBe(false)
+    // The picture is in the middle of the room left of the words, and inside the card.
+    const room = { left: one.card.x, right: one.words.x }
+    expect(Math.abs((one.picture.x - room.left) - (room.right - one.picture.x - one.picture.width)), one.slug).toBeLessThanOrEqual(card.width * 0.06)
+    expect(one.picture.y + one.picture.height, one.slug).toBeLessThanOrEqual(card.y + card.height)
+  }
 })
 
 test('the photo page stands on its own, with neighbours and arrow keys', async ({ page }) => {
