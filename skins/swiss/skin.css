@@ -149,6 +149,18 @@
 .fb-modal__close { float: right; min-height: 2.75rem; margin: 0 0 1rem 1rem; padding: 0 1rem; border: 1px solid var(--fb-muted); background: none; color: var(--fb-text); font: inherit; cursor: pointer; }
 .fb-modal__close:hover { border-color: var(--fb-text); }
 .fb-modal .fb-photo { clear: both; }
+/*
+  On a wide screen the card is the same for every photo: one size, the words in one column down its
+  right side, and the picture in the middle of the room that is left, whatever its shape and however
+  little there is to say about it. (8rem: the card's padding and its Close button.)
+*/
+@media (min-width: 52.01rem) {
+  .fb-modal { height: 94vh; }
+  .fb-modal .fb-photo { grid-template-columns: minmax(0, 1fr) 20rem; min-height: calc(94vh - 8rem); }
+  .fb-modal .fb-photo__figure { justify-self: center; align-self: center; }
+  /* Not while it is shown full screen, which has the whole screen to itself. */
+  .fb-modal .fb-photo__figure:not(.fb-photo__figure--expanded) .fb-photo__image { max-height: calc(94vh - 8rem); }
+}
 .fb-modal .fb-photo__image { max-height: 76vh; }
 .fb-modal .fb-photo__figure--expanded .fb-photo__image { max-height: 100vh; }
 

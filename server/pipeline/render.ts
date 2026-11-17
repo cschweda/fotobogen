@@ -18,7 +18,7 @@ import { newId } from '../core/ids.ts'
 import type { RecipeStep } from '../modules/contract.ts'
 import type { Raster } from '../modules/registry.ts'
 import type { PipelineContext } from './context.ts'
-import { exifColumns, exifForStorage } from './exif.ts'
+import { datesAsWritten, exifColumns, exifForStorage } from './exif.ts'
 import sharp from './image.ts'
 import { planDerivatives, WORKING_EDGE, type PlannedDerivative } from './plan.ts'
 
@@ -36,7 +36,8 @@ interface PhotoRow { id: string, original_path: string, width: number, height: n
 
 async function readExif(path: string): Promise<Record<string, unknown> | undefined> {
   try {
-    return await exifr.parse(path) ?? undefined
+    const parsed = await exifr.parse(path) as Record<string, unknown> | undefined
+    return parsed ? datesAsWritten(parsed) : undefined
   }
   catch {
     return undefined // a photo with damaged metadata is still a photo

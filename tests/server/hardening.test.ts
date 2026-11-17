@@ -41,6 +41,15 @@ describe('hardening', () => {
     expect(status).toBe(400)
   })
 
+  it('lets the site\'s own pages go full screen, and still asks for no camera, microphone, or location', async () => {
+    // The photo page and the slideshow each have a full-screen button; the browser refuses it unless this header allows it.
+    for (const path of ['/', '/slideshow', '/login']) {
+      const policy = (await get(server, path)).headers.get('permissions-policy') ?? ''
+      expect(policy, path).toContain('fullscreen=(self)')
+      for (const closed of ['camera=()', 'microphone=()', 'geolocation=()', 'display-capture=()']) expect(policy, path).toContain(closed)
+    }
+  })
+
   it('tells browsers and proxies never to keep what the admin and the login answer', async () => {
     for (const path of ['/api/admin/settings', '/api/auth/me', '/admin']) {
       expect((await get(server, path, { cookie })).headers.get('cache-control'), path).toBe('no-store')

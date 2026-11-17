@@ -336,7 +336,7 @@ onBeforeUnmount(() => {
             hint="What the photo shows, for people who cannot see it. One sentence is enough."
           />
           <FbField id="slug" v-model="form.slug" label="Address" :maxlength="80" :error="errors.slug" hint="The end of the photo's web address: /photo/…" />
-          <FbField id="taken" v-model="form.taken" label="Date taken" type="date" :error="errors.takenAt" />
+          <FbField id="taken" v-model="form.taken" label="Date taken" type="date" :error="errors.takenAt" hint="Filled in from the date the camera wrote into the file, when there is one. Empty means the file carried none: set it here if you like." />
           <div class="pick">
             <label class="pick__label" for="license">Licence</label>
             <select id="license" v-model="form.license" class="pick__select">
