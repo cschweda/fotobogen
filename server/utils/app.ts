@@ -6,7 +6,7 @@ import { join } from 'node:path'
 import { drizzle, type BetterSQLite3Database } from 'drizzle-orm/better-sqlite3'
 import { resolveSettings } from '../core/config.ts'
 import { adminHostProblem } from '../core/hosts.ts'
-import { applyRestore, inspectBackup, PENDING_ADMIN_RESTORE, PENDING_RESTORE } from '../core/backup.ts'
+import { applyRestore, inspectBackup, PENDING_ADMIN_RESTORE, PENDING_RESTORE, TWO_STEP_UNKNOWN } from '../core/backup.ts'
 import { applyMigrations, type Migration } from '../core/migrate.ts'
 import { dataPaths, ensureDataDirs, resolveDataDir, type DataPaths } from '../core/paths.ts'
 import { loadOrCreateSecret } from '../core/secret.ts'
@@ -65,6 +65,7 @@ async function boot(loadMigrations: () => Promise<Migration[]>, loadSkins: () =>
       const restored = await applyRestore(paths, pending, { modules: withModules })
       rmSync(pending, { force: true })
       console.log(`\nRestored a backup with ${restored.photos} photos. What was here before is kept in ${restored.keptIn}.`)
+      if (restored.twoStep === 'unknown') console.warn(`WARNING: ${TWO_STEP_UNKNOWN}`)
       if (!withModules && inspected.modules.length > 0) {
         console.log(`The backup's modules were not installed (${inspected.modules.join(', ')}): a module is code, and one uploaded through the admin is never run. To install them, restore the backup on the server with "pnpm fotobogen restore", or copy them into the modules folder.`)
       }

@@ -1,5 +1,5 @@
 import Database from 'better-sqlite3'
-import { createWriteStream, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { createWriteStream, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
@@ -141,6 +141,21 @@ describe('a backup', () => {
     const db = new Database(plain.paths.db)
     expect(db.prepare(`select totp_secret, backup_codes from users`).get()).toEqual({ totp_secret: null, backup_codes: null })
     db.close()
+  })
+
+  it('says so, and does not pretend to know, when the site\'s own database cannot be read for its two-step state', async () => {
+    const source = await site()
+    const { file } = await backupOf(source.ctx, source.paths)
+    // A site whose database is damaged: the restore is what mends it, so it goes ahead.
+    const target = await site()
+    target.ctx.sqlite.close()
+    writeFileSync(target.paths.db, 'this is not a database')
+    for (const extra of ['-wal', '-shm']) rmSync(target.paths.db + extra, { force: true })
+    expect(await applyRestore(target.paths, file)).toMatchObject({ photos: 2, twoStep: 'unknown' })
+    // Where it could be read, or there was no site at all, it is known.
+    const fresh = dataPaths(join(mkdtempSync(join(tmpdir(), 'fb-restore-')), 'data'))
+    mkdirSync(fresh.root, { recursive: true })
+    expect(await applyRestore(fresh, file)).toMatchObject({ twoStep: 'kept' })
   })
 
   it('restores into an empty data directory and queues every photo to be rendered again', async () => {

@@ -120,8 +120,13 @@ function withoutTwoStep(snapshot: string): void {
   }
 }
 
-/** Two-step login as the site has it now, before its database is replaced. Null when there is no site yet. */
-function currentTwoStep(file: string): TwoStep | null {
+/**
+ * Two-step login as the site has it now, before its database is replaced.
+ * Null when there is no site yet, or it has no owner. 'unknown' when there is
+ * a database that cannot be read: the restore still goes ahead, because
+ * restoring is how a damaged site is mended, but the caller is told, and says so.
+ */
+function currentTwoStep(file: string): TwoStep | null | 'unknown' {
   if (!existsSync(file)) return null
   let db: Database.Database | undefined
   try {
@@ -130,8 +135,7 @@ function currentTwoStep(file: string): TwoStep | null {
     return (db.prepare(`select totp_secret, totp_last_step, backup_codes from users order by created_at limit 1`).get() as TwoStep | undefined) ?? null
   }
   catch {
-    // A database too damaged to read has nothing to carry over; the restore is what mends it.
-    return null
+    return 'unknown'
   }
   finally {
     db?.close()
@@ -258,7 +262,7 @@ async function extractBackup(file: string, target: string, withModules: boolean)
  * With `modules: false` the backup's modules are left out and the site's own
  * stay as they are.
  */
-export async function applyRestore(paths: DataPaths, file: string, options: { modules: boolean } = { modules: true }): Promise<{ photos: number, keptIn: string }> {
+export async function applyRestore(paths: DataPaths, file: string, options: { modules: boolean } = { modules: true }): Promise<{ photos: number, keptIn: string, twoStep: 'kept' | 'unknown' }> {
   const staging = join(paths.root, `restore-${newId()}`)
   let photos: number
   const twoStep = currentTwoStep(paths.db)
@@ -294,7 +298,7 @@ export async function applyRestore(paths: DataPaths, file: string, options: { mo
         // Every login from before is ended: a backup must not bring a signed-out session back to life.
         db.prepare(`update users set session_version = session_version + 1`).run()
         // How the owner logs in at the second step is the site's own business, never the backup's.
-        carryTwoStep(db, twoStep)
+        carryTwoStep(db, twoStep === 'unknown' ? null : twoStep)
         // What was in the trash stays there; it is made again if it is ever restored.
         const ids = (db.prepare(`select id from photos where status <> 'trashed'`).all() as { id: string }[]).map(row => row.id)
         for (const id of ids) {
@@ -325,5 +329,8 @@ export async function applyRestore(paths: DataPaths, file: string, options: { mo
   for (const name of replaced) move(join(staging, name), join(paths.root, name))
   rmSync(staging, { recursive: true, force: true })
   for (const dir of [paths.originals, paths.derivatives, paths.skins, paths.modules]) mkdirSync(dir, { recursive: true })
-  return { photos, keptIn }
+  return { photos, keptIn, twoStep: twoStep === 'unknown' ? 'unknown' : 'kept' }
 }
+
+/** What to tell the owner when a restore could not read how the site logged in before. */
+export const TWO_STEP_UNKNOWN = 'The database that was here could not be read, so it is not known whether two-step login was on. It is now OFF: the password alone logs in. If you use two-step login, switch it on again under Admin, Two-step login.'
