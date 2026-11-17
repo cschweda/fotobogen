@@ -122,7 +122,8 @@ describe('the trash', () => {
     await server.restart()
     const trash = await list('?trash=1')
     expect(trash.photos.map(photo => photo.id)).toEqual([fresh]) // a day in the trash: still there
-    expect(originals()).toBe(1)
-    expect(server.output()).toContain('Removed 1 photo that had been in the trash for 30 days.')
+    // The files go, and the server says so, a moment after the record: wait for both.
+    await expect.poll(originals).toBe(1)
+    await expect.poll(() => server.output()).toContain('Removed 1 photo that had been in the trash for 30 days.')
   })
 })
