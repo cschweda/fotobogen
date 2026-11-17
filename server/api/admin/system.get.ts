@@ -25,7 +25,7 @@ export default defineEventHandler(async (event) => {
     freeBytes = Number(disk.bavail) * Number(disk.bsize)
   }
   catch { /* not every filesystem can say */ }
-  const { photos } = getSqlite().prepare(`select count(*) as photos from photos`).get() as { photos: number }
+  const { photos } = getSqlite().prepare(`select count(*) as photos from photos where status <> 'trashed'`).get() as { photos: number }
   return {
     version: String(useRuntimeConfig().appVersion),
     node: process.versions.node,

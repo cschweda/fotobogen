@@ -568,13 +568,20 @@ your site.
 
 - **Order:** drag a photo onto another to put it in front, or use each
   photo's Up, Down, and To top buttons, which do the same from the keyboard.
-- **Several at once:** tick photos, then Hide, Show, or Delete. Deleting
-  asks first, and removes the uploaded file and every resized copy.
+- **Several at once:** tick photos, then Hide, Show, or Delete.
+- **Deleting and the trash:** a deleted photo goes to the trash. It is off
+  your site at once, and kept for 30 days, file and all, then removed for
+  good. Under **Show, Trash** you can restore it, which puts it back as it
+  was (same address, albums, and tags), or delete it for good straight
+  away, which asks first and removes the uploaded file and every resized
+  copy. Uploading a file that is in the trash is refused, with a note
+  saying where it is.
 - **Find:** show only hidden photos, photos without alt text, or photos
   that could not be processed. Each is also flagged on its card.
 - **One photo:** open it to edit its title, description, alt text, web
   address, date taken, and whether it is public or hidden; to see what the
-  file recorded (camera, lens, exposure, location); or to delete it.
+  file recorded (camera, lens, exposure, location); or to delete it (to the
+  trash).
 - **Looks:** under the photo is a strip of small previews, one for each look
   the switched-on modules offer. Choosing one sets it up for that photo,
   with a larger preview, and nothing changes until you save.
@@ -585,8 +592,9 @@ zone), or hidden as a draft. A scheduled photo is in your library but not on
 the site, the feed, or the sitemap until its time, and then appears by
 itself. In Settings you can make every new upload start as a draft.
 Hiding takes a photo off the site; it does not withdraw a picture address
-someone already has (see **Links to a photo** below). To do that, delete the
-photo.
+someone already has (see **Links to a photo** below). Nor does the trash,
+for the 30 days a photo is kept there. To withdraw the addresses, delete the
+photo and then delete it for good from the trash.
 
 **Licence and downloads.** Settings has the licence your photos are
 published under (all rights reserved by default, or a Creative Commons
@@ -740,7 +748,7 @@ with photos and with the public API (the nginx and Caddy files that come
 with it do the same when they serve photos from disk). The files have long
 names that cannot be guessed, and nothing checks who asks for one: a
 picture's address keeps working for anyone who has it, even after the photo
-is hidden, until the photo is deleted or rendered again. Each
+is hidden or in the trash, until the photo is deleted for good or rendered again. Each
 photo's page in the library has a **Links** panel: the full address of the photo's page and of each size of the picture,
 and a line of HTML that shows the photo linked to its page, each with a Copy
 button. Together with the title, description, and alt text above it, that

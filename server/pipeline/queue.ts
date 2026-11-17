@@ -7,7 +7,7 @@ import { processPhoto } from './render.ts'
 
 export interface Job {
   id: string
-  type: 'ingest' | 'rerender'
+  type: 'ingest' | 'rerender' | 'restore'
   photoId: string
   attempts: number
 }

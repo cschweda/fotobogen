@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
       p.original_filename as filename, p.status, p.width, p.height, p.recipe_json as recipe,
       d.path, d.width as mediumWidth, d.height as mediumHeight
     from photos p left join derivatives d on d.photo_id = p.id and d.kind = 'medium'
-    where p.id = ?
+    where p.id = ? and p.status <> 'trashed'
   `).get(getRouterParam(event, 'id') ?? '') as {
     id: string, slug: string, title: string | null, filename: string, status: string, width: number, height: number
     description: string | null, alt: string | null, visibility: 'public' | 'hidden', publishAt: number | null, takenAt: number | null, bytes: number, mime: string, license: string | null, allowDownload: number | null

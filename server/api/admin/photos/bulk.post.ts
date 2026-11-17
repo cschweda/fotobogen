@@ -1,12 +1,13 @@
 // One action on several photos: { "ids": [...], "action": ... }.
-//   "hide" | "show" | "delete"
+//   "hide" | "show"
+//   "delete" (to the trash) | "restore" (from it) | "delete-forever" (only what is in the trash)
 //   "add-to-album" | "remove-from-album", with "album": "<album id>"
 //   "add-tag", with "tag": "<name>"
 import { defineEventHandler, readBody } from 'nuxt/server'
 import { addTag, addToAlbum, removeFromAlbum } from '../../../pipeline/collections.ts'
 import { setVisibility } from '../../../pipeline/library.ts'
-import { deletePhotos } from '../../../pipeline/remove.ts'
-import { getPipeline } from '../../../utils/app.ts'
+import { deletePhotos, restorePhotos, trashedAmong, trashPhotos } from '../../../pipeline/remove.ts'
+import { getPipeline, getQueue } from '../../../utils/app.ts'
 import { beforeDelete, isLive, photoPublished, photosDeleted } from '../../../utils/photo-events.ts'
 import { fail } from '../../../utils/respond.ts'
 import { requireAdmin } from '../../../utils/session.ts'
@@ -27,9 +28,21 @@ export default defineEventHandler(async (event) => {
     return { changed }
   }
   if (body?.action === 'delete') {
-    const gone = beforeDelete(ids)
-    const { count } = await deletePhotos(ctx, { ids })
+    // To the trash. Webhooks are told now, when the photos leave the site.
+    const already = new Set(trashedAmong(ctx, ids))
+    const gone = beforeDelete(ids.filter(id => !already.has(id)))
+    const changed = trashPhotos(ctx, ids)
     photosDeleted(gone)
+    return { changed }
+  }
+  if (body?.action === 'restore') {
+    const changed = restorePhotos(ctx, ids)
+    if (changed > 0) getQueue().kick()
+    return { changed }
+  }
+  if (body?.action === 'delete-forever') {
+    // Only what is in the trash: nothing is deleted for good in one step.
+    const { count } = await deletePhotos(ctx, { ids: trashedAmong(ctx, ids) })
     return { changed: count }
   }
   if (body?.action === 'add-to-album' || body?.action === 'remove-from-album') {

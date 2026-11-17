@@ -87,15 +87,20 @@ describe('the photo library', () => {
     expect((await send('POST', '/api/admin/photos/bulk', { ids: [ids.a], action: 'explode' })).status).toBe(422)
   })
 
-  it('deletes photos with their files, one at a time or several', async () => {
+  it('deletes photos to the trash, and from there for good with their files, one at a time or several', async () => {
     const before = readdirSync(join(server.dataDir, 'derivatives')).length
-    expect(await (await send('DELETE', `/api/admin/photos/${ids.d}`)).json()).toEqual({ deleted: 1 })
+    // To the trash: out of the library and off the site, the files kept. (tests/server/trash.test.ts has the rest.)
+    expect(await (await send('DELETE', `/api/admin/photos/${ids.d}`)).json()).toEqual({ trashed: 1 })
     expect((await send('DELETE', `/api/admin/photos/${ids.d}`)).status).toBe(404)
     expect(await (await send('POST', '/api/admin/photos/bulk', { ids: [ids.c, 'no-such-id'], action: 'delete' })).json()).toEqual({ changed: 1 })
     expect(await order()).toBe('ab')
+    expect((await get(server, '/photo/c')).status).toBe(404)
+    expect(readdirSync(join(server.dataDir, 'originals'))).toHaveLength(4)
+    // For good: the uploaded files and every resized copy go.
+    expect(await (await send('DELETE', `/api/admin/photos/${ids.d}?forever=1`)).json()).toEqual({ deleted: 1 })
+    expect(await (await send('POST', '/api/admin/photos/bulk', { ids: [ids.c, 'no-such-id'], action: 'delete-forever' })).json()).toEqual({ changed: 1 })
     expect(readdirSync(join(server.dataDir, 'originals'))).toHaveLength(2)
     expect(readdirSync(join(server.dataDir, 'derivatives')).length).toBe(before / 2)
-    expect((await get(server, '/photo/c')).status).toBe(404)
   })
 
   it('saves settings, which change the public site at once', async () => {

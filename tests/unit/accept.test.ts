@@ -59,7 +59,7 @@ describe('acceptUpload', () => {
     const second = await acceptUpload(ctx, { tmpPath: join(ctx.tmpDir, 'b'), filename: 'copy.jpg' })
     expect(second).toEqual({
       result: 'duplicate',
-      existing: { id: (first as { photo: { id: string } }).photo.id, slug: 'the-first', title: 'The First', filename: 'one.jpg' },
+      existing: { id: (first as { photo: { id: string } }).photo.id, slug: 'the-first', title: 'The First', filename: 'one.jpg', trashed: 0 }, // in the library, not in the trash
     })
     expect(rows(ctx, 'select id from photos')).toHaveLength(1)
     expect(readdirSync(join(ctx.root, 'originals'))).toHaveLength(1)

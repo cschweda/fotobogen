@@ -59,6 +59,7 @@
         <li><a href="#uploading">Uploading</a></li>
         <li><a href="#library">The library</a></li>
         <li><a href="#editing">Editing a photo</a></li>
+        <li><a href="#trash">Deleting, and the trash</a></li>
         <li><a href="#publishing">Publishing, scheduling, and drafts</a></li>
         <li><a href="#albums">Albums and tags</a></li>
         <li><a href="#public">What visitors see</a></li>
@@ -81,7 +82,7 @@
   <thead><tr><th>Page</th><th>What it is for</th></tr></thead>
   <tbody>
     <tr><td><strong>Upload</strong></td><td>Adding photographs</td></tr>
-    <tr><td><strong>Library</strong></td><td>Every photo: order, hide, delete, edit, copy links</td></tr>
+    <tr><td><strong>Library</strong></td><td>Every photo: order, hide, delete, edit, copy links; and the trash</td></tr>
     <tr><td><strong>Albums</strong></td><td>Named sets of photos</td></tr>
     <tr><td><strong>Skins</strong></td><td>How the public site looks, and light or dark</td></tr>
     <tr><td><strong>Modules</strong></td><td>Looks applied to photos: film, frames, watermark</td></tr>
@@ -135,6 +136,15 @@
 <h3>Links to a photo</h3>
 <p>Further down the same page is a <strong>Links</strong> panel: the full address of the photo's page, the address of each size of the picture, and a line of HTML that shows the photo linked to its page. Each has a <strong>Copy</strong> button. Use them in an email, a post, or another website.</p>
 <p>The pictures are public files: anyone with a picture's address can open it, with no login, and any website can show it. Nothing needs setting up for that (no CORS configuration); Fotobogen tells browsers that other sites may read its photos. Nothing checks who asks for a picture, either: its address has a long name that cannot be guessed, and keeps working for anyone who has it, even after the photo is hidden, until the photo is deleted or rendered again. The links begin with your site's address. On your own machine they begin with <code>http://localhost:5150</code>, which works only there, until you set the address under <strong>Admin, Search and sharing</strong> or as <code>SITE_URL</code> on the server.</p>
+
+<h2 id="trash">Deleting, and the trash</h2>
+<p>Deleting a photo, from the library or from its own page, moves it to the trash. It is off your site at once: the grid, its page, its albums, the feed. It is kept for <strong>30 days</strong>, with the file you uploaded, and then removed for good.</p>
+<p>In the library, choose <strong>Show, Trash</strong> to see what is there and the day each photo will go. Tick photos and press:</p>
+<ul>
+  <li><strong>Restore</strong>, to put them back as they were: the same address, albums, tags, and place in the order. A restored photo is made again from the file you uploaded, so it takes a moment to reappear.</li>
+  <li><strong>Delete for good</strong>, to remove them now. This asks first, and cannot be undone: the uploaded file and every resized copy are deleted.</li>
+</ul>
+<p>Two things to know. Uploading a file that is in the trash is refused, with a note saying where it is: restore it, or delete it for good first. And while a photo is in the trash its picture files still exist, so someone who already has a picture's own address can still open it; to withdraw those addresses, delete the photo for good.</p>
 
 <h2 id="publishing">Publishing, scheduling, and drafts</h2>
 <p>On a photo's page, <strong>Publish</strong> has three choices:</p>

@@ -208,5 +208,7 @@ curl -H "Authorization: Bearer fb_YOUR_TOKEN" -F "file=@photo.jpg" https://photo
 { "result": "accepted", "photo": { "id": "V1StGXR8_Z5j", "slug": "photo" } }
 ```
 
+Deleting, for a `manage` token: `DELETE /api/admin/photos/<id>` moves a photo to the trash (off the site, kept for 30 days); `POST /api/admin/photos/<id>/restore` takes it back out; `DELETE /api/admin/photos/<id>?forever=1` deletes a photo that is in the trash for good, and answers `409` for one that is not.
+
 The photo is processed in the background; `GET /api/admin/photos/<id>` shows `"status": "ready"` when it is done, or `"failed"` with the reason in `error` (from version 1.3.3; before that the reason was only in the list, `GET /api/admin/photos`). A duplicate or a file that is not an accepted photo answers `409` or `422` with a `message` saying why; one that is too large answers `413`, and a request with no file in it `400`. Unlike the public API, the admin API is not covered by the version promise in [UPGRADING.md](UPGRADING.md): it may change in a minor release, and the changelog will say so.
 
