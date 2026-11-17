@@ -55,10 +55,17 @@ you. Because it is fetched with git, **Admin, System, Update** works
 afterwards. To install several sites on one machine, run it again with
 another folder name.
 
-The folder is a complete copy of Fotobogen, including `ecosystem.config.cjs`
-for running it under pm2 on a server (`pm2 start ecosystem.config.cjs`) and
-the Docker files; the
-[installation guide](https://fotobogen.com/docs/installation/) covers both.
+The folder is a complete copy of Fotobogen. It always includes
+`ecosystem.config.cjs`, the settings file for running it under
+[pm2](https://pm2.io) on a server, whether or not pm2 is installed, and the
+Docker files. At the end the installer says how to start it under pm2, and
+how to install pm2 if it is missing (`npm install -g pm2`).
+
+On a server managed by **Laravel Forge**, which it recognises, it also says
+what the site's nginx settings need: a proxy to Fotobogen, and
+`client_max_body_size 50m;` so that uploads are not refused. The
+[installation guide](https://fotobogen.com/docs/installation/) has the
+whole of it.
 
 It has no dependencies: the package is two small files you can read in a
 minute, in [`bin`](bin) and [`lib`](lib). It collects nothing and contacts

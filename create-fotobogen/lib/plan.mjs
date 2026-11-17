@@ -135,6 +135,75 @@ export function toolProblems(found) {
   return problems
 }
 
+/**
+ * Whether a tool is on the path, found by looking and not by running it:
+ * asking pm2 for its version starts pm2's background process, which an
+ * installer has no business doing.
+ */
+export function isOnPath(name, { path, platform, exists }) {
+  const windows = platform === 'win32'
+  const names = windows ? [`${name}.cmd`, `${name}.exe`, `${name}.bat`, name] : [name]
+  const separator = windows ? '\\' : '/'
+  return String(path ?? '').split(windows ? ';' : ':').filter(Boolean)
+    .some(folder => names.some(file => exists(folder.replace(/[\\/]+$/, '') + separator + file)))
+}
+
+/**
+ * Whether this machine looks like a server managed by Laravel Forge. Forge
+ * runs sites as the user "forge", from /home/forge, and keeps its nginx
+ * pieces in /etc/nginx/forge-conf. Any one of the three is taken as a sign.
+ * Only on Linux: Forge manages nothing else.
+ */
+export function looksLikeForge({ platform, username, exists }) {
+  if (platform !== 'linux') return false
+  return username === 'forge' || exists('/etc/nginx/forge-conf') || exists('/home/forge')
+}
+
+/**
+ * What to say at the end about running it on a server. `pm2` is whether pm2
+ * was found. The pm2 settings file is part of every install, so
+ * it is mentioned whether or not pm2 is there.
+ */
+export function serverNotes({ folder, pm2, forge }) {
+  const lines = [
+    'On a server, use pm2 to keep it running and to start it again after a restart.',
+    'Its settings file, ecosystem.config.cjs, is already in the folder, whether or',
+    'not pm2 is installed.',
+  ]
+  if (pm2) {
+    lines.push('pm2 is installed. To run Fotobogen under it:')
+  }
+  else {
+    lines.push('pm2 is not installed on this machine. To install it (about pm2: https://pm2.io):', '  npm install -g pm2', 'Then, to run Fotobogen under it:')
+  }
+  lines.push(`  cd ${folder}`, '  pm2 start ecosystem.config.cjs', '  pm2 save', '  pm2 startup     (prints one command; run it, so pm2 starts with the server)')
+  if (forge) {
+    lines.push(
+      '',
+      'This looks like a server managed by Laravel Forge. Fotobogen sits behind',
+      'nginx there, and nginx needs two things, set in Forge under your site,',
+      'Edit Nginx Configuration:',
+      '',
+      '  1. Requests sent on to Fotobogen (5150, or the PORT in its .env):',
+      '       location / {',
+      '           proxy_pass http://127.0.0.1:5150;',
+      '           ...',
+      '       }',
+      '  2. Room for uploads. nginx stops at 1 MB unless told otherwise, which',
+      '     refuses nearly every photo with "413 Request Entity Too Large":',
+      '       client_max_body_size 50m;',
+      '',
+      'The whole file to paste, with the headers the proxy must send, is in the',
+      'folder as deploy/forge-nginx.conf. The steps are at',
+      'https://fotobogen.com/docs/installation/#forge-pm2',
+    )
+  }
+  else {
+    lines.push('', 'A domain, https, and nginx: https://fotobogen.com/docs/installation/')
+  }
+  return lines
+}
+
 /** y, yes, or just Enter when the default is yes. */
 export function saysYes(answer, fallback) {
   const text = String(answer ?? '').trim().toLowerCase()
