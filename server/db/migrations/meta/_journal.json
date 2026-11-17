@@ -57,6 +57,13 @@
       "when": 1794939619904,
       "tag": "0007_private_albums",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1794940073755,
+      "tag": "0008_front_page",
+      "breakpoints": true
     }
   ]
 }

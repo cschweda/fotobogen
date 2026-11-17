@@ -6,9 +6,9 @@ import { QUALITY_PRESETS } from '~~/shared/media'
 definePageMeta({ middleware: 'admin' })
 useHead({ title: 'Settings | Fotobogen' })
 
-interface Settings { siteTitle: string, tagline: string, grid: 'masonry' | 'square', photoView: 'modal' | 'page', showExif: boolean, showLocation: boolean, newUploads: 'public' | 'hidden', slideshowSeconds: number, slideshowOrder: 'sequence' | 'random', photoQuality: 'smaller' | 'standard' | 'high', licence: string, allowDownload: boolean }
+interface Settings { siteTitle: string, tagline: string, grid: 'masonry' | 'square', photoView: 'modal' | 'page', showExif: boolean, showLocation: boolean, newUploads: 'public' | 'hidden', slideshowSeconds: number, slideshowOrder: 'sequence' | 'random', homeOrder: 'sequence' | 'random', photoQuality: 'smaller' | 'standard' | 'high', licence: string, allowDownload: boolean }
 const { data } = await useFetch<Settings>('/api/admin/settings')
-const form = reactive<Settings>({ siteTitle: '', tagline: '', grid: 'masonry', photoView: 'modal', showExif: true, showLocation: false, newUploads: 'public', slideshowSeconds: 8, slideshowOrder: 'sequence', photoQuality: 'standard', licence: 'arr', allowDownload: false, ...data.value })
+const form = reactive<Settings>({ siteTitle: '', tagline: '', grid: 'masonry', photoView: 'modal', showExif: true, showLocation: false, newUploads: 'public', slideshowSeconds: 8, slideshowOrder: 'sequence', homeOrder: 'random', photoQuality: 'standard', licence: 'arr', allowDownload: false, ...data.value })
 const errors = ref<Record<string, string>>({})
 const message = ref('')
 const problem = ref('')
@@ -61,6 +61,13 @@ async function save() {
         <template #modal><SetupDiagram kind="modal" /></template>
         <template #page><SetupDiagram kind="page" /></template>
       </FbChoice>
+
+      <fieldset class="uploads">
+        <legend class="seconds__label">Order of the photos on your front page</legend>
+        <label class="check uploads__second"><input v-model="form.homeOrder" type="radio" name="homeOrder" value="random" aria-describedby="home-order-note"><span>Shuffled: a new order for each visit</span></label>
+        <label class="check uploads__second"><input v-model="form.homeOrder" type="radio" name="homeOrder" value="sequence" aria-describedby="home-order-note"><span>The order of your library</span></label>
+      </fieldset>
+      <p id="home-order-note" class="check__note">Shuffled, every visitor sees your photos dealt afresh, so no photo is always first. In the order of your library, the first photo there is the first on your site. An album a visitor chooses on the front page is always in the album's own order.</p>
 
       <h2 class="settings__heading">New uploads</h2>
       <fieldset class="uploads">

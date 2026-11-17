@@ -22,6 +22,8 @@ const schema = z.object({
   allowDownload: z.boolean().default(false),
   slideshowSeconds: z.number('Give a number of seconds.').int('Use whole seconds.').min(3, 'At least 3 seconds, so each photo can be taken in.').max(120, 'At most 120 seconds.').default(8),
   slideshowOrder: z.enum(['sequence', 'random']).default('sequence'),
+  // Left out by an older page or program, it stays as it was.
+  homeOrder: z.enum(['sequence', 'random'], 'Choose in order or shuffled.').optional(),
   photoQuality: z.enum(['smaller', 'standard', 'high'], 'Choose one of the three qualities.').optional(),
 })
 
@@ -43,6 +45,7 @@ export default defineEventHandler(async (event) => {
     'slideshow.seconds': settings.slideshowSeconds,
     'slideshow.order': settings.slideshowOrder,
   })
+  if (settings.homeOrder) setSettings({ 'layout.home_order': settings.homeOrder })
   // A new quality applies to every photo, so every photo's copies are made again, in the background.
   let queued = 0
   if (settings.photoQuality && settings.photoQuality !== getSetting('media.quality', DEFAULT_QUALITY)) {

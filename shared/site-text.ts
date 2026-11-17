@@ -52,6 +52,8 @@ export const SITE_TEXT = {
   albumsTitle: { group: 'Albums and tags', label: 'Heading of the albums page', default: 'Albums' },
   albumsEmpty: { group: 'Albums and tags', label: 'Shown when there are no albums', default: 'There are no albums yet.' },
   backToAlbums: { group: 'Albums and tags', label: 'Link back to the albums', default: 'All albums' },
+  chooserLabel: { group: 'Albums and tags', label: 'Name of the row of albums on the front page, for screen readers', default: 'Choose an album' },
+  chooserAll: { group: 'Albums and tags', label: 'First choice in that row: every photo', default: 'All' },
   privateNote: { group: 'Albums and tags', label: 'Line on a private album, under its name', default: 'This album is private. Only people with this link can see it.' },
   backToAlbum: { group: 'Albums and tags', label: 'Link from a photo back to its private album', default: 'Back to the album' },
   searchTitle: { group: 'Albums and tags', label: 'Heading of the search page', default: 'Search' },

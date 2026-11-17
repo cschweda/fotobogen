@@ -11,6 +11,8 @@ export default defineEventHandler(async (event) => {
     siteTitle: getSetting('site.title', ''),
     tagline: getSetting('site.tagline', ''),
     grid: getSetting<'masonry' | 'square'>('layout.grid', 'masonry'),
+    // The front page: the library's order, or dealt afresh for each visit.
+    homeOrder: getSetting<'sequence' | 'random'>('layout.home_order', 'random'),
     photoView: getSetting<'modal' | 'page'>('layout.photo_view', 'modal'),
     showExif: getSetting('privacy.show_exif', true),
     showLocation: getSetting('privacy.show_location', false),

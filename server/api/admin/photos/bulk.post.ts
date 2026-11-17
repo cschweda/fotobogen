@@ -20,6 +20,12 @@ export default defineEventHandler(async (event) => {
   const ids = Array.isArray(body?.ids) ? body.ids.filter((id): id is string => typeof id === 'string').slice(0, MAX_IDS) : []
   if (ids.length === 0) return fail(event, 422, 'Choose at least one photo.')
   const ctx = getPipeline()
+  // Photos in the trash are left exactly as they were: only the three trash actions touch them.
+  if (body?.action !== 'delete' && body?.action !== 'restore' && body?.action !== 'delete-forever') {
+    const inTrash = new Set(trashedAmong(ctx, ids))
+    if (inTrash.size > 0) ids.splice(0, ids.length, ...ids.filter(id => !inTrash.has(id)))
+    if (ids.length === 0) return { changed: 0 }
+  }
   if (body?.action === 'hide') return { changed: setVisibility(ctx, ids, 'hidden') }
   if (body?.action === 'show') {
     const hidden = ids.filter(id => !isLive(id))

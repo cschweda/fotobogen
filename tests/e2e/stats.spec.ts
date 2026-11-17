@@ -100,3 +100,31 @@ test('a public page left open in another tab loads itself again, without the scr
   await expect(left.locator('script[data-fb-stats]')).toHaveCount(0)
   await context.close()
 })
+
+test('a counting script never comes along into a private album, whose link its service must not learn', async ({ browser }) => {
+  // Found by the third audit, of 17 November 2026. The server never puts the script on a private album's page;
+  // this is the other way in: arriving there from a public page without asking the server.
+  const login = await fetch(server.url + '/api/auth/login', { method: 'POST', headers: { 'origin': server.url, 'content-type': 'application/json' }, body: JSON.stringify(ADMIN) })
+  const cookie = login.headers.getSetCookie()[0]!.split(';')[0]!
+  const send = (method: string, path: string, body: unknown) => fetch(server.url + path, { method, headers: { 'origin': server.url, cookie, 'content-type': 'application/json' }, body: JSON.stringify(body) })
+  await send('PUT', '/api/admin/stats', { provider: 'other', otherScript: 'https://stats.example/count.js', otherAttributes: [{ name: 'data-site', value: 'abc123' }] })
+  await send('POST', '/api/admin/albums', { title: 'Clients', visibility: 'private' })
+  const { albums } = await (await fetch(server.url + '/api/admin/albums', { headers: { cookie } })).json() as { albums: { privateLink: string | null }[] }
+  const link = albums.find(album => album.privateLink)!.privateLink!
+
+  const context = await browser.newContext()
+  const visit = await context.newPage()
+  const seen = await standIn(visit)
+  await visit.goto(server.url + '/')
+  await expect(visit.locator('script[data-fb-stats]')).toHaveCount(1)
+  await visit.evaluate((to) => {
+    const app = (document.querySelector('#__nuxt') as unknown as { __vue_app__: { config: { globalProperties: { $router: { push: (to: string) => void } } } } }).__vue_app__
+    app.config.globalProperties.$router.push(to)
+  }, link)
+  await visit.waitForURL(new RegExp(`${link}$`))
+  await expect(visit.getByText('This album is private.')).toBeVisible()
+  await expect(visit.locator('script[data-fb-stats]')).toHaveCount(0)
+  // Nothing was reported from the private page: one hit, from the front page.
+  expect(seen.hits).toHaveLength(1)
+  await context.close()
+})

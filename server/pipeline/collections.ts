@@ -14,6 +14,8 @@ export interface AlbumInput {
   coverPhotoId?: unknown
   /** true: give a private album a new link, which ends the old one. */
   newPrivateLink?: unknown
+  /** Whether the album is offered on the front page. */
+  onFront?: unknown
 }
 
 /** The secret part of a private album's link: 32 characters, 192 bits, from the system's random source. */
@@ -54,7 +56,12 @@ function checkAlbum(input: AlbumInput, creating: boolean) {
     if (input.visibility === 'public' || input.visibility === 'hidden' || input.visibility === 'private') visibility = input.visibility
     else errors.visibility = 'Choose public, hidden, or private.'
   }
-  return { errors, title, description, slug, visibility }
+  let onFront: boolean | undefined
+  if (input.onFront !== undefined) {
+    if (typeof input.onFront === 'boolean') onFront = input.onFront
+    else errors.onFront = 'Say whether the album is on the front page.'
+  }
+  return { errors, title, description, slug, visibility, onFront }
 }
 
 export function createAlbum(ctx: PipelineContext, input: AlbumInput): AlbumResult {
@@ -66,8 +73,9 @@ export function createAlbum(ctx: PipelineContext, input: AlbumInput): AlbumResul
     const slug = uniqueSlug(checked.slug ?? slugify(checked.title!), id, candidate => sqlite.prepare(`select 1 from albums where slug = ?`).get(candidate) !== undefined)
     const { next } = sqlite.prepare(`select coalesce(max(sort_order), 0) + 1 as next from albums`).get() as { next: number }
     const now = Date.now()
-    sqlite.prepare(`insert into albums (id, slug, title, description, visibility, private_token, sort_order, created_at, updated_at) values (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-      .run(id, slug, checked.title, checked.description ?? null, checked.visibility ?? 'public', checked.visibility === 'private' ? newPrivateToken() : null, next, now, now)
+    sqlite.prepare(`insert into albums (id, slug, title, description, visibility, private_token, on_front, sort_order, created_at, updated_at) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+      // A new album is offered on the front page unless it is made otherwise.
+      .run(id, slug, checked.title, checked.description ?? null, checked.visibility ?? 'public', checked.visibility === 'private' ? newPrivateToken() : null, checked.onFront === false ? 0 : 1, next, now, now)
     return { ok: true, id, slug }
   })()
 }
@@ -100,7 +108,7 @@ export function updateAlbum(ctx: PipelineContext, id: string, input: AlbumInput)
     }
     const sets: string[] = []
     const values: unknown[] = []
-    for (const [column, value] of [['title', checked.title], ['description', checked.description], ['slug', checked.slug], ['visibility', checked.visibility], ['cover_photo_id', cover], ['private_token', token]] as const) {
+    for (const [column, value] of [['title', checked.title], ['description', checked.description], ['slug', checked.slug], ['visibility', checked.visibility], ['cover_photo_id', cover], ['private_token', token], ['on_front', checked.onFront === undefined ? undefined : checked.onFront ? 1 : 0]] as const) {
       if (value === undefined) continue
       sets.push(`${column} = ?`)
       values.push(value)
