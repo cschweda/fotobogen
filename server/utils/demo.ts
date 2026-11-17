@@ -16,7 +16,7 @@ export const DEMO_HIDDEN = 'This part of the admin is not shown in the demo.'
 
 const ID = '[A-Za-z0-9_-]+'
 // Pages of settings and lists, each read whole.
-const READABLE = /^\/api\/admin\/(overview|system|settings|site-text|seo|stats|brand|skins|modules|albums|samples|updates|photos)$/
+const READABLE = /^\/api\/admin\/(overview|system|settings|site-text|seo|stats|embed|brand|skins|modules|albums|samples|updates|photos)$/
 const READABLE_ONE = new RegExp(`^/api/admin/(photos|albums)/${ID}$`)
 // Trying a look on a photo: it draws a preview and saves nothing.
 const PREVIEW = new RegExp(`^/api/admin/photos/${ID}/preview$`)

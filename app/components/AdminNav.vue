@@ -5,7 +5,7 @@
 const GROUPS: { name: string, links: { to: string, label: string }[] }[] = [
   { name: 'Photos', links: [{ to: '/admin/upload', label: 'Upload' }, { to: '/admin/photos', label: 'Library' }, { to: '/admin/albums', label: 'Albums' }] },
   { name: 'Appearance', links: [{ to: '/admin/skins', label: 'Skins' }, { to: '/admin/modules', label: 'Modules' }, { to: '/admin/text', label: 'Site text' }, { to: '/admin/identity', label: 'Icon and logo' }] },
-  { name: 'Site', links: [{ to: '/admin/settings', label: 'Settings' }, { to: '/admin/seo', label: 'Search and sharing' }, { to: '/admin/stats', label: 'Visitor statistics' }] },
+  { name: 'Site', links: [{ to: '/admin/settings', label: 'Settings' }, { to: '/admin/seo', label: 'Search and sharing' }, { to: '/admin/stats', label: 'Visitor statistics' }, { to: '/admin/embed', label: 'Embed on another site' }] },
   { name: 'Server', links: [{ to: '/admin/system', label: 'System' }, { to: '/admin/webhooks', label: 'Webhooks' }, { to: '/admin/tokens', label: 'API tokens' }] },
 ]
 

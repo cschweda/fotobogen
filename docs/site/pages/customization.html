@@ -169,6 +169,21 @@
   <li><strong>No box for pasting script.</strong> JavaScript of your own cannot be added from the admin, on purpose: such a box would let anyone who got your password put code in every visitor's browser.</li>
 </ul>
 
+<h2 id="embed">Showing your photos on another site</h2>
+<p>Other sites can show a slideshow of your photos inside their own pages: a blog, a club's site, a portfolio. Open <strong>Admin, Embed on another site</strong>, switch it on, choose every photo, one album, or one tag, and a size, and copy the one line of code the page gives you:</p>
+<pre><code>&lt;iframe src="https://photos.example.com/embed/slideshow" width="800" height="600" style="border:0;max-width:100%;height:auto;aspect-ratio:800/600" title="Slideshow: Kodachrome Days" loading="lazy"&gt;&lt;/iframe&gt;</code></pre>
+<p>Paste it where the other site lets you add HTML: an "HTML", "Embed", or "Code" block in most editors. The slideshow has one bar of controls (first, back, play or pause, forward, last) with "Powered by Fotobogen" at the end, linked to fotobogen.com. The arrow keys, Home, End, and Space work too. The width and height are the largest it will be: on a narrower page or a phone it shrinks to fit and keeps its shape.</p>
+<ul>
+  <li><strong>Off until you switch it on.</strong> While it is off, its address answers "not found". Switching it off again stops it at once on every site that has the code.</li>
+  <li><strong>Any site can show it, once it is on,</strong> not only yours. It plays the photos anyone can already see on your site and nothing else: never a hidden, draft, or scheduled photo, and never where a photo was taken.</li>
+  <li><strong>Only this slideshow can be shown inside another site.</strong> Every other page still refuses to be framed by anyone else, and the admin and the login refuse even your own site.</li>
+  <li><strong>Pressing a photo opens its page on your site,</strong> in a new tab.</li>
+  <li><strong>It plays as your own slideshow does:</strong> the seconds per photo and the order are the ones under <strong>Admin, Settings</strong>. It has its own plain dark look, not your skin, because it sits in a page that is not yours.</li>
+  <li><strong>Visits to it are not counted.</strong> It loads no counting script, whatever is set under Visitor statistics.</li>
+  <li><strong>Only you can switch it,</strong> logged in. No API token can, and a demo visitor cannot.</li>
+  <li><strong>Some hosted site builders remove frames</strong> from pasted code. There the slideshow cannot be shown; link to its address instead.</li>
+</ul>
+
 <h2 id="programs">Letting other programs upload</h2>
 <p><strong>Where:</strong> Admin, Server, <strong>API tokens</strong>.</p>
 <p>A token lets a script, or a program such as a photo editor's export plug-in, add photos to your site without your password. Make one, give it a name, and choose what it may do:</p>
@@ -179,7 +194,7 @@
     <tr><td><strong>Manage photos</strong></td><td>All of that, and edit, reorder, hide, and delete photos, set their looks, and manage albums</td><td>Change anything about the site itself</td></tr>
   </tbody>
 </table></div>
-<p>No token can change settings, skins, site text, or visitor statistics, make or revoke tokens, download a backup, or restore one. The token is shown once, when it is made; copy it then. Revoking a token stops it at once. <a href="/docs/usage/#tokens">How to use one.</a></p>
+<p>No token can change settings, skins, site text, visitor statistics, or embedding, make or revoke tokens, download a backup, or restore one. The token is shown once, when it is made; copy it then. Revoking a token stops it at once. <a href="/docs/usage/#tokens">How to use one.</a></p>
 
 <h2 id="address">Its address</h2>
 <p>The site answers at whatever address reaches the server. To use your own domain:</p>
