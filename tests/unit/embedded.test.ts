@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { embeddedWords, readEmbeddedWords, suggestAlt, WORDS_OPTIONS } from '../../server/pipeline/embedded.ts'
 import { imageBuffer, withEmbeddedText } from '../helpers/images.ts'
 
-const read = async (file: Buffer) => embeddedWords(await exifr.parse(file, WORDS_OPTIONS) as Record<string, unknown>)
+const read = async (file: Buffer) => embeddedWords(await exifr.parse(file, WORDS_OPTIONS as never) as Record<string, unknown>)
 
 describe('words saved inside a photo', () => {
   it('reads the title, caption, keywords and alt text an editor such as Lightroom saved (XMP)', async () => {
@@ -48,12 +48,52 @@ describe('words saved inside a photo', () => {
     expect(embeddedWords({ dc: { subject: [1, {}, 'ok'] } }).tags).toEqual(['ok'])
   })
 
+  it('drops characters that cannot be seen or that turn the text around, and alt text made of nothing else', async () => {
+    const base = await imageBuffer({ width: 64, height: 48 })
+    const words = await read(withEmbeddedText(base, { xmp: { title: 'Harbour\u202e at dawn\u200b', description: 'gnp.exe\u202e', alt: '\u200b\u2800', keywords: ['se\u200da', '\u2066\u2069'] } }))
+    expect(words).toMatchObject({ title: 'Harbour at dawn', description: 'gnp.exe', alt: null, tags: ['sea'] })
+  })
+
   it('reads the day a photo was taken, as the camera wrote it', async () => {
     const file = await imageBuffer({ width: 64, height: 48 })
     const sharp = (await import('sharp')).default
     const dated = await sharp(file).withExif({ IFD2: { DateTimeOriginal: '2019:07:04 22:30:00' } }).jpeg().toBuffer()
     expect((await read(dated)).takenAt).toBe(Date.UTC(2019, 6, 4, 22, 30, 0))
   })
+
+  it('gives up on a file built to keep the reader busy, without holding anything else up', async () => {
+    // Found by the audit of 18 November 2026: 1.2 MB of unclosed tags took the XMP reader 20 seconds,
+    // on the thread that answers every visitor. It is read in a thread of its own now, against the clock.
+    const { crc32 } = await import('node:zlib')
+    const { writeFileSync, mkdtempSync } = await import('node:fs')
+    const { tmpdir } = await import('node:os')
+    const { join } = await import('node:path')
+    const png = await imageBuffer({ width: 64, height: 64, format: 'png' })
+    const chunk = (type: string, data: Buffer) => {
+      const body = Buffer.concat([Buffer.from(type), data])
+      const [length, check] = [Buffer.alloc(4), Buffer.alloc(4)]
+      length.writeUInt32BE(data.length)
+      check.writeUInt32BE(crc32(body) >>> 0)
+      return Buffer.concat([length, body, check])
+    }
+    const xmp = `<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"><rdf:Description rdf:about="" xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:subject><rdf:Bag>${'<rdf:li>'.repeat(400_000)}</rdf:Bag></dc:subject></rdf:Description></rdf:RDF></x:xmpmeta>`
+    const file = join(mkdtempSync(join(tmpdir(), 'fb-slow-')), 'slow.png')
+    writeFileSync(file, Buffer.concat([png.subarray(0, 33), chunk('iTXt', Buffer.concat([Buffer.from('XML:com.adobe.xmp\0\0\0\0\0'), Buffer.from(xmp)])), png.subarray(33)]))
+
+    let ticks = 0
+    const ticking = setInterval(() => { ticks++ }, 50)
+    const began = Date.now()
+    const words = await readEmbeddedWords(file)
+    clearInterval(ticking)
+    expect(words).toEqual({ title: null, description: null, alt: null, tags: [], takenAt: null })
+    expect(Date.now() - began).toBeLessThan(9000)
+    // This thread went on answering all the while.
+    expect(ticks).toBeGreaterThan((Date.now() - began) / 50 / 3)
+    // With the words switched off, the slow part of the file is not read at all.
+    const quick = Date.now()
+    await readEmbeddedWords(file, { words: false })
+    expect(Date.now() - quick).toBeLessThan(1500)
+  }, 20_000)
 
   it('answers with nothing for a file it cannot read', async () => {
     expect(await readEmbeddedWords('/no/such/file.jpg')).toEqual({ title: null, description: null, alt: null, tags: [], takenAt: null })

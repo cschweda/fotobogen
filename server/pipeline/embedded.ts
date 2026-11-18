@@ -7,8 +7,11 @@
 // Everything here comes out of an uploaded file, so every value is checked,
 // cleaned and cut to length before it is used. The words are only ever
 // stored and shown as text.
-import exifr from 'exifr'
+import type exifr from 'exifr'
+import { createRequire } from 'node:module'
+import { Worker } from 'node:worker_threads'
 import type { PipelineContext } from './context.ts'
+import { saysSomething, withoutUnseen } from '../../shared/visible-text.ts'
 import { datesAsWritten } from './exif.ts'
 
 export interface EmbeddedWords {
@@ -62,16 +65,16 @@ function fromBytes(text: string): string {
 function line(value: unknown, limit: number): string | null {
   if (typeof value !== 'string') return null
   // eslint-disable-next-line no-control-regex
-  const clean = value.replace(/[\u0000-\u001f\u007f-\u009f]/g, ' ').replace(/\s+/g, ' ').trim()
-  return [...clean].slice(0, limit).join('').trim() || null
+  const clean = withoutUnseen(value).replace(/[\u0000-\u001f\u007f-\u009f]/g, ' ').replace(/\s+/g, ' ').trim()
+  return saysSomething(clean) ? [...clean].slice(0, limit).join('').trim() || null : null
 }
 
 /** Several lines of text: line breaks kept, every other control character dropped. */
 function paragraphs(value: unknown, limit: number): string | null {
   if (typeof value !== 'string') return null
   // eslint-disable-next-line no-control-regex
-  const clean = value.replace(/\r\n?/g, '\n').replace(/[\u0000-\u0009\u000b-\u001f\u007f-\u009f]/g, '').trim()
-  return [...clean].slice(0, limit).join('').trim() || null
+  const clean = withoutUnseen(value).replace(/\r\n?/g, '\n').replace(/[\u0000-\u0009\u000b-\u001f\u007f-\u009f]/g, '').trim()
+  return saysSomething(clean) ? [...clean].slice(0, limit).join('').trim() || null : null
 }
 
 /** XMP text in several languages comes as { lang, value }, or a list of them; the default language is first. */
@@ -116,10 +119,63 @@ export function embeddedWords(parsed: unknown): EmbeddedWords {
   }
 }
 
-/** The words saved inside the file at `path`. A file with damaged metadata, or none, has no words. */
-export async function readEmbeddedWords(path: string): Promise<EmbeddedWords> {
+/** The same, without the words: only what the camera wrote. Nothing in it is slow to read. */
+const DATE_OPTIONS = { xmp: false, iptc: false, ifd0: true, exif: true, gps: false, icc: false, mergeOutput: false }
+
+/** Reading the words out of a real photo takes a few milliseconds. A file that needs longer is not going to be read. */
+const TIME_LIMIT_MS = 5000
+
+// The whole program of the reading thread. Plain CommonJS.
+const READER = `
+const { parentPort, workerData } = require('node:worker_threads')
+require(workerData.reader).parse(workerData.path, workerData.options)
+  .then(found => parentPort.postMessage(found ?? null), () => parentPort.postMessage(null))
+`
+
+/**
+ * Parses a file's metadata in a thread of its own, against the clock. The
+ * XMP part of a file is text, read with patterns, and a file can be built
+ * (megabytes of unclosed tags) that keeps such a reader busy for minutes.
+ * Done here, on the thread that answers every visitor, that would stop the
+ * whole site. In its own thread it stops nothing, and is ended after five
+ * seconds with nothing read.
+ */
+function parseApart(path: string, options: unknown): Promise<unknown> {
+  return new Promise((resolve) => {
+    let worker: Worker
+    try {
+      worker = new Worker(READER, { eval: true, workerData: { path, options, reader: createRequire(import.meta.url).resolve('exifr') }, env: {}, stdout: true, stderr: true, resourceLimits: { maxOldGenerationSizeMb: 256 } })
+    }
+    catch {
+      resolve(null)
+      return
+    }
+    worker.stdout.resume()
+    worker.stderr.resume()
+    let done = false
+    const finish = (found: unknown) => {
+      if (done) return
+      done = true
+      clearTimeout(timer)
+      void worker.terminate().catch(() => undefined)
+      resolve(found)
+    }
+    const timer = setTimeout(() => finish(null), TIME_LIMIT_MS)
+    worker.once('message', finish)
+    worker.once('error', () => finish(null))
+    worker.once('exit', () => finish(null))
+  })
+}
+
+/**
+ * The words saved inside the file at `path`. A file with damaged metadata,
+ * or none, or one that takes too long to read, has no words. With
+ * `words: false` only the date is read, and the file's text is not opened.
+ */
+export async function readEmbeddedWords(path: string, { words = true }: { words?: boolean } = {}): Promise<EmbeddedWords> {
   try {
-    return embeddedWords(await exifr.parse(path, WORDS_OPTIONS))
+    const found = embeddedWords(await parseApart(path, words ? WORDS_OPTIONS : DATE_OPTIONS))
+    return words ? found : { ...NO_WORDS, tags: [], takenAt: found.takenAt }
   }
   catch {
     return { ...NO_WORDS, tags: [] }

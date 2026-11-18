@@ -7,13 +7,16 @@
 //
 // To be let in, the command makes itself a pass: an API token, written
 // straight into this site's database, used for this one run, and removed at
-// the end whatever happens. The pass is only ever sent to this machine.
+// the end whatever happens. The pass is only ever sent to this machine, and
+// only after the program at the other end has proved it is this site
+// (server/core/import-pass.ts says how).
 import { createHash, randomBytes } from 'node:crypto'
-import { createReadStream, lstatSync, readdirSync } from 'node:fs'
+import { closeSync, constants, createReadStream, fstatSync, lstatSync, openSync, readdirSync } from 'node:fs'
 import { request } from 'node:http'
 import { basename, join, relative, resolve, sep } from 'node:path'
 import Database from 'better-sqlite3'
 import { newId } from '../server/core/ids.ts'
+import { CHALLENGE_KEY, CHALLENGE_MS, PASS_HOURS, PASS_NAME, proofFor, sameText } from '../server/core/import-pass.ts'
 
 export const IMPORT_USAGE = `Usage: fotobogen import <folder> [--album <name>] [--albums] [--url <address>]
 
@@ -27,7 +30,6 @@ export const IMPORT_USAGE = `Usage: fotobogen import <folder> [--album <name>] [
 Fotobogen must be running. Photos already in the library are skipped.`
 
 const EXTENSIONS = new Set(['jpg', 'jpeg', 'png', 'webp', 'tif', 'tiff', 'avif', 'heic', 'heif'])
-const TOKEN_NAME = 'fotobogen import (temporary)'
 /** Deep enough for any real collection; a folder that goes deeper is more likely a mistake or a loop. */
 const MAX_DEPTH = 12
 const MAX_FILES = 20_000
@@ -53,7 +55,8 @@ export function findPhotos(root) {
 /** One request to the site. A file is streamed, never read whole into memory. */
 function send(site, { method, path, token, json, file }) {
   return new Promise((done, failed) => {
-    const headers = { accept: 'application/json', authorization: `Bearer ${token}` }
+    const headers = { accept: 'application/json' }
+    if (token) headers.authorization = `Bearer ${token}`
     // With the admin at an address of its own (ADMIN_HOST), the site answers the admin's requests only by that name.
     if (site.adminHost) headers.host = site.adminHost
     let body
@@ -66,10 +69,10 @@ function send(site, { method, path, token, json, file }) {
     }
     else if (file) {
       // The name goes in a header: keep it to one line, with nothing that could end the header early.
-      const name = basename(file).replace(/["\r\n\\]/g, '_')
+      const name = basename(file.path).replace(/["\r\n\\]/g, '_')
       const head = Buffer.from(`--${boundary}\r\ncontent-disposition: form-data; name="file"; filename="${name}"\r\ncontent-type: application/octet-stream\r\n\r\n`)
       const tail = Buffer.from(`\r\n--${boundary}--\r\n`)
-      size = lstatSync(file).size
+      size = file.size
       headers['content-type'] = `multipart/form-data; boundary=${boundary}`
       headers['content-length'] = head.length + size + tail.length
       body = { head, tail }
@@ -91,10 +94,29 @@ function send(site, { method, path, token, json, file }) {
     if (Buffer.isBuffer(body)) outgoing.end(body)
     else if (body) {
       outgoing.write(body.head)
-      createReadStream(file).on('error', error => outgoing.destroy(error)).on('end', () => outgoing.end(body.tail)).pipe(outgoing, { end: false })
+      // Read from the file that was opened and checked, not from its name: the name could since have been pointed elsewhere.
+      createReadStream(null, { fd: file.fd, autoClose: true }).on('error', error => outgoing.destroy(error)).on('end', () => outgoing.end(body.tail)).pipe(outgoing, { end: false })
     }
     else outgoing.end()
   })
+}
+
+/**
+ * Opens a photo to send it. Null for what is not a plain file of this
+ * folder's own: a link put in its place since the folder was listed, or a
+ * second name for a file that lives somewhere else (a hard link).
+ */
+function openPhoto(path) {
+  let fd
+  try {
+    // O_NOFOLLOW: a link is refused here, not followed. (Windows has no such flag, and there making a link takes rights an ordinary user lacks.)
+    fd = openSync(path, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0))
+    const kind = fstatSync(fd)
+    if (kind.isFile() && kind.nlink === 1) return { path, fd, size: kind.size }
+  }
+  catch { /* gone, or a link */ }
+  if (fd !== undefined) closeSync(fd)
+  return null
 }
 
 const sleep = ms => new Promise(done => setTimeout(done, ms))
@@ -134,35 +156,53 @@ export async function importFolder(args, { dbPath, env, log, fail }) {
   if (address.protocol !== 'http:' || !['127.0.0.1', 'localhost', '[::1]'].includes(address.hostname.toLowerCase()) || address.username || address.password) {
     throw fail(`fotobogen import only talks to a site on this machine, at an address such as http://127.0.0.1:5150. ${address.origin} is somewhere else. Run the command on the server the site is on.`)
   }
-  const site = { hostname: address.hostname.replace(/^\[|\]$/g, ''), port: Number(address.port || 80), origin: address.origin, adminHost: env.ADMIN_HOST || '' }
+  // "localhost" is dialled as 127.0.0.1, so that it cannot be answered from the machine's other loopback address.
+  const hostname = address.hostname.toLowerCase() === 'localhost' ? '127.0.0.1' : address.hostname.replace(/^\[|\]$/g, '')
+  const site = { hostname, port: Number(address.port || 80), origin: address.origin, adminHost: env.ADMIN_HOST || '' }
 
   const files = findPhotos(folder)
   if (files.length === 0) throw fail(`No photos were found in ${folder}. Fotobogen takes JPEG, PNG, WebP, TIFF, AVIF and HEIC files.`)
 
   const db = new Database(dbPath, { fileMustExist: true })
   db.pragma('busy_timeout = 5000')
-  const token = `fb_${randomBytes(32).toString('base64url')}`
+  const setting = db.prepare(`insert into settings (key, value) values (?, ?) on conflict(key) do update set value = excluded.value`)
+  const forget = db.prepare(`delete from settings where key = ?`)
   const tokenId = newId()
-  const removePass = () => db.prepare(`delete from api_tokens where name = ?`).run(TOKEN_NAME)
-  // A pass left by a run that was killed can open nothing (its secret died with that run); clear it away all the same.
-  removePass()
-  db.prepare(`insert into api_tokens (id, name, token_hash, prefix, scope, created_at) values (?, ?, ?, ?, 'manage', ?)`)
-    .run(tokenId, TOKEN_NAME, createHash('sha256').update(token).digest('hex'), token.slice(0, 9), Date.now())
-  // Ctrl+C in the middle still takes the pass away.
+  // Albums are a change to the library; uploading alone is not. The pass is no wider than the run needs.
+  const scope = options.album !== null || options.albums ? 'manage' : 'upload'
+  const removePass = () => {
+    db.prepare(`delete from api_tokens where id = ?`).run(tokenId)
+    forget.run(CHALLENGE_KEY)
+  }
+  // A pass left by a run that was killed: the site already refuses it; clear it away.
+  db.prepare(`delete from api_tokens where name like ? and length(name) > 60 and created_at < ?`).run(`${PASS_NAME}%`, Date.now() - PASS_HOURS * 3600_000)
+  // Ctrl+C, a closed terminal, or a stop from the system in the middle still takes the pass away.
   const interrupted = () => {
     try { removePass() }
     catch { /* the database is closing */ }
     process.exit(130)
   }
-  process.once('SIGINT', interrupted)
-  process.once('SIGTERM', interrupted)
+  for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP']) process.once(signal, interrupted)
 
   try {
-    let first
-    try { first = await send(site, { method: 'GET', path: '/api/admin/photos?ids=none', token }) }
+    // First, with nothing secret sent: is the program at that address this site?
+    const nonce = randomBytes(24).toString('base64url')
+    const key = randomBytes(32).toString('base64url')
+    setting.run(CHALLENGE_KEY, JSON.stringify({ nonce, key, expires: Date.now() + CHALLENGE_MS }))
+    let proof
+    try { proof = await send(site, { method: 'GET', path: `/api/import-proof?nonce=${nonce}` }) }
     catch { throw fail(`Fotobogen is not running at ${site.origin}. Start it, or say where it is with --url.`) }
-    if (first.status === 401) throw fail(`The site at ${site.origin} is not the site whose data is in ${dbPath}. Run the command in that site's own folder, or set DATA_DIR, or give its address with --url.`)
-    if (first.status === 503) throw fail('This site has not been set up yet. Open it in a browser and finish setup first.')
+    forget.run(CHALLENGE_KEY)
+    if (proof.status === 503) throw fail('This site has not been set up yet. Open it in a browser and finish setup first.')
+    if (proof.status !== 200 || typeof proof.body.answer !== 'string' || !sameText(proof.body.answer, proofFor(key, nonce, site.hostname, site.port))) {
+      throw fail(`The program answering at ${site.origin} is not the site whose data is in ${dbPath}. Nothing was sent to it. Run the command in that site's own folder, or set DATA_DIR, or give the site's own address with --url.`)
+    }
+
+    // Now the pass, known to be going to this site.
+    const token = `fb_${randomBytes(32).toString('base64url')}`
+    db.prepare(`insert into api_tokens (id, name, token_hash, prefix, scope, created_at) values (?, ?, ?, ?, ?, ?)`)
+      .run(tokenId, `${PASS_NAME} (${new Date().toISOString()})`, createHash('sha256').update(token).digest('hex'), token.slice(0, 9), scope, Date.now())
+    const first = await send(site, { method: 'GET', path: '/api/admin/photos?ids=none', token }).catch(() => ({ status: 0, body: {} }))
     if (first.status !== 200) throw fail(`The site at ${site.origin} answered ${first.status}${first.body.message ? `: ${first.body.message}` : '.'}`)
 
     log(`Importing ${plural(files.length, 'photo')} from ${folder}`)
@@ -172,8 +212,13 @@ export async function importFolder(args, { dbPath, env, log, fail }) {
     let already = 0
     for (const [index, file] of files.entries()) {
       const name = relative(folder, file)
+      const opened = openPhoto(file)
+      if (!opened) {
+        refused.push(`${name}: left alone, because it is a link to a file somewhere else.`)
+        continue
+      }
       let answer
-      try { answer = await send(site, { method: 'POST', path: '/api/admin/photos', token, file }) }
+      try { answer = await send(site, { method: 'POST', path: '/api/admin/photos', token, file: opened }) }
       catch (error) { throw fail(`The site stopped answering while ${name} was being sent (${error.message}). ${added} added so far; run the command again to carry on: what is already in is skipped.`) }
       if (answer.status === 200 && answer.body.photo?.id) {
         added++
@@ -195,7 +240,9 @@ export async function importFolder(args, { dbPath, env, log, fail }) {
       for (const photo of taken) {
         const parts = relative(folder, photo.file).split(sep)
         if (parts.length < 2) continue // a photo in the folder itself belongs to no album
-        wanted.set(parts[0], [...(wanted.get(parts[0]) ?? []), photo.id])
+        // A folder's name becomes an album's title: without characters that cannot be seen or that turn text around.
+        const title = parts[0].replace(/[\u00ad\u200b-\u200f\u202a-\u202e\u2060-\u206f\ufeff]/g, '').trim()
+        if (title) wanted.set(title, [...(wanted.get(title) ?? []), photo.id])
       }
     }
     if (wanted.size > 0) {
@@ -239,8 +286,7 @@ export async function importFolder(args, { dbPath, env, log, fail }) {
     return refused.length > 0 ? 1 : 0
   }
   finally {
-    process.off('SIGINT', interrupted)
-    process.off('SIGTERM', interrupted)
+    for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP']) process.off(signal, interrupted)
     removePass()
     db.close()
   }

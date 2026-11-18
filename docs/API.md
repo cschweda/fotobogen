@@ -261,8 +261,16 @@ curl -H "Authorization: Bearer fb_YOUR_TOKEN" -F "file=@photo.jpg" https://photo
 ```
 
 ```json
-{ "result": "accepted", "photo": { "id": "V1StGXR8_Z5j", "slug": "photo" } }
+{ "result": "accepted", "photo": { "id": "V1StGXR8_Z5j", "slug": "photo" }, "fromFile": ["title", "tags"] }
 ```
+
+- JPEG, PNG, WebP, TIFF, AVIF and HEIC are taken. Anything else, or a picture over the limits, answers `422` with a `message` and a `reason` (`not-an-image` or `too-many-pixels`). A file already in the library answers `409` with `existing`, the photo that has it.
+- `fromFile` (since 1.11.0) lists which of the photo's words were read from inside the file: any of `title`, `description`, `alt`, `tags`. It is empty when there were none, or when the owner has switched reading them off.
+- Every photo has alt text. One that arrives with none is given a start (its title, its file's name as words, or "Photograph taken on …"), and is marked to be checked: `altToCheck` is `true` for it in `GET /api/admin/photos` and `GET /api/admin/photos/<id>`, and `GET /api/admin/photos?show=alt-to-check` lists only those. (`show=missing-alt`, the name before 1.11.0, still works and means the same.)
+
+Editing, for a `manage` token: `PATCH /api/admin/photos/<id>` with the fields to change, as JSON. Since 1.11.0 `alt` may be changed but not emptied: an empty string or `null` answers `422`. Sending new alt text, or `"altChecked": true`, clears `altToCheck`.
+
+To bring in a whole folder on the server itself, there is a command that does all of this for you: `pnpm fotobogen import <folder>` ([README](../README.md#uploading-photos)).
 
 Deleting, for a `manage` token: `DELETE /api/admin/photos/<id>` moves a photo to the trash (off the site, kept for 30 days); `POST /api/admin/photos/<id>/restore` takes it back out; `DELETE /api/admin/photos/<id>?forever=1` deletes a photo that is in the trash for good, and answers `409` for one that is not.
 

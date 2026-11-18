@@ -9,7 +9,7 @@ A self-hosted publishing platform for photographs: install it on a small
 server, answer a few first-run questions, and get a public photo site with an
 admin backend. Think "WordPress for photos".
 
-**Version 1.10.0** (17 November 2026). It installs on macOS, Windows, and
+**Version 1.11.0** (18 November 2026). It installs on macOS, Windows, and
 Linux; takes your photographs, resizes them for every screen, and publishes
 them on a site you can restyle, reword, and put under your own name, with an
 admin behind a login. Version 1.0.0 was the first release; 1.1.0 added
@@ -22,7 +22,10 @@ second audit and makes the full-screen buttons work; 1.8.0 adds pages,
 search, private albums, a trash, albums to choose from on the front page,
 and a one-line installer; 1.9.0 adds optional
 [two-step login](#two-step-login); 1.10.0 lists a photo's size, albums,
-tags and licence in the slideshow's details.
+tags and licence in the slideshow's details; 1.11.0 takes an iPhone's HEIC
+photos, reads the titles, captions and keywords saved inside a file, gives
+every photo alt text, imports a folder at once, and answers to a swipe on a
+phone, after a review of the whole program by fresh eyes.
 
 - **What is in it:** [CHANGELOG.md](CHANGELOG.md), also published as
   [Releases](https://fotobogen.com/docs/changelog/).
@@ -81,7 +84,8 @@ free software with no warranty: keep backups of your photographs.
 ## Screenshots
 
 Taken from a local install of version 1.10.0 (the grid, the photo page, and
-the admin's Overview from 1.9.0, which they match). The
+the admin's Overview from 1.9.0, which they match; the upload page from
+1.11.0). The
 photographs are the sample photos Fotobogen can download (Unsplash
 photographs, via Lorem Picsum).
 
@@ -460,7 +464,7 @@ distributions may well work, but are reported as untested.
 `/api/health` needs no login and answers `GET` and `HEAD`:
 
 ```json
-{ "status": "ok", "version": "1.10.0", "database": "ok", "queue": { "depth": 0 }, "uptime": 86400 }
+{ "status": "ok", "version": "1.11.0", "database": "ok", "queue": { "depth": 0 }, "uptime": 86400 }
 ```
 
 It returns `200` when the app and its database are working and `503` when
@@ -484,8 +488,10 @@ Visitors see these pages:
   appear. Each tile shows a blurred placeholder until its image loads, and
   nothing shifts as they arrive. Thirty photos a page, with "More photos".
 - **A photo** at `/photo/<name>`: the picture, its title, description, date,
-  camera details, and size in pixels (if you show camera details), with previous and next links and
-  the left and right arrow keys. If the site is set to open photos over the
+  camera details, and size in pixels (if you show camera details), with previous and next links,
+  the left and right arrow keys, and on a phone a swipe across the photo
+  (left for the next, right for the one before; the slideshow answers to the
+  same swipe). If the site is set to open photos over the
   grid, the same content appears in a modal; the address still changes, and
   Back, Escape, or Close returns to the grid where you were.
   A **Full screen** button appears over the photo when you point at it (it
@@ -572,12 +578,20 @@ links to the guide.
 Log in, then choose **Upload** in the menu. Pick files or drop
 them on the page; each one shows its progress and result.
 
-- Accepted: JPEG, PNG, WebP, TIFF, and AVIF. A file is judged by its
-  contents, not its name.
+- Accepted: JPEG, PNG, WebP, TIFF, AVIF, and HEIC (the format an iPhone
+  saves in). A file is judged by its contents, not its name.
+- A HEIC is kept exactly as it came, like every upload. Because the image
+  library cannot open one, a JPEG is made from it once, when it arrives, and
+  kept beside it in `data/originals/` for the resizing to read. That is done in
+  a separate process, so the memory it takes (about 400 MB for 24 megapixels)
+  is given back at once. Camera
+  details and the date are read from the HEIC itself.
 - Limits: 50 MB per file and 100 megapixels per image by default
-  (see [Settings](#settings)). AVIF is held to 16 megapixels, WebP to 60, and
-  interlaced PNG to 40, because those formats need far more memory to open;
-  a larger one is refused with a note to upload a JPEG instead.
+  (see [Settings](#settings)). AVIF is held to 16 megapixels, HEIC to 25,
+  WebP to 60, and interlaced PNG to 40, because those formats need far more
+  memory to open; a larger one is refused with a note to upload a JPEG
+  instead. (An iPhone's usual photos are 12 or 24 megapixels. Its
+  48-megapixel setting is over the limit.)
 - The same file is not stored twice; a duplicate is refused and the page
   names the photo that already has it.
 - The file you upload is kept untouched in `data/originals/`. Resized WebP
@@ -588,6 +602,61 @@ them on the page; each one shows its progress and result.
   tries is marked failed, with the reason and a **Try again** button.
 
 Once processed, a photo appears on the public site.
+
+**The words that come with a photo.** Lightroom, Capture One, Apple Photos
+and most other programs save a photo's title, caption and keywords inside
+the file when they export it. Fotobogen reads them on upload: the title
+becomes the photo's title (and its web address), the caption its
+description, the keywords its tags, and the alt text its alt text, where
+the program wrote one. The upload page says what it read from each file,
+with a link to check it. Words you give yourself always come first, and
+everything can be changed afterwards. If your files carry notes or keywords
+that are not meant for visitors, switch this off under **Admin, Settings,
+New uploads**. A description a camera writes by itself ("OLYMPUS DIGITAL
+CAMERA") is ignored. Words are not read from a HEIC, only its camera
+details.
+
+**Every photo has alt text.** Alt text is what a screen reader says in
+place of the picture. A photo that arrives with none is given a start, so
+that none goes out silent: its title; or its file's name turned into words,
+when a person chose the name (`green-bicycle.jpg` becomes "Green bicycle");
+or, for a name a camera gave (`IMG_0042.jpg`), "Photograph taken on 1 June
+2024". Fotobogen does not look at the picture, so this is a start and not a
+description. Such photos are flagged **Alt text to check** in the Library
+until you rewrite the text or say it is right as it is. Alt text can be
+changed but not emptied. Photos from before version 1.11.0 that have none
+are given a start the same way when the server first starts on that
+version.
+
+**A whole folder at once.** On the server, in Fotobogen's folder, with the
+site running:
+
+```bash
+pnpm fotobogen import ~/Pictures/export              # every photo in the folder and the folders inside it
+pnpm fotobogen import ~/Pictures/export --albums     # and an album for each folder directly inside it
+pnpm fotobogen import ~/Pictures/export --album "Iceland 2023"   # or all of them in one album
+```
+
+In Docker the folder has to be one the container can see, such as a folder
+inside the data directory: `docker compose exec app node
+scripts/fotobogen.mjs import /data/inbox`.
+
+The photos go in through the running site exactly as uploads from the admin
+do, so the same rules apply: formats and limits, the words inside each
+file, drafts or public as Settings says, and the look set for every photo.
+What is already in the library is skipped, so the command can be run again
+after an interruption. It finishes when the site has resized everything,
+lists any file it could not take with the reason, and ends with a non-zero
+exit code if there were any. Hidden files and folders (names beginning with
+a dot), links, and files that are not photos are left alone. Import only a folder
+that is yours: everything in it is published, and with `--albums` the
+names of its folders become albums. To be let in,
+the command writes itself a temporary API token in the site's database and
+removes it at the end. It only ever talks to the site on the same machine
+(`--url http://127.0.0.1:5160` if it is not on the usual port), and before
+it sends the token it makes the program at that address prove that it is
+this site, by answering a question only a program that can read the site's
+database can answer.
 
 ## Managing photos
 
@@ -604,7 +673,8 @@ your site.
   away, which asks first and removes the uploaded file and every resized
   copy. Uploading a file that is in the trash is refused, with a note
   saying where it is.
-- **Show:** only hidden photos, scheduled photos, photos without alt text,
+- **Show:** only hidden photos, scheduled photos, photos whose alt text
+  Fotobogen wrote and you have not yet checked,
   photos that could not be processed, or the trash. Each is also flagged on
   its card.
 - **One photo:** open it to edit its title, description, alt text, web
@@ -1714,6 +1784,28 @@ Each audit is a red team and blue team exercise: the red team attacks a running 
 The newest audit is open below; older ones are folded under it. The same record is at [fotobogen.com/docs/security-audits](https://fotobogen.com/docs/security-audits/). To report a problem, open an issue on GitHub. If the details should not be public yet, say only that in the issue and ask for a private way to send them.
 
 <details open>
+<summary><strong>18 November 2026, version 1.11.0.</strong> 8 findings, none critical: 1 high, 2 medium, 3 low, 2 informational. Outcome: 6 fixed, 1 reduced, 1 accepted.</summary>
+
+The sixth audit, of everything added in version 1.11.0: HEIC uploads, the words read from inside a file, alt text for every photo, the `fotobogen import` command, and the smaller changes beside them. One attacker, with a running copy on this machine and the source code, worked as an outsider, as a visitor, as the holder of an upload-only API token, and as someone able to put files into a folder the owner later imports. It built its own files (truncated and mislabelled HEICs, a HEIC claiming to be 65,535 pixels square, XMP with hostile markup and with hundreds of thousands of unclosed tags), listened on the machine's other loopback address in the site's place, and passed the importer's questions on to the real site. The four that mattered were fixed before release, each with a test that failed first.
+
+Fixed: closed in this release. Reduced: made harder or documented, not closed. Accepted: left as it is, for the reason given. Open: not yet dealt with.
+
+| # | Severity | What was found | Outcome | What was done |
+|---|---|---|---|---|
+| 1 | High | A small file could stop the whole site. The part of a file that holds its title and keywords (XMP) is text, and a PNG could carry 1.2 MB of unclosed tags that kept the reader busy for 20 seconds, on the thread that answers every visitor; a file at the upload limit would have taken hours. An upload-only token was enough, and it happened with the reading of words switched off too. | **Fixed** | A file's metadata is read in a thread of its own and given five seconds; after that it is ended and the photo simply arrives without words. With the words switched off, the text in the file is not opened at all. A test builds such a file and checks that the server goes on answering. |
+| 2 | Medium | A HEIC of a few kilobytes could cost about 900 MB of memory, which the server then kept. The decoded picture was handed back to the server to be saved, and the limit of 32 megapixels was too generous for a 1 GB machine. | **Fixed** | A HEIC is decoded and its JPEG written in a separate process, one photo at a time, so the server never holds the picture and every byte goes back to the system when that process ends. The limit is 25 megapixels, measured at about 400 MB for an iPhone's 24. Measured on macOS; not yet measured on Linux. |
+| 3 | Medium | `fotobogen import` sent its pass (an API token with rights over the whole library) with its very first request, to whatever program answered at the address. Another user of the same machine, listening on its other loopback address or on the usual port while the site ran on another, received it and could use it on the real site. A run ended by a closed terminal left the pass in the database. | **Fixed** | Before any pass exists, the command writes a question and a key into the site's own database and asks the question; only a program that can read that database can answer, and the answer covers the address and port it came from, so passing the question on to the real site does not work either. `localhost` is dialled as 127.0.0.1. The pass is upload-only unless albums are asked for, is removed when the terminal closes too, and is refused by the site after twelve hours whatever happens. |
+| 4 | Low | The command removed its pass by name. An API token the owner had given the same name was deleted with it, and two imports at once removed each other's. | **Fixed** | It removes its own pass, by its id. Its name is longer than the admin allows a name to be, so no token made there can be taken for one. |
+| 5 | Low | Alt text made only of characters that cannot be seen (a zero-width space, a braille blank, a direction mark) was accepted, and cleared the "to check" flag. The same characters, and ones that turn text around, came through in titles, captions and keywords read from a file. | **Fixed** | Alt text must contain a letter or a digit. Characters that cannot be seen or that change the direction of text are taken out of alt text, and out of every word read from a file or made from a folder's name. Titles and captions the owner types are kept as typed. |
+| 6 | Low | The import followed a second name for a file kept elsewhere (a hard link), and opened each file by name some time after listing it, so a file could be swapped for a link in between. | **Fixed** | Each file is opened without following links, checked to be a plain file with one name, and sent from that open file. |
+| 7 | Informational | With `--albums`, the names of the folders become public albums, and a folder named like an existing album adds its photos to it. Whoever can write into the folder chooses those names. | **Reduced** | The names are shown as text everywhere, and are cleaned as above. The documentation says to import only a folder that is yours; the photos in it are published too, after all. |
+| 8 | Informational | A HEIC whose label had been changed to say AVIF was accepted and then failed to be processed, leaving a failed photo in the library. | **Accepted** | It harms nothing: the photo is marked failed with the reason, and is deleted like any other. |
+
+What was tried and held: truncated files, a header followed by rubbish, an AVIF labelled as HEIC and the reverse, and impossible sizes were all refused in about 40 milliseconds, with nothing left behind in the data folder; eight HEICs sent at once were decoded one at a time; neither the uploaded HEIC nor the JPEG kept beside it can be fetched by a visitor, by any spelling of its address; hostile markup in a title, caption, alt text, keyword or file name arrived as text on the grid, the photo page, tag pages, search, the slideshow, albums, the admin, the sharing tags, the feed and the sitemap; a photo's address made from a hostile title held only letters, digits and hyphens; with the reading of words switched off, nothing from the file was stored, and no extra field in the upload could switch it on; an upload-only token could change, delete or configure nothing; the import refused links to files and folders, an address with a name and password in it, any other machine, and every other way of writing this one; and the look set aside for a skin can hold only what the modules themselves would accept. Not reached: the embedded slideshow and webhooks with these words in them; a HEIC built to keep the decoder busy to its two-minute limit; memory use on Linux.
+
+</details>
+
+<details>
 <summary><strong>17 November 2026, version 1.10.0.</strong> No findings.</summary>
 
 The fifth audit, of one change: the slideshow's details now list a photo's size, its albums, its tags and its licence, as its own page does. One attacker, with a running copy on this machine and the source code, put a public photo into a hidden album and a private album, gave a hidden photo and a scheduled photo tags of their own, named a tag and an album with HTML in them, and then read the slideshow nine ways: for the whole site, for an album, for a tag, at the addresses of the hidden and the private album, at the tags of the hidden and the scheduled photo, as a page, and as the page for other sites. The aims: to read the name of an album a visitor may not see; to read anything of a photo a visitor may not see; to read where a photo was taken; to read a photo's size on a site that hides camera details; and to have a name run as code in the details.

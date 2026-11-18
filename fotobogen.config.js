@@ -113,9 +113,10 @@ export default {
     // Pixel limits, in megapixels, for formats that must be held whole in
     // memory to open. Measured so one photo stays under about 450 MB; see
     // docs/DESIGN.md section 7. Raising them can crash a 1 GB server.
-    // HEIC (an iPhone's format) measured about 130 MB plus 10 MB per megapixel:
-    // 24 megapixels, an iPhone's usual size, takes about 375 MB.
-    formatMegapixels: { 'avif': 16, 'webp': 60, 'interlaced png': 40, 'heic': 32 },
+    // HEIC (an iPhone's format) is decoded in a process of its own, measured at
+    // about 130 MB plus 11 MB per megapixel: 24 megapixels, an iPhone's usual
+    // size, takes about 400 MB, all of it given back when the photo is done.
+    formatMegapixels: { 'avif': 16, 'webp': 60, 'interlaced png': 40, 'heic': 25 },
 
     // The largest picture a module's transform may produce, in megapixels.
     moduleOutputMegapixels: 40,

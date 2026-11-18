@@ -55,6 +55,13 @@ describe('editing a photo', () => {
     expect(updatePhoto(ctx, a, { alt: 'A gull on a harbour wall' })).toMatchObject({ ok: true })
     expect(state()).toEqual({ alt: 'A gull on a harbour wall', alt_auto: 0 })
     expect(updatePhoto(ctx, a, { altChecked: 'yes' })).toMatchObject({ ok: false, errors: { altChecked: expect.any(String) } })
+    // Characters that show nothing are not a description (found by the audit of 18 November 2026).
+    for (const blank of ['\u200b', '\u2800', '\u202e', '\u00ad\u200d \ufeff', '...', '—']) {
+      expect(updatePhoto(ctx, a, { alt: blank }), JSON.stringify(blank)).toMatchObject({ ok: false, errors: { alt: 'Describe the photo in a few words, for people who cannot see it.' } })
+    }
+    // Invisible and direction-changing characters are taken out of what is kept.
+    expect(updatePhoto(ctx, a, { alt: 'A gull\u202e on\u200b a wall' })).toMatchObject({ ok: true })
+    expect(state()).toEqual({ alt: 'A gull on a wall', alt_auto: 0 })
   })
   it('tidies a new address and refuses one another photo has', async () => {
     const { ctx, a } = await library()

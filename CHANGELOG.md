@@ -13,6 +13,53 @@ is built from this file.
 
 Nothing yet.
 
+## [1.11.0] - 2026-11-18
+
+An iPhone's photos, the words saved inside a file, alt text for every photo, a folder at once, and a swipe on a phone. It follows a review of the whole program by someone who had never seen it, which found ten defects, all fixed here.
+
+### Added
+
+- **HEIC, the format an iPhone saves in, is accepted.** The file is kept exactly as it came. A JPEG is made from it once, when it arrives, and the web copies are made from that. Up to 25 megapixels: an iPhone's usual 12 or 24 fit, its 48-megapixel setting does not.
+- **A photo arrives with its words.** The title, caption, keywords and alt text that Lightroom, Capture One, Apple Photos and others save inside a file become the photo's title, description, tags and alt text. The upload page says what it read. Switch it off under **Settings, New uploads** if your files carry notes not meant for visitors.
+- **Every photo has alt text.** One that arrives with none is given a start, from its title, its file's name, or the day it was taken, and is flagged **Alt text to check** in the Library until you rewrite it or say it is right. Alt text can be changed but not emptied. Photos you already have are given a start the same way the first time this version starts.
+- **`pnpm fotobogen import <folder>`** brings in a whole folder, with `--albums` to make an album of each folder inside it, or `--album <name>` to put everything in one. It skips what is already there, so it can be run again.
+- **Swiping.** On a phone, a swipe across a photo goes to the next or the one before: on the photo's page, in the photo opened over the grid, and in the slideshow.
+- The RSS feed carries each photo's alt text.
+- The upload answer from the admin API lists what was read from the file (`fromFile`); `GET /api/admin/photos?show=alt-to-check` lists photos whose alt text is still to be checked.
+
+### Fixed
+
+- **A photo set to "Scheduled" with no date was published at once.** It is now refused, with the date field marked.
+- **On a phone the grid showed three or four columns of tiny pictures.** It shows two, in all four skins.
+- **On a phone the slideshow's details lay over its buttons.** They rest on top of them now, however many rows the buttons take.
+- **Choosing a skin that brings a look, then leaving it, lost a look you had set for all photos.** Yours is set aside and comes back, and the Skins page says so before you save.
+- **Three pages ran off the side of a phone:** setup step 4, Albums with a private album, and API tokens.
+- **Leaving a photo's page with changes not yet saved** now asks first.
+- **The arrow keys stopped working in a photo opened over the grid** once the link that had focus was gone.
+- **The question about hearing of new versions lay over the page's own controls** on a wide screen. It is part of the page now.
+- **Every page that does not exist wrote an error to the server's log.** It writes nothing.
+- **A new page of words was public the moment it was added, still empty.** It is hidden until you first save it.
+- The Albums page now says how to put photos in an album. The upload page links each finished photo to its edit page.
+
+### Changed
+
+- For skin writers: the slideshow's details and controls now sit inside one new block, `fb-slideshow__foot`. A skin written for an earlier version goes on working as it did; copy three rules from Swiss to get the phone layout right ([writing a skin](https://fotobogen.com/docs/writing-a-skin/)).
+- The Library's filter "Without alt text" is now "Alt text to check", since no photo is without.
+- Documentation corrected where a review found it wrong or out of date, the README's account of how the app is kept private behind a proxy in Docker above all.
+
+### Security
+
+The sixth [security audit](https://fotobogen.com/docs/security-audits/), of everything new here, before release: 8 findings, 1 high, 2 medium, 3 low, 2 informational. Six fixed, one reduced, one accepted.
+
+- **A file built for the purpose could stop the site while its words were read** (high). They are read in a thread of its own, with five seconds to do it.
+- **A HEIC could use far more memory than a small server has** (medium). It is decoded in a separate process, one at a time, and the limit is 25 megapixels.
+- **`fotobogen import` gave its pass to whatever program answered at the site's address** (medium). It now makes the site prove itself first, and the pass is narrower and expires.
+- Alt text of invisible characters is refused; such characters are removed from words read out of files. The import no longer follows hard links, and removes only its own pass.
+
+### Updating
+
+**Admin, System, Update to version 1.11.0**, or `pnpm fotobogen update`. Docker: `docker compose pull`, then `docker compose up -d`. The database gains one column, by itself, at the first start; make a backup first, as before any update.
+
 ## [1.10.0] - 2026-11-17
 
 The slideshow's details say more, and the screenshots are new.
@@ -405,6 +452,7 @@ Later entries list only what changed.
 - One admin account only. No comments, no shop, no storage outside the server's own disk.
 
 [Unreleased]: https://github.com/cschweda/fotobogen/commits/staging
+[1.11.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.11.0
 [1.10.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.10.0
 [1.9.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.9.0
 [1.8.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.8.0

@@ -157,7 +157,7 @@ Papier and Plakat are worked examples of the quickest way to make a skin: **take
 
 ### What to get right
 
-The bundled skins are tested, in both modes, at 320 and 1280 pixels wide, against WCAG 2.1 level AA. A skin of yours should hold to the same:
+The bundled skins are tested, in both modes, at 320 and 1280 pixels wide, against WCAG 2.2 level AA. A skin of yours should hold to the same:
 
 - **Readable text (1.4.3).** Text, headings, and links need a contrast of at least 4.5:1 with the page, in both modes. List the pairs under `contrast` and the Skins page warns you when one falls short. Do not use the accent as a text colour unless it passes; the bundled skins use it for underlines and bars.
 - **Set the text colour on the body** (`.fb-public body { color: var(--fb-text) }`), as the bundled skins do. The admin's stylesheet is loaded on the same pages and gives the body a pale colour of its own; without this line, headings and links on a light page are nearly invisible.

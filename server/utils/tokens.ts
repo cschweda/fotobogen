@@ -8,6 +8,7 @@
 import { createHash, randomBytes } from 'node:crypto'
 import { desc, eq } from 'drizzle-orm'
 import { newId } from '../core/ids.ts'
+import { isImportPass, PASS_HOURS } from '../core/import-pass.ts'
 import { apiTokens } from '../db/schema.ts'
 import { getDb } from './app.ts'
 
@@ -75,6 +76,11 @@ export function findToken(token: string): TokenInfo | null {
   const row = getDb().select().from(apiTokens).where(eq(apiTokens.tokenHash, hash(token))).get()
   if (!row) return null
   const now = Date.now()
+  // A pass `fotobogen import` made for one run and never took away (the run was killed) stops working by itself.
+  if (isImportPass(row.name) && now - row.createdAt > PASS_HOURS * 3600_000) {
+    getDb().delete(apiTokens).where(eq(apiTokens.id, row.id)).run()
+    return null
+  }
   if (!row.lastUsedAt || now - row.lastUsedAt > 60_000) getDb().update(apiTokens).set({ lastUsedAt: now }).where(eq(apiTokens.id, row.id)).run()
   return info(row)
 }

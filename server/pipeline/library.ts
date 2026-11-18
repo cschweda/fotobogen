@@ -2,6 +2,7 @@
 // whether they are shown, and their order. Deleting is in remove.ts.
 import type { PipelineContext } from './context.ts'
 import { isLicence } from '../../shared/licences.ts'
+import { saysSomething, withoutUnseen } from '../../shared/visible-text.ts'
 import { slugify } from './slug.ts'
 
 export interface PhotoEdit {
@@ -47,7 +48,9 @@ export function updatePhoto(ctx: PipelineContext, id: string, edit: Record<strin
   const errors: Record<string, string> = {}
   const title = text(edit.title, LIMITS.title, 'title', errors)
   const description = text(edit.description, LIMITS.description, 'description', errors)
-  const alt = text(edit.alt, LIMITS.alt, 'alt', errors)
+  const typedAlt = text(edit.alt, LIMITS.alt, 'alt', errors)
+  // Characters that cannot be seen are taken out, and what is left has to say something.
+  const alt = typeof typedAlt === 'string' ? (saysSomething(typedAlt) ? withoutUnseen(typedAlt).trim() : null) : typedAlt
   // Alt text may be changed, never removed: a photo with none says nothing to someone who cannot see it.
   if (alt === null) errors.alt = 'Describe the photo in a few words, for people who cannot see it.'
   if (edit.altChecked !== undefined && edit.altChecked !== true) errors.altChecked = 'Send true to say the alt text is right as it stands.'

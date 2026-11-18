@@ -9,7 +9,7 @@ import { newId } from '../core/ids.ts'
 import { serial } from '../core/serial.ts'
 import type { PipelineContext } from './context.ts'
 import { setPhotoTags } from './collections.ts'
-import { NO_WORDS, readEmbeddedWords, suggestAlt } from './embedded.ts'
+import { readEmbeddedWords, suggestAlt } from './embedded.ts'
 import { heicToJpeg, readableKey } from './heic.ts'
 import sharp from './image.ts'
 import { pixelLimitFor } from './limits.ts'
@@ -217,8 +217,9 @@ export async function acceptUpload(ctx: PipelineContext, input: UploadInput): Pr
     }
 
     // Words given with the upload come first; then the words saved inside the file.
-    const inside = await readEmbeddedWords(storage.localPath('originals', key))
-    const words = input.readWords === false ? NO_WORDS : inside
+    // With the words switched off, the text inside the file is not opened at all; only the date is read.
+    const inside = await readEmbeddedWords(storage.localPath('originals', key), { words: input.readWords !== false })
+    const words = inside
     const fromFile: ('title' | 'description' | 'alt' | 'tags')[] = []
     const or = (given: string | undefined, found: string | null, field: 'title' | 'description' | 'alt'): string | null => {
       const own = given?.trim() || null
