@@ -153,7 +153,7 @@
   </tbody>
 </table></div>
 <p>The largest image accepted, in megapixels: its width times its height, divided by a million. A 9504 by 6336 photograph is 60 megapixels. This limit exists because a small file can unpack into an enormous image that fills the server's memory.</p>
-<p>Lower it on a server with little memory. Raising it above 100 is safe only with memory to match. Three formats have their own lower limits, which this setting does not raise; see <a href="#format-megapixels"><code>formatMegapixels</code></a>.</p>
+<p>Lower it on a server with little memory. Raising it above 100 is safe only with memory to match. Four formats have their own lower limits, which this setting does not raise; see <a href="#format-megapixels"><code>formatMegapixels</code></a>.</p>
 
 <h2 id="webhooks">Okay to change: webhooks</h2>
 
@@ -215,9 +215,11 @@
     <tr><td><code>avif</code></td><td><code>16</code></td></tr>
     <tr><td><code>webp</code></td><td><code>60</code></td></tr>
     <tr><td><code>interlaced png</code></td><td><code>40</code></td></tr>
+    <tr><td><code>heic</code></td><td><code>32</code></td></tr>
   </tbody>
 </table></div>
-<p>JPEG, ordinary PNG, and TIFF can be read a strip at a time. These three formats must be held whole in memory to open, so they are held to smaller sizes. The limits were measured so that one photo stays under about 450 MB. A larger file in one of these formats is refused with a note to upload a JPEG instead.</p>
+<p>JPEG, ordinary PNG, and TIFF can be read a strip at a time. These four formats must be held whole in memory to open, so they are held to smaller sizes. The limits were measured so that one photo stays under about 450 MB. A larger file in one of these formats is refused with a note to upload a JPEG instead.</p>
+<p>HEIC, the format an iPhone saves in, was measured at about 130 MB plus 10 MB for each megapixel. An iPhone's usual 12 or 24 megapixels fit; its 48-megapixel setting does not, on a server this small.</p>
 <p><strong>Why not to change them:</strong> raising one can crash a 1 GB server in the middle of an upload.</p>
 
 <h3><code>internals.moduleOutputMegapixels</code></h3>
@@ -299,7 +301,7 @@
     <tr><td>none (in <code>.env</code> only)</td><td>a file in your home folder</td><td><code>TWO_STEP_KEY_FILE</code></td><td>Rarely needed</td></tr>
     <tr><td>none (in <code>.env</code> only)</td><td>not set</td><td><code>TWO_STEP_KEY</code></td><td>Only to share one authenticator entry between Docker sites</td></tr>
     <tr><td><code>internals.derivatives</code></td><td>see above</td><td>none</td><td>No</td></tr>
-    <tr><td><code>internals.formatMegapixels</code></td><td>16, 60, 40</td><td>none</td><td>No</td></tr>
+    <tr><td><code>internals.formatMegapixels</code></td><td>16, 60, 40, 32</td><td>none</td><td>No</td></tr>
     <tr><td><code>internals.moduleOutputMegapixels</code></td><td>40</td><td>none</td><td>No</td></tr>
     <tr><td><code>internals.queue</code></td><td>3 attempts</td><td>none</td><td>No</td></tr>
     <tr><td><code>internals.auth</code></td><td>see above</td><td>none</td><td>No</td></tr>

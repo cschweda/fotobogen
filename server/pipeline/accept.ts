@@ -8,6 +8,8 @@ import { basename, extname } from 'node:path'
 import { newId } from '../core/ids.ts'
 import { serial } from '../core/serial.ts'
 import type { PipelineContext } from './context.ts'
+import { setPhotoTags } from './collections.ts'
+import { NO_WORDS, readEmbeddedWords, suggestAlt } from './embedded.ts'
 import { heicToJpeg, readableKey } from './heic.ts'
 import sharp from './image.ts'
 import { pixelLimitFor } from './limits.ts'
@@ -35,10 +37,15 @@ export interface UploadInput {
   title?: string
   description?: string
   alt?: string
+  /**
+   * Whether to use the title, caption, keywords and alt text saved inside
+   * the file (by Lightroom and the like) where none are given. Default: yes.
+   */
+  readWords?: boolean
 }
 
 export type AcceptResult
-  = | { result: 'accepted', photo: { id: string, slug: string } }
+  = | { result: 'accepted', photo: { id: string, slug: string }, /** Which of the photo's words were read from inside the file. */ fromFile: ('title' | 'description' | 'alt' | 'tags')[] }
     /** `trashed`: the copy already here is in the trash (1) or in the library (0). */
     | { result: 'duplicate', existing: { id: string, slug: string, title: string | null, filename: string, trashed?: number } }
     | { result: 'rejected', reason: 'not-an-image' | 'too-many-pixels', message: string }
@@ -209,9 +216,23 @@ export async function acceptUpload(ctx: PipelineContext, input: UploadInput): Pr
       stored.push(readableKey(key))
     }
 
-    const title = input.title?.trim() || null
+    // Words given with the upload come first; then the words saved inside the file.
+    const inside = await readEmbeddedWords(storage.localPath('originals', key))
+    const words = input.readWords === false ? NO_WORDS : inside
+    const fromFile: ('title' | 'description' | 'alt' | 'tags')[] = []
+    const or = (given: string | undefined, found: string | null, field: 'title' | 'description' | 'alt'): string | null => {
+      const own = given?.trim() || null
+      if (!own && found) fromFile.push(field)
+      return own ?? found
+    }
+    const title = or(input.title, words.title, 'title')
+    const description = or(input.description, words.description, 'description')
+    const ownAlt = or(input.alt, words.alt, 'alt')
+    if (words.tags.length > 0) fromFile.push('tags')
     const filename = basename(input.filename).slice(0, 255) || 'photo'
     const wanted = slugify(title ?? basename(filename, extname(filename)))
+    // No photo goes without alt text. With none given and none in the file, a start is written, and marked to be checked.
+    const alt = ownAlt ?? suggestAlt({ title, filename, takenAt: inside.takenAt })
     const now = Date.now()
 
     const insert = sqlite.transaction(() => {
@@ -219,20 +240,21 @@ export async function acceptUpload(ctx: PipelineContext, input: UploadInput): Pr
         sqlite.prepare(`select 1 from photos where slug = ?`).get(candidate) !== undefined)
       const { next } = sqlite.prepare(`select coalesce(max(sort_order), 0) + 1 as next from photos`).get() as { next: number }
       sqlite.prepare(`
-        insert into photos (id, slug, title, description, alt, original_path, original_filename, mime, bytes,
+        insert into photos (id, slug, title, description, alt, alt_auto, original_path, original_filename, mime, bytes,
           checksum, width, height, status, visibility, is_sample, sort_order, created_at, updated_at)
-        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'processing', ?, ?, ?, ?, ?)
-      `).run(id, slug, title, input.description?.trim() || null, input.alt?.trim() || null, key, filename, mime,
+        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'processing', ?, ?, ?, ?, ?)
+      `).run(id, slug, title, description, alt, ownAlt ? 0 : 1, key, filename, mime,
         fileBytes, checksum, size.width, size.height, input.visibility === 'hidden' ? 'hidden' : 'public', input.isSample ? 1 : 0, next, now, now)
       sqlite.prepare(`insert into jobs (id, type, photo_id, status, attempts, created_at) values (?, 'ingest', ?, 'queued', 0, ?)`)
         .run(newId(), id, now)
+      if (words.tags.length > 0) setPhotoTags(ctx, id, words.tags)
       return slug
     })
 
     try {
       const slug = insert()
       stored.length = 0 // the database now refers to the files
-      return { result: 'accepted', photo: { id, slug } }
+      return { result: 'accepted', photo: { id, slug }, fromFile }
     }
     catch (error) {
       // The same file finished uploading in another request a moment ago.

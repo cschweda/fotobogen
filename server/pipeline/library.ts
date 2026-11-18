@@ -7,7 +7,10 @@ import { slugify } from './slug.ts'
 export interface PhotoEdit {
   title?: string | null
   description?: string | null
-  alt?: string | null
+  /** Never empty: every photo is described. */
+  alt?: string
+  /** True: the alt text Fotobogen wrote is right as it stands. */
+  altChecked?: boolean
   slug?: string
   /** Milliseconds since 1970, or null for "unknown". */
   takenAt?: number | null
@@ -45,6 +48,9 @@ export function updatePhoto(ctx: PipelineContext, id: string, edit: Record<strin
   const title = text(edit.title, LIMITS.title, 'title', errors)
   const description = text(edit.description, LIMITS.description, 'description', errors)
   const alt = text(edit.alt, LIMITS.alt, 'alt', errors)
+  // Alt text may be changed, never removed: a photo with none says nothing to someone who cannot see it.
+  if (alt === null) errors.alt = 'Describe the photo in a few words, for people who cannot see it.'
+  if (edit.altChecked !== undefined && edit.altChecked !== true) errors.altChecked = 'Send true to say the alt text is right as it stands.'
 
   let slug: string | undefined
   if (edit.slug !== undefined) {
@@ -82,7 +88,7 @@ export function updatePhoto(ctx: PipelineContext, id: string, edit: Record<strin
   if (Object.keys(errors).length > 0) return { ok: false, reason: 'invalid', errors }
 
   return sqlite.transaction((): EditResult => {
-    const current = sqlite.prepare(`select slug from photos where id = ?`).get(id) as { slug: string } | undefined
+    const current = sqlite.prepare(`select slug, alt from photos where id = ?`).get(id) as { slug: string, alt: string | null } | undefined
     if (!current) return { ok: false, reason: 'not-found', errors: {} }
     if (slug !== undefined && slug !== current.slug && sqlite.prepare(`select 1 from photos where slug = ? and id <> ?`).get(slug, id)) {
       return { ok: false, reason: 'slug-taken', errors: { slug: 'Another photo already has this address. Choose a different one.' } }
@@ -97,6 +103,8 @@ export function updatePhoto(ctx: PipelineContext, id: string, edit: Record<strin
     set('title', title)
     set('description', description)
     set('alt', alt)
+    // Words the owner wrote, or approved, are no longer Fotobogen's own guess.
+    if (edit.altChecked === true || (typeof alt === 'string' && alt !== current.alt)) set('alt_auto', 0)
     set('slug', slug)
     set('taken_at', takenAt)
     set('visibility', visibility)

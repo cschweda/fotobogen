@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import sharp from 'sharp'
 import { describe, expect, it } from 'vitest'
 import { acceptUpload, sniffFormat } from '../../server/pipeline/accept.ts'
-import { imageBuffer, imageFile } from '../helpers/images.ts'
+import { imageBuffer, imageFile, withEmbeddedText } from '../helpers/images.ts'
 import { rows, testContext } from '../helpers/pipeline.ts'
 
 describe('sniffFormat', () => {
@@ -37,6 +37,51 @@ describe('sniffFormat', () => {
 })
 
 describe('acceptUpload', () => {
+  it('takes the title, caption, keywords and alt text saved inside the file, and names the photo\'s address after its title', async () => {
+    const ctx = testContext()
+    const tmpPath = join(ctx.tmpDir, 'up-words')
+    writeFileSync(tmpPath, withEmbeddedText(await imageBuffer({ width: 300, height: 200 }), {
+      xmp: { title: 'Harbour at dawn', description: 'Boats & gulls', keywords: ['Sea', 'boats', 'sea'], alt: 'Three fishing boats tied up at a stone quay' },
+    }))
+    const outcome = await acceptUpload(ctx, { tmpPath, filename: 'DSC01234.jpg' })
+    expect(outcome).toMatchObject({ result: 'accepted', photo: { slug: 'harbour-at-dawn' }, fromFile: ['title', 'description', 'alt', 'tags'] })
+    expect(rows(ctx, 'select title, description, alt, alt_auto from photos')).toEqual([
+      { title: 'Harbour at dawn', description: 'Boats & gulls', alt: 'Three fishing boats tied up at a stone quay', alt_auto: 0 },
+    ])
+    expect(rows(ctx, 'select name from tags order by name collate nocase')).toEqual([{ name: 'boats' }, { name: 'Sea' }])
+  })
+
+  it('leaves the words inside the file alone when the owner has switched that off, and never lets them replace words that were given', async () => {
+    const ctx = testContext()
+    const file = withEmbeddedText(await imageBuffer({ width: 300, height: 200, seed: 5 }), { xmp: { title: 'Inside', description: 'Inside too', keywords: ['inside'], alt: 'Inside alt' } })
+    const tmpPath = join(ctx.tmpDir, 'up-off')
+    writeFileSync(tmpPath, file)
+    expect(await acceptUpload(ctx, { tmpPath, filename: 'quiet street.jpg', readWords: false })).toMatchObject({ result: 'accepted', photo: { slug: 'quiet-street' }, fromFile: [] })
+    expect(rows(ctx, 'select title, description, alt, alt_auto from photos')).toEqual([{ title: null, description: null, alt: 'Quiet street', alt_auto: 1 }])
+    expect(rows(ctx, 'select name from tags')).toEqual([])
+
+    const given = testContext()
+    const second = join(given.tmpDir, 'up-given')
+    writeFileSync(second, file)
+    expect(await acceptUpload(given, { tmpPath: second, filename: 'a.jpg', title: 'Given', alt: 'Given alt' })).toMatchObject({ fromFile: ['description', 'tags'] })
+    expect(rows(given, 'select title, description, alt, alt_auto from photos')).toEqual([{ title: 'Given', description: 'Inside too', alt: 'Given alt', alt_auto: 0 }])
+  })
+
+  it('never leaves a photo without alt text: with nothing better, it writes a start from the title, the file\'s name or the date, and marks it to be checked', async () => {
+    const ctx = testContext()
+    const sharp2 = (await import('sharp')).default
+    const dated = await sharp2(await imageBuffer({ width: 300, height: 200, seed: 9 })).withExif({ IFD2: { DateTimeOriginal: '2024:06:01 08:15:30' } }).jpeg().toBuffer()
+    const tmpPath = join(ctx.tmpDir, 'up-alt')
+    writeFileSync(tmpPath, dated)
+    await acceptUpload(ctx, { tmpPath, filename: 'IMG_0042.jpg' })
+    writeFileSync(tmpPath, await imageBuffer({ width: 300, height: 200, seed: 10 }))
+    await acceptUpload(ctx, { tmpPath, filename: 'green-bicycle.jpg' })
+    expect(rows(ctx, 'select alt, alt_auto from photos order by sort_order')).toEqual([
+      { alt: 'Photograph taken on 1 June 2024', alt_auto: 1 },
+      { alt: 'Green bicycle', alt_auto: 1 },
+    ])
+  })
+
   it('keeps an iPhone HEIC as it came, with a JPEG beside it for the image library to read', async () => {
     const ctx = testContext()
     const tmpPath = join(ctx.tmpDir, 'up-heic')

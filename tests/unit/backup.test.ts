@@ -16,7 +16,7 @@ import { imageFile } from '../helpers/images.ts'
 import { rows, testContext } from '../helpers/pipeline.ts'
 
 const migrationsDir = fileURLToPath(new URL('../../server/db/migrations', import.meta.url))
-const KNOWN = ['0000_initial', '0001_albums_and_tags', '0002_scheduled_publishing', '0003_licence_and_download', '0004_api_tokens', '0005_trash', '0006_pages', '0007_private_albums', '0008_front_page', '0009_two_step']
+const KNOWN = ['0000_initial', '0001_albums_and_tags', '0002_scheduled_publishing', '0003_licence_and_download', '0004_api_tokens', '0005_trash', '0006_pages', '0007_private_albums', '0008_front_page', '0009_two_step', '0010_alt_auto']
 
 async function site() {
   const ctx = testContext()

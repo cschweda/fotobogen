@@ -71,6 +71,13 @@
       "when": 1794947547925,
       "tag": "0009_two_step",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1795011718863,
+      "tag": "0010_alt_auto",
+      "breakpoints": true
     }
   ]
 }

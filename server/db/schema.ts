@@ -32,6 +32,8 @@ export const photos = sqliteTable('photos', {
   title: text('title'),
   description: text('description'),
   alt: text('alt'),
+  // 1 while the alt text is one Fotobogen wrote itself (from the title or the file's name) and the owner has not yet checked.
+  altAuto: integer('alt_auto').notNull().default(0),
   originalPath: text('original_path').notNull(),
   originalFilename: text('original_filename').notNull(),
   mime: text('mime').notNull(),

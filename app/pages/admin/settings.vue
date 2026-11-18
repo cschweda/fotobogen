@@ -6,9 +6,9 @@ import { QUALITY_PRESETS } from '~~/shared/media'
 definePageMeta({ middleware: 'admin' })
 useHead({ title: 'Settings | Fotobogen' })
 
-interface Settings { siteTitle: string, tagline: string, grid: 'masonry' | 'square', photoView: 'modal' | 'page', showExif: boolean, showLocation: boolean, newUploads: 'public' | 'hidden', slideshowSeconds: number, slideshowOrder: 'sequence' | 'random', homeOrder: 'sequence' | 'random', photoQuality: 'smaller' | 'standard' | 'high', licence: string, allowDownload: boolean }
+interface Settings { siteTitle: string, tagline: string, grid: 'masonry' | 'square', photoView: 'modal' | 'page', showExif: boolean, showLocation: boolean, newUploads: 'public' | 'hidden', readWords: boolean, slideshowSeconds: number, slideshowOrder: 'sequence' | 'random', homeOrder: 'sequence' | 'random', photoQuality: 'smaller' | 'standard' | 'high', licence: string, allowDownload: boolean }
 const { data } = await useFetch<Settings>('/api/admin/settings')
-const form = reactive<Settings>({ siteTitle: '', tagline: '', grid: 'masonry', photoView: 'modal', showExif: true, showLocation: false, newUploads: 'public', slideshowSeconds: 8, slideshowOrder: 'sequence', homeOrder: 'random', photoQuality: 'standard', licence: 'arr', allowDownload: false, ...data.value })
+const form = reactive<Settings>({ siteTitle: '', tagline: '', grid: 'masonry', photoView: 'modal', showExif: true, showLocation: false, newUploads: 'public', readWords: true, slideshowSeconds: 8, slideshowOrder: 'sequence', homeOrder: 'random', photoQuality: 'standard', licence: 'arr', allowDownload: false, ...data.value })
 const errors = ref<Record<string, string>>({})
 const message = ref('')
 const problem = ref('')
@@ -75,6 +75,8 @@ async function save() {
         <label class="check"><input v-model="form.newUploads" type="radio" name="newUploads" value="public"><span>Go on the site as soon as they are processed</span></label>
         <label class="check uploads__second"><input v-model="form.newUploads" type="radio" name="newUploads" value="hidden"><span>Stay hidden as drafts until you publish them</span></label>
       </fieldset>
+      <label class="check uploads__second"><input v-model="form.readWords" type="checkbox" aria-describedby="read-words-note"><span>Use the title, caption, keywords and alt text saved inside a photo</span></label>
+      <p id="read-words-note" class="check__note">Lightroom, Apple Photos and most other programs save these words in the file when they export it. With this on, a photo arrives with them; you can change them afterwards. Switch it off if your files carry notes or keywords that are not meant for visitors. Where a photo was taken is a separate switch on this page, and stays off unless you turn it on.</p>
 
       <h2 class="settings__heading">Slideshow</h2>
       <div class="seconds" :class="{ 'seconds--invalid': errors.slideshowSeconds }">

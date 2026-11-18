@@ -420,12 +420,12 @@ export const escapeXml = (text: string): string =>
   text.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f\ufffe\uffff]|[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/g, '').replace(/[<>&'"]/g, character => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '\'': '&apos;', '"': '&quot;' })[character]!)
 
 /** The newest public photos, for the feed and the sitemap. */
-export function recentPhotos(limit: number): { slug: string, title: string | null, description: string | null, createdAt: number, updatedAt: number, image: string | null }[] {
+export function recentPhotos(limit: number): { slug: string, title: string | null, description: string | null, alt: string | null, createdAt: number, updatedAt: number, image: string | null }[] {
   const { sqlite, storage } = getPipeline()
   const rows = sqlite.prepare(`
-    select p.slug, p.title, p.description, coalesce(p.publish_at, p.created_at) as createdAt, p.updated_at as updatedAt, d.path
+    select p.slug, p.title, p.description, p.alt, coalesce(p.publish_at, p.created_at) as createdAt, p.updated_at as updatedAt, d.path
     from photos p left join derivatives d on d.photo_id = p.id and d.kind = 'medium'
     where ${visible()} order by p.sort_order desc limit ?
-  `).all(limit) as { slug: string, title: string | null, description: string | null, createdAt: number, updatedAt: number, path: string | null }[]
+  `).all(limit) as { slug: string, title: string | null, description: string | null, alt: string | null, createdAt: number, updatedAt: number, path: string | null }[]
   return rows.map(({ path, ...row }) => ({ ...row, image: path ? storage.publicUrl(path) : null }))
 }
