@@ -91,7 +91,7 @@ describe('private albums', () => {
   })
 
   it('answers "not found" for a wrong link, and tells browsers and proxies to keep nothing', async () => {
-    for (const wrong of ['/private/' + 'A'.repeat(32), '/private/x', `${link.slice(0, -1)}_`, '/private/' + link.slice(9).toUpperCase(), '/private']) {
+    for (const wrong of ['/private/' + 'A'.repeat(32), '/private/x', `${link.slice(0, -1)}${link.endsWith('_') ? '-' : '_'}`, '/private/' + link.slice(9).toUpperCase(), '/private']) {
       expect((await get(server, wrong)).status, wrong).toBe(404)
       if (wrong !== '/private') expect((await get(server, `/api${wrong}`)).status, wrong).toBe(404)
     }
