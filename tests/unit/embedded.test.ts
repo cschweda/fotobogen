@@ -95,6 +95,22 @@ describe('words saved inside a photo', () => {
     expect(Date.now() - quick).toBeLessThan(1500)
   }, 20_000)
 
+  it('reads one file at a time, however many arrive together', async () => {
+    const { writeFileSync, mkdtempSync } = await import('node:fs')
+    const { tmpdir } = await import('node:os')
+    const { join } = await import('node:path')
+    const dir = mkdtempSync(join(tmpdir(), 'fb-many-'))
+    const files = await Promise.all(Array.from({ length: 6 }, async (_, index) => {
+      const file = join(dir, `${index}.jpg`)
+      writeFileSync(file, withEmbeddedText(await imageBuffer({ width: 64, height: 48, seed: index + 1 }), { xmp: { title: `Photo ${index}` } }))
+      return file
+    }))
+    const { threadsAtOnce } = await import('../../server/pipeline/embedded.ts')
+    const read = await Promise.all(files.map(file => readEmbeddedWords(file)))
+    expect(read.map(words => words.title)).toEqual(files.map((_, index) => `Photo ${index}`))
+    expect(threadsAtOnce.most).toBe(1)
+  })
+
   it('answers with nothing for a file it cannot read', async () => {
     expect(await readEmbeddedWords('/no/such/file.jpg')).toEqual({ title: null, description: null, alt: null, tags: [], takenAt: null })
   })

@@ -10,6 +10,7 @@
 import type exifr from 'exifr'
 import { createRequire } from 'node:module'
 import { Worker } from 'node:worker_threads'
+import { serial } from '../core/serial.ts'
 import type { PipelineContext } from './context.ts'
 import { saysSomething, withoutUnseen } from '../../shared/visible-text.ts'
 import { datesAsWritten } from './exif.ts'
@@ -140,22 +141,30 @@ require(workerData.reader).parse(workerData.path, workerData.options)
  * whole site. In its own thread it stops nothing, and is ended after five
  * seconds with nothing read.
  */
+// One file at a time: many uploads at once must not mean many reading threads at once, each with memory of its own.
+const oneAtATime = serial()
+/** How many reading threads are running, and the most there have ever been at once. Watched by a test. */
+export const threadsAtOnce = { now: 0, most: 0 }
+
 function parseApart(path: string, options: unknown): Promise<unknown> {
-  return new Promise((resolve) => {
+  return oneAtATime(() => new Promise((resolve) => {
     let worker: Worker
     try {
-      worker = new Worker(READER, { eval: true, workerData: { path, options, reader: createRequire(import.meta.url).resolve('exifr') }, env: {}, stdout: true, stderr: true, resourceLimits: { maxOldGenerationSizeMb: 256 } })
+      worker = new Worker(READER, { eval: true, workerData: { path, options, reader: createRequire(import.meta.url).resolve('exifr') }, env: {}, stdout: true, stderr: true, resourceLimits: { maxOldGenerationSizeMb: 128 } })
     }
     catch {
       resolve(null)
       return
     }
+    threadsAtOnce.now++
+    threadsAtOnce.most = Math.max(threadsAtOnce.most, threadsAtOnce.now)
     worker.stdout.resume()
     worker.stderr.resume()
     let done = false
     const finish = (found: unknown) => {
       if (done) return
       done = true
+      threadsAtOnce.now--
       clearTimeout(timer)
       void worker.terminate().catch(() => undefined)
       resolve(found)
@@ -164,7 +173,7 @@ function parseApart(path: string, options: unknown): Promise<unknown> {
     worker.once('message', finish)
     worker.once('error', () => finish(null))
     worker.once('exit', () => finish(null))
-  })
+  }))
 }
 
 /**
