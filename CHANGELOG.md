@@ -13,6 +13,28 @@ is built from this file.
 
 Nothing yet.
 
+## [1.10.0] - 2026-11-17
+
+The slideshow's details say more, and the screenshots are new.
+
+### Added
+
+- **The slideshow's details list what the photo's page lists.** Press a photo in the slideshow and, with its title and description, you now see its size in pixels, the albums it is in, its tags, and its licence, as well as the date taken, camera, lens, and exposure it already gave. Albums and tags are links. Size follows the camera-details setting, as on the photo's page. Where a photo was taken is still never shown in the slideshow, and an album visitors may not see is never named.
+- `GET /api/slideshow` gives each slide `size`, `tags`, `albums`, and `licence`. Nothing is removed.
+
+### Changed
+
+- For skin writers: the details panel may now hold several paragraphs of the class `fb-slideshow__facts`, and the photo page's `fb-tags` list. A skin written for an earlier version shows them without changes; the four built-in skins tidy the spacing of the tags there.
+- Every screenshot in the README and on fotobogen.com is retaken from this version.
+
+### Security
+
+- The fifth [security audit](https://fotobogen.com/docs/security-audits/), of this change: no findings.
+
+### Updating
+
+**Admin, System, Update to version 1.10.0**, or `pnpm fotobogen update`. Docker: `docker compose pull`, then `docker compose up -d`. Nothing in the database changes.
+
 ## [1.9.0] - 2026-11-17
 
 Optional two-step login, and the fourth [security audit](https://fotobogen.com/docs/security-audits/). Updating changes nothing about how you log in until you switch it on.
@@ -383,6 +405,7 @@ Later entries list only what changed.
 - One admin account only. No comments, no shop, no storage outside the server's own disk.
 
 [Unreleased]: https://github.com/cschweda/fotobogen/commits/staging
+[1.10.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.10.0
 [1.9.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.9.0
 [1.8.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.8.0
 [1.7.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.7.0

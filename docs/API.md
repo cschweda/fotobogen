@@ -148,7 +148,7 @@ The album, then a page of its photos in the album's own order, in the same shape
 
 `GET /api/slideshow`, `GET /api/slideshow?album=<slug>`, `GET /api/slideshow?tag=<slug>`
 
-Up to 500 photos with what a slideshow needs, plus the timing and order set in the admin. It never includes a location.
+Up to 500 photos with what a slideshow needs, plus the timing and order set in the admin. `camera` and `size` are `null` when the site hides camera details; `albums` lists public albums only. It never includes a location.
 
 ```json
 {
@@ -156,7 +156,7 @@ Up to 500 photos with what a slideshow needs, plus the timing and order set in t
   "back": "/",
   "seconds": 8,
   "order": "sequence",
-  "slides": [{ "slug": "crossing", "title": "Crossing", "description": "…", "alt": "…", "takenAt": null, "camera": "Leica M11, 35 mm, f/2.8", "images": [{ "url": "…", "width": 1280, "height": 854 }] }]
+  "slides": [{ "slug": "crossing", "title": "Crossing", "description": "…", "alt": "…", "takenAt": null, "camera": "Leica M11, 35 mm, f/2.8", "size": { "width": 6000, "height": 4000 }, "tags": [{ "slug": "street", "name": "street" }], "albums": [{ "slug": "city", "title": "City" }], "licence": { "label": "All rights reserved", "url": null }, "images": [{ "url": "…", "width": 1280, "height": 854 }] }]
 }
 ```
 

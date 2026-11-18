@@ -4,7 +4,7 @@ import { upload, whenProcessed } from '../helpers/photos.ts'
 import { get, startServer, type TestServer } from '../helpers/server.ts'
 import { completeSetup } from '../helpers/setup.ts'
 
-interface Show { title: string | null, back: string, seconds: number, order: string, slides: { slug: string, camera: string | null, images: { width: number }[] }[] }
+interface Show { title: string | null, back: string, seconds: number, order: string, slides: { slug: string, camera: string | null, size: { width: number, height: number } | null, tags: { slug: string, name: string }[], albums: { slug: string, title: string }[], licence: { label: string, url: string | null }, images: { width: number }[] }[] }
 
 describe('the slideshow', () => {
   let server: TestServer
@@ -65,6 +65,31 @@ describe('the slideshow', () => {
     for (const slideshowSeconds of [1, 500, 2.5, 'fast']) {
       expect((await send('PUT', '/api/admin/settings', { ...settings, slideshowSeconds })).status, String(slideshowSeconds)).toBe(422)
     }
+  })
+
+  it('gives each slide what its photo page shows: size, tags, public albums and licence, but never a hidden album or a location', async () => {
+    await send('PUT', '/api/admin/settings', { ...settings, slideshowOrder: 'sequence' })
+    const hidden = (await (await send('POST', '/api/admin/albums', { title: 'Kept Back' })).json() as { id: string }).id
+    await send('PATCH', `/api/admin/albums/${hidden}`, { visibility: 'hidden' })
+    await send('POST', '/api/admin/photos/bulk', { ids: [ids.a], action: 'add-to-album', album: hidden })
+    const secret = (await (await send('POST', '/api/admin/albums', { title: 'Family Only' })).json() as { id: string }).id
+    expect((await send('PATCH', `/api/admin/albums/${secret}`, { visibility: 'private' })).status).toBe(200)
+    await send('POST', '/api/admin/photos/bulk', { ids: [ids.a], action: 'add-to-album', album: secret })
+    await send('PATCH', `/api/admin/photos/${ids.a}`, { tags: ['zebra', 'Dusk'], license: 'cc-by' })
+    const a = (await show()).slides.find(slide => slide.slug === 'a')!
+    expect(a.size).toEqual({ width: 1600, height: 1000 })
+    expect(a.tags).toEqual([{ slug: 'dusk', name: 'Dusk' }, { slug: 'zebra', name: 'zebra' }])
+    expect(a.albums).toEqual([{ slug: 'coast', title: 'Coast' }])
+    expect(a.licence).toEqual({ label: 'CC BY 4.0', url: 'https://creativecommons.org/licenses/by/4.0/' })
+    const text = await (await get(server, '/api/slideshow')).text()
+    expect(text).not.toMatch(/Kept Back|kept-back|Family Only|family-only|"lat"|"lng"|location/)
+
+    // With camera details hidden, the size goes with them; tags, albums and licence stay, as on the photo's page.
+    await send('PUT', '/api/admin/settings', { ...settings, showExif: false })
+    const quiet = (await show()).slides.find(slide => slide.slug === 'a')!
+    expect(quiet).toMatchObject({ camera: null, size: null, albums: [{ slug: 'coast' }], licence: { label: 'CC BY 4.0' } })
+    expect(quiet.tags).toHaveLength(2)
+    await send('PUT', '/api/admin/settings', settings)
   })
 
   it('renders a page that is kept out of search engines', async () => {

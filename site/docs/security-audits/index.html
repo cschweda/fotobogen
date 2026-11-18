@@ -55,6 +55,7 @@
     <div class="pages__here">
       <h2>On this page</h2>
       <ul>
+        <li><a href="#audit-2026-11-17-d">17 November 2026, the fifth audit</a></li>
         <li><a href="#audit-2026-11-17-c">17 November 2026, the fourth audit</a></li>
         <li><a href="#audit-2026-11-17-b">17 November 2026, the third audit</a></li>
         <li><a href="#audit-2026-11-17">17 November 2026</a></li>
@@ -70,6 +71,13 @@
 <p>The newest audit is open below; older ones are folded under it. To report a problem, <a href="https://github.com/cschweda/fotobogen/issues">open an issue on GitHub</a>. If the details should not be public yet, say only that in the issue and ask for a private way to send them.</p>
 
 <details class="audit" open>
+<summary><strong>17 November 2026, version 1.10.0.</strong> No findings.</summary>
+<h2 id="audit-2026-11-17-d">17 November 2026, the fifth audit</h2>
+<p>The fifth audit, of one change: the slideshow&#x27;s details now list a photo&#x27;s size, its albums, its tags and its licence, as its own page does. One attacker, with a running copy on this machine and the source code, put a public photo into a hidden album and a private album, gave a hidden photo and a scheduled photo tags of their own, named a tag and an album with HTML in them, and then read the slideshow nine ways: for the whole site, for an album, for a tag, at the addresses of the hidden and the private album, at the tags of the hidden and the scheduled photo, as a page, and as the page for other sites. The aims: to read the name of an album a visitor may not see; to read anything of a photo a visitor may not see; to read where a photo was taken; to read a photo&#x27;s size on a site that hides camera details; and to have a name run as code in the details.</p>
+<p>Nothing was found. What was tried and held: the hidden and the private album are named nowhere, and their addresses are not found; the hidden and the scheduled photo are left out, and their tags are not found; no location is given, with locations switched on for photo pages; with camera details switched off, no slide gives a size or a camera; a tag and an album named with HTML arrive as text in the page. Two tests keep it so: one fails if a hidden or private album is named or a size is given with camera details off (checked by breaking the code on purpose), and one opens the details in a browser with an album named in HTML. Not new, and still open from the first audit: the date a photo was taken is shown whatever the camera-details setting says. Not tested: a library of 500 photos, the most a slideshow plays (the copy held 25); browsers other than Chromium.</p>
+</details>
+
+<details class="audit">
 <summary><strong>17 November 2026, version 1.9.0.</strong> 6 findings, none critical, high, or medium: 2 low, 4 informational. Outcome: 2 fixed, 4 accepted.</summary>
 <h2 id="audit-2026-11-17-c">17 November 2026, the fourth audit</h2>
 <p>The fourth audit, of two-step login alone: the code after the password, the backup codes, the key a server keeps for every Fotobogen on it, the admin page, and the commands on the server. One attacker, with a running copy on this machine and the source code, sent about 60 requests of its own making. The aims: to log in without a code; to read the key or the backup codes without the password; to use one code twice; to switch two-step login on or off from another site or with an API token; and to fetch the key file by a web address. Each finding was shown against the running copy or by a test. Finding 2 was not found by the attacker: an automated review of the finished change raised it afterwards. Both fixes were made with a test that failed first and are in version 1.9.0.</p>

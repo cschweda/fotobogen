@@ -207,6 +207,8 @@
 .fb-slideshow__title { margin: 0 0 0.4rem; font-size: 1.25rem; font-weight: 700; letter-spacing: -0.015em; }
 .fb-slideshow__description { max-width: 46rem; margin: 0 0 0.5rem; white-space: pre-line; }
 .fb-slideshow__facts { margin: 0 0 0.5rem; color: #d0d0cb; font-size: 0.875rem; }
+.fb-slideshow__details .fb-tags { margin: 0 0 0.5rem; }
+.fb-slideshow__details .fb-tag, .fb-slideshow__details .fb-tag:hover { border-color: currentColor; }
 .fb-slideshow__empty { align-self: center; justify-self: center; padding: var(--fb-margin); }
 
 @media (prefers-reduced-motion: reduce) {

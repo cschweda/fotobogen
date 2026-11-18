@@ -38,6 +38,7 @@ const stage = ref<HTMLElement>()
 let wakeLock: { release(): Promise<void> } | null = null
 // The playing itself (the order, the cross-fade, the timer) is shared with the slideshow made for other sites.
 const { slides, position, current, layers, front, playing, announcement, srcset, step, togglePlaying, schedule } = useSlideshow(show, { held: details })
+const size = (slide: Slide) => slide.size ? t('sizeValue', { width: slide.size.width.toLocaleString('en'), height: slide.size.height.toLocaleString('en') }) : null
 const taken = (slide: Slide) => slide.takenAt === null ? null : new Intl.DateTimeFormat('en', { dateStyle: 'long', timeZone: 'UTC' }).format(new Date(slide.takenAt))
 
 /** A click on the photo shows its details and holds it; another carries on. */
@@ -115,8 +116,19 @@ onBeforeUnmount(() => {
       <div v-if="details && current" id="slide-details" class="fb-slideshow__details">
         <h2 class="fb-slideshow__title">{{ current.title ?? t('untitled') }}</h2>
         <p v-if="current.description" class="fb-slideshow__description">{{ current.description }}</p>
-        <p v-if="taken(current) || current.camera" class="fb-slideshow__facts">
-          {{ [taken(current), current.camera].filter(Boolean).join(' · ') }}
+        <!-- Everything the photo's page lists, except where it was taken. Each line is a paragraph of the same class, so a skin styles them all at once. -->
+        <p v-if="taken(current) || current.camera || size(current)" class="fb-slideshow__facts">
+          {{ [taken(current), current.camera, size(current)].filter(Boolean).join(' · ') }}
+        </p>
+        <p v-if="current.albums.length" class="fb-slideshow__facts">
+          {{ t('inAlbums') }} <template v-for="(album, index) in current.albums" :key="album.slug"><template v-if="index > 0">, </template><a :href="`/album/${album.slug}`">{{ album.title }}</a></template>
+        </p>
+        <ul v-if="current.tags.length" class="fb-tags" :aria-label="t('tagsLabel')">
+          <li v-for="tag in current.tags" :key="tag.slug"><a class="fb-tag" :href="`/tag/${tag.slug}`" rel="tag">{{ tag.name }}</a></li>
+        </ul>
+        <p class="fb-slideshow__facts">
+          <a v-if="current.licence.url" :href="current.licence.url" rel="license">{{ current.licence.label }}</a>
+          <template v-else>{{ current.licence.label }}</template>
         </p>
         <p><a :href="`/photo/${current.slug}`">{{ t('openPhotoPage') }}</a></p>
       </div>
