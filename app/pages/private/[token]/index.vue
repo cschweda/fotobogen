@@ -12,7 +12,7 @@ const here = `/private/${encodeURIComponent(token)}`
 await useFetch('/api/site', { key: 'site' })
 const { t } = useSiteText()
 const { data, error } = await useFetch<{ album: { title: string, description: string | null, count: number } }>(source, { key: `private-${token}` })
-if (error.value || !data.value) throw createError({ status: 404, statusText: 'Not Found', fatal: true })
+if (error.value || !data.value) throw createError({ status: 404, statusText: 'Not Found', fatal: import.meta.client })
 // No canonical address and no sharing picture: nothing here should travel.
 useHead({ title: () => data.value!.album.title, meta: [{ key: 'robots', name: 'robots', content: 'noindex, nofollow' }] })
 </script>

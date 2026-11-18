@@ -1,4 +1,4 @@
-<!-- A note in the corner of every admin page, about new versions.
+<!-- A note at the top of every admin page, about new versions.
 
      Until the owner has said whether Fotobogen may ask GitHub once a day, it
      asks them, once. When a newer version is known, it says so. It never
@@ -83,8 +83,5 @@ async function answer(automatic: boolean) {
 .toast__heading { margin: 0 0 0.4rem; font-size: 1.0625rem; font-weight: 700; letter-spacing: -0.01em; }
 .toast__text { margin: 0; color: var(--fb-muted); font-size: 0.9375rem; }
 .toast__actions { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 0.9rem; }
-/* Wide screens: it sits in the bottom corner. Narrow ones: it is part of the page, above the content, so it covers nothing. */
-@media (min-width: 56rem) {
-  .toast { position: fixed; right: 1.5rem; bottom: 1.5rem; z-index: 20; width: 21rem; margin: 0; box-shadow: 0 0.5rem 1.5rem rgb(0 0 0 / 18%); }
-}
+/* It is part of the page, above the content, at every width: in a corner it lay over the page's own controls. */
 </style>

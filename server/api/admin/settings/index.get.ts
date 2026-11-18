@@ -21,6 +21,8 @@ export default defineEventHandler(async (event) => {
     licence: getSetting('site.license', DEFAULT_LICENCE),
     allowDownload: getSetting('privacy.allow_original_download', false),
     newUploads: getSetting<'public' | 'hidden'>('uploads.default_visibility', 'public'),
+    // Whether a new upload takes the title, caption, keywords and alt text saved inside its file.
+    readWords: getSetting('uploads.read_words', true),
     // How hard the copies made for the web are compressed: smaller, standard, or high.
     photoQuality: isQualityPreset(getSetting<unknown>('media.quality', DEFAULT_QUALITY)) ? getSetting<QualityPreset>('media.quality', DEFAULT_QUALITY) : DEFAULT_QUALITY,
     // The slideshow: seconds each photo is shown, and whether the order is yours or shuffled.

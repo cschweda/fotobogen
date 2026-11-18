@@ -1,6 +1,6 @@
 # Roadmap
 
-**Version 1.10.0 is the current release** (17 November 2026), following 1.9.0, 1.8.0, 1.7.0, 1.6.0, 1.5.0, 1.4.0, 1.3.3, 1.3.2, 1.3.1, 1.3.0, 1.2.0, 1.1.0 and 1.0.0, the first: see [CHANGELOG.md](../CHANGELOG.md). Everything marked Done below is in it. What is marked Planned or Later comes after.
+**Version 1.11.0 is the current release** (18 November 2026), following 1.10.0, 1.9.0, 1.8.0, 1.7.0, 1.6.0, 1.5.0, 1.4.0, 1.3.3, 1.3.2, 1.3.1, 1.3.0, 1.2.0, 1.1.0 and 1.0.0, the first: see [CHANGELOG.md](../CHANGELOG.md). Everything marked Done below is in it. What is marked Planned or Later comes after.
 
 The feature list agreed on 2026-11-15, in the order it is being built. Each item lands as one pull request against `staging`.
 
@@ -48,6 +48,9 @@ Visits to fotobogen.com itself are counted with Plausible. (Counting visits to y
 | Optional two-step login with an authenticator app and backup codes | Done, in 1.9.0 |
 | A picture-quality setting for the web copies | Done |
 | Demo mode: a read-only login for a site that shows Fotobogen off | Done |
+| HEIC, the format an iPhone saves in | Done, in 1.11.0 |
+| Titles, captions, keywords and alt text read from inside a photo; alt text for every photo | Done, in 1.11.0 |
+| Swiping between photos on a phone | Done, in 1.11.0 |
 | Update from the admin, for a copy installed with git | Done, in 1.1.0 |
 | A note in the admin when a new version is out, after asking once whether it may check | Done, in 1.2.0 |
 | Questions at the first start (port, address, demo mode), `fotobogen init`, colour in the terminal | Done, in 1.3.0 |
@@ -62,7 +65,7 @@ Visits to fotobogen.com itself are counted with Plausible. (Counting visits to y
 | 4 | A read-only JSON API for public photos ([API.md](API.md)) | Done |
 | 5 | Webhooks on upload, publish, and delete ([WEBHOOKS.md](WEBHOOKS.md)) | Done |
 | 6 | An S3-compatible storage adapter | Planned |
-| 7 | An import command for a folder of photos; importers for Flickr and WordPress exports | Planned |
+| 7 | An import command for a folder of photos (`fotobogen import`, done in 1.11.0); importers for Flickr and WordPress exports (planned) | Partly done |
 | 8 | A documented upgrade and migration policy ([UPGRADING.md](UPGRADING.md)) | Done |
 
 ## Already built

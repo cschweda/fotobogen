@@ -1,8 +1,9 @@
-import { existsSync, readdirSync, unlinkSync } from 'node:fs'
+import { copyFileSync, existsSync, readdirSync, unlinkSync } from 'node:fs'
 import { join } from 'node:path'
 import sharp from 'sharp'
 import { describe, expect, it } from 'vitest'
 import { acceptUpload } from '../../server/pipeline/accept.ts'
+import { deletePhotos } from '../../server/pipeline/remove.ts'
 import { processPhoto } from '../../server/pipeline/render.ts'
 import { imageFile, type TestImage } from '../helpers/images.ts'
 import { rows, testContext } from '../helpers/pipeline.ts'
@@ -19,6 +20,28 @@ const derivatives = (ctx: ReturnType<typeof testContext>) =>
   rows<Derivative>(ctx, 'select kind, format, width, height, path, bytes from derivatives order by width * height')
 
 describe('processPhoto', () => {
+  it('makes the web copies of an iPhone HEIC, reads its camera details from the file as uploaded, and removes both files with the photo', async () => {
+    const ctx = testContext()
+    const tmpPath = join(ctx.tmpDir, 'up-heic')
+    copyFileSync('tests/fixtures/iphone.heic', tmpPath)
+    const outcome = await acceptUpload(ctx, { tmpPath, filename: 'IMG_0042.HEIC' })
+    if (outcome.result !== 'accepted') throw new Error('not accepted')
+    const id = outcome.photo.id
+    await processPhoto(ctx, id)
+
+    expect(derivatives(ctx).map(d => [d.kind, d.format, d.width, d.height])).toEqual([['square', 'webp', 200, 200], ['thumb', 'webp', 320, 200], ['medium', 'webp', 320, 200]])
+    const [photo] = rows<Record<string, unknown>>(ctx, 'select status, camera, lens, taken_at from photos')
+    expect(photo).toEqual({ status: 'ready', camera: 'Apple iPhone 15', lens: 'iPhone 15 back camera 6.86mm f/1.6', taken_at: Date.UTC(2024, 5, 1, 8, 15, 30) })
+
+    // If the JPEG made from it is ever lost (an old backup, a tidy-up by hand), it is made again from the upload.
+    unlinkSync(join(ctx.root, 'originals', `${id}.heic.jpg`))
+    await processPhoto(ctx, id)
+    expect(readdirSync(join(ctx.root, 'originals')).sort()).toEqual([`${id}.heic`, `${id}.heic.jpg`])
+
+    expect(await deletePhotos(ctx, { ids: [id] })).toEqual({ count: 1, leftBehind: [] })
+    expect(readdirSync(join(ctx.root, 'originals'))).toEqual([])
+  })
+
   it('writes WebP derivatives at the planned sizes and marks the photo ready', async () => {
     const ctx = testContext()
     const id = await accepted(ctx, { width: 3000, height: 2000 })

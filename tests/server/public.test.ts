@@ -58,6 +58,11 @@ describe('the public site', () => {
     expect((await tiles()).tiles.map(tile => tile.slug)).toEqual(['field', 'harbour'])
     expect((await get(server, '/api/photos/tower')).status).toBe(404)
     expect((await get(server, '/photo/tower')).status).toBe(404)
+    // A page that is not there is an ordinary answer, not a fault: nothing is written to the server's log.
+    for (const path of ['/photo/no-such-photo', '/album/no-such-album', '/tag/no-such-tag', '/no-such-page', '/private/not-a-link', '/slideshow?album=no-such-album']) {
+      expect((await get(server, path)).status, path).toBe(404)
+    }
+    expect(server.output()).not.toContain('[request error]')
     for (const path of ['/feed.xml', '/sitemap.xml', '/']) {
       expect(await (await get(server, path)).text(), path).not.toContain('tower')
     }

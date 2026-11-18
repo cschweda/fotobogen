@@ -19,7 +19,9 @@ import type { RecipeStep } from '../modules/contract.ts'
 import type { Raster } from '../modules/registry.ts'
 import type { PipelineContext } from './context.ts'
 import { datesAsWritten, exifColumns, exifForStorage } from './exif.ts'
+import { heicToJpeg, readableKey } from './heic.ts'
 import sharp from './image.ts'
+import { pixelLimitFor } from './limits.ts'
 import { planDerivatives, WORKING_EDGE, type PlannedDerivative } from './plan.ts'
 
 /** The quality the owner chose under Settings; "standard" (fotobogen.config.js) unless they chose another. */
@@ -42,6 +44,21 @@ async function readExif(path: string): Promise<Record<string, unknown> | undefin
   catch {
     return undefined // a photo with damaged metadata is still a photo
   }
+}
+
+/**
+ * The file the image library reads for a photo: the original, or for a HEIC
+ * the JPEG made from it when it arrived. If that JPEG has gone missing it is
+ * made again from the upload, which is always kept.
+ */
+async function readablePath(ctx: PipelineContext, originalKey: string): Promise<string> {
+  const key = readableKey(originalKey)
+  const path = ctx.storage.localPath('originals', key)
+  if (key !== originalKey && await ctx.storage.size('originals', key) === null) {
+    const made = await heicToJpeg(ctx.storage.localPath('originals', originalKey), path, pixelLimitFor('heic', false, ctx.limits).maxPixels)
+    if (!made.ok) throw new Error('The original file could not be read.')
+  }
+  return path
 }
 
 /** Decode a stored original, upright and in sRGB, no larger than `edge` on its long side. */
@@ -121,7 +138,7 @@ export async function renderPreview(ctx: PipelineContext, photoId: string, recip
   const photo = ctx.sqlite.prepare(`select original_path from photos where id = ?`).get(photoId) as { original_path: string } | undefined
   if (!photo || !ctx.modules) return null
   const size = Math.max(120, Math.min(PREVIEW_EDGE, Math.round(edge) || PREVIEW_EDGE))
-  const decoded = await workingRaster(ctx, ctx.storage.localPath('originals', photo.original_path), size)
+  const decoded = await workingRaster(ctx, await readablePath(ctx, photo.original_path), size)
   const result = await ctx.modules.apply(decoded, ctx.modules.cleanRecipe(recipe))
   return sharp(result.data, { raw: { width: result.width, height: result.height, channels: result.channels } }).webp({ quality: 80 }).toBuffer()
 }
@@ -162,7 +179,7 @@ export async function processPhoto(ctx: PipelineContext, photoId: string, option
 
   const recipe = effectiveRecipe(ctx, photo.recipe_json)
   const quality = webpQuality(ctx)
-  const decoded = await workingRaster(ctx, original, WORKING_EDGE)
+  const decoded = await workingRaster(ctx, await readablePath(ctx, photo.original_path), WORKING_EDGE)
   // The recipe is applied to the working copy; the original file is never changed.
   const working = recipe.length > 0 && ctx.modules ? await ctx.modules.apply(decoded, recipe) : decoded
   const raster = () => sharp(working.data, { raw: { width: working.width, height: working.height, channels: working.channels } })

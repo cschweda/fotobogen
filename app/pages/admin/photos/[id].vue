@@ -11,6 +11,8 @@ definePageMeta({ middleware: 'admin' })
 
 interface Detail {
   id: string, slug: string, title: string | null, description: string | null, alt: string | null
+  /** The alt text is one Fotobogen wrote itself and has not been checked. */
+  altToCheck: boolean
   visibility: 'public' | 'hidden', publishAt: number | null, takenAt: number | null, filename: string, status: 'processing' | 'ready' | 'failed'
   /** Why it could not be processed, when it could not. */
   error: string | null
@@ -25,7 +27,7 @@ interface Detail {
 const route = useRoute()
 const id = String(route.params.id)
 const { data: photo, refresh, error } = await useFetch<Detail>(`/api/admin/photos/${id}`)
-if (error.value || !photo.value) throw createError({ status: 404, statusText: 'Photo not found', fatal: true })
+if (error.value || !photo.value) throw createError({ status: 404, statusText: 'Photo not found', fatal: import.meta.client })
 const { data: listing } = await useFetch<{ modules: ModuleInfo[] }>('/api/admin/modules')
 const modules = computed(() => listing.value?.modules ?? [])
 const { data: albumList } = await useFetch<{ albums: { id: string, title: string }[] }>('/api/admin/albums')
@@ -76,12 +78,22 @@ const embed = computed(() => {
 
 const errors = ref<Record<string, string>>({})
 const savingDetails = ref(false)
+// What was last saved, to tell whether leaving the page would lose anything.
+const savedForm = ref(JSON.stringify(form))
+const unsavedDetails = computed(() => JSON.stringify(form) !== savedForm.value)
 
 async function saveDetails() {
   if (savingDetails.value) return
-  savingDetails.value = true
   errors.value = {}
   problem.value = ''
+  // "Scheduled" needs its date: without one the photo would simply be public.
+  if (form.publish === 'later' && !form.publishAt) {
+    errors.value = { publishAt: 'Choose the date and time this photo goes public.' }
+    problem.value = 'The details were not saved: the date is missing.'
+    message.value = ''
+    return
+  }
+  savingDetails.value = true
   try {
     const result = await $fetch<{ slug: string, tags?: string[] }>(`/api/admin/photos/${id}`, {
       method: 'PATCH',
@@ -98,6 +110,7 @@ async function saveDetails() {
     form.slug = result.slug
     if (result.tags) form.tags = result.tags.join(', ')
     message.value = 'Details saved.'
+    savedForm.value = JSON.stringify(form)
     await refresh()
   }
   catch (caught) {
@@ -109,9 +122,34 @@ async function saveDetails() {
   }
 }
 
+// Leaving with changes that were not saved asks first, whether by a link in the admin or by closing the tab.
+const LEAVE = 'You have changes on this page that are not saved. Leave without saving them?'
+let leavingForGood = false
+const unsaved = () => !leavingForGood && (unsavedDetails.value || changed.value)
+onBeforeRouteLeave(() => !unsaved() || window.confirm(LEAVE))
+function beforeUnload(event: BeforeUnloadEvent) {
+  if (unsaved()) event.preventDefault()
+}
+onMounted(() => window.addEventListener('beforeunload', beforeUnload))
+onBeforeUnmount(() => window.removeEventListener('beforeunload', beforeUnload))
+
+/** The alt text Fotobogen wrote is right: stop marking it "to check". */
+async function approveAlt() {
+  problem.value = ''
+  try {
+    await $fetch(`/api/admin/photos/${id}`, { method: 'PATCH', body: { altChecked: true } })
+    message.value = 'Alt text marked as checked.'
+    await refresh()
+  }
+  catch (caught) {
+    problem.value = failure(caught, 'That could not be saved.')
+  }
+}
+
 async function remove() {
   try {
     await $fetch(`/api/admin/photos/${id}`, { method: 'DELETE' })
+    leavingForGood = true
     await navigateTo('/admin/photos')
   }
   catch (caught) {
@@ -332,8 +370,12 @@ onBeforeUnmount(() => {
           <FbField id="description" v-model="form.description" label="Description" :rows="3" :maxlength="5000" :error="errors.description" />
           <FbField
             id="alt" v-model="form.alt" label="Alt text" :rows="2" :maxlength="500" :error="errors.alt"
-            hint="What the photo shows, for people who cannot see it. One sentence is enough."
+            hint="What the photo shows, for people who cannot see it. One sentence is enough. Every photo has one."
           />
+          <div v-if="photo.altToCheck" class="altcheck">
+            <p class="altcheck__text"><strong>Fotobogen wrote this alt text itself</strong>, from the photo's title, its file name or its date. It has not looked at the picture. Say what the photo shows, then save; or, if it is already right:</p>
+            <button type="button" class="fb-button fb-button--quiet" @click="approveAlt">It is right as it is</button>
+          </div>
           <FbField id="slug" v-model="form.slug" label="Address" :maxlength="80" :error="errors.slug" hint="The end of the photo's web address: /photo/…" />
           <FbField id="taken" v-model="form.taken" label="Date taken" type="date" :error="errors.takenAt" hint="Filled in from the date the camera wrote into the file, when there is one. Empty means the file carried none: set it here if you like." />
           <div class="pick">
@@ -365,7 +407,7 @@ onBeforeUnmount(() => {
             <legend class="scope__legend">Publish</legend>
             <label class="scope__choice"><input v-model="form.publish" type="radio" name="publish" value="now"><span>Public: shown on your site</span></label>
             <label class="scope__choice"><input v-model="form.publish" type="radio" name="publish" value="later"><span>Scheduled: public from a date and time</span></label>
-            <label class="scope__choice"><input v-model="form.publish" type="radio" name="publish" value="hidden"><span>Hidden: a draft only you see</span></label>
+            <label class="scope__choice"><input v-model="form.publish" type="radio" name="publish" value="hidden"><span>Hidden: a draft, kept in your library and not on your site</span></label>
           </fieldset>
           <FbField
             v-if="form.publish === 'later'" id="publishAt" v-model="form.publishAt" label="Goes public on" type="datetime-local"
@@ -436,6 +478,9 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+.altcheck { margin: -0.5rem 0 1.5rem; padding: 0.8rem 1rem; border-left: 4px solid var(--fb-text); background: var(--fb-panel); }
+.altcheck__text { max-width: 38rem; margin: 0 0 0.75rem; color: var(--fb-muted); font-size: 0.9375rem; }
+.altcheck__text strong { color: var(--fb-text); }
 .back { margin: 0 0 1.5rem; font-size: 0.875rem; }
 .title { overflow-wrap: anywhere; }
 .edit { display: grid; grid-template-columns: minmax(0, 3fr) minmax(18rem, 2fr); gap: clamp(1.5rem, 4vw, 3rem); margin-top: 2.5rem; align-items: start; }

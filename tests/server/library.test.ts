@@ -77,11 +77,15 @@ describe('the photo library', () => {
   it('hides and shows several photos at once, and can list just the hidden ones or those without alt text', async () => {
     expect(await (await send('POST', '/api/admin/photos/bulk', { ids: [ids.c, ids.d], action: 'hide' })).json()).toEqual({ changed: 2 })
     expect(await publicSlugs()).toEqual(['harbour-dawn', 'b'])
-    const hidden = await (await get(server, '/api/admin/photos?show=hidden', { cookie })).json() as { photos: { filename: string, hidden: boolean }[], counts: { hidden: number, missingAlt: number } }
+    const hidden = await (await get(server, '/api/admin/photos?show=hidden', { cookie })).json() as { photos: { filename: string, hidden: boolean }[], counts: { hidden: number, altToCheck: number } }
     expect(hidden.photos.map(photo => photo.filename)).toEqual(['d.jpg', 'c.jpg'])
-    expect(hidden.counts).toMatchObject({ hidden: 2, missingAlt: 3 })
-    const noAlt = await (await get(server, '/api/admin/photos?show=missing-alt', { cookie })).json() as { photos: { filename: string }[] }
-    expect(noAlt.photos.map(photo => photo.filename)).toEqual(['d.jpg', 'c.jpg', 'b.jpg'])
+    // Three still carry the alt text Fotobogen wrote for them; the one the owner described does not.
+    expect(hidden.counts).toMatchObject({ hidden: 2, altToCheck: 3 })
+    for (const name of ['alt-to-check', 'missing-alt']) { // the second is the filter's name before 1.11.0
+      const toCheck = await (await get(server, `/api/admin/photos?show=${name}`, { cookie })).json() as { photos: { filename: string, altToCheck: boolean }[] }
+      expect(toCheck.photos.map(photo => photo.filename), name).toEqual(['d.jpg', 'c.jpg', 'b.jpg'])
+      expect(toCheck.photos.every(photo => photo.altToCheck)).toBe(true)
+    }
     expect(await (await send('POST', '/api/admin/photos/bulk', { ids: [ids.c, ids.d], action: 'show' })).json()).toEqual({ changed: 2 })
     expect((await send('POST', '/api/admin/photos/bulk', { ids: [], action: 'hide' })).status).toBe(422)
     expect((await send('POST', '/api/admin/photos/bulk', { ids: [ids.a], action: 'explode' })).status).toBe(422)

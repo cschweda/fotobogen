@@ -114,7 +114,7 @@ test('a photo\'s page in the admin gives its links to copy', async ({ page, cont
   await expect(page.getByRole('heading', { name: 'Links' })).toBeVisible()
   await expect(page.getByLabel('This photo\'s page')).toHaveValue(`${server.url}/photo/harbour`)
   await expect(page.getByLabel(/^Medium picture, 900 × 600 pixels/)).toHaveValue(new RegExp(`^${server.url}/media/.+-medium-.+\\.webp$`))
-  await expect(page.getByLabel('HTML that shows the photo and links to its page')).toHaveValue(new RegExp(`^<a href="${server.url}/photo/harbour"><img src=".+" width="900" height="600" alt=""></a>$`))
+  await expect(page.getByLabel('HTML that shows the photo and links to its page')).toHaveValue(new RegExp(`^<a href="${server.url}/photo/harbour"><img src=".+" width="900" height="600" alt="Harbour"></a>$`)) // the alt text written from the file's name
 
   await page.getByRole('button', { name: 'Copy This photo\'s page' }).click()
   await expect(page.getByText('Copied.')).toBeVisible()

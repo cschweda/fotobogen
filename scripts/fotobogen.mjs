@@ -32,6 +32,9 @@ Commands:
   module new <name>                 Start a new module in data/modules/<name>
   module test <name or folder>      Try a module on a test picture (or --image <file>) and
                                     write the results to ./module-test (or --out <dir>)
+  import <folder>                   Bring a folder of photos into the running site. Add
+                                    --albums to make an album of each folder inside it,
+                                    or --album <name> to put them all in one
   seed-fetch                        Download the 25 sample photos into the library
                                     (needs a source checkout; in a running site,
                                     use Admin > Download sample photos instead)
@@ -355,6 +358,13 @@ try {
   }
   else if (command === 'two-step') {
     await twoStep(args)
+  }
+  else if (command === 'import') {
+    const paths = dataPaths(resolveDataDir(process.env, process.cwd()))
+    const { importFolder, IMPORT_USAGE } = await import('./import.mjs')
+    if (args.length === 0) throw new CliError(IMPORT_USAGE)
+    if (!existsSync(paths.db)) throw new CliError(`No Fotobogen database found at ${paths.db}. Start the app once first, or check DATA_DIR.`)
+    process.exitCode = await importFolder(args, { dbPath: paths.db, env: process.env, log: line => console.log(line), fail: message => new CliError(message) })
   }
   else if (command === 'seed-fetch') {
     await seedFetch()

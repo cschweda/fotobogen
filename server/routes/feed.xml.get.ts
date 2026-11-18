@@ -11,7 +11,7 @@ export default defineEventHandler((event) => {
   const text = cleanText(getSetting<unknown>('site.text', {}))
   const items = recentPhotos(30).map((photo) => {
     const link = `${origin}/photo/${encodeURIComponent(photo.slug)}`
-    const picture = photo.image ? `<p><img src="${escapeXml(origin + photo.image)}" alt=""></p>` : ''
+    const picture = photo.image ? `<p><img src="${escapeXml(origin + photo.image)}" alt="${escapeXml(photo.alt ?? '')}"></p>` : ''
     const words = photo.description ? `<p>${escapeXml(photo.description)}</p>` : ''
     return `    <item>
       <title>${escapeXml(photo.title ?? siteText(text, 'untitled'))}</title>

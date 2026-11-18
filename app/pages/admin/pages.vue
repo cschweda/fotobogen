@@ -25,12 +25,16 @@ async function create() {
   errors.value = {}
   problem.value = ''
   try {
-    const made = await $fetch<{ id: string }>('/api/admin/pages', { method: 'POST', body: { title: title.value } })
-    message.value = `Page "${title.value.trim()}" added. Write its text below.`
+    // Made hidden: a page with no words in it is not for visitors. Saving it below puts it on the site.
+    const made = await $fetch<{ id: string }>('/api/admin/pages', { method: 'POST', body: { title: title.value, visibility: 'hidden' } })
+    message.value = `Page "${title.value.trim()}" added. Write its text below. It is not on your site until you save it.`
     title.value = ''
     await refresh()
     const page = pages.value.find(candidate => candidate.id === made.id)
-    if (page) edit(page)
+    if (page) {
+      edit(page)
+      draft.hidden = false
+    }
   }
   catch (caught) {
     errors.value = failed(caught)?.errors ?? {}

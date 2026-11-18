@@ -20,7 +20,7 @@ const scope = typeof route.query.album === 'string' ? { album: route.query.album
 const { data: site } = await useFetch('/api/site', { key: 'site' })
 const { t, siteName } = useSiteText()
 const { data: show, error } = await useFetch<Show>('/api/slideshow', { query: scope })
-if (error.value || !show.value) throw createError({ status: 404, statusText: 'Nothing to show', fatal: true })
+if (error.value || !show.value) throw createError({ status: 404, statusText: 'Nothing to show', fatal: import.meta.client })
 
 useHead({
   htmlAttrs: { 'lang': () => site.value?.language || 'en', 'class': 'fb-public', 'data-fb-mode': useSkinMode(() => site.value?.mode).mode },
@@ -35,11 +35,15 @@ useHead({
 const details = ref(false)
 const fullscreen = ref(false)
 const stage = ref<HTMLElement>()
+const photoButton = ref<HTMLElement>()
 let wakeLock: { release(): Promise<void> } | null = null
 // The playing itself (the order, the cross-fade, the timer) is shared with the slideshow made for other sites.
 const { slides, position, current, layers, front, playing, announcement, srcset, step, togglePlaying, schedule } = useSlideshow(show, { held: details })
 const size = (slide: Slide) => slide.size ? t('sizeValue', { width: slide.size.width.toLocaleString('en'), height: slide.size.height.toLocaleString('en') }) : null
 const taken = (slide: Slide) => slide.takenAt === null ? null : new Intl.DateTimeFormat('en', { dateStyle: 'long', timeZone: 'UTC' }).format(new Date(slide.takenAt))
+
+// On a phone: a swipe across the photo moves on or back, as the arrow keys do.
+useSwipe(photoButton, { next: () => void step(1, true), previous: () => void step(-1, true) })
 
 /** A click on the photo shows its details and holds it; another carries on. */
 function toggleDetails() {
@@ -104,7 +108,7 @@ onBeforeUnmount(() => {
 
     <template v-else>
       <!-- The photo is a button: pressing it shows or hides its details. -->
-      <button type="button" class="fb-slideshow__photo" :aria-expanded="details" aria-controls="slide-details" :aria-label="details ? t('hideDetails') : t('showDetails')" @click="toggleDetails">
+      <button ref="photoButton" type="button" class="fb-slideshow__photo" :aria-expanded="details" aria-controls="slide-details" :aria-label="details ? t('hideDetails') : t('showDetails')" @click="toggleDetails">
         <template v-for="(slide, index) in layers" :key="index">
           <img
             v-if="slide" class="fb-slideshow__image" :class="{ 'fb-slideshow__image--front': front === index }"
@@ -113,6 +117,8 @@ onBeforeUnmount(() => {
         </template>
       </button>
 
+      <!-- One block at the foot of the screen: the details rest on the controls, however many rows those take. -->
+      <div class="fb-slideshow__foot">
       <div v-if="details && current" id="slide-details" class="fb-slideshow__details">
         <h2 class="fb-slideshow__title">{{ current.title ?? t('untitled') }}</h2>
         <p v-if="current.description" class="fb-slideshow__description">{{ current.description }}</p>
@@ -141,6 +147,7 @@ onBeforeUnmount(() => {
         <button type="button" class="fb-slideshow__control" @click="toggleFullscreen">{{ fullscreen ? t('leaveFullScreen') : t('fullScreen') }}</button>
         <a class="fb-slideshow__control" :href="show?.back ?? '/'" @click.prevent="close">{{ t('close') }}</a>
       </nav>
+      </div>
       <p class="fb-visually-hidden" role="status">{{ announcement }}</p>
     </template>
   </main>

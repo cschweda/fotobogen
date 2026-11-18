@@ -30,6 +30,10 @@ test('the owner writes a page and adds a link; visitors find both in the menu', 
   await page.getByLabel('Title of a new page').fill('About')
   await page.getByRole('button', { name: 'Add page' }).click()
   await expect(page.getByLabel('Address', { exact: true })).toHaveValue('about')
+  // Until it is saved it is not on the site: a page with no words in it is not shown to visitors.
+  await expect(page.getByRole('status').first()).toContainText('It is not on your site until you save it.')
+  expect((await page.request.get(server.url + '/about')).status()).toBe(404)
+  await expect(page.getByRole('checkbox', { name: 'Hidden' })).not.toBeChecked()
   await page.getByLabel('Text', { exact: true }).fill('I photograph the **coast**.\n\n## Contact\n\n- Write to me@example.com\n- <img src=x onerror=alert(1)> [x](javascript:alert(2))')
   const preview = page.locator('.preview')
   await expect(preview.getByRole('heading', { name: 'Contact' })).toBeVisible()

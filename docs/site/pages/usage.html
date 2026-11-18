@@ -31,13 +31,45 @@
 <p>Choose <strong>Upload</strong>, then pick files or drop them on the page. Each file shows its progress and what became of it.</p>
 <figure><img src="/screens/upload.png" alt="The upload page listing five files: three ready with thumbnails, one duplicate, one not accepted" width="1072" height="1133" loading="lazy"><figcaption>Each file gets its own row and its own result.</figcaption></figure>
 <ul>
-  <li><strong>Formats:</strong> JPEG, PNG, WebP, TIFF, and AVIF. A file is judged by what is inside it, not by its name.</li>
-  <li><strong>Size:</strong> up to 50 MB and 100 megapixels each. AVIF is held to 16 megapixels, WebP to 60, and interlaced PNG to 40, because those need far more memory to open. A larger one is refused with a note to upload a JPEG instead.</li>
+  <li><strong>Formats:</strong> JPEG, PNG, WebP, TIFF, AVIF, and HEIC (the format an iPhone saves in). A file is judged by what is inside it, not by its name.</li>
+  <li><strong>Size:</strong> up to 50 MB and 100 megapixels each. AVIF is held to 16 megapixels, HEIC to 25, WebP to 60, and interlaced PNG to 40, because those need far more memory to open. A larger one is refused with a note to upload a JPEG instead. An iPhone's usual photos are 12 or 24 megapixels; its 48-megapixel setting is over the limit.</li>
   <li><strong>Duplicates:</strong> the same file is not stored twice. The page names the photo that already has it.</li>
   <li><strong>Your file is kept untouched.</strong> Fotobogen makes resized copies for the web (up to 2560 pixels on the long side) and never enlarges anything.</li>
   <li><strong>Processing</strong> happens one photo at a time in the background, so you can keep uploading. A photo that cannot be processed after three tries is marked failed, with the reason and a <strong>Try again</strong> button, here and on the photo's own page in the library.</li>
 </ul>
 <p>Once processed, a photo is on your site, unless you have set new uploads to start as drafts.</p>
+
+<h3 id="words">The words that come with a photo</h3>
+<p>Lightroom, Capture One, Apple Photos and most other programs save a photo's title, caption and keywords inside the file when they export it. Fotobogen reads them when the file arrives:</p>
+<ul>
+  <li>the <strong>title</strong> becomes the photo's title, and its web address;</li>
+  <li>the <strong>caption</strong> becomes its description;</li>
+  <li>the <strong>keywords</strong> become its tags;</li>
+  <li>the <strong>alt text</strong> becomes its alt text, where the program wrote one.</li>
+</ul>
+<p>The upload page says what it read from each file, with a link to check it. Everything can be changed afterwards. If your files carry notes or keywords that are not meant for visitors, switch this off under <strong>Settings, New uploads</strong>. A description a camera writes by itself, such as "OLYMPUS DIGITAL CAMERA", is ignored. From a HEIC only its camera details are read, and a description if the camera data holds one; not a title or keywords.</p>
+
+<h3 id="alt-text">Every photo has alt text</h3>
+<p>Alt text is what a screen reader says in place of the picture. A photo that arrives with none is given a start, so that none goes out silent:</p>
+<ul>
+  <li>its title, if it has one;</li>
+  <li>or its file's name turned into words, when a person chose the name: <code>green-bicycle.jpg</code> becomes "Green bicycle";</li>
+  <li>or, for a name a camera gave, such as <code>IMG_0042.jpg</code>: "Photograph taken on 1 June 2024".</li>
+</ul>
+<p>Fotobogen does not look at the picture, so this is a start and not a description. Such photos are flagged <strong>Alt text to check</strong> in the library until you rewrite the text, or say on the photo's page that it is right as it is. Alt text can be changed but not emptied.</p>
+
+<h3 id="import">A whole folder at once</h3>
+<p>On the server, in Fotobogen's folder, with the site running:</p>
+<pre><code>pnpm fotobogen import ~/Pictures/export
+pnpm fotobogen import ~/Pictures/export --albums
+pnpm fotobogen import ~/Pictures/export --album "Iceland 2023"</code></pre>
+<ul>
+  <li>The first takes every photo in the folder and in the folders inside it.</li>
+  <li><code>--albums</code> also makes an album of each folder directly inside it, named after the folder.</li>
+  <li><code>--album</code> puts everything in one album, made if it is not there.</li>
+</ul>
+<p>The photos go in exactly as uploads from the admin do, so the same rules apply, the words inside each file are read, and new photos are drafts or public as your settings say. What is already in the library is skipped, so the command can be run again after an interruption. It ends by listing any file it could not take, with the reason. Import only a folder that is yours: everything in it is published, and with <code>--albums</code> the names of its folders become albums.</p>
+<p>In Docker the folder has to be one the container can see, such as a folder inside the data directory: <code>docker compose exec app node scripts/fotobogen.mjs import /data/inbox</code>. If the site is not on port 5150, add <code>--url http://127.0.0.1:5160</code> with its port. The command only talks to a site on the same machine.</p>
 
 <h2 id="library">The library</h2>
 <p><strong>Library</strong> shows every photograph. The first one there is the first on your site.</p>
@@ -45,14 +77,14 @@
 <ul>
   <li><strong>Order:</strong> drag a photo onto another to put it in front, or use its Up, Down, and To top buttons.</li>
   <li><strong>Several at once:</strong> tick photos, then Hide, Show, Delete, add to an album, or add a tag. Delete moves them to <a href="#trash">the trash</a> without asking, because it can be undone.</li>
-  <li><strong>Find:</strong> show only hidden photos, photos with no alt text, or photos that failed.</li>
+  <li><strong>Find:</strong> show only hidden photos, scheduled photos, photos whose alt text is still to be checked, or photos that failed.</li>
 </ul>
 
 <h2 id="editing">Editing a photo</h2>
 <p>Open a photo from the library to change:</p>
 <ul>
   <li>its <strong>title</strong> and <strong>description</strong>;</li>
-  <li>its <strong>alt text</strong>, which describes the picture to people who cannot see it. Screen readers read it aloud, and it is worth writing for every photo;</li>
+  <li>its <strong>alt text</strong>, which describes the picture to people who cannot see it. Screen readers read it aloud. Every photo has one: where Fotobogen <a href="#alt-text">wrote it itself</a>, the page says so and asks you to improve it;</li>
   <li>its <strong>web address</strong> (the last part of <code>/photo/…</code>) and the <strong>date taken</strong>;</li>
   <li>its <strong>albums</strong> and <strong>tags</strong>;</li>
   <li>when it is <strong>published</strong>, its <strong>licence</strong>, and whether it can be <strong>downloaded</strong>;</li>
@@ -79,7 +111,7 @@
 <ul>
   <li><strong>Public</strong>: shown on your site now.</li>
   <li><strong>Scheduled</strong>: public from a date and time you pick, in your own time zone. Until then the photo is in your library but not on the site, the feed, or the sitemap. It appears by itself when the time comes.</li>
-  <li><strong>Hidden</strong>: a draft only you see.</li>
+  <li><strong>Hidden</strong>: a draft, kept in your library and not on your site. (Nobody sees it at its address, you included; look at it in the admin.)</li>
 </ul>
 <p>In Settings you can make every new upload start as a draft, so nothing is public until you say so.</p>
 
@@ -110,7 +142,7 @@
 </div>
 <ul>
   <li><strong>The grid</strong>, at your address: photos shuffled afresh for each visit, or in your library's order (you choose in Settings), thirty to a page, each keeping its shape or all cut square. It works with JavaScript switched off, and nothing jumps as images arrive.</li>
-  <li><strong>A photo</strong>: the picture, its title, description, date, camera details, and size in pixels, with previous and next. It opens over the grid or on a page of its own, as you chose. A <strong>Full screen</strong> button appears over the photo when you point at it, and a click on the photo does the same; <kbd>Escape</kbd> leaves it. Photos with no camera data, such as the samples, show only their size.</li>
+  <li><strong>A photo</strong>: the picture, its title, description, date, camera details, and size in pixels, with previous and next: links, the arrow keys, and on a phone a swipe across the photo. It opens over the grid or on a page of its own, as you chose. A <strong>Full screen</strong> button appears over the photo when you point at it, and a click on the photo does the same; <kbd>Escape</kbd> leaves it. Photos with no camera data, such as the samples, show only their size.</li>
   <li><strong>Albums and tags</strong>, each with its own page. Albums you switch on for the front page appear there as a row of names; choosing one shows that album alone.</li>
   <li><strong>Search</strong>, from a link in the menu: it looks in titles, descriptions, alt text, tags, and the names of public albums, for up to six words, and finds only what a visitor can already see.</li>
   <li><strong>Your own pages and links</strong> in the menu, if you have made any under <strong>Admin, Pages</strong>.</li>
@@ -187,4 +219,4 @@ done</code></pre>
 </ul>
 
 <h2 id="keyboard">Keyboard and accessibility</h2>
-<p>The admin and the public site are built to WCAG 2.1 level AA and are tested for it on every change: everything can be reached and worked from the keyboard, text has a contrast of at least 4.5 to 1 in light and dark, and nothing scrolls sideways on a phone. Motion is reduced when your device asks for that. If you find something that does not meet this, it is a bug: please <a href="https://github.com/cschweda/fotobogen/issues" data-goal="GitHub click" data-where="docs-issue">report it</a>.</p>
+<p>The admin and the public site are built to WCAG 2.2 level AA and are tested for it on every change: everything can be reached and worked from the keyboard, text has a contrast of at least 4.5 to 1 in light and dark, and nothing scrolls sideways on a phone. Motion is reduced when your device asks for that. If you find something that does not meet this, it is a bug: please <a href="https://github.com/cschweda/fotobogen/issues" data-goal="GitHub click" data-where="docs-issue">report it</a>.</p>

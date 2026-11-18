@@ -104,4 +104,29 @@ describe('a skin that brings a look', () => {
     expect(await colour(follows)).toBeGreaterThan(5)
     await choose({ active: 'swiss' })
   })
+
+  it('gives the owner\'s own look back when a skin that replaced it is left again', async () => {
+    // Found by the review of 18 November 2026: the owner's look was lost for good, without a word.
+    const own = [{ module: 'filmlooks', transform: 'film-look', params: { look: 'Colour slide (Kodachrome style)' } }]
+    expect((await send('PUT', '/api/admin/site-recipe', { recipe: own })).status).toBe(200)
+    await whenProcessed(server, cookie)
+    // The Skins page can say what a skin's look would replace.
+    expect((await skins() as unknown as { ownLook: string[] }).ownLook).toEqual(['Film look: Colour slide (Kodachrome style)'])
+
+    await choose({ active: 'rangefinder' })
+    expect((await modules()).siteRecipe).toMatchObject([{ params: { look: 'B&W 400 (Tri-X style)' } }])
+    expect((await skins() as unknown as { ownLook: string[] }).ownLook).toEqual(['Film look: Colour slide (Kodachrome style)'])
+
+    await choose({ active: 'swiss' })
+    expect((await modules()).siteRecipe).toMatchObject([{ params: { look: 'Colour slide (Kodachrome style)' } }])
+    expect((await skins()).lookFrom).toBeNull()
+    await whenProcessed(server, cookie)
+    expect(await colour(follows)).toBeGreaterThan(5)
+
+    // The same when the skin is kept and only its look is declined.
+    await choose({ active: 'rangefinder' })
+    await choose({ active: 'rangefinder', useLook: false })
+    expect((await modules()).siteRecipe).toMatchObject([{ params: { look: 'Colour slide (Kodachrome style)' } }])
+    await whenProcessed(server, cookie)
+  })
 })

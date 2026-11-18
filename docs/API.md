@@ -14,17 +14,19 @@ The admin's own endpoints under `/api/admin/` are not part of this; they need a 
 - [Site](#site)
 - [Photos](#photos)
 - [One photo](#one-photo)
+- [Downloading a photo](#downloading-a-photo)
 - [Albums](#albums)
 - [One album](#one-album)
 - [One tag](#one-tag)
 - [Slideshow](#slideshow)
+- [Images](#images)
 - [Search](#search)
 - [One page](#one-page)
 - [A private album](#a-private-album)
-- [Images](#images)
 - [Feeds](#feeds)
 - [Health](#health)
 - [Errors](#errors)
+- [The admin API, with a token](#the-admin-api-with-a-token)
 
 ## Site
 
@@ -115,6 +117,16 @@ A page past the end returns an empty `tiles`.
 - `images` runs from smallest to largest; small originals have fewer.
 - `download` is `null` unless visitors may download the photo. `original` says whether the download is the file as uploaded or a copy with camera data removed.
 - `previous` and `next` are slugs, or `null` at either end.
+
+## Downloading a photo
+
+`GET /api/photos/<slug>/download`
+
+The file itself, for a photo whose `download` is not `null`. It is sent as an attachment (`Content-Disposition: attachment`, with a file name made from the photo's own), and is never to be stored by a browser or a proxy (`Cache-Control: private, no-store`), so that switching downloads off takes effect at once.
+
+What is sent is the largest web copy, a WebP with all camera data removed. Only a site that has chosen to show where photos were taken sends the file exactly as it was uploaded; `download.original` says which.
+
+When downloads are off for the photo, or the photo does not exist or is not public, the answer is `404` with no `message`.
 
 ## Albums
 
@@ -249,8 +261,16 @@ curl -H "Authorization: Bearer fb_YOUR_TOKEN" -F "file=@photo.jpg" https://photo
 ```
 
 ```json
-{ "result": "accepted", "photo": { "id": "V1StGXR8_Z5j", "slug": "photo" } }
+{ "result": "accepted", "photo": { "id": "V1StGXR8_Z5j", "slug": "photo" }, "fromFile": ["title", "tags"] }
 ```
+
+- JPEG, PNG, WebP, TIFF, AVIF and HEIC are taken. Anything else, or a picture over the limits, answers `422` with a `message` and a `reason` (`not-an-image` or `too-many-pixels`). A file already in the library answers `409` with `existing`, the photo that has it.
+- `fromFile` (since 1.11.0) lists which of the photo's words were read from inside the file: any of `title`, `description`, `alt`, `tags`. It is empty when there were none, or when the owner has switched reading them off.
+- Every photo has alt text. One that arrives with none is given a start (its title, its file's name as words, or "Photograph taken on …"), and is marked to be checked: `altToCheck` is `true` for it in `GET /api/admin/photos` and `GET /api/admin/photos/<id>`, and `GET /api/admin/photos?show=alt-to-check` lists only those. (`show=missing-alt`, the name before 1.11.0, still works and means the same.)
+
+Editing, for a `manage` token: `PATCH /api/admin/photos/<id>` with the fields to change, as JSON. Since 1.11.0 `alt` may be changed but not emptied: an empty string or `null` answers `422`. Sending new alt text, or `"altChecked": true`, clears `altToCheck`.
+
+To bring in a whole folder on the server itself, there is a command that does all of this for you: `pnpm fotobogen import <folder>` ([README](../README.md#uploading-photos)).
 
 Deleting, for a `manage` token: `DELETE /api/admin/photos/<id>` moves a photo to the trash (off the site, kept for 30 days); `POST /api/admin/photos/<id>/restore` takes it back out; `DELETE /api/admin/photos/<id>?forever=1` deletes a photo that is in the trash for good, and answers `409` for one that is not.
 

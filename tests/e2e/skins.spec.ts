@@ -79,6 +79,18 @@ for (const skin of ['swiss', 'papier', 'plakat', 'rangefinder'] as const) {
           expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth), `${path} at ${width} px scrolls sideways`).toBeLessThanOrEqual(0)
           if (path !== '/slideshow') expect(await faintText(page), `${path} at ${width}: text too faint to read`).toEqual([])
           await expectNoAxeViolations(page)
+          if (path === '/' && width === 320) {
+            // A phone gets two columns, not postage stamps.
+            expect(await page.locator('.fb-grid').evaluate(grid => getComputedStyle(grid).gridTemplateColumns.split(' ').length), 'columns on a phone').toBe(2)
+          }
+          if (path === '/slideshow') {
+            // The details sit above the controls, however many rows the controls take.
+            await page.locator('.fb-slideshow__photo').click()
+            const details = (await page.locator('.fb-slideshow__details').boundingBox())!
+            const controls = (await page.locator('.fb-slideshow__controls').boundingBox())!
+            expect(details.y + details.height, `details over the controls at ${width}`).toBeLessThanOrEqual(controls.y + 1)
+            expect(details.y, `details start on the screen at ${width}`).toBeGreaterThanOrEqual(0)
+          }
         }
       }
     })

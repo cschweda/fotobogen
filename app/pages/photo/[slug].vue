@@ -8,7 +8,7 @@ definePageMeta({ layout: 'public' })
 const route = useRoute()
 await useFetch('/api/site', { key: 'site' })
 const { data: photo, error } = await useFetch<PublicPhoto>(`/api/photos/${encodeURIComponent(String(route.params.slug))}`)
-if (error.value || !photo.value) throw createError({ status: 404, statusText: 'Photo not found', fatal: true })
+if (error.value || !photo.value) throw createError({ status: 404, statusText: 'Photo not found', fatal: import.meta.client })
 
 const { t } = useSiteText()
 const title = computed(() => photo.value!.title ?? t('untitled'))

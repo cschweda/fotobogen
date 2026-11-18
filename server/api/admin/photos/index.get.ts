@@ -8,7 +8,7 @@ import { requireAdmin } from '../../../utils/session.ts'
 
 interface Row {
   id: string, slug: string, title: string | null, filename: string, status: 'processing' | 'ready' | 'failed' | 'trashed', trashedAt: number | null
-  width: number, height: number, isSample: number, createdAt: number, visibility: 'public' | 'hidden', alt: string | null, publishAt: number | null
+  width: number, height: number, isSample: number, createdAt: number, visibility: 'public' | 'hidden', alt: string | null, altAuto: number, publishAt: number | null
   thumb: string | null, thumbWidth: number | null, thumbHeight: number | null, error: string | null
 }
 
@@ -19,8 +19,8 @@ export default defineEventHandler(async (event) => {
   await requireAdmin(event)
   const { sqlite, storage } = getPipeline()
   const wanted = String(getQuery(event).ids ?? '').split(',').filter(id => /^[A-Za-z0-9_-]{1,32}$/.test(id)).slice(0, MAX_IDS)
-  // ?show=hidden | scheduled | missing-alt | failed narrows the list.
-  const FILTERS: Record<string, string> = { 'hidden': `p.visibility = 'hidden'`, 'scheduled': `p.visibility = 'public' and p.publish_at > ${Date.now()}`, 'missing-alt': `(p.alt is null or p.alt = '')`, 'failed': `p.status = 'failed'` }
+  // ?show=hidden | scheduled | alt-to-check | failed narrows the list. ("missing-alt" is the old name of alt-to-check.)
+  const FILTERS: Record<string, string> = { 'hidden': `p.visibility = 'hidden'`, 'scheduled': `p.visibility = 'public' and p.publish_at > ${Date.now()}`, 'alt-to-check': `p.alt_auto = 1`, 'missing-alt': `p.alt_auto = 1`, 'failed': `p.status = 'failed'` }
   const narrowed = FILTERS[String(getQuery(event).show ?? '')]
   // ?album=<id> lists one album's photos.
   const album = String(getQuery(event).album ?? '')
@@ -31,7 +31,7 @@ export default defineEventHandler(async (event) => {
   const filter = conditions.length > 0 ? `where ${conditions.join(' and ')}` : ''
   const rows = sqlite.prepare(`
     select p.id, p.slug, p.title, p.original_filename as filename, p.status, p.width, p.height,
-      p.is_sample as isSample, p.created_at as createdAt, p.visibility, p.alt, p.publish_at as publishAt, p.trashed_at as trashedAt,
+      p.is_sample as isSample, p.created_at as createdAt, p.visibility, p.alt, p.alt_auto as altAuto, p.publish_at as publishAt, p.trashed_at as trashedAt,
       d.path as thumb, d.width as thumbWidth, d.height as thumbHeight,
       (select error from jobs where photo_id = p.id and status = 'failed' order by created_at desc, rowid desc limit 1) as error
     from photos p
@@ -43,10 +43,10 @@ export default defineEventHandler(async (event) => {
   const counts = sqlite.prepare(`
     select coalesce(sum(status <> 'trashed'), 0) as total, coalesce(sum(is_sample and status <> 'trashed'), 0) as samples,
       coalesce(sum(status = 'processing'), 0) as processing, coalesce(sum(status = 'failed'), 0) as failed,
-      coalesce(sum(visibility = 'hidden' and status <> 'trashed'), 0) as hidden, coalesce(sum((alt is null or alt = '') and status <> 'trashed'), 0) as missingAlt,
+      coalesce(sum(visibility = 'hidden' and status <> 'trashed'), 0) as hidden, coalesce(sum(alt_auto = 1 and status <> 'trashed'), 0) as altToCheck,
       coalesce(sum(status = 'trashed'), 0) as trash
     from photos
-  `).get() as { total: number, samples: number, processing: number, failed: number, hidden: number, missingAlt: number, trash: number }
+  `).get() as { total: number, samples: number, processing: number, failed: number, hidden: number, altToCheck: number, trash: number }
 
   return {
     counts,
@@ -62,7 +62,8 @@ export default defineEventHandler(async (event) => {
       hidden: row.visibility === 'hidden',
       // Public, but not until this time.
       scheduledFor: row.visibility === 'public' && row.publishAt !== null && row.publishAt > Date.now() ? row.publishAt : null,
-      missingAlt: !row.alt,
+      // The alt text is one Fotobogen wrote itself, and the owner has not yet looked at it.
+      altToCheck: row.altAuto === 1,
       createdAt: row.createdAt,
       thumb: row.thumb ? { url: storage.publicUrl(row.thumb), width: row.thumbWidth!, height: row.thumbHeight! } : null,
       error: row.status === 'failed' ? row.error : null,
