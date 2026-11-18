@@ -9,6 +9,9 @@ import type { Ref } from 'vue'
 
 export interface Slide {
   slug: string, title: string | null, description: string | null, alt: string, takenAt: number | null, camera: string | null
+  size: { width: number, height: number } | null
+  tags: { slug: string, name: string }[], albums: { slug: string, title: string }[]
+  licence: { label: string, url: string | null }
   images: { url: string, width: number, height: number }[]
 }
 export interface Show { title: string | null, back: string, seconds: number, order: 'sequence' | 'random', slides: Slide[] }

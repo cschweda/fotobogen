@@ -360,7 +360,10 @@ You do not need to do anything: Fotobogen's own rules, added after your styleshe
   <div class="fb-slideshow__details">
     <h2 class="fb-slideshow__title">Title</h2>
     <p class="fb-slideshow__description">Description</p>
-    <p class="fb-slideshow__facts">Date · camera</p>
+    <p class="fb-slideshow__facts">Date · camera · size</p>
+    <p class="fb-slideshow__facts">In <a>Album</a></p>
+    <ul class="fb-tags"><li><a class="fb-tag">tag</a></li></ul>
+    <p class="fb-slideshow__facts">Licence</p>
   </div>
   <nav class="fb-slideshow__controls">
     <button class="fb-slideshow__control">Previous</button>

@@ -72,6 +72,28 @@ test('pressing the photo shows its details and holds it there', async ({ page })
   await expect.poll(() => showing(page), { timeout: 8_000 }).not.toBe(held)
 })
 
+test('the details list what the photo page lists: size, albums, tags and licence', async ({ page }) => {
+  const send = (method: string, path: string, body: unknown) => fetch(server.url + path, { method, headers: { origin: server.url, cookie, 'content-type': 'application/json' }, body: JSON.stringify(body) })
+  const list = await (await fetch(server.url + '/api/admin/photos', { headers: { cookie } })).json() as { photos: { id: string }[] }
+  const album = (await (await send('POST', '/api/admin/albums', { title: 'Orchard' })).json() as { id: string }).id
+  // A second album with a hostile name: it must arrive as text.
+  const hostile = (await (await send('POST', '/api/admin/albums', { title: '<img src=x onerror=alert(1)>' })).json() as { id: string }).id
+  await send('POST', '/api/admin/photos/bulk', { ids: list.photos.map(photo => photo.id), action: 'add-to-album', album: hostile })
+  for (const photo of list.photos) await send('PATCH', `/api/admin/photos/${photo.id}`, { tags: ['wood'], license: 'cc-by' })
+  await send('POST', '/api/admin/photos/bulk', { ids: list.photos.map(photo => photo.id), action: 'add-to-album', album })
+
+  await page.goto(server.url + '/slideshow')
+  await page.getByRole('button', { name: 'Show details and hold this photo' }).click()
+  const details = page.locator('#slide-details')
+  await expect(details).toContainText('900 × 600 pixels')
+  await expect(details).toContainText('<img src=x onerror=alert(1)>')
+  await expect(details.locator('img')).toHaveCount(0)
+  await expect(details.getByRole('link', { name: 'Orchard' })).toHaveAttribute('href', '/album/orchard')
+  await expect(details.getByRole('list', { name: 'Tags' }).getByRole('link', { name: 'wood' })).toHaveAttribute('href', '/tag/wood')
+  await expect(details.getByRole('link', { name: 'CC BY 4.0' })).toHaveAttribute('href', 'https://creativecommons.org/licenses/by/4.0/')
+  await expectNoAxeViolations(page)
+})
+
 test('with reduced motion the photos change without a fade', async ({ browser }) => {
   const context = await browser.newContext({ reducedMotion: 'reduce' })
   const page = await context.newPage()

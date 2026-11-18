@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Releases | Fotobogen documentation</title>
-<meta name="description" content="What is in each version of Fotobogen. The current version is 1.9.0.">
+<meta name="description" content="What is in each version of Fotobogen. The current version is 1.10.0.">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#f5f5f2" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0a0a0b" media="(prefers-color-scheme: dark)">
@@ -12,7 +12,7 @@
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://fotobogen.com/docs/changelog/">
 <meta property="og:title" content="Releases | Fotobogen documentation">
-<meta property="og:description" content="What is in each version of Fotobogen. The current version is 1.9.0.">
+<meta property="og:description" content="What is in each version of Fotobogen. The current version is 1.10.0.">
 <meta property="og:image" content="https://fotobogen.com/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -55,6 +55,7 @@
     <div class="pages__here">
       <h2>On this page</h2>
       <ul>
+        <li><a href="#v1-10-0">Version 1.10.0, 17 November 2026</a></li>
         <li><a href="#v1-9-0">Version 1.9.0, 17 November 2026</a></li>
         <li><a href="#v1-8-0">Version 1.8.0, 17 November 2026</a></li>
         <li><a href="#v1-7-0">Version 1.7.0, 17 November 2026</a></li>
@@ -75,6 +76,24 @@
 <h1>Releases</h1>
 <p class="lead">What is in each version of Fotobogen, newest first. This page is made from <a href="https://github.com/cschweda/fotobogen/blob/main/CHANGELOG.md">CHANGELOG.md</a> in the source, so the two always agree.</p>
 <p>Version numbers follow <a href="https://semver.org">semantic versioning</a>: a change in the first number means something you rely on changed, the second adds features, and the third only fixes. <a href="https://github.com/cschweda/fotobogen/blob/main/docs/UPGRADING.md">What a version number promises, and how to upgrade.</a></p>
+<h2 id="v1-10-0">Version 1.10.0, 17 November 2026</h2>
+<p>The slideshow's details say more, and the screenshots are new.</p>
+<h3>Added</h3>
+<ul>
+  <li><strong>The slideshow's details list what the photo's page lists.</strong> Press a photo in the slideshow and, with its title and description, you now see its size in pixels, the albums it is in, its tags, and its licence, as well as the date taken, camera, lens, and exposure it already gave. Albums and tags are links. Size follows the camera-details setting, as on the photo's page. Where a photo was taken is still never shown in the slideshow, and an album visitors may not see is never named.</li>
+  <li><code>GET /api/slideshow</code> gives each slide <code>size</code>, <code>tags</code>, <code>albums</code>, and <code>licence</code>. Nothing is removed.</li>
+</ul>
+<h3>Changed</h3>
+<ul>
+  <li>For skin writers: the details panel may now hold several paragraphs of the class <code>fb-slideshow__facts</code>, and the photo page's <code>fb-tags</code> list. A skin written for an earlier version shows them without changes; the four built-in skins tidy the spacing of the tags there.</li>
+  <li>Every screenshot in the README and on fotobogen.com is retaken from this version.</li>
+</ul>
+<h3>Security</h3>
+<ul>
+  <li>The fifth <a href="https://fotobogen.com/docs/security-audits/">security audit</a>, of this change: no findings.</li>
+</ul>
+<h3>Updating</h3>
+<p><strong>Admin, System, Update to version 1.10.0</strong>, or <code>pnpm fotobogen update</code>. Docker: <code>docker compose pull</code>, then <code>docker compose up -d</code>. Nothing in the database changes.</p>
 <h2 id="v1-9-0">Version 1.9.0, 17 November 2026</h2>
 <p>Optional two-step login, and the fourth <a href="https://fotobogen.com/docs/security-audits/">security audit</a>. Updating changes nothing about how you log in until you switch it on.</p>
 <h3>Added</h3>

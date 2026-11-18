@@ -9,7 +9,7 @@ A self-hosted publishing platform for photographs: install it on a small
 server, answer a few first-run questions, and get a public photo site with an
 admin backend. Think "WordPress for photos".
 
-**Version 1.9.0** (17 November 2026). It installs on macOS, Windows, and
+**Version 1.10.0** (17 November 2026). It installs on macOS, Windows, and
 Linux; takes your photographs, resizes them for every screen, and publishes
 them on a site you can restyle, reword, and put under your own name, with an
 admin behind a login. Version 1.0.0 was the first release; 1.1.0 added
@@ -21,7 +21,8 @@ other sites show a slideshow of your photos; 1.7.0 followed the
 second audit and makes the full-screen buttons work; 1.8.0 adds pages,
 search, private albums, a trash, albums to choose from on the front page,
 and a one-line installer; 1.9.0 adds optional
-[two-step login](#two-step-login).
+[two-step login](#two-step-login); 1.10.0 lists a photo's size, albums,
+tags and licence in the slideshow's details.
 
 - **What is in it:** [CHANGELOG.md](CHANGELOG.md), also published as
   [Releases](https://fotobogen.com/docs/changelog/).
@@ -79,17 +80,19 @@ free software with no warranty: keep backups of your photographs.
 
 ## Screenshots
 
-Taken from a local install. The grid, the photo page, and the admin's
-Overview are from version 1.9.0; the others are from earlier versions and
-differ in small ways, such as a shorter menu. The
+Taken from a local install of version 1.10.0 (the grid, the photo page, and
+the admin's Overview from 1.9.0, which they match). The
 photographs are the sample photos Fotobogen can download (Unsplash
 photographs, via Lorem Picsum).
 
-What visitors see: the grid, and a photo on its own page.
+What visitors see: the grid, a photo on its own page, and the slideshow
+with a photo's details open.
 
 ![The public site: a dark page with a row of album names to choose from, above a masonry grid of photographs of different shapes](docs/screenshots/gallery.jpg)
 
 ![A photo page: the photograph with its title, description, and size beside it, and Previous and Next links](docs/screenshots/photo.jpg)
+
+![The slideshow: a photograph filling the screen, with a panel over its lower part giving the title, description, size in pixels, album, two tags, and licence, above the Previous, Pause, Next, Full screen, and Close buttons](docs/screenshots/slideshow.jpg)
 
 Editing a photo, with the strip of look previews under it and a film frame
 chosen:
@@ -127,7 +130,7 @@ The last step lists what was chosen and closes the wizard for good. If
 samples were asked for, a counter shows them arriving, and the download can
 be cancelled:
 
-![Setup wizard, step 6 of 6: Fotobogen is ready, with 9 of 25 sample photos downloaded](docs/screenshots/setup-6-downloading.png)
+![Setup wizard, step 6 of 6: Fotobogen is ready, with 10 of 25 sample photos downloaded](docs/screenshots/setup-6-downloading.png)
 
 After setup, the admin area sits behind a login:
 
@@ -139,8 +142,7 @@ side. Sample photos can be downloaded or removed from here at any time:
 ![The admin's Overview page: a menu down the left grouped into Photos, Appearance, Site, and Server, beside the site's name, photo count, versions, and what is stored](docs/screenshots/admin.png)
 
 Each upload shows its progress and result; a duplicate or a file that is not
-a photo is explained on its own row. (The pictures here are generated
-gradients, not photographs.)
+a photo is explained on its own row.
 
 ![Upload page listing five files: three ready with thumbnails, one duplicate, one not accepted](docs/screenshots/upload.png)
 
@@ -446,7 +448,7 @@ distributions may well work, but are reported as untested.
 `/api/health` needs no login and answers `GET` and `HEAD`:
 
 ```json
-{ "status": "ok", "version": "1.9.0", "database": "ok", "queue": { "depth": 0 }, "uptime": 86400 }
+{ "status": "ok", "version": "1.10.0", "database": "ok", "queue": { "depth": 0 }, "uptime": 86400 }
 ```
 
 It returns `200` when the app and its database are working and `503` when
@@ -490,8 +492,10 @@ Visitors see these pages:
 - **Slideshow** at `/slideshow`: full screen, one photo after another, for
   the whole site or for one album or tag ("Play as a slideshow"). It loads
   each photo before showing it and cross-fades; it goes round for ever, in
-  your order or shuffled afresh each time round. Press a photo to see its
-  title and details and hold it there. Pause, step with the buttons or the
+  your order or shuffled afresh each time round. Press a photo to hold it
+  there and see what its own page lists: title, description, date taken,
+  camera and exposure, size, albums, tags, and licence (camera details and
+  size only when the site shows them). Pause, step with the buttons or the
   arrow keys, Space to pause, F for full screen, Escape to leave. With
   "reduce motion" on, photos change without the fade. The seconds per photo
   and the order are in Settings. It never shows where a photo was taken.
@@ -1693,6 +1697,15 @@ Each audit is a red team and blue team exercise: the red team attacks a running 
 The newest audit is open below; older ones are folded under it. The same record is at [fotobogen.com/docs/security-audits](https://fotobogen.com/docs/security-audits/). To report a problem, open an issue on GitHub. If the details should not be public yet, say only that in the issue and ask for a private way to send them.
 
 <details open>
+<summary><strong>17 November 2026, version 1.10.0.</strong> No findings.</summary>
+
+The fifth audit, of one change: the slideshow's details now list a photo's size, its albums, its tags and its licence, as its own page does. One attacker, with a running copy on this machine and the source code, put a public photo into a hidden album and a private album, gave a hidden photo and a scheduled photo tags of their own, named a tag and an album with HTML in them, and then read the slideshow nine ways: for the whole site, for an album, for a tag, at the addresses of the hidden and the private album, at the tags of the hidden and the scheduled photo, as a page, and as the page for other sites. The aims: to read the name of an album a visitor may not see; to read anything of a photo a visitor may not see; to read where a photo was taken; to read a photo's size on a site that hides camera details; and to have a name run as code in the details.
+
+Nothing was found. What was tried and held: the hidden and the private album are named nowhere, and their addresses are not found; the hidden and the scheduled photo are left out, and their tags are not found; no location is given, with locations switched on for photo pages; with camera details switched off, no slide gives a size or a camera; a tag and an album named with HTML arrive as text in the page. Two tests keep it so: one fails if a hidden or private album is named or a size is given with camera details off (checked by breaking the code on purpose), and one opens the details in a browser with an album named in HTML. Not new, and still open from the first audit: the date a photo was taken is shown whatever the camera-details setting says. Not tested: a library of 500 photos, the most a slideshow plays (the copy held 25); browsers other than Chromium.
+
+</details>
+
+<details>
 <summary><strong>17 November 2026, version 1.9.0.</strong> 6 findings, none critical, high, or medium: 2 low, 4 informational. Outcome: 2 fixed, 4 accepted.</summary>
 
 The fourth audit, of two-step login alone: the code after the password, the backup codes, the key a server keeps for every Fotobogen on it, the admin page, and the commands on the server. One attacker, with a running copy on this machine and the source code, sent about 60 requests of its own making. The aims: to log in without a code; to read the key or the backup codes without the password; to use one code twice; to switch two-step login on or off from another site or with an API token; and to fetch the key file by a web address. Each finding was shown against the running copy or by a test. Finding 2 was not found by the attacker: an automated review of the finished change raised it afterwards. Both fixes were made with a test that failed first and are in version 1.9.0.
