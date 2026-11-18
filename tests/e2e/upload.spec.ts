@@ -47,7 +47,7 @@ test('photos upload, are processed, and show their thumbnail; problems are expla
   await expect(row('harbour.jpg')).toContainText('Ready', { timeout: 30_000 })
   await expect(row('harbour.jpg').locator('img')).toHaveAttribute('src', /^\/media\/.+-thumb-[0-9a-f]{8}\.webp$/)
   await expect(row('notes.jpg')).toContainText('Not accepted')
-  await expect(row('notes.jpg')).toContainText('JPEG, PNG, WebP, TIFF, or AVIF')
+  await expect(row('notes.jpg')).toContainText('JPEG, PNG, WebP, TIFF, AVIF, or HEIC')
   await expect(page.getByText('1 photo in your library.')).toBeVisible()
   // The thumbnail really loads.
   await expect.poll(() => row('harbour.jpg').locator('img').evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth)).toBe(480)

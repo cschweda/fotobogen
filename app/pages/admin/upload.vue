@@ -163,7 +163,7 @@ onBeforeUnmount(() => clearTimeout(poll))
   <FbShell context="Admin" :wordmark-href="$siteHome" nav>
     <h1 class="fb-h1">Upload photos</h1>
     <p class="fb-lead">
-      JPEG, PNG, WebP, TIFF, or AVIF. Each photo is resized for every screen; the file you upload is kept untouched.
+      JPEG, PNG, WebP, TIFF, AVIF, or HEIC (an iPhone's own format). Each photo is resized for every screen; the file you upload is kept untouched.
     </p>
 
     <div
@@ -173,7 +173,7 @@ onBeforeUnmount(() => clearTimeout(poll))
       <label class="fb-button drop__button" for="files">Choose photos</label>
       <input
         id="files" ref="input" class="fb-visually-hidden drop__input" type="file" multiple
-        accept="image/jpeg,image/png,image/webp,image/tiff,image/avif,.jpg,.jpeg,.png,.webp,.tif,.tiff,.avif"
+        accept="image/jpeg,image/png,image/webp,image/tiff,image/avif,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.tif,.tiff,.avif,.heic,.heif"
         @change="add(input?.files)"
       >
       <span class="drop__hint">or drop them here</span>

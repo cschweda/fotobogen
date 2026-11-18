@@ -55,6 +55,18 @@ describe('uploading photos', () => {
     expect(health.queue.depth).toBe(0)
   })
 
+  it('accepts an iPhone HEIC in the built server, shows it as WebP, and never serves the files beside it', async () => {
+    const response = await upload(server, cookie, readFileSync('tests/fixtures/iphone.heic'), 'IMG_0042.HEIC')
+    expect(response.status).toBe(200)
+    const { photo } = await response.json() as { photo: { id: string, slug: string } }
+    const { photos } = await whenProcessed(server, cookie)
+    expect(photos.find(listed => listed.id === photo.id)).toMatchObject({ status: 'ready', width: 320, height: 200, filename: 'IMG_0042.HEIC' })
+    expect(query(server, `select camera, mime from photos where id = '${photo.id}'`)).toEqual([{ camera: 'Apple iPhone 15', mime: 'image/heic' }])
+    const page = await (await get(server, `/api/photos/${photo.slug}`)).json() as { images: { url: string }[] }
+    expect((await get(server, page.images[0]!.url)).headers.get('content-type')).toBe('image/webp')
+    for (const name of [`${photo.id}.heic`, `${photo.id}.heic.jpg`]) expect((await get(server, `/media/${name}`)).status, name).toBe(404)
+  })
+
   it('refuses the same file a second time and names the photo that has it', async () => {
     const bytes = await imageBuffer({ seed: 21 })
     expect((await upload(server, cookie, bytes, 'first.jpg')).status).toBe(200)
@@ -75,7 +87,7 @@ describe('uploading photos', () => {
     ] as const) {
       const response = await upload(server, cookie, bytes, name)
       expect(response.status, name).toBe(422)
-      expect(await response.json()).toMatchObject({ reason: 'not-an-image', message: expect.stringContaining('JPEG, PNG, WebP, TIFF, or AVIF') })
+      expect(await response.json()).toMatchObject({ reason: 'not-an-image', message: expect.stringContaining('JPEG, PNG, WebP, TIFF, AVIF, or HEIC') })
     }
     expect((await listPhotos(server, cookie)).counts.total).toBe(before)
     expect(readdirSync(join(server.dataDir, 'tmp'))).toEqual([])

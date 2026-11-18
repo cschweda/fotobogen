@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, writeFileSync } from 'node:fs'
+import { copyFileSync, existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import sharp from 'sharp'
 import { describe, expect, it } from 'vitest'
@@ -12,6 +12,22 @@ describe('sniffFormat', () => {
       expect(sniffFormat(await imageBuffer({ format, width: 32, height: 32 }))).toBe(format)
     }
   })
+  it('recognises an iPhone\'s HEIC, by its brand or by the brands it says it is compatible with', () => {
+    const ftyp = (major: string, ...compatible: string[]) => {
+      const body = Buffer.from(`ftyp${major}\0\0\0\0${compatible.join('')}`, 'latin1')
+      const size = Buffer.alloc(4)
+      size.writeUInt32BE(body.length + 4)
+      return Buffer.concat([size, body, Buffer.alloc(16)])
+    }
+    expect(sniffFormat(readFileSync('tests/fixtures/iphone.heic'))).toBe('heic')
+    for (const major of ['heic', 'heix']) expect(sniffFormat(ftyp(major, 'mif1')), major).toBe('heic')
+    expect(sniffFormat(ftyp('mif1', 'mif1', 'heic'))).toBe('heic')
+    // The same container holds AVIF, which stays AVIF, and things that are neither.
+    expect(sniffFormat(ftyp('mif1', 'mif1', 'avif'))).toBe('avif')
+    expect(sniffFormat(ftyp('mif1', 'mif1', 'miaf'))).toBeNull()
+    // A film (the same container again) is not a photo.
+    for (const major of ['hevc', 'hevx', 'msf1', 'isom', 'mp42', 'qt  ']) expect(sniffFormat(ftyp(major, 'mif1')), major).toBeNull()
+  })
   it('recognises nothing else', async () => {
     expect(sniffFormat(await imageBuffer({ format: 'gif', width: 32, height: 32 }))).toBeNull()
     expect(sniffFormat(Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"/>'))).toBeNull()
@@ -21,6 +37,44 @@ describe('sniffFormat', () => {
 })
 
 describe('acceptUpload', () => {
+  it('keeps an iPhone HEIC as it came, with a JPEG beside it for the image library to read', async () => {
+    const ctx = testContext()
+    const tmpPath = join(ctx.tmpDir, 'up-heic')
+    copyFileSync('tests/fixtures/iphone.heic', tmpPath)
+    const outcome = await acceptUpload(ctx, { tmpPath, filename: 'IMG_0042.HEIC' })
+    expect(outcome.result).toBe('accepted')
+    if (outcome.result !== 'accepted') return
+    const [photo] = rows<Record<string, unknown>>(ctx, 'select * from photos')
+    expect(photo).toMatchObject({ original_path: `${outcome.photo.id}.heic`, mime: 'image/heic', width: 320, height: 200, original_filename: 'IMG_0042.HEIC' })
+    // The file as uploaded, byte for byte.
+    expect(readFileSync(join(ctx.root, 'originals', `${outcome.photo.id}.heic`)).equals(readFileSync('tests/fixtures/iphone.heic'))).toBe(true)
+    const readable = await sharp(join(ctx.root, 'originals', `${outcome.photo.id}.heic.jpg`)).metadata()
+    expect([readable.format, readable.width, readable.height]).toEqual(['jpeg', 320, 200])
+    // The right picture: the fixture is blue on its left half and not on its right.
+    const { data } = await sharp(join(ctx.root, 'originals', `${outcome.photo.id}.heic.jpg`)).raw().toBuffer({ resolveWithObject: true })
+    const blue = (x: number, y: number) => data[(y * 320 + x) * 3 + 2]!
+    expect(blue(40, 100)).toBeGreaterThan(150)
+    expect(blue(280, 100)).toBeLessThan(90)
+
+    // The same file again is a duplicate, found before any decoding.
+    copyFileSync('tests/fixtures/iphone.heic', tmpPath)
+    expect((await acceptUpload(ctx, { tmpPath, filename: 'again.heic' })).result).toBe('duplicate')
+  })
+
+  it('refuses a file that only claims to be HEIC, and one with more pixels than the limit, leaving nothing behind', async () => {
+    const ctx = testContext()
+    const tmpPath = join(ctx.tmpDir, 'up-bad')
+    const real = readFileSync('tests/fixtures/iphone.heic')
+    writeFileSync(tmpPath, Buffer.concat([real.subarray(0, 300), Buffer.alloc(900, 0x41)]))
+    expect(await acceptUpload(ctx, { tmpPath, filename: 'broken.heic' })).toMatchObject({ result: 'rejected', reason: 'not-an-image' })
+
+    copyFileSync('tests/fixtures/iphone.heic', tmpPath)
+    const small = { ...ctx, limits: { ...ctx.limits, maxPixels: 50_000 } }
+    expect(await acceptUpload(small, { tmpPath, filename: 'big.heic' })).toMatchObject({ result: 'rejected', reason: 'too-many-pixels', message: expect.stringContaining('0.1 megapixels') })
+    expect(existsSync(join(ctx.root, 'originals')) ? readdirSync(join(ctx.root, 'originals')) : []).toEqual([])
+    expect(readdirSync(ctx.tmpDir)).toEqual([])
+  })
+
   it('stores the original, records the photo as processing, and queues an ingest job', async () => {
     const ctx = testContext()
     const tmpPath = await imageFile(join(ctx.tmpDir, 'up1'), { width: 800, height: 600 })
