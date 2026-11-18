@@ -35,11 +35,15 @@ useHead({
 const details = ref(false)
 const fullscreen = ref(false)
 const stage = ref<HTMLElement>()
+const photoButton = ref<HTMLElement>()
 let wakeLock: { release(): Promise<void> } | null = null
 // The playing itself (the order, the cross-fade, the timer) is shared with the slideshow made for other sites.
 const { slides, position, current, layers, front, playing, announcement, srcset, step, togglePlaying, schedule } = useSlideshow(show, { held: details })
 const size = (slide: Slide) => slide.size ? t('sizeValue', { width: slide.size.width.toLocaleString('en'), height: slide.size.height.toLocaleString('en') }) : null
 const taken = (slide: Slide) => slide.takenAt === null ? null : new Intl.DateTimeFormat('en', { dateStyle: 'long', timeZone: 'UTC' }).format(new Date(slide.takenAt))
+
+// On a phone: a swipe across the photo moves on or back, as the arrow keys do.
+useSwipe(photoButton, { next: () => void step(1, true), previous: () => void step(-1, true) })
 
 /** A click on the photo shows its details and holds it; another carries on. */
 function toggleDetails() {
@@ -104,7 +108,7 @@ onBeforeUnmount(() => {
 
     <template v-else>
       <!-- The photo is a button: pressing it shows or hides its details. -->
-      <button type="button" class="fb-slideshow__photo" :aria-expanded="details" aria-controls="slide-details" :aria-label="details ? t('hideDetails') : t('showDetails')" @click="toggleDetails">
+      <button ref="photoButton" type="button" class="fb-slideshow__photo" :aria-expanded="details" aria-controls="slide-details" :aria-label="details ? t('hideDetails') : t('showDetails')" @click="toggleDetails">
         <template v-for="(slide, index) in layers" :key="index">
           <img
             v-if="slide" class="fb-slideshow__image" :class="{ 'fb-slideshow__image--front': front === index }"

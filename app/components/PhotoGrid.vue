@@ -154,7 +154,7 @@ onBeforeUnmount(() => window.removeEventListener('popstate', onPopState))
 
     <dialog ref="dialog" class="fb-modal" tabindex="-1" :aria-label="t('photoDialog')" @close="closed" @keydown="onKey">
       <button type="button" class="fb-modal__close" @click="dialog?.close()">{{ t('close') }}</button>
-      <PhotoView v-if="open" :photo="open" heading-level="h2" :photo-base="photoBase" @go="go" />
+      <PhotoView v-if="open" :photo="open" heading-level="h2" :photo-base="photoBase" swipe-in-place @go="go" @step="show" />
     </dialog>
   </div>
 </template>

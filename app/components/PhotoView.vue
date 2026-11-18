@@ -22,10 +22,16 @@ export interface PublicPhoto {
 }
 
 /** `photoBase`: where a photo's own page is; /photo, unless it is shown in a private album. */
-const props = withDefaults(defineProps<{ photo: PublicPhoto, headingLevel?: 'h1' | 'h2', photoBase?: string }>(), { photoBase: '/photo' })
+const props = withDefaults(defineProps<{
+  photo: PublicPhoto
+  headingLevel?: 'h1' | 'h2'
+  photoBase?: string
+  /** In the modal: a swipe asks the grid for the neighbour (`step`) instead of loading its page. */
+  swipeInPlace?: boolean
+}>(), { photoBase: '/photo', swipeInPlace: false })
 const { t } = useSiteText()
 /** In the modal, moving to a neighbour swaps the photo in place instead of loading a page. */
-const emit = defineEmits<{ go: [slug: string, event: MouseEvent] }>()
+const emit = defineEmits<{ go: [slug: string, event: MouseEvent], step: [slug: string] }>()
 
 const largest = computed(() => props.photo.images.at(-1))
 const sizeText = computed(() => props.photo.size ? t('sizeValue', { width: props.photo.size.width.toLocaleString('en'), height: props.photo.size.height.toLocaleString('en') }) : null)
@@ -35,6 +41,13 @@ const sizeText = computed(() => props.photo.size ? t('sizeValue', { width: props
 // (an iPhone cannot, for a picture), so the button is only offered where it works.
 const figure = ref<HTMLElement>()
 const expanded = ref(false)
+// A swipe across the photo: left for the next, right for the one before. At either end, nothing.
+function swipeTo(slug: string | null) {
+  if (!slug) return
+  if (props.swipeInPlace) emit('step', slug)
+  else window.location.href = `${props.photoBase}/${encodeURIComponent(slug)}`
+}
+useSwipe(figure, { next: () => swipeTo(props.photo.next), previous: () => swipeTo(props.photo.previous) })
 const canExpand = ref(false)
 const onFullscreenChange = () => { expanded.value = document.fullscreenElement === figure.value }
 onMounted(() => {
