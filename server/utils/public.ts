@@ -323,6 +323,12 @@ export interface Slide {
   takenAt: number | null
   /** Camera and exposure on one line, when the site shows camera details. */
   camera: string | null
+  /** The photograph as uploaded, in pixels. Part of the camera details: given when they are. */
+  size: { width: number, height: number } | null
+  tags: { slug: string, name: string }[]
+  /** Public albums this photo is in. */
+  albums: { slug: string, title: string }[]
+  licence: { label: string, url: string | null }
   /** The largest copy first; the browser picks by screen size. */
   images: { url: string, width: number, height: number }[]
 }
@@ -339,13 +345,18 @@ export function publicSlides(scope?: { album: string } | { tag: string }): Slide
   const key = scope ? ['album' in scope ? scope.album : scope.tag] : []
   const rows = sqlite.prepare(`
     select p.id, p.slug, p.title, p.description, p.alt, p.taken_at as takenAt,
-      p.camera, p.lens, p.focal_length as focalLength, p.aperture, p.shutter, p.iso
+      p.camera, p.lens, p.focal_length as focalLength, p.aperture, p.shutter, p.iso, p.width, p.height, p.license
     ${from} where ${visible()} order by ${order} limit ?
   `).all(...key, SLIDE_LIMIT) as {
     id: string, slug: string, title: string | null, description: string | null, alt: string | null, takenAt: number | null
     camera: string | null, lens: string | null, focalLength: string | null, aperture: string | null, shutter: string | null, iso: number | null
+    width: number, height: number, license: string | null
   }[]
   const showExif = getSetting('privacy.show_exif', true)
+  const siteLicence = getSetting('site.license', DEFAULT_LICENCE)
+  const tags = sqlite.prepare(`select t.slug, t.name from tags t join photo_tags pt on pt.tag_id = t.id where pt.photo_id = ? order by t.name collate nocase`)
+  // A hidden or private album's name is never given: the same rule as on the photo's page.
+  const albums = sqlite.prepare(`select a.slug, a.title from albums a join album_photos ap on ap.album_id = a.id where ap.photo_id = ? and a.visibility = 'public' order by a.title collate nocase`)
   const copies = sqlite.prepare(`select path, width, height from derivatives where photo_id = ? and kind in ('medium', 'large') order by width`)
   return rows.map(row => ({
     slug: row.slug,
@@ -356,6 +367,10 @@ export function publicSlides(scope?: { album: string } | { tag: string }): Slide
     camera: showExif
       ? [row.camera, row.lens, row.focalLength, row.aperture, row.shutter, row.iso ? `ISO ${row.iso}` : null].filter(Boolean).join(', ') || null
       : null,
+    size: showExif ? { width: row.width, height: row.height } : null,
+    tags: tags.all(row.id) as { slug: string, name: string }[],
+    albums: albums.all(row.id) as { slug: string, title: string }[],
+    licence: (({ label, url }) => ({ label, url }))(licenceFor(row.license ?? siteLicence)),
     images: (copies.all(row.id) as { path: string, width: number, height: number }[]).map(copy => ({ url: storage.publicUrl(copy.path), width: copy.width, height: copy.height })),
   })).filter(slide => slide.images.length > 0)
 }
