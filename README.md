@@ -613,8 +613,9 @@ with a link to check it. Words you give yourself always come first, and
 everything can be changed afterwards. If your files carry notes or keywords
 that are not meant for visitors, switch this off under **Admin, Settings,
 New uploads**. A description a camera writes by itself ("OLYMPUS DIGITAL
-CAMERA") is ignored. Words are not read from a HEIC, only its camera
-details.
+CAMERA") is ignored. From a HEIC only its camera details are
+read, and a description if the camera data holds one; not a title or
+keywords.
 
 **Every photo has alt text.** Alt text is what a screen reader says in
 place of the picture. A photo that arrives with none is given a start, so
