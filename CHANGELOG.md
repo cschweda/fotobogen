@@ -25,7 +25,7 @@ The slideshow's details say more, and the screenshots are new.
 ### Changed
 
 - For skin writers: the details panel may now hold several paragraphs of the class `fb-slideshow__facts`, and the photo page's `fb-tags` list. A skin written for an earlier version shows them without changes; the four built-in skins tidy the spacing of the tags there.
-- Every screenshot in the README and on fotobogen.com is retaken from this version.
+- The screenshots in the README and on fotobogen.com are retaken from this version, except the admin overview, the grid and the photo page, which had not changed since 1.9.0.
 
 ### Security
 

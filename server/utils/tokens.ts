@@ -19,7 +19,7 @@ export const TOKEN_NAME_MAX = 60
 
 /** What each scope may do, in words, for the admin and the documentation. */
 export const SCOPE_ABOUT: Record<TokenScope, { label: string, about: string }> = {
-  upload: { label: 'Upload only', about: 'Upload photos, list the library, and see whether a photo has been processed. It cannot change or delete anything.' },
+  upload: { label: 'Upload only', about: 'Upload photos, list the library, and see whether a photo has been processed. It can try again with an upload that failed, and can change or delete nothing else.' },
   manage: { label: 'Manage photos', about: 'Everything Upload can do, and also edit, reorder, hide, and delete photos, set their looks, and manage albums.' },
 }
 

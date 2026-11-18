@@ -25,7 +25,7 @@ interface Detail {
 const route = useRoute()
 const id = String(route.params.id)
 const { data: photo, refresh, error } = await useFetch<Detail>(`/api/admin/photos/${id}`)
-if (error.value || !photo.value) throw createError({ status: 404, statusText: 'Photo not found', fatal: true })
+if (error.value || !photo.value) throw createError({ status: 404, statusText: 'Photo not found', fatal: import.meta.client })
 const { data: listing } = await useFetch<{ modules: ModuleInfo[] }>('/api/admin/modules')
 const modules = computed(() => listing.value?.modules ?? [])
 const { data: albumList } = await useFetch<{ albums: { id: string, title: string }[] }>('/api/admin/albums')
@@ -76,12 +76,22 @@ const embed = computed(() => {
 
 const errors = ref<Record<string, string>>({})
 const savingDetails = ref(false)
+// What was last saved, to tell whether leaving the page would lose anything.
+const savedForm = ref(JSON.stringify(form))
+const unsavedDetails = computed(() => JSON.stringify(form) !== savedForm.value)
 
 async function saveDetails() {
   if (savingDetails.value) return
-  savingDetails.value = true
   errors.value = {}
   problem.value = ''
+  // "Scheduled" needs its date: without one the photo would simply be public.
+  if (form.publish === 'later' && !form.publishAt) {
+    errors.value = { publishAt: 'Choose the date and time this photo goes public.' }
+    problem.value = 'The details were not saved: the date is missing.'
+    message.value = ''
+    return
+  }
+  savingDetails.value = true
   try {
     const result = await $fetch<{ slug: string, tags?: string[] }>(`/api/admin/photos/${id}`, {
       method: 'PATCH',
@@ -98,6 +108,7 @@ async function saveDetails() {
     form.slug = result.slug
     if (result.tags) form.tags = result.tags.join(', ')
     message.value = 'Details saved.'
+    savedForm.value = JSON.stringify(form)
     await refresh()
   }
   catch (caught) {
@@ -109,9 +120,21 @@ async function saveDetails() {
   }
 }
 
+// Leaving with changes that were not saved asks first, whether by a link in the admin or by closing the tab.
+const LEAVE = 'You have changes on this page that are not saved. Leave without saving them?'
+let leavingForGood = false
+const unsaved = () => !leavingForGood && (unsavedDetails.value || changed.value)
+onBeforeRouteLeave(() => !unsaved() || window.confirm(LEAVE))
+function beforeUnload(event: BeforeUnloadEvent) {
+  if (unsaved()) event.preventDefault()
+}
+onMounted(() => window.addEventListener('beforeunload', beforeUnload))
+onBeforeUnmount(() => window.removeEventListener('beforeunload', beforeUnload))
+
 async function remove() {
   try {
     await $fetch(`/api/admin/photos/${id}`, { method: 'DELETE' })
+    leavingForGood = true
     await navigateTo('/admin/photos')
   }
   catch (caught) {
@@ -365,7 +388,7 @@ onBeforeUnmount(() => {
             <legend class="scope__legend">Publish</legend>
             <label class="scope__choice"><input v-model="form.publish" type="radio" name="publish" value="now"><span>Public: shown on your site</span></label>
             <label class="scope__choice"><input v-model="form.publish" type="radio" name="publish" value="later"><span>Scheduled: public from a date and time</span></label>
-            <label class="scope__choice"><input v-model="form.publish" type="radio" name="publish" value="hidden"><span>Hidden: a draft only you see</span></label>
+            <label class="scope__choice"><input v-model="form.publish" type="radio" name="publish" value="hidden"><span>Hidden: a draft, kept in your library and not on your site</span></label>
           </fieldset>
           <FbField
             v-if="form.publish === 'later'" id="publishAt" v-model="form.publishAt" label="Goes public on" type="datetime-local"

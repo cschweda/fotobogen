@@ -243,7 +243,7 @@ async function submit() {
               v-model="answers.samples" name="samples" legend="Sample photos" :error="errors.samples"
               :options="[
                 { value: false, label: 'Start empty', note: 'Nothing is downloaded.' },
-                { value: true, label: 'Download 25 sample photos', note: 'Fetched from Lorem Picsum, the only outside request Fotobogen makes.' },
+                { value: true, label: 'Download 25 sample photos', note: 'Fetched from Lorem Picsum. Fotobogen contacts no other server unless you later ask it to.' },
               ]"
             >
               <template #false><SetupDiagram kind="empty" /></template>
@@ -285,7 +285,7 @@ async function submit() {
 <style scoped>
 .setup {
   display: grid;
-  grid-template-columns: minmax(14rem, 5fr) 7fr;
+  grid-template-columns: minmax(14rem, 5fr) minmax(0, 7fr);
   gap: clamp(2rem, 6vw, 6rem);
   align-items: start;
 }
@@ -319,7 +319,7 @@ async function submit() {
 .strength__label { color: var(--fb-muted); font-size: 0.875rem; }
 
 @media (max-width: 52rem) {
-  .setup { grid-template-columns: 1fr; gap: 2rem; }
+  .setup { grid-template-columns: minmax(0, 1fr); gap: 2rem; }
   .setup__progress { position: static; }
 }
 </style>

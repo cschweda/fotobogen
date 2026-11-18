@@ -23,7 +23,7 @@ const firstPage = Math.max(1, Math.floor(Number(route.query.page)) || 1)
 const { data: site } = await useFetch('/api/site', { key: 'site' })
 const { t } = useSiteText()
 const { data: first, error } = await useFetch<Page>(props.source, { query: { page: firstPage } })
-if (error.value) throw createError({ status: 404, statusText: 'Not found', fatal: true })
+if (error.value) throw createError({ status: 404, statusText: 'Not found', fatal: import.meta.client })
 
 const tiles = ref<Tile[]>(first.value?.tiles ?? [])
 const page = ref(first.value?.page ?? 1)
@@ -81,10 +81,20 @@ async function openPhoto(tile: Tile, event: MouseEvent) {
   dialog.value?.showModal()
 }
 
-async function go(slug: string, event: MouseEvent) {
+/** Shows another photo in the open dialog, and keeps the keyboard there. */
+async function show(slug: string) {
+  if (!(await load(slug))) return
+  history.replaceState({ fotobogenPhoto: slug }, '', `${props.photoBase}/${slug}`)
+  // The link that had focus may be gone (the last photo has no "Next"). Focus
+  // then falls to the page behind, and the arrow keys would stop working.
+  await nextTick()
+  if (dialog.value?.open && !dialog.value.contains(document.activeElement)) dialog.value.focus()
+}
+
+function go(slug: string, event: MouseEvent) {
   if (event.metaKey || event.ctrlKey || event.shiftKey) return
   event.preventDefault()
-  if (await load(slug)) history.replaceState({ fotobogenPhoto: slug }, '', `${props.photoBase}/${slug}`)
+  void show(slug)
 }
 
 /** The dialog closed (Escape, the button, or Back): put the address back to the grid. */
@@ -107,7 +117,7 @@ function onPopState() {
 function onKey(event: KeyboardEvent) {
   if (!open.value || event.metaKey || event.ctrlKey || event.altKey) return
   const target = event.key === 'ArrowLeft' ? open.value.previous : event.key === 'ArrowRight' ? open.value.next : null
-  if (target) void load(target).then(ok => ok && history.replaceState({ fotobogenPhoto: target }, '', `${props.photoBase}/${target}`))
+  if (target) void show(target)
 }
 
 onMounted(() => window.addEventListener('popstate', onPopState))
@@ -142,7 +152,7 @@ onBeforeUnmount(() => window.removeEventListener('popstate', onPopState))
       <a v-if="page < pages" class="fb-pager__more" :href="pageAddress(page + 1)" @click="more">{{ t('gridMore') }}</a>
     </nav>
 
-    <dialog ref="dialog" class="fb-modal" :aria-label="t('photoDialog')" @close="closed" @keydown="onKey">
+    <dialog ref="dialog" class="fb-modal" tabindex="-1" :aria-label="t('photoDialog')" @close="closed" @keydown="onKey">
       <button type="button" class="fb-modal__close" @click="dialog?.close()">{{ t('close') }}</button>
       <PhotoView v-if="open" :photo="open" heading-level="h2" :photo-base="photoBase" @go="go" />
     </dialog>

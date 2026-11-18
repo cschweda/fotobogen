@@ -10,7 +10,7 @@ const route = useRoute()
 const slug = String(route.params.slug ?? '')
 await useFetch('/api/site', { key: 'site' })
 const { data: page, error } = await useFetch<{ slug: string, title: string, body: string }>(`/api/pages/${encodeURIComponent(slug)}`)
-if (error.value || !page.value) throw createError({ status: 404, statusText: 'Not Found', fatal: true })
+if (error.value || !page.value) throw createError({ status: 404, statusText: 'Not Found', fatal: import.meta.client })
 usePageSeo({ title: () => page.value?.title, path: () => `/${page.value?.slug ?? slug}` })
 </script>
 

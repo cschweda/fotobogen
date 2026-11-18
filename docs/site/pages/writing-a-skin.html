@@ -140,7 +140,7 @@ cp -R skins/swiss data/skins/harbour</code></pre>
 .fb-site-footer { margin: 0 var(--fb-margin); padding: 1.25rem 0 2.5rem; border-top: 4px solid var(--fb-text); }</code></pre>
 <p>Plakat turns the site's name into a poster headline with two:</p>
 <pre><code>.fb-site-title { font-size: clamp(2.75rem, 11vw, 8.5rem); line-height: 0.88; letter-spacing: -0.055em; overflow-wrap: anywhere; }
-.fb-site-title::after { content: ""; display: block; width: 7rem; height: 0.7rem; background: var(--fb-accent); }</code></pre>
+.fb-site-title::after { content: ""; display: block; width: clamp(3rem, 10vw, 7rem); height: clamp(0.4rem, 1vw, 0.7rem); background: var(--fb-accent); }</code></pre>
 
 <h2 id="markup">The HTML you are styling</h2>
 <p>These class names are stable; a skin may rely on them.</p>
@@ -244,25 +244,29 @@ cp -R skins/swiss data/skins/harbour</code></pre>
     &lt;img class="fb-slideshow__image fb-slideshow__image--front"&gt;
     &lt;img class="fb-slideshow__image"&gt;
   &lt;/button&gt;
-  &lt;div class="fb-slideshow__details"&gt;
-    &lt;h2 class="fb-slideshow__title"&gt;Title&lt;/h2&gt;
-    &lt;p class="fb-slideshow__description"&gt;Description&lt;/p&gt;
-    &lt;p class="fb-slideshow__facts"&gt;Date, camera, size&lt;/p&gt;
-    &lt;p class="fb-slideshow__facts"&gt;In &lt;a&gt;Album&lt;/a&gt;&lt;/p&gt;
-    &lt;ul class="fb-tags"&gt;&lt;li&gt;&lt;a class="fb-tag"&gt;tag&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;
-    &lt;p class="fb-slideshow__facts"&gt;Licence&lt;/p&gt;
+  &lt;div class="fb-slideshow__foot"&gt;
+    &lt;div class="fb-slideshow__details"&gt;   &lt;!-- only while the details are shown --&gt;
+      &lt;h2 class="fb-slideshow__title"&gt;Title&lt;/h2&gt;
+      &lt;p class="fb-slideshow__description"&gt;Description&lt;/p&gt;
+      &lt;p class="fb-slideshow__facts"&gt;Date, camera, size&lt;/p&gt;
+      &lt;p class="fb-slideshow__facts"&gt;In &lt;a&gt;Album&lt;/a&gt;&lt;/p&gt;
+      &lt;ul class="fb-tags"&gt;&lt;li&gt;&lt;a class="fb-tag"&gt;tag&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;
+      &lt;p class="fb-slideshow__facts"&gt;Licence&lt;/p&gt;
+      &lt;p&gt;&lt;a&gt;Open this photo's page&lt;/a&gt;&lt;/p&gt;   &lt;!-- a paragraph with no class of its own --&gt;
+    &lt;/div&gt;
+    &lt;nav class="fb-slideshow__controls"&gt;
+      &lt;button class="fb-slideshow__control"&gt;Previous&lt;/button&gt;
+      &lt;button class="fb-slideshow__control" aria-pressed="false"&gt;Pause&lt;/button&gt;   &lt;!-- or Play --&gt;
+      &lt;button class="fb-slideshow__control"&gt;Next&lt;/button&gt;
+      &lt;span class="fb-slideshow__count"&gt;3 / 25&lt;/span&gt;
+      &lt;button class="fb-slideshow__control"&gt;Full screen&lt;/button&gt;
+      &lt;a class="fb-slideshow__control"&gt;Close&lt;/a&gt;
+    &lt;/nav&gt;
   &lt;/div&gt;
-  &lt;nav class="fb-slideshow__controls"&gt;
-    &lt;button class="fb-slideshow__control"&gt;Previous&lt;/button&gt;
-    &lt;button class="fb-slideshow__control" aria-pressed="false"&gt;Pause&lt;/button&gt;   &lt;!-- or Play --&gt;
-    &lt;button class="fb-slideshow__control"&gt;Next&lt;/button&gt;
-    &lt;span class="fb-slideshow__count"&gt;3 / 25&lt;/span&gt;
-    &lt;button class="fb-slideshow__control"&gt;Full screen&lt;/button&gt;
-    &lt;a class="fb-slideshow__control"&gt;Close&lt;/a&gt;
-  &lt;/nav&gt;
   &lt;!-- With nothing to show, the page holds only this: --&gt;
-  &lt;p class="fb-slideshow__empty"&gt;There are no photos to show. &lt;a&gt;Go back&lt;/a&gt;&lt;/p&gt;
+  &lt;p class="fb-slideshow__empty"&gt;There are no photographs to show yet. &lt;a&gt;Go back&lt;/a&gt;&lt;/p&gt;
 &lt;/main&gt;</code></pre>
+<p><code>fb-slideshow__foot</code> is new in 1.11.0. It holds the details and the controls in one block at the foot of the screen, so the details rest on the controls however many rows those take on a phone. The built-in skins make it <code>position: absolute; bottom: 0</code> and a column, and leave the two parts inside it unpositioned. A skin written before 1.11.0, which positions the details and the controls themselves, goes on working: the new block has no size of its own then. Copy the three rules from Swiss to get the phone layout right.</p>
 <p>The words in the outlines are the defaults. Two images are stacked; the one with <code>--front</code> is showing, and the skin makes the change between them. Swiss fades <code>opacity</code> over a second, and not at all when the visitor's device asks for reduced motion. Unless you want a different slideshow, leave Swiss's rules for it as they are.</p>
 
 <h2 id="grid">The grid</h2>

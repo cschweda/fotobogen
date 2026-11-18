@@ -20,7 +20,7 @@ const scope = typeof route.query.album === 'string' ? { album: route.query.album
 const { data: site } = await useFetch('/api/site', { key: 'site' })
 const { t, siteName } = useSiteText()
 const { data: show, error } = await useFetch<Show>('/api/slideshow', { query: scope })
-if (error.value || !show.value) throw createError({ status: 404, statusText: 'Nothing to show', fatal: true })
+if (error.value || !show.value) throw createError({ status: 404, statusText: 'Nothing to show', fatal: import.meta.client })
 
 useHead({
   htmlAttrs: { 'lang': () => site.value?.language || 'en', 'class': 'fb-public', 'data-fb-mode': useSkinMode(() => site.value?.mode).mode },
@@ -113,6 +113,8 @@ onBeforeUnmount(() => {
         </template>
       </button>
 
+      <!-- One block at the foot of the screen: the details rest on the controls, however many rows those take. -->
+      <div class="fb-slideshow__foot">
       <div v-if="details && current" id="slide-details" class="fb-slideshow__details">
         <h2 class="fb-slideshow__title">{{ current.title ?? t('untitled') }}</h2>
         <p v-if="current.description" class="fb-slideshow__description">{{ current.description }}</p>
@@ -141,6 +143,7 @@ onBeforeUnmount(() => {
         <button type="button" class="fb-slideshow__control" @click="toggleFullscreen">{{ fullscreen ? t('leaveFullScreen') : t('fullScreen') }}</button>
         <a class="fb-slideshow__control" :href="show?.back ?? '/'" @click.prevent="close">{{ t('close') }}</a>
       </nav>
+      </div>
       <p class="fb-visually-hidden" role="status">{{ announcement }}</p>
     </template>
   </main>

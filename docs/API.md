@@ -14,17 +14,19 @@ The admin's own endpoints under `/api/admin/` are not part of this; they need a 
 - [Site](#site)
 - [Photos](#photos)
 - [One photo](#one-photo)
+- [Downloading a photo](#downloading-a-photo)
 - [Albums](#albums)
 - [One album](#one-album)
 - [One tag](#one-tag)
 - [Slideshow](#slideshow)
+- [Images](#images)
 - [Search](#search)
 - [One page](#one-page)
 - [A private album](#a-private-album)
-- [Images](#images)
 - [Feeds](#feeds)
 - [Health](#health)
 - [Errors](#errors)
+- [The admin API, with a token](#the-admin-api-with-a-token)
 
 ## Site
 
@@ -115,6 +117,16 @@ A page past the end returns an empty `tiles`.
 - `images` runs from smallest to largest; small originals have fewer.
 - `download` is `null` unless visitors may download the photo. `original` says whether the download is the file as uploaded or a copy with camera data removed.
 - `previous` and `next` are slugs, or `null` at either end.
+
+## Downloading a photo
+
+`GET /api/photos/<slug>/download`
+
+The file itself, for a photo whose `download` is not `null`. It is sent as an attachment (`Content-Disposition: attachment`, with a file name made from the photo's own), and is never to be stored by a browser or a proxy (`Cache-Control: private, no-store`), so that switching downloads off takes effect at once.
+
+What is sent is the largest web copy, a WebP with all camera data removed. Only a site that has chosen to show where photos were taken sends the file exactly as it was uploaded; `download.original` says which.
+
+When downloads are off for the photo, or the photo does not exist or is not public, the answer is `404` with no `message`.
 
 ## Albums
 

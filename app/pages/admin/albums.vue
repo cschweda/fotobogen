@@ -92,6 +92,7 @@ async function remove(album: Album) {
   <FbShell context="Admin" :wordmark-href="$siteHome" nav>
     <h1 class="fb-h1">Albums</h1>
     <p class="fb-lead">An album is a named set of photos with its own page. A photo can be in several albums, or none.</p>
+    <p class="how">To put photos in an album: in the <NuxtLink class="fb-link" to="/admin/photos">Library</NuxtLink>, tick them and press “Add to album”. One photo can also be given its albums on its own page.</p>
     <p class="fb-visually-hidden" role="status">{{ message }}</p>
     <div class="fb-alert" role="alert">{{ problem }}</div>
 
@@ -165,12 +166,13 @@ async function remove(album: Album) {
 .front__note { max-width: 34rem; margin: 0.25rem 0 0.75rem 1.85rem; color: var(--fb-muted); font-size: 0.875rem; }
 .private { margin: 0.75rem 0 0.25rem; padding: 0.9rem 1rem; border-left: 4px solid var(--fb-text); background: var(--fb-panel); }
 .private__note { max-width: 36rem; margin: 0 0 0.75rem; color: var(--fb-muted); font-size: 0.875rem; }
+.how { max-width: 40rem; margin: 1rem 0 0; color: var(--fb-muted); }
 .back { margin: 0 0 1.5rem; font-size: 0.875rem; }
 .new, .list { max-width: 44rem; margin-top: 2.5rem; }
 .heading { margin: 0 0 1.25rem; font-size: 1.25rem; font-weight: 700; letter-spacing: -0.015em; }
 .empty { color: var(--fb-muted); }
 .albums { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--fb-line); }
-.album { display: grid; grid-template-columns: 6rem 1fr; gap: 1.25rem; padding: 1.25rem 0; border-bottom: 1px solid var(--fb-line); }
+.album { display: grid; grid-template-columns: 6rem minmax(0, 1fr); gap: 1.25rem; padding: 1.25rem 0; border-bottom: 1px solid var(--fb-line); }
 .album__cover { display: block; width: 6rem; height: 6rem; background: var(--fb-frame); overflow: hidden; }
 .album__cover img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .album__name { margin: 0; font-size: 1.0625rem; font-weight: 700; }

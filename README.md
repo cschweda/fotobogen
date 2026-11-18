@@ -182,8 +182,11 @@ dependencies); Fotobogen itself comes from GitHub with git, so updating from
 the admin works afterwards. It has been run for real on macOS, and its tests
 run on Linux; on Windows, use the steps below for now.
 
-At the end it also says how to run the site under pm2 on a server, and on a
-server managed by Laravel Forge it says what nginx needs.
+At the end it also says how to run the site under pm2 (a small program that
+keeps a site running on a server and starts it again after a restart; see
+[Without Docker (pm2)](#without-docker-pm2)), and on a server managed by
+Laravel Forge (a service that sets servers up for you) it says what nginx
+needs.
 
 The same steps by hand:
 
@@ -248,7 +251,8 @@ client. Nothing in Fotobogen depends on the folder's name.
 
 **Several installs on one machine.** Each folder is a complete site of its
 own: its own photos and database (in its own `data` folder), its own login,
-its own settings (in its own `.env`), and its own version, updated by
+its own settings (in its own `.env`, a small text file of settings in its
+folder; see [Settings](#settings)), and its own version, updated by
 itself. What they must not share:
 
 | Each install needs its own | How |
@@ -329,7 +333,8 @@ Open the site in a browser and enter this token to finish setup.
 
 Open http://localhost:3000 (`pnpm dev` uses port 3000; `pnpm start` uses
 5150), enter the token, and complete the six steps. You
-end up logged in at `/admin`. Everything the site stores goes in `./data`;
+end up logged in, on a short notice about backups to read once, and then at
+`/admin`. Everything the site stores goes in `./data`;
 delete that directory to start over with a fresh install.
 
 After changing `server/db/schema.ts`, generate a migration with
@@ -357,7 +362,11 @@ The answers are saved to `.env` in Fotobogen's folder, and it does not ask
 again. To change them, edit `.env`, or run `pnpm fotobogen init` to be asked
 again (your other settings in `.env` are kept); then restart. Nothing is
 asked when nobody is at the keyboard: under pm2, in Docker, from a script,
-or when `.env` already exists or `PORT`, `SITE_URL`, or `DEMO_MODE` is set.
+or in a CI run. Nor is anything asked when `.env` already exists, when the
+site already has a database, when `PORT`, `SITE_URL`, or `DEMO_MODE` is
+set, or when `FOTOBOGEN_NO_QUESTIONS=1` is. (Demo mode is for a copy that
+shows Fotobogen off to strangers; answer no unless that is what you are
+building. See [Demo mode](#demo-mode).)
 Whether to start with sample photos is asked in the browser, with the rest
 of setup.
 
@@ -426,8 +435,9 @@ shown.
 In a terminal the report is in colour: `ok` in green, `WARN` in yellow,
 `FAIL` and anything that stops the start in red. The words are always there
 too, so nothing depends on telling the colours apart. Colour is left out
-when the output is not a terminal (a log file, pm2, Docker), and can be
-switched off with `NO_COLOR=1`. Run it on its own at any time with
+when the output is not a terminal (a log file, pm2, Docker) or the terminal
+says it cannot show it (`TERM=dumb`). `NO_COLOR=1` switches it off and
+`FORCE_COLOR=1` switches it on, whatever the output is. Run it on its own at any time with
 `pnpm preflight`.
 
 | Check | Stops the start when | Warns when |
@@ -435,12 +445,14 @@ switched off with `NO_COLOR=1`. Run it on its own at any time with
 | Node.js | older than 24 | |
 | Operating system | | not Linux, macOS, or Windows; or a Linux that is not Ubuntu, Debian, or based on them |
 | Processor | not x64 or arm64 | |
-| Memory | under 900 MB (the container's limit counts, not the host's) | under 2 GB with no swap |
+| Memory | under 900 MB (the container's limit counts, not the host's) | under 1900 MB with less than 512 MB of swap (swap is read on Linux only, so this warning is never given on macOS or Windows) |
 | Data directory | it cannot be created or written | |
 | Disk space | under 500 MB free | under 2 GB free |
 | Image and database libraries | they do not load, or a photo format is missing | |
 
-Fotobogen is tested on Ubuntu, macOS, and Windows. Other Linux
+Fotobogen's tests run on Ubuntu and Windows for every change, and it is run
+by hand on macOS. Debian and systems based on Ubuntu or Debian are treated
+the same as Ubuntu. Other Linux
 distributions may well work, but are reported as untested.
 
 ## Health check
@@ -529,7 +541,7 @@ the Swiss manner, and you can switch between them at any time under
 **Every skin has a light and a dark mode.** You choose which one visitors
 see first (or let it follow each visitor's device), and a button at the top
 of the site lets a visitor switch. All four are tested in both modes, on a
-phone and on a wide screen, against WCAG 2.1 level AA: text and headings
+phone and on a wide screen, against WCAG 2.2 level AA: text and headings
 have a contrast of at least 4.5:1, nothing scrolls sideways, and everything
 works from the keyboard.
 
@@ -627,7 +639,8 @@ site are compressed: Smaller files, Standard, or High. Changing it makes
 every photo's copies again in the background; your uploaded files are never
 changed.
 
-**Admin, Settings** holds the site title and tagline, the grid layout,
+**Admin, Settings** holds the site title and tagline (the same two fields
+as on Site text; either page changes them), the grid layout,
 whether photos open over the grid or on their own page, and the two privacy
 switches: camera details (on by default) and location (off by default).
 
@@ -938,7 +951,7 @@ pnpm test:e2e                            # browser tests, including axe accessib
 pnpm typecheck                           # TypeScript check of app and server code
 ```
 
-Both commands build the app first. Set `FB_SKIP_BUILD=1` to reuse an
+`pnpm test` and `pnpm test:e2e` build the app first; the other two do not. Set `FB_SKIP_BUILD=1` to reuse an
 existing build while iterating. The tests never use the network: sample
 downloads are pointed at a stand-in server.
 
@@ -1140,7 +1153,7 @@ that folder; if photos then answer 403, use the simpler file above.
 | Saving in the admin answers "This request did not come from this site" | The `proxy_set_header Host $http_host;` line is missing |
 | An upload answers `413 Request Entity Too Large` | `client_max_body_size` is smaller than the file. Raise it and `MAX_UPLOAD_MB` together |
 | Logging in says it needs a secure connection | The site is being used over http. Logging in needs https (or `localhost`) |
-| Links copied from the admin begin with `http://127.0.0.1:5150` | Set `SITE_URL`, or the address under **Search and sharing** |
+| Links copied from the admin, or in the feed, begin with `http://` or with `127.0.0.1:5150` | The `Host` or `X-Forwarded-Proto` line is missing from the nginx file, or `TRUST_PROXY=1` is not set. Setting `SITE_URL`, or the address under **Search and sharing**, fixes the links whatever the proxy sends |
 
 ## Laravel Forge with pm2 (no Docker)
 
@@ -1243,7 +1256,8 @@ Leave everything else as it is: the `listen` lines, `server_name`, the
 certificate lines, and on Forge every `include forge-conf/...` line. The
 `root` line can stay; it is no longer used.
 
-The block for changes 2 to 5, ready to paste:
+The block for changes 1 to 5, ready to paste (it also sends the HSTS
+header, which is not one of the six changes but belongs on any https site):
 
 ```nginx
 client_max_body_size 50m;
@@ -1265,10 +1279,13 @@ addition: nginx serves the resized photos from disk itself.
 Forge checks the file and reloads nginx when you save. By hand:
 `sudo nginx -t`, then `sudo systemctl reload nginx`.
 
-**On the app's side**, two settings go with the proxy. Both are already set
-in `ecosystem.config.cjs` and the Docker compose files:
+**On the app's side**, two things go with the proxy. Both are already
+arranged in `ecosystem.config.cjs` and the Docker compose files:
 
-- `HOST=127.0.0.1`, so only nginx can reach the app.
+- Only nginx can reach the app. With pm2 that is `HOST=127.0.0.1`. In
+  Docker the app listens on every address inside its container, and the
+  compose files publish its port to the server's own `127.0.0.1` only (or,
+  with Caddy, to no port of the server at all).
 - `TRUST_PROXY=1`, so the app believes the headers in change 4. Set it only
   when the app really is reachable through nginx alone.
 
@@ -1792,7 +1809,7 @@ Fixed: closed in this release. Reduced: made harder or documented, not closed. A
 <details>
 <summary><strong>16 November 2026, version 1.3.3.</strong> 36 findings, none critical: 1 high, 5 medium, 19 low, 11 informational. Outcome: 20 fixed, 3 reduced, 6 accepted, 7 open.</summary>
 
-Four separate attackers, each with its own running copy of version 1.3.3 and the source code, took one area each: login and permissions; files going in and out (uploads, backups, skins, modules); injected text and outbound requests (pages, the feed, webhooks); and the updater, the command line, and the deployment files. Each finding had to be shown working against the running copy or proven from the code. The fixes were then made, with a test for each where one could be written, and released in version 1.3.3.
+Four separate attackers, each with its own running copy of version 1.3.3 and the source code, took one area each: login and permissions; files going in and out (uploads, backups, skins, modules); injected text and outbound requests (pages, the feed, webhooks); and the updater, the command line, and the deployment files. Each finding had to be shown working against the running copy or proven from the code. The fixes were then made, with a test for each where one could be written, and released in version 1.3.3: the attackers' copies were that version as it stood before its release.
 
 Fixed: closed in this release. Reduced: made harder or documented, not closed. Accepted: left as it is, for the reason given. Open: not yet dealt with.
 
@@ -1824,7 +1841,7 @@ Fixed: closed in this release. Reduced: made harder or documented, not closed. A
 | 24 | Low | pnpm fotobogen backup wrote through a link to another file, and the file could be read by other users. | **Fixed** | A link is refused, and the backup is readable by its owner only. |
 | 25 | Low | Two advisories in packages used to build the site (minimatch, esbuild), neither in code that answers visitors. | **Open** | Waiting for the packages that bring them in to update. |
 | 26 | Informational | A request carrying anything shaped like an API token skipped the same-site check on every address, not only the admin API where tokens work. | **Fixed** | The token stands in for the check only on the admin API. |
-| 27 | Informational | Answers from the admin and the login carried no instruction against being stored by a browser or proxy. | **Fixed** | They are marked never to be stored. |
+| 27 | Informational | Answers from the admin and the login carried no instruction against being stored by a browser or proxy. | **Fixed** | The admin's pages and everything the admin and the login send back as data are marked never to be stored. (The login form itself, which holds nothing private, is not.) |
 | 28 | Informational | A TRACE request, or a Host header that could not be read, produced an error and a long entry in the log. | **Fixed** | Refused at once, quietly. |
 | 29 | Informational | The link to a release's notes was checked by how it began, so an address with "../" in it could lead to another project on GitHub. It needed a forged answer from GitHub. | **Fixed** | The address is parsed and must resolve inside the project. |
 | 30 | Informational | Site text placeholders such as {constructor} were filled from built-in names. Owner only, and harmless. | **Fixed** | Only the names a text is given are filled in. |
@@ -1864,8 +1881,8 @@ Fixed: closed in this release. Reduced: made harder or documented, not closed. A
   Every numbered release is tagged, and has a release on GitHub with its notes.
 
 The batching matters because a push to `main` that changes `site/` or
-`netlify.toml` triggers a production deploy of the placeholder page on
-Netlify, and each one costs build credits.
+`netlify.toml` triggers a production deploy of fotobogen.com (the guide and
+the documentation in `site/`) on Netlify, and each one costs build credits.
 
 ## The fotobogen.com site
 

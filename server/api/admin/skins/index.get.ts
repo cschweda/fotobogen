@@ -5,7 +5,7 @@ import { getSkins } from '../../../utils/app.ts'
 import { requireAdmin } from '../../../utils/session.ts'
 import { getSetting } from '../../../utils/settings.ts'
 import { activeSkin } from '../../../utils/skin.ts'
-import { describeLook, lookFrom } from '../../../utils/skin-look.ts'
+import { describeLook, lookFrom, ownLook } from '../../../utils/skin-look.ts'
 
 export default defineEventHandler(async (event) => {
   await requireAdmin(event)
@@ -16,6 +16,8 @@ export default defineEventHandler(async (event) => {
     mode: getSetting('skin.mode', 'skin'),
     // The skin whose look is the site-wide one now, if a skin set it.
     lookFrom: lookFrom(),
+    // The owner's own look for every photo, in words: what a skin's look replaces, and what comes back after it.
+    ownLook: ownLook(),
     skins: getSkins().list().map((skin) => {
       const values = cleanValues(skin, saved[skin.name])
       return {

@@ -22,7 +22,7 @@ const scope = typeof route.query.album === 'string' ? { album: route.query.album
 const { data: site } = await useFetch('/api/site', { key: 'site' })
 const { t, siteName } = useSiteText()
 const { data: show, error } = await useFetch<Show>('/api/slideshow', { query: scope })
-if (error.value || !show.value) throw createError({ status: 404, statusText: 'Nothing to show', fatal: true })
+if (error.value || !show.value) throw createError({ status: 404, statusText: 'Nothing to show', fatal: import.meta.client })
 
 const heading = computed(() => `${t('slideshowTitle')}: ${show.value?.title ?? siteName.value}`)
 useHead({

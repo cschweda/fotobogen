@@ -80,7 +80,7 @@ const example = computed(() => `curl -H "Authorization: Bearer ${made.value?.tok
     <section class="block" aria-labelledby="list-heading">
       <h2 id="list-heading" class="heading">Tokens</h2>
       <p v-if="tokens.length === 0" class="about">There are no tokens. Nothing but your own login can change your site.</p>
-      <div v-else class="table">
+      <div v-else class="scroller">
         <table>
           <thead>
             <tr><th scope="col">Name</th><th scope="col">Kind</th><th scope="col">Begins</th><th scope="col">Made</th><th scope="col">Last used</th><th scope="col"><span class="fb-visually-hidden">Revoke</span></th></tr>
@@ -142,7 +142,9 @@ const example = computed(() => `curl -H "Authorization: Bearer ${made.value?.tok
 .heading { margin: 0 0 0.75rem; font-size: 1.25rem; font-weight: 700; letter-spacing: -0.015em; }
 .about { max-width: 40rem; margin: 0 0 1rem; color: var(--fb-muted); }
 .about strong { color: var(--fb-text); }
-.table { overflow-x: auto; }
+/* Not called "table": the utility styles have a class of that name, which would undo the scrolling. */
+/* Positioned, so that the hidden words inside it (for screen readers) scroll with it and do not widen the page. */
+.scroller { position: relative; overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: 0.9375rem; }
 th, td { padding: 0.7rem 1rem 0.7rem 0; border-bottom: 1px solid var(--fb-line); text-align: left; vertical-align: middle; }
 thead th { color: var(--fb-muted); font-weight: 400; border-bottom-color: var(--fb-edge); }
