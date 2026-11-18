@@ -38,6 +38,31 @@ describe('editing a photo', () => {
     updatePhoto(ctx, a, { title: '   ', takenAt: null })
     expect(rows(ctx, `select title, taken_at from photos where id = '${a}'`)).toEqual([{ title: null, taken_at: null }])
   })
+  it('keeps every photo described: alt text cannot be emptied, and stops being marked "to check" once the owner has written or approved it', async () => {
+    const { ctx, a } = await library()
+    const state = () => rows(ctx, `select alt, alt_auto from photos where id = '${a}'`)[0]
+    expect(state()).toEqual({ alt: 'Photograph', alt_auto: 1 })
+    for (const empty of ['', '   ', null]) {
+      expect(updatePhoto(ctx, a, { alt: empty }), JSON.stringify(empty)).toEqual({ ok: false, reason: 'invalid', errors: { alt: 'Describe the photo in a few words, for people who cannot see it.' } })
+    }
+    // Saving the same words again (the edit form sends every field) leaves the mark.
+    expect(updatePhoto(ctx, a, { alt: 'Photograph', title: 'A title' })).toMatchObject({ ok: true })
+    expect(state()).toEqual({ alt: 'Photograph', alt_auto: 1 })
+    // Saying it is right as it stands removes the mark; so does writing something else.
+    expect(updatePhoto(ctx, a, { altChecked: true })).toMatchObject({ ok: true })
+    expect(state()).toEqual({ alt: 'Photograph', alt_auto: 0 })
+    ctx.sqlite.prepare(`update photos set alt_auto = 1 where id = ?`).run(a)
+    expect(updatePhoto(ctx, a, { alt: 'A gull on a harbour wall' })).toMatchObject({ ok: true })
+    expect(state()).toEqual({ alt: 'A gull on a harbour wall', alt_auto: 0 })
+    expect(updatePhoto(ctx, a, { altChecked: 'yes' })).toMatchObject({ ok: false, errors: { altChecked: expect.any(String) } })
+    // Characters that show nothing are not a description (found by the audit of 18 November 2026).
+    for (const blank of ['\u200b', '\u2800', '\u202e', '\u00ad\u200d \ufeff', '...', '—']) {
+      expect(updatePhoto(ctx, a, { alt: blank }), JSON.stringify(blank)).toMatchObject({ ok: false, errors: { alt: 'Describe the photo in a few words, for people who cannot see it.' } })
+    }
+    // Invisible and direction-changing characters are taken out of what is kept.
+    expect(updatePhoto(ctx, a, { alt: 'A gull\u202e on\u200b a wall' })).toMatchObject({ ok: true })
+    expect(state()).toEqual({ alt: 'A gull on a wall', alt_auto: 0 })
+  })
   it('tidies a new address and refuses one another photo has', async () => {
     const { ctx, a } = await library()
     expect(updatePhoto(ctx, a, { slug: 'Harbour at Dawn!' })).toEqual({ ok: true, slug: 'harbour-at-dawn' })
@@ -51,7 +76,7 @@ describe('editing a photo', () => {
     expect(result).toEqual({ ok: false, reason: 'invalid', errors: {
       title: 'Use 200 characters or fewer.', alt: 'This must be text.', visibility: 'Choose public or hidden.', takenAt: 'This is not a date.',
     } })
-    expect(rows(ctx, `select title, alt from photos where id = '${a}'`)).toEqual([{ title: null, alt: null }])
+    expect(rows(ctx, `select title, alt from photos where id = '${a}'`)).toEqual([{ title: null, alt: 'Photograph' }])
     expect(updatePhoto(ctx, 'no-such-id', { title: 'x' })).toMatchObject({ ok: false, reason: 'not-found' })
   })
 })

@@ -13,10 +13,10 @@ interface Photo {
   id: string, title: string | null, filename: string, status: 'processing' | 'ready' | 'failed' | 'trashed'
   /** In the trash: the day it will be removed for good. */
   removedOn?: number
-  hidden: boolean, missingAlt: boolean, isSample: boolean, scheduledFor: number | null
+  hidden: boolean, altToCheck: boolean, isSample: boolean, scheduledFor: number | null
   thumb: { url: string, width: number, height: number } | null
 }
-interface Listing { counts: { total: number, hidden: number, missingAlt: number, failed: number, processing: number, trash: number }, photos: Photo[] }
+interface Listing { counts: { total: number, hidden: number, altToCheck: number, failed: number, processing: number, trash: number }, photos: Photo[] }
 
 const show = ref('')
 const route = useRoute()
@@ -130,7 +130,7 @@ function selectAll(on: boolean) {
       Photos you deleted. They are off your site, and each is kept here for 30 days, then removed for good. Restoring a photo puts it back as it was: same address, albums, and tags. Until a photo is deleted for good, someone who already has the address of one of its pictures can still open it.
     </p>
     <p v-else-if="counts" class="fb-lead">
-      {{ plural(counts.total) }}<template v-if="counts.hidden">, {{ counts.hidden }} hidden</template><template v-if="counts.missingAlt">, {{ counts.missingAlt }} without alt text</template><template v-if="counts.trash">, {{ counts.trash }} in the trash</template>.
+      {{ plural(counts.total) }}<template v-if="counts.hidden">, {{ counts.hidden }} hidden</template><template v-if="counts.altToCheck">, {{ counts.altToCheck }} with alt text to check</template><template v-if="counts.trash">, {{ counts.trash }} in the trash</template>.
       The first photo here is the first on your site.
     </p>
     <p class="fb-visually-hidden" role="status">{{ message }}</p>
@@ -145,7 +145,7 @@ function selectAll(on: boolean) {
           <option value="">All photos</option>
           <option value="hidden">Hidden</option>
           <option value="scheduled">Scheduled</option>
-          <option value="missing-alt">Without alt text</option>
+          <option value="alt-to-check">Alt text to check</option>
           <option value="failed">Could not be processed</option>
           <option value="trash">Trash{{ counts?.trash ? ` (${counts.trash})` : '' }}</option>
         </select>
@@ -208,12 +208,12 @@ function selectAll(on: boolean) {
           <span class="card__name">{{ name(photo) }}</span>
         </label>
         <p v-if="inTrash && photo.removedOn" class="card__badges"><span class="badge">Removed for good on {{ day(photo.removedOn) }}</span></p>
-        <p v-else-if="photo.hidden || photo.scheduledFor || photo.missingAlt || photo.status !== 'ready' || photo.isSample" class="card__badges">
+        <p v-else-if="photo.hidden || photo.scheduledFor || photo.altToCheck || photo.status !== 'ready' || photo.isSample" class="card__badges">
           <span v-if="photo.status === 'processing'" class="badge">Processing</span>
           <span v-if="photo.status === 'failed'" class="badge badge--problem">Could not be processed</span>
           <span v-if="photo.hidden" class="badge">Hidden</span>
           <span v-if="photo.scheduledFor" class="badge">Scheduled for {{ new Date(photo.scheduledFor).toLocaleDateString() }}</span>
-          <span v-if="photo.missingAlt" class="badge badge--problem">No alt text</span>
+          <span v-if="photo.altToCheck" class="badge badge--problem">Alt text to check</span>
           <span v-if="photo.isSample" class="badge">Sample</span>
         </p>
         <div v-if="!inTrash" class="card__order">

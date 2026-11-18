@@ -65,6 +65,18 @@ test('a photo opens over the grid, can be worked by keyboard, and closing return
   }
   expect(await page.evaluate(() => document.querySelector('.fb-grid')!.matches(':not(dialog *)') && document.querySelector('dialog')!.matches(':modal'))).toBe(true)
 
+  // The keys go on working when the link that had focus goes away: at the last photo there is no "Next" to hold it.
+  await dialog.getByRole('link', { name: 'Next' }).focus()
+  await page.keyboard.press('ArrowRight')
+  await expect(page).toHaveURL(server.url + '/photo/tower')
+  await page.keyboard.press('ArrowRight')
+  await expect(page).toHaveURL(server.url + '/photo/harbour')
+  await expect(dialog.getByRole('link', { name: 'Next' })).toHaveCount(0)
+  await page.keyboard.press('ArrowLeft')
+  await expect(page).toHaveURL(server.url + '/photo/tower')
+  await page.keyboard.press('ArrowLeft')
+  await expect(page).toHaveURL(server.url + '/photo/field')
+
   await page.keyboard.press('Escape')
   await expect(dialog).toBeHidden()
   await expect(page).toHaveURL(server.url + '/')

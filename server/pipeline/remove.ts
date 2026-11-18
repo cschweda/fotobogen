@@ -4,6 +4,7 @@
 // but kept, file and all, for thirty days, and put back with one press. Only
 // from the trash is a photo deleted for good: the rows, then the files they
 // pointed at.
+import { readableKey } from './heic.ts'
 import { newId } from '../core/ids.ts'
 import type { PipelineContext } from './context.ts'
 
@@ -67,6 +68,8 @@ export async function deletePhotos(ctx: PipelineContext, where: 'samples' | { id
     const files: { area: 'originals' | 'derivatives', key: string }[] = []
     for (const photo of photos) {
       files.push({ area: 'originals', key: photo.original })
+      // A HEIC has a JPEG beside it, made when it arrived.
+      if (readableKey(photo.original) !== photo.original) files.push({ area: 'originals', key: readableKey(photo.original) })
       for (const row of sqlite.prepare(`select path from derivatives where photo_id = ?`).all(photo.id) as { path: string }[]) {
         files.push({ area: 'derivatives', key: row.path })
       }

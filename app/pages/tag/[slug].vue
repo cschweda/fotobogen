@@ -6,7 +6,7 @@ const source = `/api/tags/${encodeURIComponent(slug)}`
 await useFetch('/api/site', { key: 'site' })
 const { t } = useSiteText()
 const { data, error } = await useFetch<{ tag: { name: string }, total: number }>(source, { key: `tag-${slug}` })
-if (error.value || !data.value) throw createError({ status: 404, statusText: 'Tag not found', fatal: true })
+if (error.value || !data.value) throw createError({ status: 404, statusText: 'Tag not found', fatal: import.meta.client })
 usePageSeo({ title: () => data.value!.tag.name, path: () => `/tag/${slug}` })
 </script>
 

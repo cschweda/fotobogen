@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Releases | Fotobogen documentation</title>
-<meta name="description" content="What is in each version of Fotobogen. The current version is 1.10.0.">
+<meta name="description" content="What is in each version of Fotobogen. The current version is 1.11.0.">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#f5f5f2" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0a0a0b" media="(prefers-color-scheme: dark)">
@@ -12,7 +12,7 @@
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://fotobogen.com/docs/changelog/">
 <meta property="og:title" content="Releases | Fotobogen documentation">
-<meta property="og:description" content="What is in each version of Fotobogen. The current version is 1.10.0.">
+<meta property="og:description" content="What is in each version of Fotobogen. The current version is 1.11.0.">
 <meta property="og:image" content="https://fotobogen.com/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -55,6 +55,7 @@
     <div class="pages__here">
       <h2>On this page</h2>
       <ul>
+        <li><a href="#v1-11-0">Version 1.11.0, 18 November 2026</a></li>
         <li><a href="#v1-10-0">Version 1.10.0, 17 November 2026</a></li>
         <li><a href="#v1-9-0">Version 1.9.0, 17 November 2026</a></li>
         <li><a href="#v1-8-0">Version 1.8.0, 17 November 2026</a></li>
@@ -76,6 +77,48 @@
 <h1>Releases</h1>
 <p class="lead">What is in each version of Fotobogen, newest first. This page is made from <a href="https://github.com/cschweda/fotobogen/blob/main/CHANGELOG.md">CHANGELOG.md</a> in the source, so the two always agree.</p>
 <p>Version numbers follow <a href="https://semver.org">semantic versioning</a>: a change in the first number means something you rely on changed, the second adds features, and the third only fixes. <a href="https://github.com/cschweda/fotobogen/blob/main/docs/UPGRADING.md">What a version number promises, and how to upgrade.</a></p>
+<h2 id="v1-11-0">Version 1.11.0, 18 November 2026</h2>
+<p>An iPhone's photos, the words saved inside a file, alt text for every photo, a folder at once, and a swipe on a phone. It follows a review of the whole program by someone who had never seen it, which found ten defects, all fixed here.</p>
+<h3>Added</h3>
+<ul>
+  <li><strong>HEIC, the format an iPhone saves in, is accepted.</strong> The file is kept exactly as it came. A JPEG is made from it once, when it arrives, and the web copies are made from that. Up to 25 megapixels: an iPhone's usual 12 or 24 fit, its 48-megapixel setting does not.</li>
+  <li><strong>A photo arrives with its words.</strong> The title, caption, keywords and alt text that Lightroom, Capture One, Apple Photos and others save inside a file become the photo's title, description, tags and alt text. The upload page says what it read. Switch it off under <strong>Settings, New uploads</strong> if your files carry notes not meant for visitors.</li>
+  <li><strong>Every photo has alt text.</strong> One that arrives with none is given a start, from its title, its file's name, or the day it was taken, and is flagged <strong>Alt text to check</strong> in the Library until you rewrite it or say it is right. Alt text can be changed but not emptied. Photos you already have are given a start the same way the first time this version starts.</li>
+  <li><strong><code>pnpm fotobogen import &lt;folder&gt;</code></strong> brings in a whole folder, with <code>--albums</code> to make an album of each folder inside it, or <code>--album &lt;name&gt;</code> to put everything in one. It skips what is already there, so it can be run again.</li>
+  <li><strong>Swiping.</strong> On a phone, a swipe across a photo goes to the next or the one before: on the photo's page, in the photo opened over the grid, and in the slideshow.</li>
+  <li>The RSS feed carries each photo's alt text.</li>
+  <li>The upload answer from the admin API lists what was read from the file (<code>fromFile</code>); <code>GET /api/admin/photos?show=alt-to-check</code> lists photos whose alt text is still to be checked.</li>
+</ul>
+<h3>Fixed</h3>
+<ul>
+  <li><strong>A photo set to &quot;Scheduled&quot; with no date was published at once.</strong> It is now refused, with the date field marked.</li>
+  <li><strong>On a phone the grid showed three or four columns of tiny pictures.</strong> It shows two, in all four skins.</li>
+  <li><strong>On a phone the slideshow's details lay over its buttons.</strong> They rest on top of them now, however many rows the buttons take.</li>
+  <li><strong>Choosing a skin that brings a look, then leaving it, lost a look you had set for all photos.</strong> Yours is set aside and comes back, and the Skins page says so before you save.</li>
+  <li><strong>Three pages ran off the side of a phone:</strong> setup step 4, Albums with a private album, and API tokens.</li>
+  <li><strong>Leaving a photo's page with changes not yet saved</strong> now asks first.</li>
+  <li><strong>The arrow keys stopped working in a photo opened over the grid</strong> once the link that had focus was gone.</li>
+  <li><strong>The question about hearing of new versions lay over the page's own controls</strong> on a wide screen. It is part of the page now.</li>
+  <li><strong>Every page that does not exist wrote an error to the server's log.</strong> It writes nothing.</li>
+  <li><strong>A new page of words was public the moment it was added, still empty.</strong> It is hidden until you first save it.</li>
+  <li>The Albums page now says how to put photos in an album. The upload page links each finished photo to its edit page.</li>
+</ul>
+<h3>Changed</h3>
+<ul>
+  <li>For skin writers: the slideshow's details and controls now sit inside one new block, <code>fb-slideshow__foot</code>. A skin written for an earlier version goes on working as it did; copy three rules from Swiss to get the phone layout right (<a href="https://fotobogen.com/docs/writing-a-skin/">writing a skin</a>).</li>
+  <li>The Library's filter &quot;Without alt text&quot; is now &quot;Alt text to check&quot;, since no photo is without.</li>
+  <li>Documentation corrected where a review found it wrong or out of date, the README's account of how the app is kept private behind a proxy in Docker above all.</li>
+</ul>
+<h3>Security</h3>
+<p>The sixth <a href="https://fotobogen.com/docs/security-audits/">security audit</a>, of everything new here, before release: 8 findings, 1 high, 2 medium, 3 low, 2 informational. Six fixed, one reduced, one accepted.</p>
+<ul>
+  <li><strong>A file built for the purpose could stop the site while its words were read</strong> (high). They are read in a thread of its own, with five seconds to do it.</li>
+  <li><strong>A HEIC could use far more memory than a small server has</strong> (medium). It is decoded in a separate process, one at a time, and the limit is 25 megapixels.</li>
+  <li><strong><code>fotobogen import</code> gave its pass to whatever program answered at the site's address</strong> (medium). It now makes the site prove itself first, and the pass is narrower and expires.</li>
+  <li>Alt text of invisible characters is refused; such characters are removed from words read out of files. The import no longer follows hard links, and removes only its own pass.</li>
+</ul>
+<h3>Updating</h3>
+<p><strong>Admin, System, Update to version 1.11.0</strong>, or <code>pnpm fotobogen update</code>. Docker: <code>docker compose pull</code>, then <code>docker compose up -d</code>. The database gains one column, by itself, at the first start; make a backup first, as before any update.</p>
 <h2 id="v1-10-0">Version 1.10.0, 17 November 2026</h2>
 <p>The slideshow's details say more, and the screenshots are new.</p>
 <h3>Added</h3>
@@ -86,7 +129,7 @@
 <h3>Changed</h3>
 <ul>
   <li>For skin writers: the details panel may now hold several paragraphs of the class <code>fb-slideshow__facts</code>, and the photo page's <code>fb-tags</code> list. A skin written for an earlier version shows them without changes; the four built-in skins tidy the spacing of the tags there.</li>
-  <li>Every screenshot in the README and on fotobogen.com is retaken from this version.</li>
+  <li>The screenshots in the README and on fotobogen.com are retaken from this version, except the admin overview, the grid and the photo page, which had not changed since 1.9.0.</li>
 </ul>
 <h3>Security</h3>
 <ul>

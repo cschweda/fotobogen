@@ -30,11 +30,11 @@ test.beforeEach(async ({ page }) => {
 
 const names = (page: import('@playwright/test').Page) => page.locator('.card__name').allTextContents()
 
-test('the library lists photos, flags missing alt text, and reorders from the keyboard', async ({ page }) => {
+test('the library lists photos, flags alt text that is still to be checked, and reorders from the keyboard', async ({ page }) => {
   await page.getByRole('link', { name: 'Library', exact: true }).click()
   await expect(heading(page, 'Photos')).toBeVisible()
   expect(await names(page)).toEqual(['cedar.jpg', 'birch.jpg', 'apple.jpg'])
-  await expect(page.getByText('No alt text')).toHaveCount(3)
+  await expect(page.locator('.badge', { hasText: 'Alt text to check' })).toHaveCount(3)
   await expectNoAxeViolations(page)
 
   const up = page.getByRole('button', { name: 'Up: apple.jpg' })
@@ -121,11 +121,22 @@ test('a photo is edited, tried in different looks from thumbnails under it, and 
   await page.getByRole('link', { name: 'Edit apple.jpg' }).click()
   await expect(heading(page, 'apple.jpg')).toBeVisible()
 
+  // The photo arrived with alt text made from its file name, and the page says so and asks for better.
+  await expect(page.getByLabel('Alt text')).toHaveValue('Apple')
+  await expect(page.getByText('Fotobogen wrote this alt text itself')).toBeVisible()
+  await expectNoAxeViolations(page)
+  // It can be changed, never emptied.
+  await page.getByLabel('Alt text').fill('')
+  await page.getByRole('button', { name: 'Save details' }).click()
+  await expect(page.getByLabel('Alt text')).toHaveAttribute('aria-invalid', 'true')
+  await expect(page.getByText('Describe the photo in a few words, for people who cannot see it.')).toBeVisible()
+
   await page.getByLabel('Title').fill('Apple orchard')
   await page.getByLabel('Alt text').fill('Rows of apple trees in blossom')
   await page.getByLabel('Description').fill('Late April.')
   await page.getByRole('button', { name: 'Save details' }).click()
   await expect(heading(page, 'Apple orchard')).toBeVisible()
+  await expect(page.getByText('Fotobogen wrote this alt text itself')).toHaveCount(0)
 
   // An address another photo has is refused, on the field itself.
   await page.getByLabel('Address').fill('birch')

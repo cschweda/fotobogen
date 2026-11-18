@@ -52,7 +52,9 @@ const fieldId = (module: string, transform: string, key: string) => `${props.idP
 
 <template>
   <p v-if="available.length === 0" class="controls__none">
-    No modules are switched on. Switch one on under <NuxtLink class="fb-link" to="/admin/modules">Modules</NuxtLink>.
+    No modules are switched on.
+    <template v-if="$route.path === '/admin/modules'">Switch one on in the list above.</template>
+    <template v-else>Switch one on under <NuxtLink class="fb-link" to="/admin/modules">Modules</NuxtLink>.</template>
   </p>
   <div v-for="{ module, transform } in available" :key="`${module.name}/${transform.id}`" class="controls">
     <label class="controls__switch">

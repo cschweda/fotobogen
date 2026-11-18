@@ -15,6 +15,8 @@ interface Item {
   /** 0 to 100 while uploading. */
   percent: number
   message: string
+  /** What was read from inside the file, in words; not a problem. */
+  note?: string
   photoId?: string
   thumb?: { url: string, width: number, height: number }
 }
@@ -84,6 +86,7 @@ async function sendNext() {
     if (status === 200) {
       item.state = 'processing'
       item.photoId = (body.photo as { id: string }).id
+      item.note = fromFileNote(body.fromFile)
       void watch()
     }
     else if (status === 409) {
@@ -139,6 +142,14 @@ async function watch() {
   if (items.value.some(item => item.state === 'processing')) poll = setTimeout(watch, 1000)
 }
 
+/** "Read from the file: its title, caption and keywords." Empty when nothing was. */
+function fromFileNote(fromFile: unknown): string {
+  const NAMES: Record<string, string> = { title: 'title', description: 'caption', alt: 'alt text', tags: 'keywords' }
+  const found = (Array.isArray(fromFile) ? fromFile : []).map(field => NAMES[String(field)]).filter(Boolean)
+  if (found.length === 0) return ''
+  return `Read from the file: its ${found.length === 1 ? found[0] : `${found.slice(0, -1).join(', ')} and ${found.at(-1)}`}.`
+}
+
 async function retry(item: Item) {
   try {
     await $fetch(`/api/admin/photos/${item.photoId}/retry`, { method: 'POST' })
@@ -163,7 +174,7 @@ onBeforeUnmount(() => clearTimeout(poll))
   <FbShell context="Admin" :wordmark-href="$siteHome" nav>
     <h1 class="fb-h1">Upload photos</h1>
     <p class="fb-lead">
-      JPEG, PNG, WebP, TIFF, or AVIF. Each photo is resized for every screen; the file you upload is kept untouched.
+      JPEG, PNG, WebP, TIFF, AVIF, or HEIC (an iPhone's own format). Each photo is resized for every screen; the file you upload is kept untouched.
     </p>
 
     <div
@@ -173,7 +184,7 @@ onBeforeUnmount(() => clearTimeout(poll))
       <label class="fb-button drop__button" for="files">Choose photos</label>
       <input
         id="files" ref="input" class="fb-visually-hidden drop__input" type="file" multiple
-        accept="image/jpeg,image/png,image/webp,image/tiff,image/avif,.jpg,.jpeg,.png,.webp,.tif,.tiff,.avif"
+        accept="image/jpeg,image/png,image/webp,image/tiff,image/avif,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.tif,.tiff,.avif,.heic,.heif"
         @change="add(input?.files)"
       >
       <span class="drop__hint">or drop them here</span>
@@ -199,6 +210,8 @@ onBeforeUnmount(() => clearTimeout(poll))
               :aria-label="`Uploading ${item.name}`"
             />
             <span v-if="item.message" class="item__message">{{ item.message }}</span>
+            <span v-if="item.note" class="item__note">{{ item.note }}</span>
+            <NuxtLink v-if="item.state === 'ready' && item.photoId" class="fb-link item__edit" :to="`/admin/photos/${item.photoId}`">Check its words<span class="fb-visually-hidden">: {{ item.name }}</span></NuxtLink>
           </span>
           <button v-if="item.state === 'failed'" type="button" class="fb-button fb-button--quiet item__retry" @click="retry(item)">
             Try again<span class="fb-visually-hidden"> with {{ item.name }}</span>
@@ -252,6 +265,8 @@ onBeforeUnmount(() => clearTimeout(poll))
 .item--ready .item__state { color: var(--fb-text); }
 .item__size::before { content: "/"; margin: 0 0.35em; color: var(--fb-edge); }
 .item__message { color: var(--fb-error); font-size: 0.875rem; }
+.item__note { display: block; color: var(--fb-muted); font-size: 0.875rem; }
+.item__edit { display: inline-block; margin-top: 0.15rem; font-size: 0.875rem; }
 .item--duplicate .item__message, .item--removed .item__message { color: var(--fb-muted); }
 .item__bar { width: 100%; height: 0.25rem; appearance: none; border: 0; background: var(--fb-frame); }
 .item__bar::-webkit-progress-bar { background: var(--fb-frame); }

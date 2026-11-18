@@ -1,4 +1,4 @@
-# Netlify serves only the fotobogen.com placeholder page in site/.
+# Netlify serves only fotobogen.com: the guide and the documentation in site/.
 # Fotobogen itself needs a persistent disk and never runs on Netlify.
 
 [build]

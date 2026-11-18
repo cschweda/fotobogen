@@ -6,7 +6,7 @@ const source = `/api/albums/${encodeURIComponent(slug)}`
 await useFetch('/api/site', { key: 'site' })
 const { t } = useSiteText()
 const { data, error } = await useFetch<{ album: { title: string, description: string | null, cover: { url: string } | null } }>(source, { key: `album-${slug}` })
-if (error.value || !data.value) throw createError({ status: 404, statusText: 'Album not found', fatal: true })
+if (error.value || !data.value) throw createError({ status: 404, statusText: 'Album not found', fatal: import.meta.client })
 
 usePageSeo({
   title: () => data.value!.album.title,

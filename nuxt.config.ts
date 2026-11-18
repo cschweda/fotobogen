@@ -1,3 +1,4 @@
+import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import { readFileSync } from 'node:fs'
 
@@ -30,6 +31,9 @@ export default defineNuxtConfig({
 
   nitro: {
     preset: 'node-server',
+    // The HEIC decoder and the metadata reader are loaded by name, apart from the server
+    // (server/pipeline/heic.ts, embedded.ts), where the build cannot see: say so here, or they are left out.
+    externals: { traceInclude: ['heic-decode', 'exifr', 'sharp'].map(name => createRequire(import.meta.url).resolve(name)) },
     // Migration SQL is bundled into the server build, so a deployed app
     // needs nothing on disk except its data directory.
     serverAssets: [

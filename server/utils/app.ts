@@ -8,6 +8,7 @@ import { resolveSettings } from '../core/config.ts'
 import { adminHostProblem } from '../core/hosts.ts'
 import { applyRestore, inspectBackup, PENDING_ADMIN_RESTORE, PENDING_RESTORE, TWO_STEP_UNKNOWN } from '../core/backup.ts'
 import { applyMigrations, type Migration } from '../core/migrate.ts'
+import { fillMissingAlt } from '../pipeline/embedded.ts'
 import { dataPaths, ensureDataDirs, resolveDataDir, type DataPaths } from '../core/paths.ts'
 import { loadOrCreateSecret } from '../core/secret.ts'
 import { loadOrCreateSetupToken } from '../core/setup-token.ts'
@@ -91,6 +92,9 @@ async function boot(loadMigrations: () => Promise<Migration[]>, loadSkins: () =>
   sqlite.pragma('foreign_keys = ON')
   sqlite.pragma('busy_timeout = 5000')
   applyMigrations(sqlite, await loadMigrations())
+  // Every photo has alt text: any without (from before 1.11.0, or an older backup) is given a start to check.
+  const described = fillMissingAlt(sqlite)
+  if (described > 0) console.log(`Wrote a first alt text for ${described} ${described === 1 ? 'photo' : 'photos'} that had none. Look them over under Admin, Library, "Alt text to check".`)
   // The database holds the login's password hash and the webhooks' secrets:
   // for the user running Fotobogen only. (Windows has no such file modes.)
   if (process.platform !== 'win32') {

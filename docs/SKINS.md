@@ -150,14 +150,14 @@ Papier and Plakat are worked examples of the quickest way to make a skin: **take
 
    ```css
    .fb-site-title { font-size: clamp(2.75rem, 11vw, 8.5rem); line-height: 0.88; letter-spacing: -0.055em; overflow-wrap: anywhere; }
-   .fb-site-title::after { content: ""; display: block; width: 7rem; height: 0.7rem; background: var(--fb-accent); }
+   .fb-site-title::after { content: ""; display: block; width: clamp(3rem, 10vw, 7rem); height: clamp(0.4rem, 1vw, 0.7rem); background: var(--fb-accent); }
    ```
 
 5. Restart, choose it under **Admin, Skins**, and look at the grid, a photo page, an album, and the slideshow, **in both modes, on a phone and on a wide screen.**
 
 ### What to get right
 
-The bundled skins are tested, in both modes, at 320 and 1280 pixels wide, against WCAG 2.1 level AA. A skin of yours should hold to the same:
+The bundled skins are tested, in both modes, at 320 and 1280 pixels wide, against WCAG 2.2 level AA. A skin of yours should hold to the same:
 
 - **Readable text (1.4.3).** Text, headings, and links need a contrast of at least 4.5:1 with the page, in both modes. List the pairs under `contrast` and the Skins page warns you when one falls short. Do not use the accent as a text colour unless it passes; the bundled skins use it for underlines and bars.
 - **Set the text colour on the body** (`.fb-public body { color: var(--fb-text) }`), as the bundled skins do. The admin's stylesheet is loaded on the same pages and gives the body a pale colour of its own; without this line, headings and links on a light page are nearly invisible.
@@ -357,26 +357,31 @@ You do not need to do anything: Fotobogen's own rules, added after your styleshe
     <img class="fb-slideshow__image fb-slideshow__image--front">
     <img class="fb-slideshow__image">
   </button>
-  <div class="fb-slideshow__details">
-    <h2 class="fb-slideshow__title">Title</h2>
-    <p class="fb-slideshow__description">Description</p>
-    <p class="fb-slideshow__facts">Date · camera · size</p>
-    <p class="fb-slideshow__facts">In <a>Album</a></p>
-    <ul class="fb-tags"><li><a class="fb-tag">tag</a></li></ul>
-    <p class="fb-slideshow__facts">Licence</p>
+  <div class="fb-slideshow__foot">
+    <div class="fb-slideshow__details">   <!-- only while the details are shown -->
+      <h2 class="fb-slideshow__title">Title</h2>
+      <p class="fb-slideshow__description">Description</p>
+      <p class="fb-slideshow__facts">Date · camera · size</p>
+      <p class="fb-slideshow__facts">In <a>Album</a></p>
+      <ul class="fb-tags"><li><a class="fb-tag">tag</a></li></ul>
+      <p class="fb-slideshow__facts">Licence</p>
+      <p><a>Open this photo's page</a></p>   <!-- a paragraph with no class of its own -->
+    </div>
+    <nav class="fb-slideshow__controls">
+      <button class="fb-slideshow__control">Previous</button>
+      <button class="fb-slideshow__control" aria-pressed="false">Pause</button>   <!-- or Play -->
+      <button class="fb-slideshow__control">Next</button>
+      <span class="fb-slideshow__count">3 / 25</span>
+      <button class="fb-slideshow__control">Full screen</button>
+      <a class="fb-slideshow__control">Close</a>
+    </nav>
   </div>
-  <nav class="fb-slideshow__controls">
-    <button class="fb-slideshow__control">Previous</button>
-    <button class="fb-slideshow__control" aria-pressed="false">Pause</button>   <!-- or Play -->
-    <button class="fb-slideshow__control">Next</button>
-    <span class="fb-slideshow__count">3 / 25</span>
-    <button class="fb-slideshow__control">Full screen</button>
-    <a class="fb-slideshow__control">Close</a>
-  </nav>
   <!-- With nothing to show, the page holds only this: -->
-  <p class="fb-slideshow__empty">There are no photos to show. <a>Go back</a></p>
+  <p class="fb-slideshow__empty">There are no photographs to show yet. <a>Go back</a></p>
 </main>
 ```
+
+`fb-slideshow__foot` is new in 1.11.0. It holds the details and the controls in one block at the foot of the screen, so the details rest on the controls however many rows those take on a phone. The built-in skins make it `position: absolute; bottom: 0` and a column, and leave the two parts inside it unpositioned. A skin written before 1.11.0, which positions the details and the controls themselves, goes on working: the new block has no size of its own then. Copy the three rules from Swiss to get the phone layout right.
 
 Two images are stacked; the one with `--front` is showing, and the skin makes the change between them (Swiss fades `opacity` over a second, and not at all under `prefers-reduced-motion`). Stack them with `position: absolute` and show only the front one, or both will be visible.
 

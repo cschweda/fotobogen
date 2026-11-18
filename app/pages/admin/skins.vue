@@ -13,7 +13,7 @@ interface Skin {
   error: string | null, options: Record<string, Option>, values: Values, warnings: string[]
 }
 
-const { data, refresh } = await useFetch<{ active: string, mode: string, lookFrom: string | null, skins: Skin[] }>('/api/admin/skins')
+const { data, refresh } = await useFetch<{ active: string, mode: string, lookFrom: string | null, ownLook: string[], skins: Skin[] }>('/api/admin/skins')
 const skins = computed(() => data.value?.skins ?? [])
 const chosen = ref(data.value?.active ?? 'swiss')
 const mode = ref(data.value?.mode ?? 'skin')
@@ -51,7 +51,7 @@ async function save() {
 <template>
   <FbShell context="Admin" :wordmark-href="$siteHome" nav>
     <h1 class="fb-h1">Skins</h1>
-    <p class="fb-lead">A skin changes how your public site looks. Switching takes effect at once; nothing is rebuilt and no photo is touched.</p>
+    <p class="fb-lead">A skin changes how your public site looks. Choose one and press Save: the change shows on your site at once. Nothing is rebuilt and no photo is touched.</p>
     <p class="fb-visually-hidden" role="status">{{ message }}</p>
     <div class="fb-alert" role="alert">{{ problem }}</div>
 
@@ -76,6 +76,7 @@ async function save() {
           <input v-model="useLook[current.name]" type="checkbox">
           <span>Use this look for all photos</span>
         </label>
+        <p v-if="data?.ownLook.length && useLook[current.name]" class="skins__note"><strong>This takes the place of the look you set under Modules ({{ data.ownLook.join(', then ') }}).</strong> Yours comes back when you untick this box or choose a skin without a look.</p>
         <p class="skins__note">You can change the look or switch it off for all photos under <NuxtLink class="fb-link" to="/admin/modules">Modules</NuxtLink>, and give any one photo a different look, or none, on its own page. Unticking this box uses the skin without its look.</p>
       </div>
 

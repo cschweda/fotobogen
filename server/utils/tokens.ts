@@ -8,6 +8,7 @@
 import { createHash, randomBytes } from 'node:crypto'
 import { desc, eq } from 'drizzle-orm'
 import { newId } from '../core/ids.ts'
+import { isImportPass, PASS_HOURS } from '../core/import-pass.ts'
 import { apiTokens } from '../db/schema.ts'
 import { getDb } from './app.ts'
 
@@ -19,7 +20,7 @@ export const TOKEN_NAME_MAX = 60
 
 /** What each scope may do, in words, for the admin and the documentation. */
 export const SCOPE_ABOUT: Record<TokenScope, { label: string, about: string }> = {
-  upload: { label: 'Upload only', about: 'Upload photos, list the library, and see whether a photo has been processed. It cannot change or delete anything.' },
+  upload: { label: 'Upload only', about: 'Upload photos, list the library, and see whether a photo has been processed. It can try again with an upload that failed, and can change or delete nothing else.' },
   manage: { label: 'Manage photos', about: 'Everything Upload can do, and also edit, reorder, hide, and delete photos, set their looks, and manage albums.' },
 }
 
@@ -75,6 +76,11 @@ export function findToken(token: string): TokenInfo | null {
   const row = getDb().select().from(apiTokens).where(eq(apiTokens.tokenHash, hash(token))).get()
   if (!row) return null
   const now = Date.now()
+  // A pass `fotobogen import` made for one run and never took away (the run was killed) stops working by itself.
+  if (isImportPass(row.name) && now - row.createdAt > PASS_HOURS * 3600_000) {
+    getDb().delete(apiTokens).where(eq(apiTokens.id, row.id)).run()
+    return null
+  }
   if (!row.lastUsedAt || now - row.lastUsedAt > 60_000) getDb().update(apiTokens).set({ lastUsedAt: now }).where(eq(apiTokens.id, row.id)).run()
   return info(row)
 }

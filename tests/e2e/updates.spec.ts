@@ -29,6 +29,13 @@ test('the admin checks for updates on request, and the dashboard says when there
   const toast = page.getByRole('complementary', { name: 'Hear about new versions?' })
   await expect(toast).toContainText('Nothing about your site is sent.')
   await expectNoAxeViolations(page)
+  // The question covers nothing on the page while it waits for an answer.
+  await page.goto(server.url + '/admin/modules')
+  await expect(toast).toBeVisible()
+  const [note, main] = [(await toast.boundingBox())!, (await page.getByRole('main').boundingBox())!]
+  const apart = note.y + note.height <= main.y || note.y >= main.y + main.height || note.x + note.width <= main.x || note.x >= main.x + main.width
+  expect(apart, 'the question lies over the page').toBe(true)
+  await page.goto(server.url + '/admin')
   await toast.getByRole('button', { name: 'No thanks' }).click()
   await expect(toast).toHaveCount(0)
   await page.reload()

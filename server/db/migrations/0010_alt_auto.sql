@@ -1,0 +1,1 @@
+ALTER TABLE `photos` ADD `alt_auto` integer DEFAULT 0 NOT NULL;

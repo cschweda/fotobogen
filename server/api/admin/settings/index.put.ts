@@ -25,6 +25,7 @@ const schema = z.object({
   // Left out by an older page or program, it stays as it was.
   homeOrder: z.enum(['sequence', 'random'], 'Choose in order or shuffled.').optional(),
   photoQuality: z.enum(['smaller', 'standard', 'high'], 'Choose one of the three qualities.').optional(),
+  readWords: z.boolean('Choose yes or no.').optional(),
 })
 
 export default defineEventHandler(async (event) => {
@@ -46,6 +47,7 @@ export default defineEventHandler(async (event) => {
     'slideshow.order': settings.slideshowOrder,
   })
   if (settings.homeOrder) setSettings({ 'layout.home_order': settings.homeOrder })
+  if (settings.readWords !== undefined) setSettings({ 'uploads.read_words': settings.readWords })
   // A new quality applies to every photo, so every photo's copies are made again, in the background.
   let queued = 0
   if (settings.photoQuality && settings.photoQuality !== getSetting('media.quality', DEFAULT_QUALITY)) {

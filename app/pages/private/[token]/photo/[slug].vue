@@ -9,7 +9,7 @@ const token = encodeURIComponent(String(route.params.token))
 const album = `/private/${token}`
 await useFetch('/api/site', { key: 'site' })
 const { data: photo, error } = await useFetch<PublicPhoto>(`/api/private/${token}/photos/${encodeURIComponent(String(route.params.slug))}`)
-if (error.value || !photo.value) throw createError({ status: 404, statusText: 'Not Found', fatal: true })
+if (error.value || !photo.value) throw createError({ status: 404, statusText: 'Not Found', fatal: import.meta.client })
 const { t } = useSiteText()
 useHead({ title: () => photo.value!.title ?? t('untitled'), meta: [{ key: 'robots', name: 'robots', content: 'noindex, nofollow' }] })
 

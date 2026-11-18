@@ -8,11 +8,14 @@ import { basename, extname } from 'node:path'
 import { newId } from '../core/ids.ts'
 import { serial } from '../core/serial.ts'
 import type { PipelineContext } from './context.ts'
+import { setPhotoTags } from './collections.ts'
+import { readEmbeddedWords, suggestAlt } from './embedded.ts'
+import { heicToJpeg, readableKey } from './heic.ts'
 import sharp from './image.ts'
 import { pixelLimitFor } from './limits.ts'
 import { slugify, uniqueSlug } from './slug.ts'
 
-export type ImageFormat = 'jpeg' | 'png' | 'webp' | 'tiff' | 'avif'
+export type ImageFormat = 'jpeg' | 'png' | 'webp' | 'tiff' | 'avif' | 'heic'
 
 const FORMATS: Record<ImageFormat, { ext: string, mime: string }> = {
   jpeg: { ext: 'jpg', mime: 'image/jpeg' },
@@ -20,6 +23,7 @@ const FORMATS: Record<ImageFormat, { ext: string, mime: string }> = {
   webp: { ext: 'webp', mime: 'image/webp' },
   tiff: { ext: 'tif', mime: 'image/tiff' },
   avif: { ext: 'avif', mime: 'image/avif' },
+  heic: { ext: 'heic', mime: 'image/heic' },
 }
 
 export interface UploadInput {
@@ -33,20 +37,25 @@ export interface UploadInput {
   title?: string
   description?: string
   alt?: string
+  /**
+   * Whether to use the title, caption, keywords and alt text saved inside
+   * the file (by Lightroom and the like) where none are given. Default: yes.
+   */
+  readWords?: boolean
 }
 
 export type AcceptResult
-  = | { result: 'accepted', photo: { id: string, slug: string } }
+  = | { result: 'accepted', photo: { id: string, slug: string }, /** Which of the photo's words were read from inside the file. */ fromFile: ('title' | 'description' | 'alt' | 'tags')[] }
     /** `trashed`: the copy already here is in the trash (1) or in the library (0). */
     | { result: 'duplicate', existing: { id: string, slug: string, title: string | null, filename: string, trashed?: number } }
     | { result: 'rejected', reason: 'not-an-image' | 'too-many-pixels', message: string }
 
-const NOT_AN_IMAGE = 'This file is not a photo Fotobogen can read. Use a JPEG, PNG, WebP, TIFF, or AVIF file.'
+const NOT_AN_IMAGE = 'This file is not a photo Fotobogen can read. Use a JPEG, PNG, WebP, TIFF, AVIF, or HEIC file.'
 
 /**
  * The format, judged from the file's first bytes. The file is only handed
- * to the image library when this recognises it, so formats outside the
- * accepted five (SVG, PDF, GIF, ...) never reach a decoder.
+ * to a decoder when this recognises it, so formats outside the accepted
+ * six (SVG, PDF, GIF, a film, ...) never reach one.
  */
 export function sniffFormat(head: Uint8Array): ImageFormat | null {
   const bytes = Buffer.from(head.buffer, head.byteOffset, head.byteLength)
@@ -56,15 +65,28 @@ export function sniffFormat(head: Uint8Array): ImageFormat | null {
   if (bytes.readUInt32BE(0) === 0x89504e47 && bytes.readUInt32BE(4) === 0x0d0a1a0a) return 'png'
   if (ascii(0, 4) === 'RIFF' && ascii(8, 12) === 'WEBP') return 'webp'
   if (ascii(0, 4) === 'II*\0' || ascii(0, 4) === 'MM\0*') return 'tiff'
-  if (ascii(4, 8) === 'ftyp' && (ascii(8, 12) === 'avif' || ascii(8, 12) === 'avis')) return 'avif'
+  if (ascii(4, 8) === 'ftyp') {
+    // One container holds AVIF, HEIC, and films. The file says which it is
+    // in its "brand", and in the brands it lists as compatible with.
+    const major = ascii(8, 12)
+    if (major === 'avif' || major === 'avis') return 'avif'
+    if (major === 'heic' || major === 'heix') return 'heic'
+    if (major === 'mif1') {
+      const end = Math.min(bytes.length, bytes.readUInt32BE(0))
+      const compatible: string[] = []
+      for (let at = 16; at + 4 <= end; at += 4) compatible.push(ascii(at, at + 4))
+      if (compatible.includes('heic') || compatible.includes('heix')) return 'heic'
+      if (compatible.includes('avif')) return 'avif'
+    }
+  }
   return null
 }
 
 async function readHead(path: string): Promise<Buffer> {
   const file = await open(path, 'r')
   try {
-    const head = Buffer.alloc(32)
-    const { bytesRead } = await file.read(head, 0, 32, 0)
+    const head = Buffer.alloc(64)
+    const { bytesRead } = await file.read(head, 0, 64, 0)
     return head.subarray(0, bytesRead)
   }
   finally {
@@ -130,7 +152,9 @@ function isUniqueViolation(error: unknown, column: string): boolean {
 
 export async function acceptUpload(ctx: PipelineContext, input: UploadInput): Promise<AcceptResult> {
   const { sqlite, storage } = ctx
-  let stored: string | undefined
+  const stored: string[] = []
+  // A HEIC is decoded to a JPEG, which the image library reads from then on.
+  const readableTmp = `${input.tmpPath}.readable.jpg`
   try {
     const head = await readHead(input.tmpPath)
     const format = sniffFormat(head)
@@ -150,11 +174,28 @@ export async function acceptUpload(ctx: PipelineContext, input: UploadInput): Pr
     const existing = findExisting()
     if (existing) return { result: 'duplicate', existing }
 
-    const size = await readDimensions(input.tmpPath, format)
+    let size: { width: number, height: number, interlaced: boolean } | null
+    if (format === 'heic') {
+      const most = pixelLimitFor(format, false, ctx.limits)
+      const made = await oneAtATime(() => heicToJpeg(input.tmpPath, readableTmp, most.maxPixels))
+      if (!made.ok && made.reason === 'too-many-pixels') {
+        return {
+          result: 'rejected',
+          reason: 'too-many-pixels',
+          message: most.kind
+            ? `This photo is ${megapixels(made.pixels)}; the limit for HEIC files is ${megapixels(most.maxPixels)}, because they take much more memory to open. Save it as a JPEG and upload that.`
+            : `This photo is ${megapixels(made.pixels)}; the limit is ${megapixels(most.maxPixels)}.`,
+        }
+      }
+      size = made.ok ? { width: made.width, height: made.height, interlaced: false } : null
+    }
+    else {
+      size = await readDimensions(input.tmpPath, format)
+    }
     if (!size) return { result: 'rejected', reason: 'not-an-image', message: NOT_AN_IMAGE }
     const limit = pixelLimitFor(format, size.interlaced, ctx.limits)
     if (size.width * size.height > limit.maxPixels) {
-      const NAMES: Record<string, string> = { 'avif': 'AVIF', 'webp': 'WebP', 'interlaced png': 'interlaced PNG' }
+      const NAMES: Record<string, string> = { 'avif': 'AVIF', 'webp': 'WebP', 'heic': 'HEIC', 'interlaced png': 'interlaced PNG' }
       return {
         result: 'rejected',
         reason: 'too-many-pixels',
@@ -169,11 +210,30 @@ export async function acceptUpload(ctx: PipelineContext, input: UploadInput): Pr
     const key = `${id}.${ext}`
     const fileBytes = await fileSize(input.tmpPath)
     await storage.put('originals', key, input.tmpPath)
-    stored = key
+    stored.push(key)
+    if (format === 'heic') {
+      await storage.put('originals', readableKey(key), readableTmp)
+      stored.push(readableKey(key))
+    }
 
-    const title = input.title?.trim() || null
+    // Words given with the upload come first; then the words saved inside the file.
+    // With the words switched off, the text inside the file is not opened at all; only the date is read.
+    const inside = await readEmbeddedWords(storage.localPath('originals', key), { words: input.readWords !== false })
+    const words = inside
+    const fromFile: ('title' | 'description' | 'alt' | 'tags')[] = []
+    const or = (given: string | undefined, found: string | null, field: 'title' | 'description' | 'alt'): string | null => {
+      const own = given?.trim() || null
+      if (!own && found) fromFile.push(field)
+      return own ?? found
+    }
+    const title = or(input.title, words.title, 'title')
+    const description = or(input.description, words.description, 'description')
+    const ownAlt = or(input.alt, words.alt, 'alt')
+    if (words.tags.length > 0) fromFile.push('tags')
     const filename = basename(input.filename).slice(0, 255) || 'photo'
     const wanted = slugify(title ?? basename(filename, extname(filename)))
+    // No photo goes without alt text. With none given and none in the file, a start is written, and marked to be checked.
+    const alt = ownAlt ?? suggestAlt({ title, filename, takenAt: inside.takenAt })
     const now = Date.now()
 
     const insert = sqlite.transaction(() => {
@@ -181,20 +241,21 @@ export async function acceptUpload(ctx: PipelineContext, input: UploadInput): Pr
         sqlite.prepare(`select 1 from photos where slug = ?`).get(candidate) !== undefined)
       const { next } = sqlite.prepare(`select coalesce(max(sort_order), 0) + 1 as next from photos`).get() as { next: number }
       sqlite.prepare(`
-        insert into photos (id, slug, title, description, alt, original_path, original_filename, mime, bytes,
+        insert into photos (id, slug, title, description, alt, alt_auto, original_path, original_filename, mime, bytes,
           checksum, width, height, status, visibility, is_sample, sort_order, created_at, updated_at)
-        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'processing', ?, ?, ?, ?, ?)
-      `).run(id, slug, title, input.description?.trim() || null, input.alt?.trim() || null, key, filename, mime,
+        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'processing', ?, ?, ?, ?, ?)
+      `).run(id, slug, title, description, alt, ownAlt ? 0 : 1, key, filename, mime,
         fileBytes, checksum, size.width, size.height, input.visibility === 'hidden' ? 'hidden' : 'public', input.isSample ? 1 : 0, next, now, now)
       sqlite.prepare(`insert into jobs (id, type, photo_id, status, attempts, created_at) values (?, 'ingest', ?, 'queued', 0, ?)`)
         .run(newId(), id, now)
+      if (words.tags.length > 0) setPhotoTags(ctx, id, words.tags)
       return slug
     })
 
     try {
       const slug = insert()
-      stored = undefined // the database now refers to the file
-      return { result: 'accepted', photo: { id, slug } }
+      stored.length = 0 // the database now refers to the files
+      return { result: 'accepted', photo: { id, slug }, fromFile }
     }
     catch (error) {
       // The same file finished uploading in another request a moment ago.
@@ -205,7 +266,8 @@ export async function acceptUpload(ctx: PipelineContext, input: UploadInput): Pr
   }
   finally {
     await rm(input.tmpPath, { force: true, maxRetries: 10, retryDelay: 50 })
-    if (stored) await storage.delete('originals', stored)
+    await rm(readableTmp, { force: true, maxRetries: 10, retryDelay: 50 })
+    for (const key of stored) await storage.delete('originals', key)
   }
 }
 

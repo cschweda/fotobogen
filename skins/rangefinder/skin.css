@@ -87,8 +87,6 @@
   grid, so the order photos are read in is the order they appear in.
 */
 .fb-grid-wrap { container-type: inline-size; --fb-cols: var(--fb-columns); }
-@container (max-width: 64rem) { .fb-grid { --fb-cols: min(var(--fb-columns), 3); } }
-@container (max-width: 40rem) { .fb-grid { --fb-cols: 2; } }
 .fb-grid {
   --fb-cols: var(--fb-columns);
   display: grid;
@@ -96,6 +94,9 @@
   column-gap: var(--fb-gutter);
   margin: 0; padding: 0; list-style: none;
 }
+/* After the rule above, so that they win over it: a container query adds no weight of its own. */
+@container (max-width: 64rem) { .fb-grid { --fb-cols: min(var(--fb-columns), 3); } }
+@container (max-width: 40rem) { .fb-grid { --fb-cols: 2; } }
 .fb-tile { position: relative; background-size: cover; background-position: center; background-color: var(--fb-line); }
 .fb-tile__link { display: block; width: 100%; height: 100%; }
 .fb-tile__image { display: block; width: 100%; height: 100%; object-fit: cover; }
@@ -162,6 +163,8 @@
 
 /* The same photo opened over the grid. */
 .fb-modal { width: min(96vw, 84rem); max-height: 94vh; padding: clamp(1rem, 3vw, 2rem); border: 1px solid var(--fb-line); background: var(--fb-ground); color: var(--fb-text); overflow: auto; }
+/* The dialog takes focus itself when a photo has no link left to hold it; that needs no ring. */
+.fb-modal:focus { outline: none; }
 .fb-modal::backdrop { background: rgb(0 0 0 / 0.86); }
 .fb-modal__close { float: right; min-height: 2.75rem; margin: 0 0 1rem 1rem; padding: 0 1rem; border: 1px solid var(--fb-muted); background: none; color: var(--fb-text); font: inherit; cursor: pointer; }
 .fb-modal__close:hover { border-color: var(--fb-text); }
@@ -191,8 +194,9 @@
 .fb-slideshow__photo:focus-visible { outline-offset: -4px; }
 .fb-slideshow__image { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; opacity: 0; transition: opacity 1s ease; }
 .fb-slideshow__image--front { opacity: 1; }
+.fb-slideshow__foot { position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; max-height: 100%; }
 .fb-slideshow__controls {
-  position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;
+  flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;
   padding: 0.75rem var(--fb-margin); background: rgb(0 0 0 / 0.72); font-size: 0.875rem;
 }
 .fb-slideshow__control {
@@ -203,7 +207,7 @@
 .fb-slideshow__control[aria-pressed="true"] { background: #f5f5f2; color: #0a0a0b; }
 .fb-slideshow__count { margin: 0 auto 0 0.5rem; color: #d0d0cb; font-variant-numeric: tabular-nums; }
 .fb-slideshow__details {
-  position: absolute; left: 0; right: 0; bottom: 4.25rem; max-height: 50vh; overflow: auto;
+  min-height: 0; max-height: 50vh; overflow: auto;
   padding: 1.25rem var(--fb-margin); background: rgb(0 0 0 / 0.82); color: #f5f5f2;
 }
 .fb-slideshow__details a { color: #f5f5f2; }

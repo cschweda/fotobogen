@@ -48,6 +48,8 @@ export default defineEventHandler(async (event) => {
     filename: received.filename,
     // New uploads go straight to the site, or wait as drafts, as the owner chose in Settings.
     visibility: getSetting<'public' | 'hidden'>('uploads.default_visibility', 'public'),
+    // The title, caption, keywords and alt text saved inside the file are used, unless the owner switched that off.
+    readWords: getSetting<boolean>('uploads.read_words', true),
   })
   if (outcome.result === 'accepted') {
     photoUploaded(outcome.photo.id)
