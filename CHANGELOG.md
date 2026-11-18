@@ -11,7 +11,7 @@ is built from this file.
 
 ## [Unreleased]
 
-Nothing yet.
+- The photo page and slideshow screenshots show a photo's date, camera, lens and settings. The values are examples, and the README says so: the sample photos carry no camera data.
 
 ## [1.11.0] - 2026-11-18
 
