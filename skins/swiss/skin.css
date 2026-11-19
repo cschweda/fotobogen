@@ -51,7 +51,7 @@
 .fb-empty { max-width: 34rem; margin: 3rem 0; padding: 1.25rem 0; border-top: 1px solid var(--fb-line); border-bottom: 1px solid var(--fb-line); color: var(--fb-muted); }
 
 /* Links between the parts of the site, and the heading of an album or tag page. */
-.fb-nav { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.4rem 1.25rem; margin-left: auto; font-size: 0.875rem; }
+.fb-nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 0.4rem 1.25rem; margin-left: auto; font-size: 0.875rem; }
 .fb-page-title { margin: 0.5rem 0 0.5rem; font-size: clamp(1.75rem, 1.2rem + 2vw, 2.75rem); font-weight: 700; line-height: 1.05; letter-spacing: -0.03em; }
 .fb-page-description { max-width: 38rem; margin: 0 0 2rem; color: var(--fb-muted); white-space: pre-line; }
 .fb-page-actions { margin: 0 0 1.5rem; font-size: 0.875rem; }

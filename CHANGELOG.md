@@ -12,6 +12,7 @@ is built from this file.
 ## [Unreleased]
 
 - The photo page and slideshow screenshots show a photo's date, camera, lens and settings. The values are examples, and the README says so: the sample photos carry no camera data.
+- The light and dark mode button lines up with the menu links beside it, in all four bundled skins. A skin of your own can do the same with `align-items: center` on `.fb-nav`.
 
 ## [1.11.0] - 2026-11-18
 
