@@ -7,10 +7,10 @@ set -euo pipefail
 # README, Branches): the root package.json is private and is never published.
 #
 # Usage:
-#   ./publish.sh --dry-run   run every check and a dry-run publish; change nothing
-#   ./publish.sh             run every check, then publish
+#   installer/publish.sh --dry-run   run every check and a dry-run publish; change nothing
+#   installer/publish.sh             run every check, then publish
 #
-# A release is two commands: ./publish.sh --dry-run, then ./publish.sh.
+# A release is two commands: installer/publish.sh --dry-run, then installer/publish.sh.
 #
 # The version published is the one in installer/package.json. This script never changes
 # it, and never commits or pushes to a branch: a push to main starts a production build of the
@@ -22,10 +22,13 @@ set -euo pipefail
 # seconds, and the checks take minutes. Press Enter there instead of typing a code and npm
 # prints a link to approve the publish in your browser. A dry run asks for nothing.
 #
+# It lives in installer/ so the top of a site's folder holds only what a site owner uses;
+# everyone who installs Fotobogen gets this file, but only the maintainer can use it.
+#
 # Works in Git Bash on Windows as well as on macOS and Linux.
 #
 # Before anything is published, it checks that:
-#   - you're in the Fotobogen root, on main, up to date with origin/main, with a clean tree;
+#   - it runs from the Fotobogen root (it moves there itself), on main, up to date with origin/main, with a clean tree;
 #   - you're logged in to npm, and the version isn't on npm or tagged on another commit;
 #   - installer/CHANGELOG.md has an entry for the version;
 #   - CI finished and passed for this commit (needs the GitHub CLI, logged in: without it a
@@ -66,7 +69,7 @@ DRY_RUN=false
 for arg in "$@"; do
   case "$arg" in
     --dry-run) DRY_RUN=true ;;
-    *) die "Unknown argument '$arg'. Usage: ./publish.sh [--dry-run]. The version comes from $PACKAGE_DIR/package.json; the two-factor code is asked for at the end." ;;
+    *) die "Unknown argument '$arg'. Usage: installer/publish.sh [--dry-run]. The version comes from $PACKAGE_DIR/package.json; the two-factor code is asked for at the end." ;;
   esac
 done
 
@@ -86,7 +89,9 @@ trap cleanup EXIT
 
 # ─── Preflight ──────────────────────────────────────────────────────
 
-[[ -f package.json && -f "$PACKAGE_DIR/package.json" ]] || die "Run this from the Fotobogen root (the folder that holds $PACKAGE_DIR/)."
+# Work from the Fotobogen root, wherever this was started from: this file is in installer/.
+cd "$(dirname "$0")/.." || die "The Fotobogen root could not be found from $0."
+[[ -f package.json && -f "$PACKAGE_DIR/package.json" ]] || die "No Fotobogen root above this script: it belongs in $PACKAGE_DIR/, beside $PACKAGE_DIR/package.json."
 [[ "$(pkg_field name)" == "$PACKAGE_NAME" ]] || die "$PACKAGE_DIR/package.json isn't $PACKAGE_NAME."
 command -v pnpm >/dev/null || die "pnpm is required (npm install -g pnpm@10)."
 command -v git >/dev/null || die "git is required."
@@ -266,7 +271,7 @@ else
   info "The commits to the installer so far, and who made them:"
   RANGE="HEAD"
 fi
-git log --format='  %h  %an  %s' "$RANGE" -- "$PACKAGE_DIR" publish.sh |
+git log --format='  %h  %an  %s' "$RANGE" -- "$PACKAGE_DIR" |
   node --input-type=commonjs -e '
     const text = require("fs").readFileSync(0, "utf8");
     const shown = (c) => "\\u{" + c.codePointAt(0).toString(16) + "}";
@@ -306,13 +311,13 @@ read -r -p "Code (or Enter for the link): " OTP || OTP=""
 # The tarball that was installed and run above, not a new one packed from the folder.
 if [[ "$OTP" =~ ^[0-9]{6}$ ]]; then
   npm publish "$TARBALL" --access public --ignore-scripts --otp "$OTP" ||
-    die "npm did not publish it (a code lasts about 30 seconds, so it may have run out). Nothing was published. Run ./publish.sh again."
+    die "npm did not publish it (a code lasts about 30 seconds, so it may have run out). Nothing was published. Run installer/publish.sh again."
 elif [[ -z "$OTP" ]]; then
   info "Open the link npm prints below, approve it, and come back here."
   npm publish "$TARBALL" --access public --ignore-scripts --auth-type=web ||
-    die "npm did not publish it. Nothing was published. Run ./publish.sh again."
+    die "npm did not publish it. Nothing was published. Run installer/publish.sh again."
 else
-  die "That isn't a 6-digit code, so nothing was published. Run ./publish.sh again, and type npm's code or press Enter when it asks."
+  die "That isn't a 6-digit code, so nothing was published. Run installer/publish.sh again, and type npm's code or press Enter when it asks."
 fi
 info "Published $PACKAGE_NAME@$VERSION."
 

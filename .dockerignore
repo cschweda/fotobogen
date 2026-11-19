@@ -15,4 +15,3 @@ test-results
 playwright-report
 *.log
 installer
-publish.sh
