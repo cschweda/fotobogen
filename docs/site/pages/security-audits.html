@@ -6,7 +6,7 @@
 <p>The newest audit is open below; older ones are folded under it. To report a problem, <a href="https://github.com/cschweda/fotobogen/issues">open an issue on GitHub</a>. If the details should not be public yet, say only that in the issue and ask for a private way to send them.</p>
 
 <details class="audit" open>
-<summary><strong>19 November 2026, the droplet setup script (not yet released).</strong> 6 findings, none critical: 1 high, 2 low, 3 informational. Outcome: 3 fixed, 3 accepted.</summary>
+<summary><strong>19 November 2026, version 1.12.0.</strong> 6 findings, none critical: 1 high, 2 low, 3 informational. Outcome: 3 fixed, 3 accepted.</summary>
 <h2 id="audit-2026-11-19">19 November 2026, the seventh audit</h2>
 <p>The seventh audit, of <code>deploy/droplet-setup.sh</code>, the script that sets up a new DigitalOcean droplet on its own. One attacker, with the source and a copy of the script running in a systemd Ubuntu 24.04 container on this machine, worked as someone who chooses the domain the script is given, and as someone who has taken over the running site (its user, <code>fotobogen</code>) and waits for the owner to run the script again as root.</p>
 <p>Fixed: closed in this release. Reduced: made harder or documented, not closed. Accepted: left as it is, for the reason given. Open: not yet dealt with.</p>

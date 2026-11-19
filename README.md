@@ -9,7 +9,7 @@ A self-hosted publishing platform for photographs: install it on a small
 server, answer a few first-run questions, and get a public photo site with an
 admin backend. Think "WordPress for photos".
 
-**Version 1.11.1** (19 November 2026). It installs on macOS, Windows, and
+**Version 1.12.0** (19 November 2026). It installs on macOS, Windows, and
 Linux; takes your photographs, resizes them for every screen, and publishes
 them on a site you can restyle, reword, and put under your own name, with an
 admin behind a login. Version 1.0.0 was the first release; 1.1.0 added
@@ -26,7 +26,8 @@ tags and licence in the slideshow's details; 1.11.0 takes an iPhone's HEIC
 photos, reads the titles, captions and keywords saved inside a file, gives
 every photo alt text, imports a folder at once, and answers to a swipe on a
 phone, after a review of the whole program by fresh eyes; 1.11.1 adds a
-[walkthrough for your own domain](#your-own-domain-start-to-finish).
+[walkthrough for your own domain](#your-own-domain-start-to-finish); 1.12.0
+sets up a new DigitalOcean droplet from one paste, with no terminal.
 
 - **What is in it:** [CHANGELOG.md](CHANGELOG.md), also published as
   [Releases](https://fotobogen.com/docs/changelog/).
@@ -469,7 +470,7 @@ distributions may well work, but are reported as untested.
 `/api/health` needs no login and answers `GET` and `HEAD`:
 
 ```json
-{ "status": "ok", "version": "1.11.1", "database": "ok", "queue": { "depth": 0 }, "uptime": 86400 }
+{ "status": "ok", "version": "1.12.0", "database": "ok", "queue": { "depth": 0 }, "uptime": 86400 }
 ```
 
 It returns `200` when the app and its database are working and `503` when
@@ -1938,7 +1939,7 @@ Each audit is a red team and blue team exercise: the red team attacks a running 
 The newest audit is open below; older ones are folded under it. The same record is at [fotobogen.com/docs/security-audits](https://fotobogen.com/docs/security-audits/). To report a problem, open an issue on GitHub. If the details should not be public yet, say only that in the issue and ask for a private way to send them.
 
 <details open>
-<summary><strong>19 November 2026, the droplet setup script (not yet released).</strong> 6 findings, none critical: 1 high, 2 low, 3 informational. Outcome: 3 fixed, 3 accepted.</summary>
+<summary><strong>19 November 2026, version 1.12.0.</strong> 6 findings, none critical: 1 high, 2 low, 3 informational. Outcome: 3 fixed, 3 accepted.</summary>
 
 The seventh audit, of `deploy/droplet-setup.sh`, the script that sets up a new DigitalOcean droplet on its own. One attacker, with the source and a copy of the script running in a systemd Ubuntu 24.04 container on this machine, worked as someone who chooses the domain the script is given, and as someone who has taken over the running site (its user, `fotobogen`) and waits for the owner to run the script again as root.
 
