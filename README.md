@@ -61,6 +61,7 @@ free software with no warranty: keep backups of your photographs.
 - [Modules](#modules)
 - [Tests](#tests)
 - [Windows](#windows)
+- [Your own domain, start to finish](#your-own-domain-start-to-finish)
 - [Docker quick start](#docker-quick-start)
 - [Laravel Forge](#laravel-forge)
 - [Without Docker (pm2)](#without-docker-pm2)
@@ -1059,6 +1060,120 @@ file mode `0600`; they inherit the folder's permissions), and the Docker
 path needs Docker Desktop or WSL, which is not covered by the Windows test
 run.
 
+## Your own domain, start to finish
+
+A walkthrough from nothing to your photographs at
+`https://photos.example.com`: buy a domain, rent a server, point the domain
+at it, install Fotobogen, keep it running under pm2, and put nginx and HTTPS
+in front. The complete version, with a check after every step and what to
+do when one fails, is on
+[fotobogen.com/docs/your-own-domain](https://fotobogen.com/docs/your-own-domain/).
+
+**Who this is for.** It takes about an hour in a terminal on a rented
+server. If that is not for you, someone who has set up a website before can
+do it in fifteen minutes; after that, everything happens in the admin in a
+browser.
+
+Below, `photos.example.com` stands for your domain and `203.0.113.10` for
+your server's address.
+
+1. **Buy a domain** from a registrar: [Porkbun](https://porkbun.com),
+   [Namecheap](https://www.namecheap.com), or
+   [DNSimple](https://dnsimple.com) (a paid subscription with a clean DNS
+   editor; it can also run the DNS of a domain bought elsewhere). A
+   subdomain such as `photos.yourname.com` of a domain you already own costs
+   nothing more.
+2. **Rent a server**: Ubuntu 24.04 LTS, 2 GB of memory recommended (1 GB
+   works with swap). On the Forge track, Forge creates it. Copy its IP address.
+3. **Point the domain at it, straight away** (DNS can take a while to take
+   effect, and HTTPS needs it). At the registrar, add an **A record**: name
+   `photos` (empty, or `@`, for the whole domain), value `203.0.113.10`.
+   Porkbun: the domain's **DNS** page. Namecheap: **Manage**, **Advanced
+   DNS**. DNSimple: **DNS**, **Manage records**. Check with
+   `nslookup photos.example.com`.
+
+Then follow one of the two tracks.
+
+<details>
+<summary><strong>Track A: a plain server</strong> (a DigitalOcean droplet, or any Ubuntu VPS)</summary>
+
+Log in as root, make an ordinary user, and open only SSH and the web:
+
+```bash
+ssh root@203.0.113.10
+adduser photos && usermod -aG sudo photos
+rsync --archive --chown=photos:photos ~/.ssh /home/photos
+apt update && apt upgrade -y && apt install -y nginx git
+ufw allow OpenSSH && ufw allow 'Nginx Full' && ufw enable
+exit
+```
+
+As that user, install Node.js 24, pnpm and pm2, then Fotobogen (on a 1 GB
+server, [add swap](https://fotobogen.com/docs/installation/#swap) first):
+
+```bash
+ssh photos@203.0.113.10
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | bash
+source ~/.nvm/nvm.sh && nvm install 24 && npm install -g pnpm@10 pm2
+npx fotobogen@latest fotobogen     # answer no when it offers to start
+cd ~/fotobogen
+pnpm fotobogen init                # Enter for the port; site address https://photos.example.com; no demo mode
+pm2 start ecosystem.config.cjs
+pm2 save && pm2 startup            # run the "sudo env PATH=..." line it prints
+pm2 logs fotobogen                 # the setup token; Control + C to leave
+```
+
+Put nginx in front: save the site file from
+[nginx in front of the app](#nginx-in-front-of-the-app) as
+`/etc/nginx/sites-available/photos.example.com`, then:
+
+```bash
+sudo ln -s /etc/nginx/sites-available/photos.example.com /etc/nginx/sites-enabled/
+sudo rm /etc/nginx/sites-enabled/default
+sudo nginx -t && sudo systemctl reload nginx
+sudo apt install -y certbot python3-certbot-nginx
+sudo certbot --nginx -d photos.example.com
+```
+
+</details>
+
+<details>
+<summary><strong>Track B: Laravel Forge</strong></summary>
+
+1. In Forge, create a server (Ubuntu 24.04, 2 GB if you can), and do step 3
+   above with its IP address. Add your SSH key on its **SSH Keys** tab.
+2. Create the site `photos.example.com` with a project type that has no PHP
+   (Static HTML, or Other), and install the repository `cschweda/fotobogen`,
+   branch `main`.
+3. Log in as `forge` and build and start it:
+
+   ```bash
+   ssh forge@203.0.113.10
+   curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | bash
+   source ~/.nvm/nvm.sh && nvm install 24 && nvm alias default 24
+   npm install -g pnpm@10 pm2
+   cd /home/forge/photos.example.com
+   pnpm install --frozen-lockfile && pnpm build
+   pnpm fotobogen init              # site address https://photos.example.com
+   pm2 start ecosystem.config.cjs
+   pm2 save && pm2 startup          # run the "sudo env PATH=..." line it prints
+   pm2 logs fotobogen               # the setup token
+   ```
+
+4. **Edit Nginx Configuration**: replace the `location / { ... }` block with
+   the blocks from [deploy/forge-nginx.conf](deploy/forge-nginx.conf)
+   (its marked path becomes
+   `/home/forge/photos.example.com/data/derivatives/`), and delete the `location ~ \.php$`, `location = /favicon.ico` and
+   `location = /robots.txt` blocks if they are there.
+5. **SSL** tab: obtain a Let's Encrypt certificate.
+6. **Deployments** tab: use the deploy script from
+   [Laravel Forge with pm2](#laravel-forge-with-pm2-no-docker).
+
+</details>
+
+Open `https://photos.example.com`, enter the setup token, and the wizard
+does the rest.
+
 ## Docker quick start
 
 For a server with nothing on it but Docker. This runs Fotobogen behind
@@ -1281,7 +1396,10 @@ same standing.
    `location / { ... }` block with the blocks from
    [deploy/forge-nginx.conf](deploy/forge-nginx.conf), and change the two
    marked lines: the path to your site's `data/derivatives/` folder, and
-   the port if you changed it. Leave everything else Forge wrote (the
+   the port if you changed it. Also delete Forge's `location ~ \.php$`,
+   `location = /favicon.ico` and `location = /robots.txt` blocks if there
+   are any: the last two answer from disk and hide Fotobogen's own. Leave
+   everything else Forge wrote (the
    `listen` lines, the certificate, its `include` lines) as it is. Save;
    Forge checks the file and reloads nginx.
 6. **Issue the certificate**: the site's **SSL** tab, Let's Encrypt.

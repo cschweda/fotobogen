@@ -24,7 +24,7 @@ describe('the documentation pages', () => {
   })
 
   it('cover installation, usage, skins, modules, and questions', () => {
-    expect(PAGES.map((page: { slug: string }) => page.slug)).toEqual(['', 'installation', 'configuration', 'usage', 'updating', 'customization', 'skins', 'writing-a-skin', 'modules', 'writing-a-module', 'faq', 'security-audits', 'changelog'])
+    expect(PAGES.map((page: { slug: string }) => page.slug)).toEqual(['', 'installation', 'your-own-domain', 'configuration', 'usage', 'updating', 'customization', 'skins', 'writing-a-skin', 'modules', 'writing-a-module', 'faq', 'security-audits', 'changelog'])
     const text = (slug: string) => files.get(`docs/${slug}/index.html`)!
     // Installation: each system, both Docker routes, and server sizes.
     for (const id of ['requirements', 'macos', 'windows', 'linux', 'docker-vps', 'docker-forge', 'docker-local', 'first-run']) {
@@ -35,6 +35,19 @@ describe('the documentation pages', () => {
     expect(text('faq')).toContain('<h2 id="backups">')
     expect(text('faq')).toContain('<h2 id="starting-over">')
     expect(text('faq')).toContain('Start again from nothing')
+  })
+
+  it('walk through a domain from start to finish, on a plain server and on Forge', () => {
+    const page = files.get('docs/your-own-domain/index.html')!
+    // The shared steps, then each track's own steps, from buying the domain to HTTPS.
+    for (const id of ['tracks', 'buy', 'server', 'dns', 'plain', 'plain-node', 'plain-install', 'plain-pm2', 'plain-nginx', 'plain-https', 'forge', 'forge-site', 'forge-install', 'forge-nginx', 'forge-https', 'forge-deploy', 'finish', 'trouble']) {
+      expect(page, id).toMatch(new RegExp(`<h[23] id="${id}">`))
+    }
+    for (const registrar of ['Porkbun', 'Namecheap', 'DNSimple']) expect(page, registrar).toContain(`<strong>${registrar}:</strong>`)
+    // Every jump within the page lands on something there.
+    for (const [, id] of page.matchAll(/href="#([^"]+)"/g)) expect(page, `#${id}`).toContain(`id="${id}"`)
+    // The nginx file it gives keeps the line without which the admin cannot save.
+    expect(page).toContain('proxy_set_header Host $http_host;')
   })
 
   it('explain every single setting in fotobogen.config.js, and every name in .env.sample', async () => {
