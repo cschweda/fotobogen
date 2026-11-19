@@ -1,6 +1,6 @@
 # Roadmap
 
-**Version 1.11.1 is the current release** (19 November 2026), following 1.11.0, 1.10.0, 1.9.0, 1.8.0, 1.7.0, 1.6.0, 1.5.0, 1.4.0, 1.3.3, 1.3.2, 1.3.1, 1.3.0, 1.2.0, 1.1.0 and 1.0.0, the first: see [CHANGELOG.md](../CHANGELOG.md). Everything marked Done below is in it. What is marked Planned or Later comes after.
+**Version 1.12.0 is the current release** (19 November 2026), following 1.11.1, 1.11.0, 1.10.0, 1.9.0, 1.8.0, 1.7.0, 1.6.0, 1.5.0, 1.4.0, 1.3.3, 1.3.2, 1.3.1, 1.3.0, 1.2.0, 1.1.0 and 1.0.0, the first: see [CHANGELOG.md](../CHANGELOG.md). Everything marked Done below is in it. What is marked Planned or Later comes after.
 
 The feature list agreed on 2026-11-15, in the order it is being built. Each item lands as one pull request against `staging`.
 

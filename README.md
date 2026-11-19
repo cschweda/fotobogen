@@ -9,7 +9,7 @@ A self-hosted publishing platform for photographs: install it on a small
 server, answer a few first-run questions, and get a public photo site with an
 admin backend. Think "WordPress for photos".
 
-**Version 1.11.1** (19 November 2026). It installs on macOS, Windows, and
+**Version 1.12.0** (19 November 2026). It installs on macOS, Windows, and
 Linux; takes your photographs, resizes them for every screen, and publishes
 them on a site you can restyle, reword, and put under your own name, with an
 admin behind a login. Version 1.0.0 was the first release; 1.1.0 added
@@ -26,7 +26,8 @@ tags and licence in the slideshow's details; 1.11.0 takes an iPhone's HEIC
 photos, reads the titles, captions and keywords saved inside a file, gives
 every photo alt text, imports a folder at once, and answers to a swipe on a
 phone, after a review of the whole program by fresh eyes; 1.11.1 adds a
-[walkthrough for your own domain](#your-own-domain-start-to-finish).
+[walkthrough for your own domain](#your-own-domain-start-to-finish); 1.12.0
+sets up a new DigitalOcean droplet from one paste, with no terminal.
 
 - **What is in it:** [CHANGELOG.md](CHANGELOG.md), also published as
   [Releases](https://fotobogen.com/docs/changelog/).
@@ -469,7 +470,7 @@ distributions may well work, but are reported as untested.
 `/api/health` needs no login and answers `GET` and `HEAD`:
 
 ```json
-{ "status": "ok", "version": "1.11.1", "database": "ok", "queue": { "depth": 0 }, "uptime": 86400 }
+{ "status": "ok", "version": "1.12.0", "database": "ok", "queue": { "depth": 0 }, "uptime": 86400 }
 ```
 
 It returns `200` when the app and its database are working and `503` when
@@ -1077,6 +1078,31 @@ browser.
 
 Below, `photos.example.com` stands for your domain and `203.0.113.10` for
 your server's address.
+
+**The quick way, with no terminal: one paste on DigitalOcean.** When
+creating a droplet (Ubuntu 24.04, 2 GB if you can), open **Advanced
+options**, tick the box for initialization scripts (user data), and paste:
+
+```bash
+#!/bin/bash
+export FOTOBOGEN_DOMAIN=photos.example.com
+curl -fsSL https://raw.githubusercontent.com/cschweda/fotobogen/main/deploy/droplet-setup.sh | bash
+```
+
+[deploy/droplet-setup.sh](deploy/droplet-setup.sh) then sets the droplet up
+by itself in about ten minutes: the firewall, swap on a 1 GB server, a user
+with no password or `sudo` to run the site, Node.js 24, Fotobogen's newest
+release under pm2, and [Caddy](https://caddyserver.com) in front, which gets
+the HTTPS certificate on its own and keeps trying until the domain points at
+the server. Add the A record (step 3 below) whenever you like. The setup
+token is shown when you open the droplet's **Console** in DigitalOcean.
+Leave the domain empty to start at `https://203-0-113-10.sslip.io` and move
+to your own domain later by running the same script with it:
+`curl -fsSL https://raw.githubusercontent.com/cschweda/fotobogen/main/deploy/droplet-setup.sh | sudo bash -s photos.example.com`.
+Updating is the admin's button, as on any pm2 install. Details:
+[the quick way](https://fotobogen.com/docs/your-own-domain/#quick).
+
+The step-by-step way:
 
 1. **Buy a domain** from a registrar: [Porkbun](https://porkbun.com),
    [Namecheap](https://www.namecheap.com), or
@@ -1913,6 +1939,26 @@ Each audit is a red team and blue team exercise: the red team attacks a running 
 The newest audit is open below; older ones are folded under it. The same record is at [fotobogen.com/docs/security-audits](https://fotobogen.com/docs/security-audits/). To report a problem, open an issue on GitHub. If the details should not be public yet, say only that in the issue and ask for a private way to send them.
 
 <details open>
+<summary><strong>19 November 2026, version 1.12.0.</strong> 6 findings, none critical: 1 high, 2 low, 3 informational. Outcome: 3 fixed, 3 accepted.</summary>
+
+The seventh audit, of `deploy/droplet-setup.sh`, the script that sets up a new DigitalOcean droplet on its own. One attacker, with the source and a copy of the script running in a systemd Ubuntu 24.04 container on this machine, worked as someone who chooses the domain the script is given, and as someone who has taken over the running site (its user, `fotobogen`) and waits for the owner to run the script again as root.
+
+Fixed: closed in this release. Reduced: made harder or documented, not closed. Accepted: left as it is, for the reason given. Open: not yet dealt with.
+
+| # | Severity | What was found | Outcome | What was done |
+|---|---|---|---|---|
+| 1 | High | Running the script again could have handed the server to whoever had taken over the site. Run as root, it edited, re-owned and changed the permissions of `.env` in the site's own folder, so a link put there (to `/etc/shadow`, say) would have given that file to the site's user; it ran `pm2` from the site user's own folder; and the instructions said to run the copy of the script in that folder, which the site's user can rewrite. | **Fixed** | `.env` is edited as the site's user. `pm2 startup`, the one step that needs root and a program of that user's, runs once, on the first install, before the site has answered anyone. The instructions and the script's own messages run it again from GitHub. Tried: with `.env` and the setup token replaced by links to `/etc/shadow`, a re-run stopped with a clear message and `/etc/shadow` was untouched. |
+| 2 | Low | `.env` was created readable by every user of the server. It will hold settings such as the two-step key. | **Fixed** | It is created, and kept, readable by the site's user only. |
+| 3 | Informational | The setup token is shown in the message at every login to the server, until setup is finished. | **Accepted** | That is how the owner reads it without a terminal. On a new droplet only root logs in, and root can read the token's file anyway. See also 6. |
+| 4 | Informational | The droplet fetches the script from the main branch on GitHub when it first starts, so whoever can change that branch decides what new servers run. | **Accepted** | The same trust as the one-line installer and every update. Changes reach main only as reviewed releases. |
+| 5 | Informational | Between the end of the install and the owner's first visit, the setup page is public. | **Accepted** | It needs the 128-bit setup token, and wrong tokens are limited, as on every install. |
+| 6 | Low | The login message read the token file in the site's folder, as root. The site's user could put a link there and have another file shown to root, fill it with terminal control codes, or make it a pipe or a link to an endless file such as `/dev/zero`, which would have held up every login to the server; reading it as the site's user instead, even with a time limit, left a process that user could pause. Found by an automated review after the red team's pass, in three rounds. | **Fixed** | The login message no longer reads anything in the site's folder. The first install copies the token to `/etc/fotobogen-setup-token`, readable by root only, before the site has answered anyone, and the message shows that copy, as hexadecimal digits only. It asks only whether the site's token file is still there (setup unfinished), which cannot block. If the token is ever made again, the message says where to read it. Tried: a real token, a pipe, links to `/dev/zero` and to nothing, and setup finished; each login message took 2 ms. |
+
+What was tried and held: six hostile domains (one carrying a Caddy block, one with a second line, one with a `#` and a setting, one beginning with a dash, an empty label, and a full address in capitals) were all either refused before anything changed or reduced to the bare name; the site listens on 127.0.0.1 only; the firewall allows only 22, 80 and 443; the site's user has no password and no `sudo`; the token file is readable by that user only; after a restart, pm2 and Caddy came back by themselves and the site answered over HTTPS. Not tried: a real DigitalOcean droplet, a real certificate from Let's Encrypt, a build on a 1 GB machine, and other providers.
+
+</details>
+
+<details>
 <summary><strong>18 November 2026, version 1.11.0.</strong> 8 findings, none critical: 1 high, 2 medium, 3 low, 2 informational. Outcome: 6 fixed, 1 reduced, 1 accepted.</summary>
 
 The sixth audit, of everything added in version 1.11.0: HEIC uploads, the words read from inside a file, alt text for every photo, the `fotobogen import` command, and the smaller changes beside them. One attacker, with a running copy on this machine and the source code, worked as an outsider, as a visitor, as the holder of an upload-only API token, and as someone able to put files into a folder the owner later imports. It built its own files (truncated and mislabelled HEICs, a HEIC claiming to be 65,535 pixels square, XMP with hostile markup and with hundreds of thousands of unclosed tags), listened on the machine's other loopback address in the site's place, and passed the importer's questions on to the real site. The four that mattered were fixed before release, each with a test that failed first.

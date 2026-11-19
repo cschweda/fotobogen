@@ -40,12 +40,16 @@ describe('the documentation pages', () => {
   it('walk through a domain from start to finish, on a plain server and on Forge', () => {
     const page = files.get('docs/your-own-domain/index.html')!
     // The shared steps, then each track's own steps, from buying the domain to HTTPS.
-    for (const id of ['tracks', 'buy', 'server', 'dns', 'plain', 'plain-node', 'plain-install', 'plain-pm2', 'plain-nginx', 'plain-https', 'forge', 'forge-site', 'forge-install', 'forge-nginx', 'forge-https', 'forge-deploy', 'finish', 'trouble']) {
+    for (const id of ['quick', 'tracks', 'buy', 'server', 'dns', 'plain', 'plain-node', 'plain-install', 'plain-pm2', 'plain-nginx', 'plain-https', 'forge', 'forge-site', 'forge-install', 'forge-nginx', 'forge-https', 'forge-deploy', 'finish', 'trouble']) {
       expect(page, id).toMatch(new RegExp(`<h[23] id="${id}">`))
     }
     for (const registrar of ['Porkbun', 'Namecheap', 'DNSimple']) expect(page, registrar).toContain(`<strong>${registrar}:</strong>`)
     // Every jump within the page lands on something there.
     for (const [, id] of page.matchAll(/href="#([^"]+)"/g)) expect(page, `#${id}`).toContain(`id="${id}"`)
+    // The quick way pastes a script that is in the repository, and re-runs it from GitHub, never from the site user's folder.
+    expect(existsSync('deploy/droplet-setup.sh')).toBe(true)
+    expect(page).toContain('raw.githubusercontent.com/cschweda/fotobogen/main/deploy/droplet-setup.sh | bash')
+    expect(page).not.toContain('sudo bash /home/fotobogen')
     // The nginx file it gives keeps the line without which the admin cannot save.
     expect(page).toContain('proxy_set_header Host $http_host;')
   })
