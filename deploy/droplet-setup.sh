@@ -216,10 +216,15 @@ if [ "\$state" = "failed" ]; then
   echo "  Fotobogen: the setup stopped. What went wrong is in $LOG"
 elif [ "\$state" != "done" ]; then
   echo "  Fotobogen is still being installed. Progress: tail -f $LOG"
-elif [ -f $APP_DIR/data/setup-token ] && [ ! -L $APP_DIR/data/setup-token ]; then
-  echo "  Fotobogen is running at $ADDRESS"
-  echo "  Open it, and enter this setup token: \$(cat $APP_DIR/data/setup-token)"
 else
+  # Read as the site's user, never as root: that user can put anything at this
+  # path. Only the 32 hex digits a token is made of are printed.
+  token=\$(runuser -u $APP_USER -- cat $APP_DIR/data/setup-token 2>/dev/null | tr -cd '0-9a-f' | cut -c1-32)
+fi
+if [ "\$state" = "done" ] && [ \${#token} -eq 32 ]; then
+  echo "  Fotobogen is running at $ADDRESS"
+  echo "  Open it, and enter this setup token: \$token"
+elif [ "\$state" = "done" ]; then
   echo "  Fotobogen is running at $ADDRESS"
 fi
 echo
