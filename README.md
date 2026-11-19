@@ -1078,6 +1078,31 @@ browser.
 Below, `photos.example.com` stands for your domain and `203.0.113.10` for
 your server's address.
 
+**The quick way, with no terminal: one paste on DigitalOcean.** When
+creating a droplet (Ubuntu 24.04, 2 GB if you can), open **Advanced
+options**, tick the box for initialization scripts (user data), and paste:
+
+```bash
+#!/bin/bash
+export FOTOBOGEN_DOMAIN=photos.example.com
+curl -fsSL https://raw.githubusercontent.com/cschweda/fotobogen/main/deploy/droplet-setup.sh | bash
+```
+
+[deploy/droplet-setup.sh](deploy/droplet-setup.sh) then sets the droplet up
+by itself in about ten minutes: the firewall, swap on a 1 GB server, a user
+with no password or `sudo` to run the site, Node.js 24, Fotobogen's newest
+release under pm2, and [Caddy](https://caddyserver.com) in front, which gets
+the HTTPS certificate on its own and keeps trying until the domain points at
+the server. Add the A record (step 3 below) whenever you like. The setup
+token is shown when you open the droplet's **Console** in DigitalOcean.
+Leave the domain empty to start at `https://203-0-113-10.sslip.io` and move
+to your own domain later by running the same script with it:
+`curl -fsSL https://raw.githubusercontent.com/cschweda/fotobogen/main/deploy/droplet-setup.sh | sudo bash -s photos.example.com`.
+Updating is the admin's button, as on any pm2 install. Details:
+[the quick way](https://fotobogen.com/docs/your-own-domain/#quick).
+
+The step-by-step way:
+
 1. **Buy a domain** from a registrar: [Porkbun](https://porkbun.com),
    [Namecheap](https://www.namecheap.com), or
    [DNSimple](https://dnsimple.com) (a paid subscription with a clean DNS
@@ -1913,6 +1938,25 @@ Each audit is a red team and blue team exercise: the red team attacks a running 
 The newest audit is open below; older ones are folded under it. The same record is at [fotobogen.com/docs/security-audits](https://fotobogen.com/docs/security-audits/). To report a problem, open an issue on GitHub. If the details should not be public yet, say only that in the issue and ask for a private way to send them.
 
 <details open>
+<summary><strong>19 November 2026, the droplet setup script (not yet released).</strong> 5 findings, none critical: 1 high, 1 low, 3 informational. Outcome: 2 fixed, 3 accepted.</summary>
+
+The seventh audit, of `deploy/droplet-setup.sh`, the script that sets up a new DigitalOcean droplet on its own. One attacker, with the source and a copy of the script running in a systemd Ubuntu 24.04 container on this machine, worked as someone who chooses the domain the script is given, and as someone who has taken over the running site (its user, `fotobogen`) and waits for the owner to run the script again as root.
+
+Fixed: closed in this release. Reduced: made harder or documented, not closed. Accepted: left as it is, for the reason given. Open: not yet dealt with.
+
+| # | Severity | What was found | Outcome | What was done |
+|---|---|---|---|---|
+| 1 | High | Running the script again could have handed the server to whoever had taken over the site. Run as root, it edited, re-owned and changed the permissions of `.env` in the site's own folder, so a link put there (to `/etc/shadow`, say) would have given that file to the site's user; it ran `pm2` from the site user's own folder; and the instructions said to run the copy of the script in that folder, which the site's user can rewrite. | **Fixed** | `.env` is edited as the site's user. `pm2 startup`, the one step that needs root and a program of that user's, runs once, on the first install, before the site has answered anyone. The instructions and the script's own messages run it again from GitHub. Tried: with `.env` and the setup token replaced by links to `/etc/shadow`, a re-run stopped with a clear message and `/etc/shadow` was untouched. |
+| 2 | Low | `.env` was created readable by every user of the server. It will hold settings such as the two-step key. | **Fixed** | It is created, and kept, readable by the site's user only. |
+| 3 | Informational | The setup token is shown in the message at every login to the server, until setup is finished. | **Accepted** | That is how the owner reads it without a terminal. On a new droplet only root logs in, and root can read the token's file anyway. The message will not show a token file that has been replaced by a link. |
+| 4 | Informational | The droplet fetches the script from the main branch on GitHub when it first starts, so whoever can change that branch decides what new servers run. | **Accepted** | The same trust as the one-line installer and every update. Changes reach main only as reviewed releases. |
+| 5 | Informational | Between the end of the install and the owner's first visit, the setup page is public. | **Accepted** | It needs the 128-bit setup token, and wrong tokens are limited, as on every install. |
+
+What was tried and held: six hostile domains (one carrying a Caddy block, one with a second line, one with a `#` and a setting, one beginning with a dash, an empty label, and a full address in capitals) were all either refused before anything changed or reduced to the bare name; the site listens on 127.0.0.1 only; the firewall allows only 22, 80 and 443; the site's user has no password and no `sudo`; the token file is readable by that user only; after a restart, pm2 and Caddy came back by themselves and the site answered over HTTPS. Not tried: a real DigitalOcean droplet, a real certificate from Let's Encrypt, a build on a 1 GB machine, and other providers.
+
+</details>
+
+<details>
 <summary><strong>18 November 2026, version 1.11.0.</strong> 8 findings, none critical: 1 high, 2 medium, 3 low, 2 informational. Outcome: 6 fixed, 1 reduced, 1 accepted.</summary>
 
 The sixth audit, of everything added in version 1.11.0: HEIC uploads, the words read from inside a file, alt text for every photo, the `fotobogen import` command, and the smaller changes beside them. One attacker, with a running copy on this machine and the source code, worked as an outsider, as a visitor, as the holder of an upload-only API token, and as someone able to put files into a folder the owner later imports. It built its own files (truncated and mislabelled HEICs, a HEIC claiming to be 65,535 pixels square, XMP with hostile markup and with hundreds of thousands of unclosed tags), listened on the machine's other loopback address in the site's place, and passed the importer's questions on to the real site. The four that mattered were fixed before release, each with a test that failed first.

@@ -11,6 +11,7 @@ is built from this file.
 
 ## [Unreleased]
 
+- One paste sets up a new DigitalOcean droplet: [`deploy/droplet-setup.sh`](deploy/droplet-setup.sh), given as the droplet's start-up script (user data), installs Fotobogen under pm2 with Caddy and HTTPS in front, a firewall, and swap on a small server, with no terminal. The setup token is shown in the droplet's Console. Without a domain the site starts at an `sslip.io` address, and running the script again with a domain moves it there. Documented as **the quick way** in Your own domain, start to finish, and in the README. Audited before release: the seventh audit is in the security audits.
 ## [1.11.1] - 2026-11-19
 
 A walkthrough for putting Fotobogen on your own domain, from buying the name to HTTPS, and three small fixes.

@@ -81,6 +81,9 @@
 <p class="lead">What is in each version of Fotobogen, newest first. This page is made from <a href="https://github.com/cschweda/fotobogen/blob/main/CHANGELOG.md">CHANGELOG.md</a> in the source, so the two always agree.</p>
 <p>Version numbers follow <a href="https://semver.org">semantic versioning</a>: a change in the first number means something you rely on changed, the second adds features, and the third only fixes. <a href="https://github.com/cschweda/fotobogen/blob/main/docs/UPGRADING.md">What a version number promises, and how to upgrade.</a></p>
 <h2 id="unreleased">Not yet released</h2>
+<ul>
+  <li>One paste sets up a new DigitalOcean droplet: <a href="https://github.com/cschweda/fotobogen/blob/main/deploy/droplet-setup.sh"><code>deploy/droplet-setup.sh</code></a>, given as the droplet's start-up script (user data), installs Fotobogen under pm2 with Caddy and HTTPS in front, a firewall, and swap on a small server, with no terminal. The setup token is shown in the droplet's Console. Without a domain the site starts at an <code>sslip.io</code> address, and running the script again with a domain moves it there. Documented as <strong>the quick way</strong> in Your own domain, start to finish, and in the README. Audited before release: the seventh audit is in the security audits.</li>
+</ul>
 <h2 id="v1-11-1">Version 1.11.1, 19 November 2026</h2>
 <p>A walkthrough for putting Fotobogen on your own domain, from buying the name to HTTPS, and three small fixes.</p>
 <ul>
