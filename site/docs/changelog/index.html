@@ -40,6 +40,7 @@
     <ul class="pages__all">
       <li><a href="/docs/">Overview</a></li>
       <li><a href="/docs/installation/">Installation</a></li>
+      <li><a href="/docs/your-own-domain/">Your own domain</a></li>
       <li><a href="/docs/configuration/">Configuration</a></li>
       <li><a href="/docs/usage/">Using Fotobogen</a></li>
       <li><a href="/docs/updating/">Updating</a></li>
@@ -80,6 +81,8 @@
 <p>Version numbers follow <a href="https://semver.org">semantic versioning</a>: a change in the first number means something you rely on changed, the second adds features, and the third only fixes. <a href="https://github.com/cschweda/fotobogen/blob/main/docs/UPGRADING.md">What a version number promises, and how to upgrade.</a></p>
 <h2 id="unreleased">Not yet released</h2>
 <ul>
+  <li>A new walkthrough, <strong>Your own domain, start to finish</strong>, in the documentation and in the README: buying a domain (Porkbun, Namecheap, DNSimple), renting a server, pointing the domain at it, installing, pm2, nginx, and HTTPS, on a plain server or with Laravel Forge, with a check after every step.</li>
+  <li>The Forge instructions now say to delete Forge's <code>location = /favicon.ico</code> and <code>location = /robots.txt</code> blocks, which would answer from disk instead of passing those addresses to Fotobogen.</li>
   <li><code>publish.sh</code>, which releases the installer to npm and is of use only to Fotobogen's maintainer, moved from the top of the folder to <code>installer/publish.sh</code>, beside the installer it publishes. A site's own folder now begins with only what its owner uses.</li>
   <li>The photo page and slideshow screenshots show a photo's date, camera, lens and settings. The values are examples, and the README says so: the sample photos carry no camera data.</li>
   <li>The light and dark mode button lines up with the menu links beside it, in all four bundled skins. A skin of your own can do the same with <code>align-items: center</code> on <code>.fb-nav</code>.</li>

@@ -1,6 +1,9 @@
 <!-- {"title": "Installation", "description": "Install Fotobogen on macOS, Windows, or Linux, with Node or with Docker, on a fresh VPS or one set up by Laravel Forge. Minimum and recommended server sizes."} -->
 <h1>Installation</h1>
 <p class="lead">Pick the section that matches your machine. Each one ends at the same place: a web address and a setup token, which the <a href="#first-run">first run</a> section takes from there.</p>
+<div class="note">
+  <p><strong>Putting it on the internet for the first time?</strong> <a href="/docs/your-own-domain/">Your own domain, start to finish</a> walks through all of it in order: buying the domain, renting the server, pointing one at the other, installing, pm2, nginx, and HTTPS.</p>
+</div>
 
 <h2 id="one-line">The one-line install</h2>
 <p>With <a href="https://nodejs.org">Node.js 24</a> and git on the machine, one command installs Fotobogen:</p>
@@ -237,7 +240,7 @@ pm2 start ecosystem.config.cjs
 pm2 logs fotobogen</code></pre>
   <code>pnpm fotobogen init</code> asks for the port, the site's address (<code>https://photos.example.com</code>), and demo mode, and writes <code>.env</code>; the pm2 file takes the port from there. The last command shows the setup token.</li>
   <li><strong>Make it start after a reboot:</strong> <code>pm2 save</code>, then <code>pm2 startup</code>, and run the <code>sudo</code> command it prints.</li>
-  <li><strong>Point nginx at it.</strong> In Forge, open the site's nginx configuration. Inside the <code>server</code> block, replace the <code>location /</code> block with the blocks from <a href="https://github.com/cschweda/fotobogen/blob/main/deploy/forge-nginx.conf"><code>deploy/forge-nginx.conf</code></a>, changing the two marked lines. Leave the rest of what Forge wrote as it is.</li>
+  <li><strong>Point nginx at it.</strong> In Forge, open the site's nginx configuration. Inside the <code>server</code> block, replace the <code>location /</code> block with the blocks from <a href="https://github.com/cschweda/fotobogen/blob/main/deploy/forge-nginx.conf"><code>deploy/forge-nginx.conf</code></a>, changing the two marked lines. Delete Forge's <code>location ~ \.php$</code>, <code>location = /favicon.ico</code> and <code>location = /robots.txt</code> blocks if it wrote any: the last two answer from disk and hide Fotobogen's own. Leave the rest of what Forge wrote as it is.</li>
   <li><strong>Issue the certificate</strong> in Forge.</li>
   <li><strong>Set the deploy script</strong>, so that Forge's Deploy button updates the site:
 <pre><code>cd /home/forge/photos.example.com
