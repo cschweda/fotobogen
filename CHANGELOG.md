@@ -11,6 +11,7 @@ is built from this file.
 
 ## [Unreleased]
 
+- `publish.sh`, which releases the installer to npm and is of use only to Fotobogen's maintainer, moved from the top of the folder to `installer/publish.sh`, beside the installer it publishes. A site's own folder now begins with only what its owner uses.
 - The photo page and slideshow screenshots show a photo's date, camera, lens and settings. The values are examples, and the README says so: the sample photos carry no camera data.
 - The light and dark mode button lines up with the menu links beside it, in all four bundled skins. A skin of your own can do the same with `align-items: center` on `.fb-nav`.
 
