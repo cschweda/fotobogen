@@ -11,6 +11,10 @@ is built from this file.
 
 ## [Unreleased]
 
+## [1.11.1] - 2026-11-19
+
+A walkthrough for putting Fotobogen on your own domain, from buying the name to HTTPS, and three small fixes.
+
 - A new walkthrough, **Your own domain, start to finish**, in the documentation and in the README: buying a domain (Porkbun, Namecheap, DNSimple), renting a server, pointing the domain at it, installing, pm2, nginx, and HTTPS, on a plain server or with Laravel Forge, with a check after every step.
 - The Forge instructions now say to delete Forge's `location = /favicon.ico` and `location = /robots.txt` blocks, which would answer from disk instead of passing those addresses to Fotobogen.
 - `publish.sh`, which releases the installer to npm and is of use only to Fotobogen's maintainer, moved from the top of the folder to `installer/publish.sh`, beside the installer it publishes. A site's own folder now begins with only what its owner uses.
@@ -456,6 +460,7 @@ Later entries list only what changed.
 - One admin account only. No comments, no shop, no storage outside the server's own disk.
 
 [Unreleased]: https://github.com/cschweda/fotobogen/commits/staging
+[1.11.1]: https://github.com/cschweda/fotobogen/releases/tag/v1.11.1
 [1.11.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.11.0
 [1.10.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.10.0
 [1.9.0]: https://github.com/cschweda/fotobogen/releases/tag/v1.9.0

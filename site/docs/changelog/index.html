@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Releases | Fotobogen documentation</title>
-<meta name="description" content="What is in each version of Fotobogen. The current version is 1.11.0.">
+<meta name="description" content="What is in each version of Fotobogen. The current version is 1.11.1.">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#f5f5f2" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0a0a0b" media="(prefers-color-scheme: dark)">
@@ -12,7 +12,7 @@
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://fotobogen.com/docs/changelog/">
 <meta property="og:title" content="Releases | Fotobogen documentation">
-<meta property="og:description" content="What is in each version of Fotobogen. The current version is 1.11.0.">
+<meta property="og:description" content="What is in each version of Fotobogen. The current version is 1.11.1.">
 <meta property="og:image" content="https://fotobogen.com/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -57,6 +57,7 @@
       <h2>On this page</h2>
       <ul>
         <li><a href="#unreleased">Not yet released</a></li>
+        <li><a href="#v1-11-1">Version 1.11.1, 19 November 2026</a></li>
         <li><a href="#v1-11-0">Version 1.11.0, 18 November 2026</a></li>
         <li><a href="#v1-10-0">Version 1.10.0, 17 November 2026</a></li>
         <li><a href="#v1-9-0">Version 1.9.0, 17 November 2026</a></li>
@@ -80,6 +81,8 @@
 <p class="lead">What is in each version of Fotobogen, newest first. This page is made from <a href="https://github.com/cschweda/fotobogen/blob/main/CHANGELOG.md">CHANGELOG.md</a> in the source, so the two always agree.</p>
 <p>Version numbers follow <a href="https://semver.org">semantic versioning</a>: a change in the first number means something you rely on changed, the second adds features, and the third only fixes. <a href="https://github.com/cschweda/fotobogen/blob/main/docs/UPGRADING.md">What a version number promises, and how to upgrade.</a></p>
 <h2 id="unreleased">Not yet released</h2>
+<h2 id="v1-11-1">Version 1.11.1, 19 November 2026</h2>
+<p>A walkthrough for putting Fotobogen on your own domain, from buying the name to HTTPS, and three small fixes.</p>
 <ul>
   <li>A new walkthrough, <strong>Your own domain, start to finish</strong>, in the documentation and in the README: buying a domain (Porkbun, Namecheap, DNSimple), renting a server, pointing the domain at it, installing, pm2, nginx, and HTTPS, on a plain server or with Laravel Forge, with a check after every step.</li>
   <li>The Forge instructions now say to delete Forge's <code>location = /favicon.ico</code> and <code>location = /robots.txt</code> blocks, which would answer from disk instead of passing those addresses to Fotobogen.</li>
