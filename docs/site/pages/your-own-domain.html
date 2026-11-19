@@ -1,10 +1,34 @@
-<!-- {"title": "Your own domain, start to finish", "description": "A complete walkthrough: buy a domain, rent a server, point the domain at it, install Fotobogen, keep it running with pm2, and put nginx and HTTPS in front. On a plain server, or on one managed by Laravel Forge."} -->
+<!-- {"title": "Your own domain, start to finish", "description": "A complete walkthrough: buy a domain, rent a server, point the domain at it, install Fotobogen, keep it running with pm2, and put nginx and HTTPS in front. On a plain server, on one managed by Laravel Forge, or with one paste when creating a DigitalOcean droplet."} -->
 <h1>Your own domain, start to finish</h1>
 <p class="lead">From nothing to your photographs at <code>https://photos.example.com</code>: buy a domain, rent a server, point the one at the other, install Fotobogen, keep it running, and put nginx and HTTPS in front of it. Every command is written out in full.</p>
 
 <div class="note">
-  <p><strong>Who this is for.</strong> This takes about an hour, most of it typing commands into a terminal on a server you rent. Nothing here needs you to write code, but there are several moving parts, and each step checks the one before. If the terminal is not for you, someone who has set up a website before can do all of it in fifteen minutes, and after that everything happens in Fotobogen's admin in a browser.</p>
+  <p><strong>Who this is for.</strong> The step-by-step tracks below take about an hour, most of it typing commands into a terminal on a server you rent. Nothing here needs you to write code, but there are several moving parts, and each step checks the one before. If the terminal is not for you, start with <a href="#quick">the quick way</a>, which needs none; or someone who has set up a website before can do the tracks in fifteen minutes. Either way, after that everything happens in Fotobogen's admin in a browser.</p>
 </div>
+
+<h2 id="quick">The quick way: one paste on DigitalOcean</h2>
+<p>When you create a DigitalOcean droplet, you can give it a short script to run the first time it starts. Paste the three lines below there, and the droplet sets itself up: the firewall, swap on a small server, Node.js, Fotobogen's newest release under pm2, and <a href="https://caddyserver.com">Caddy</a> in front, which gets the HTTPS certificate by itself. No terminal, no nginx, no Certbot. It is the same set-up as <a href="#plain">the plain-server track</a>, with Caddy in nginx's place.</p>
+<ol>
+  <li><strong>Buy a domain</strong> (<a href="#buy">step 1</a>), or skip this to start without one: see below.</li>
+  <li><strong>Create a droplet</strong> on <a href="https://www.digitalocean.com">DigitalOcean</a>: <strong>Ubuntu 24.04 (LTS)</strong>, the 2 GB size if you can (1 GB works: swap is added for you, and the install takes longer). Choose how to log in, an SSH key or a password; either works.</li>
+  <li><strong>Paste the script.</strong> Under <strong>Advanced options</strong>, tick the box for initialization scripts (user data), and paste, with your domain on the second line:
+<pre><code>#!/bin/bash
+export FOTOBOGEN_DOMAIN=photos.example.com
+curl -fsSL https://raw.githubusercontent.com/cschweda/fotobogen/main/deploy/droplet-setup.sh | bash</code></pre></li>
+  <li><strong>Create the droplet</strong>, copy its IP address, and <strong>add the A record</strong> for your domain (<a href="#dns">step 3</a>). The order does not matter: Caddy keeps trying until the domain points at the server, and HTTPS starts by itself once it does.</li>
+  <li><strong>Wait about ten minutes</strong> (longer on 1 GB). Until it is ready, the address shows "Fotobogen is being installed on this server".</li>
+  <li><strong>Get the setup token.</strong> On the droplet's page in DigitalOcean, open the <strong>Console</strong>. It logs you in in the browser, and the message at the top says where Fotobogen is and shows the token. (If it says Fotobogen is still being installed, close it and look again in a few minutes.)</li>
+  <li><strong>Open your address</strong>, enter the token, and go on to <a href="#finish">the finish</a>.</li>
+</ol>
+<p><strong>No domain yet?</strong> Leave the second line as <code>export FOTOBOGEN_DOMAIN=</code>, with nothing after the <code>=</code>. The site then lives at the server's own address written as a name, such as <code>https://203-0-113-10.sslip.io</code> (from the free service <a href="https://sslip.io">sslip.io</a>), with HTTPS, and the Console shows it with the token. When you have a domain, point it at the server, open the Console, and run the script again with the domain:</p>
+<pre><code>curl -fsSL https://raw.githubusercontent.com/cschweda/fotobogen/main/deploy/droplet-setup.sh | sudo bash -s photos.example.com</code></pre>
+<p>That changes only the address; your photos and settings stay. Then set the site's address under <strong>Admin, Search and sharing</strong> too, if you had set one there.</p>
+<ul>
+  <li><strong>Updating</strong> later is the button in the admin, as on any pm2 install: see <a href="/docs/updating/">Updating</a>.</li>
+  <li><strong>What it made:</strong> a user, <code>fotobogen</code>, with no password and no <code>sudo</code>, which runs the site from <code>/home/fotobogen/fotobogen</code>; Caddy's file at <code>/etc/caddy/Caddyfile</code>; a firewall open only to SSH and the web. Everything it did is written to <code>/var/log/fotobogen-setup.log</code>.</li>
+  <li><strong>If it stops,</strong> the Console says so when you log in; the end of <code>/var/log/fotobogen-setup.log</code> says why, and the command to run it again. Running it again carries on from where it stopped.</li>
+  <li><strong>Other providers</strong> that take a start-up script when creating a server (Hetzner, Vultr, Linode, and others call it <em>user data</em> or <em>cloud-init</em>) should work the same way with the same three lines, but only DigitalOcean is described here. If the provider puts the server behind its own address translation, give the domain rather than leaving it empty.</li>
+</ul>
 
 <h2 id="tracks">Which are you using?</h2>
 <p>Steps 1 to 3 are the same for everyone. After that, follow one track:</p>
