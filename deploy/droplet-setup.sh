@@ -46,6 +46,7 @@ PORT=5150
 NVM_VERSION=v0.40.3
 LOG=/var/log/fotobogen-setup.log
 STATUS=/etc/fotobogen-setup-status
+TOKEN_COPY=/etc/fotobogen-setup-token
 
 [[ $EUID -eq 0 ]] || { echo "Run this as root (sudo bash $0)." >&2; exit 1; }
 
@@ -96,6 +97,10 @@ as_app() { sudo -u "$APP_USER" -H bash -c "export NVM_DIR=$APP_HOME/.nvm; [[ -s 
 # ─── 1. A page straight away ────────────────────────────────────────
 
 step "Installing Caddy"
+# Whether the site has ever been open to visitors. Until the end of the first
+# full run, Caddy shows only the "being installed" page.
+OPENED=false
+[[ "$(cat "$STATUS" 2>/dev/null)" == "done" ]] && OPENED=true
 status "installing"
 apt_get update
 apt_get install caddy curl git ufw
@@ -199,6 +204,15 @@ curl -fsS --max-time 2 "http://127.0.0.1:$PORT/api/health" >/dev/null || { FAILE
 
 # ─── 7. Caddy in front ──────────────────────────────────────────────
 
+# The setup token, copied where only root can change it, for the message at
+# login. Taken once, before the site has answered anyone: after that, the site's
+# folder is not trusted, and the login message never reads from it.
+if [[ $OPENED == false && ! -s $TOKEN_COPY ]]; then
+  head -c 64 "$APP_DIR/data/setup-token" | tr -cd '0-9a-f' | cut -c1-32 > "$TOKEN_COPY.new"
+  chmod 600 "$TOKEN_COPY.new"
+  mv -f "$TOKEN_COPY.new" "$TOKEN_COPY"
+fi
+
 step "Pointing Caddy at it"
 write_caddy "	request_body {
 		max_size 50MB
@@ -216,16 +230,13 @@ if [ "\$state" = "failed" ]; then
   echo "  Fotobogen: the setup stopped. What went wrong is in $LOG"
 elif [ "\$state" != "done" ]; then
   echo "  Fotobogen is still being installed. Progress: tail -f $LOG"
-else
-  # Read as the site's user, never as root: that user can put anything at this
-  # path, so the read is also cut short (a pipe or /dev/zero must not hold up a
-  # login). Only the 32 hex digits a token is made of are printed.
-  token=\$(timeout -k 1 2 runuser -u $APP_USER -- head -c 64 -- $APP_DIR/data/setup-token 2>/dev/null | tr -cd '0-9a-f' | cut -c1-32)
-fi
-if [ "\$state" = "done" ] && [ \${#token} -eq 32 ]; then
+elif [ -e $APP_DIR/data/setup-token ] || [ -L $APP_DIR/data/setup-token ]; then
+  # Setup is not finished while the site keeps its token. Only whether the file
+  # is there is asked, never what it holds: the token shown is root's own copy.
   echo "  Fotobogen is running at $ADDRESS"
-  echo "  Open it, and enter this setup token: \$token"
-elif [ "\$state" = "done" ]; then
+  echo "  Open it, and enter this setup token: \$(tr -cd '0-9a-f' < $TOKEN_COPY 2>/dev/null)"
+  echo "  (If the site says it is wrong, the token was made again since: sudo cat $APP_DIR/data/setup-token)"
+else
   echo "  Fotobogen is running at $ADDRESS"
 fi
 echo
