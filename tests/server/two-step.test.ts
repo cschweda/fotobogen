@@ -15,6 +15,8 @@ describe('two-step login', () => {
   let cookie: string
   let key = ''
   let codes: string[] = []
+  // The code that switched two-step on, kept: computing it again could land in the next 30 seconds.
+  let enableCode = ''
   const as = (path: string, body: unknown, headers: Record<string, string> = {}) => post(server, path, body, { cookie, ...headers })
   const login = (extra: Record<string, unknown> = {}) => post(server, '/api/auth/login', { ...ADMIN, ...extra })
   // Wrong passwords and wrong codes count against one limit of five; a right password starts the count again.
@@ -66,7 +68,8 @@ describe('two-step login', () => {
     const other = sessionCookie(await login())!
     expect((await as('/api/admin/two-step/enable', { code: '000000' })).status).toBe(422)
     expect((await as('/api/admin/two-step/enable', {})).status).toBe(422)
-    const response = await as('/api/admin/two-step/enable', { code: totpAt(key, Date.now()) })
+    enableCode = totpAt(key, Date.now())
+    const response = await as('/api/admin/two-step/enable', { code: enableCode })
     expect(response.status).toBe(200)
     codes = (await response.json() as { codes: string[] }).codes
     expect(codes).toHaveLength(10)
@@ -95,7 +98,7 @@ describe('two-step login', () => {
   it('accepts each code from the app once', async () => {
     await startCountAgain()
     // The code that switched it on has been used: it does not also log in.
-    expect((await login({ code: totpAt(key, Date.now()) })).status).toBe(401)
+    expect((await login({ code: enableCode })).status).toBe(401)
     const next = totpAt(key, Date.now() + 30_000)
     const ok = await login({ code: next })
     expect(ok.status).toBe(200)
