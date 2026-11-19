@@ -172,8 +172,8 @@ public site on a server, see [Docker quick start](#docker-quick-start),
 [Without Docker (pm2)](#without-docker-pm2), or
 [the installation guide](https://fotobogen.com/docs/installation/).
 
-**The one-line install.** With [Node.js 24](https://nodejs.org) and git on
-the machine, one command does everything in this section:
+**Install it with one command.** With [Node.js 24](https://nodejs.org) and
+git on the machine:
 
 ```bash
 npx fotobogen@latest
@@ -181,13 +181,21 @@ npx fotobogen@latest
 
 It asks which folder to put it in, fetches the newest release, installs its
 packages, builds it, and offers to start it. If pnpm is missing it offers to
-install that too. It never installs into a folder that already exists. Name
-the folder on the command line to skip the question:
-`npx fotobogen@latest fotobogen-live`. The npm package `fotobogen` is only
-this installer ([`installer/`](installer), two small files with no
-dependencies); Fotobogen itself comes from GitHub with git, so updating from
-the admin works afterwards. It has been run for real on macOS, and its tests
-run on Linux; on Windows, use the steps below for now.
+install that too. It never installs into a folder that already exists. The
+npm package `fotobogen` is only this installer ([`installer/`](installer),
+two small files with no dependencies); Fotobogen itself comes from GitHub
+with git, so updating from the admin works afterwards. It has been run for
+real on macOS, and its tests run on Linux; on Windows, use
+[the steps by hand](#without-the-installer-and-on-windows) for now.
+
+**Then open the address it prints**, `http://localhost:5150`, in a browser on
+the same computer, and enter the setup token shown in the terminal. Use the
+`localhost` address: logging in is kept by your browser only on this
+computer's own addresses or over https.
+
+Leave the terminal open while you use the site. Control + C stops it, and
+`pnpm start`, in the folder it made, starts it again with everything as you
+left it.
 
 At the end it also says how to run the site under pm2 (a small program that
 keeps a site running on a server and starts it again after a restart; see
@@ -195,9 +203,11 @@ keeps a site running on a server and starts it again after a restart; see
 Laravel Forge (a service that sets servers up for you) it says what nginx
 needs.
 
-The same steps by hand:
+### Without the installer (and on Windows)
 
-**1. Have Node.js 24 and pnpm 10.**
+The installer runs these same steps. To run them yourself:
+
+**1. Have Node.js 24, pnpm 10, and git.**
 
 ```bash
 node --version      # must print v24 or later
@@ -227,30 +237,20 @@ pnpm start
 ```
 
 If Node.js or pnpm is too old, `pnpm install` stops before fetching anything
-and prints what to do.
-
-**3. Open the address it prints**, `http://localhost:5150`, in a browser on
-the same computer, and enter the setup token shown in the terminal. Use the
-`localhost` address: logging in is kept by your browser only on this
-computer's own addresses or over https.
-
-Leave the terminal open while you use the site. Control + C stops it, and
-`pnpm start` starts it again with everything as you left it.
+and prints what to do. Then open the address it prints, as above. (On
+Windows, see also [Windows](#windows).)
 
 ### In a folder with another name
 
-The folder does not have to be called `fotobogen`. With the one-line
-install, name it: `npx fotobogen@latest fotobogen-live`. By hand,
-`git clone` takes the folder's name as a second argument, and everything
-else is the same:
+The folder does not have to be called `fotobogen`. Name it to the installer:
 
 ```bash
-git clone https://github.com/cschweda/fotobogen.git fotobogen-live
-cd fotobogen-live
-pnpm install
-pnpm build
-pnpm start
+npx fotobogen@latest fotobogen-live
 ```
+
+By hand, `git clone` takes the folder's name as a second argument
+(`git clone https://github.com/cschweda/fotobogen.git fotobogen-live`), and
+everything else is the same.
 
 Use this to keep an install beside a copy of the source, or to run several
 sites on one machine: `fotobogen-live`, `fotobogen-test`, one for each
@@ -1032,7 +1032,8 @@ downloads are pointed at a stand-in server.
 ## Windows
 
 Fotobogen installs and runs on Windows with Node 24 and pnpm; no compiler or
-Visual Studio is needed. In PowerShell:
+Visual Studio is needed. The one-line installer has not been tried on
+Windows yet, so install by hand. In PowerShell:
 
 ```powershell
 git clone https://github.com/cschweda/fotobogen.git
@@ -1066,7 +1067,9 @@ domain automatically.
 
 The image is downloaded from `ghcr.io/cschweda/fotobogen`; nothing is built
 on your server. (To build it yourself instead, uncomment the `build: .` line
-in `docker-compose.yml` and add `--build` to the command.)
+in `docker-compose.yml` and add `--build` to the command.) The one-line
+installer is not used here: Docker needs the repository's
+`docker-compose.yml` and `.env.sample`, so clone it.
 
 ```bash
 git clone https://github.com/cschweda/fotobogen.git
@@ -1107,14 +1110,17 @@ Building takes more memory than running; on a 1 GB server, add 2 GB of swap
 first.
 
 ```bash
-git clone https://github.com/cschweda/fotobogen.git
+npx fotobogen@latest fotobogen   # answer no when it offers to start
 cd fotobogen
-pnpm install --frozen-lockfile
-pnpm build
-pnpm fotobogen init          # optional: asks for the port, the site's address, and demo mode
+pnpm fotobogen init              # optional: asks for the port, the site's address, and demo mode
 pm2 start ecosystem.config.cjs
-pm2 logs fotobogen           # shows the setup token
+pm2 logs fotobogen               # shows the setup token
 ```
+
+The installer installs and builds it, and ends by printing these pm2 steps.
+By hand, `git clone https://github.com/cschweda/fotobogen.git`, then
+`cd fotobogen`, `pnpm install --frozen-lockfile` and `pnpm build` in place
+of the first line.
 
 **For one site there is nothing to edit in `ecosystem.config.cjs`**, and no
 pm2 file to write yourself. (The file itself sets `HOST`, `DATA_DIR`, and

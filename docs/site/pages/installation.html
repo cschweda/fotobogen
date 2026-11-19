@@ -57,16 +57,10 @@
 <p>For trying Fotobogen, or running it on a Mac at home. Works on Apple silicon and Intel.</p>
 <ol>
   <li><strong>Install Node.js 24.</strong> Download the installer from <a href="https://nodejs.org">nodejs.org</a>, or, if you use <a href="https://github.com/nvm-sh/nvm#installing-and-updating">nvm</a>, run <code>nvm install 24</code>. Check with <code>node --version</code>; it should print <code>v24</code> and some more.</li>
-  <li><strong>Install pnpm</strong>, which fetches Fotobogen's parts:
-<pre><code>npm install -g pnpm@10</code></pre></li>
-  <li><strong>Get Fotobogen and build it.</strong> In Terminal:
-<pre><code>git clone https://github.com/cschweda/fotobogen.git
-cd fotobogen
-pnpm install
-pnpm build
-pnpm start</code></pre>
-  If <code>git</code> is missing, macOS offers to install it the first time you type the command.</li>
-  <li><code>pnpm start</code> checks the machine, then prints the address and a setup token:
+  <li><strong>Install Fotobogen.</strong> In Terminal:
+<pre><code>npx fotobogen@latest</code></pre>
+  It asks for a folder name, offers to install pnpm if it is missing, fetches, installs, and builds Fotobogen, and offers to start it. If <code>git</code> is missing, macOS offers to install it; run the command again afterwards.</li>
+  <li>Starting it (or <code>pnpm start</code> in its folder) checks the machine, then prints the address and a setup token:
 <pre><code>Fotobogen setup token: 3b213e46bd70894ad18f1357791b1f18
 Open the site in a browser and enter this token to finish setup.
 Fotobogen is running. Open it in a browser on this computer:
@@ -75,13 +69,20 @@ Fotobogen is running. Open it in a browser on this computer:
 
 Logging in works at that address, or over https.</code></pre></li>
 </ol>
+<p><strong>By hand, without the installer,</strong> in place of step 2:</p>
+<pre><code>npm install -g pnpm@10
+git clone https://github.com/cschweda/fotobogen.git
+cd fotobogen
+pnpm install
+pnpm build
+pnpm start</code></pre>
 <p><strong>If <code>pnpm install</code> stops and says Node.js is too old,</strong> the terminal you are in is using an older version, even if a newer one is installed. With nvm, <code>nvm use 24</code> switches the terminal you are in; <code>nvm alias default 24</code> only affects terminals opened afterwards. nvm keeps tools separately for each version of Node.js, so install pnpm again after switching: <code>npm install -g pnpm@10</code>.</p>
-<p><strong>To install into a folder with another name,</strong> name it to the installer (<code>npx fotobogen@latest fotobogen-live</code>), or give the name when you clone: <code>git clone https://github.com/cschweda/fotobogen.git fotobogen-live</code>, then <code>cd fotobogen-live</code> and carry on as above. Each folder is its own site with its own <code>data</code>; see <a href="#several">several installs on one machine</a>.</p>
+<p><strong>To install into a folder with another name,</strong> name it to the installer: <code>npx fotobogen@latest fotobogen-live</code>. By hand, give the name when you clone: <code>git clone https://github.com/cschweda/fotobogen.git fotobogen-live</code>, then <code>cd fotobogen-live</code> and carry on as above. Each folder is its own site with its own <code>data</code>; see <a href="#several">several installs on one machine</a>.</p>
 <p>Leave that Terminal window open while you use the site; <kbd>Control</kbd> + <kbd>C</kbd> stops it, and <code>pnpm start</code> starts it again with everything as you left it. Go on to <a href="#first-run">the first run</a>.</p>
 <p>To reach it from another device on your home network, use the Mac's name or address in place of <code>localhost</code>, for example <code>http://my-mac.local:5150</code>. You can look around the public site that way, but <strong>logging in works only over HTTPS or on <code>localhost</code></strong>, so do the admin work on the Mac itself. From another computer you can borrow the Mac's <code>localhost</code> over SSH: run <code>ssh -L 5150:localhost:5150 you@my-mac.local</code> there, leave it open, and browse to <code>http://localhost:5150</code>.</p>
 
 <h2 id="windows">Windows</h2>
-<p>Windows 10 or 11. No compiler or Visual Studio is needed.</p>
+<p>Windows 10 or 11. No compiler or Visual Studio is needed. The one-line installer has not been tried on Windows yet, so these steps are by hand.</p>
 <ol>
   <li><strong>Install Node.js 24</strong> from <a href="https://nodejs.org">nodejs.org</a>, and <strong>Git</strong> from <a href="https://git-scm.com">git-scm.com</a>.</li>
   <li>Open <strong>PowerShell</strong> and install pnpm:
@@ -117,7 +118,7 @@ sudo chmod 600 /swapfile
 sudo mkswap /swapfile
 sudo swapon /swapfile
 echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab</code></pre></li>
-  <li><strong>Get Fotobogen:</strong>
+  <li><strong>Get Fotobogen.</strong> Docker needs the repository's <code>docker-compose.yml</code> and <code>.env.sample</code>, so clone it rather than using the one-line installer:
 <pre><code>git clone https://github.com/cschweda/fotobogen.git
 cd fotobogen
 mkdir -p data
@@ -164,14 +165,12 @@ PUID=$(id -u) PGID=$(id -g) docker compose -f docker-compose.forge.yml up -d</co
 npm install -g pnpm@10 pm2</code></pre></li>
   <li>On a 1 GB server, <a href="#swap">add swap</a> before building.</li>
   <li><strong>Get, build, and start:</strong>
-<pre><code>git clone https://github.com/cschweda/fotobogen.git
+<pre><code>npx fotobogen@latest fotobogen
 cd fotobogen
-pnpm install --frozen-lockfile
-pnpm build
 pnpm fotobogen init
 pm2 start ecosystem.config.cjs
 pm2 logs fotobogen</code></pre>
-  <code>pnpm fotobogen init</code> is optional: it asks for the port, the site's address, and demo mode, and writes <code>.env</code>. For one site there is nothing to edit in <code>ecosystem.config.cjs</code>, which takes the port from <code>.env</code>. (It sets the data folder itself; to move that under pm2, change it in the file.) The last command shows the setup token.</li>
+  Answer no when the installer offers to start it; pm2 starts it instead. By hand, in place of the first line: <code>git clone https://github.com/cschweda/fotobogen.git</code>, then <code>pnpm install --frozen-lockfile</code> and <code>pnpm build</code> in the folder. <code>pnpm fotobogen init</code> is optional: it asks for the port, the site's address, and demo mode, and writes <code>.env</code>. For one site there is nothing to edit in <code>ecosystem.config.cjs</code>, which takes the port from <code>.env</code>. (It sets the data folder itself; to move that under pm2, change it in the file.) The last command shows the setup token.</li>
   <li><strong>Start it at boot:</strong> run <code>pm2 save</code>, then <code>pm2 startup</code>, and run the line that prints.</li>
   <li><strong>Put nginx in front of it</strong>, as in the next section.</li>
 </ol>
@@ -322,7 +321,7 @@ ADMIN_HOST=admin.photos.example.com</code></pre></li>
 <p>Two smaller protections apply whether or not you do this: the admin and the login cannot be shown inside a frame, and when you log in, pages of your site open in other tabs load themselves again without the counting script.</p>
 
 <h2 id="docker-local">Docker on your own computer</h2>
-<p>If you already use Docker Desktop, OrbStack, or Colima and would rather not install Node.js:</p>
+<p>If you already use Docker Desktop, OrbStack, or Colima and would rather not install Node.js (Docker needs the repository's files, so this clones it rather than using the one-line installer):</p>
 <pre><code>git clone https://github.com/cschweda/fotobogen.git
 cd fotobogen
 mkdir -p data
@@ -333,12 +332,9 @@ docker compose logs app</code></pre>
 <p>The site is at <code>http://localhost</code>. The image has been built and run on macOS. On Windows this needs Docker Desktop or WSL and has not been tested.</p>
 
 <h2 id="several">Several installs on one machine</h2>
-<p>The folder does not have to be called <code>fotobogen</code>, and one machine can hold as many installs as you like: <code>fotobogen-live</code> and <code>fotobogen-test</code>, or one for each client. Give <code>git clone</code> the folder's name, and everything else is the same:</p>
-<pre><code>git clone https://github.com/cschweda/fotobogen.git fotobogen-live
-cd fotobogen-live
-pnpm install
-pnpm build
-pnpm start</code></pre>
+<p>The folder does not have to be called <code>fotobogen</code>, and one machine can hold as many installs as you like: <code>fotobogen-live</code> and <code>fotobogen-test</code>, or one for each client. Give the installer the folder's name:</p>
+<pre><code>npx fotobogen@latest fotobogen-live</code></pre>
+<p>By hand, <code>git clone https://github.com/cschweda/fotobogen.git fotobogen-live</code> does the same, and everything after it is unchanged.</p>
 <p>Each folder is a complete site of its own: its own photos and database, its own login, its own settings, and its own version, updated by itself. Nothing in Fotobogen depends on the folder's name. What installs must not share:</p>
 <div class="table"><table>
   <thead><tr><th>Each install needs its own</th><th>How</th></tr></thead>
