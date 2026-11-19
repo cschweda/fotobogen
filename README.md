@@ -9,7 +9,7 @@ A self-hosted publishing platform for photographs: install it on a small
 server, answer a few first-run questions, and get a public photo site with an
 admin backend. Think "WordPress for photos".
 
-**Version 1.11.0** (18 November 2026). It installs on macOS, Windows, and
+**Version 1.11.1** (19 November 2026). It installs on macOS, Windows, and
 Linux; takes your photographs, resizes them for every screen, and publishes
 them on a site you can restyle, reword, and put under your own name, with an
 admin behind a login. Version 1.0.0 was the first release; 1.1.0 added
@@ -25,7 +25,8 @@ and a one-line installer; 1.9.0 adds optional
 tags and licence in the slideshow's details; 1.11.0 takes an iPhone's HEIC
 photos, reads the titles, captions and keywords saved inside a file, gives
 every photo alt text, imports a folder at once, and answers to a swipe on a
-phone, after a review of the whole program by fresh eyes.
+phone, after a review of the whole program by fresh eyes; 1.11.1 adds a
+[walkthrough for your own domain](#your-own-domain-start-to-finish).
 
 - **What is in it:** [CHANGELOG.md](CHANGELOG.md), also published as
   [Releases](https://fotobogen.com/docs/changelog/).
@@ -61,6 +62,7 @@ free software with no warranty: keep backups of your photographs.
 - [Modules](#modules)
 - [Tests](#tests)
 - [Windows](#windows)
+- [Your own domain, start to finish](#your-own-domain-start-to-finish)
 - [Docker quick start](#docker-quick-start)
 - [Laravel Forge](#laravel-forge)
 - [Without Docker (pm2)](#without-docker-pm2)
@@ -172,8 +174,8 @@ public site on a server, see [Docker quick start](#docker-quick-start),
 [Without Docker (pm2)](#without-docker-pm2), or
 [the installation guide](https://fotobogen.com/docs/installation/).
 
-**The one-line install.** With [Node.js 24](https://nodejs.org) and git on
-the machine, one command does everything in this section:
+**Install it with one command.** With [Node.js 24](https://nodejs.org) and
+git on the machine:
 
 ```bash
 npx fotobogen@latest
@@ -181,13 +183,21 @@ npx fotobogen@latest
 
 It asks which folder to put it in, fetches the newest release, installs its
 packages, builds it, and offers to start it. If pnpm is missing it offers to
-install that too. It never installs into a folder that already exists. Name
-the folder on the command line to skip the question:
-`npx fotobogen@latest fotobogen-live`. The npm package `fotobogen` is only
-this installer ([`installer/`](installer), two small files with no
-dependencies); Fotobogen itself comes from GitHub with git, so updating from
-the admin works afterwards. It has been run for real on macOS, and its tests
-run on Linux; on Windows, use the steps below for now.
+install that too. It never installs into a folder that already exists. The
+npm package `fotobogen` is only this installer ([`installer/`](installer),
+two small files with no dependencies); Fotobogen itself comes from GitHub
+with git, so updating from the admin works afterwards. It has been run for
+real on macOS, and its tests run on Linux; on Windows, use
+[the steps by hand](#without-the-installer-and-on-windows) for now.
+
+**Then open the address it prints**, `http://localhost:5150`, in a browser on
+the same computer, and enter the setup token shown in the terminal. Use the
+`localhost` address: logging in is kept by your browser only on this
+computer's own addresses or over https.
+
+Leave the terminal open while you use the site. Control + C stops it, and
+`pnpm start`, in the folder it made, starts it again with everything as you
+left it.
 
 At the end it also says how to run the site under pm2 (a small program that
 keeps a site running on a server and starts it again after a restart; see
@@ -195,9 +205,11 @@ keeps a site running on a server and starts it again after a restart; see
 Laravel Forge (a service that sets servers up for you) it says what nginx
 needs.
 
-The same steps by hand:
+### Without the installer (and on Windows)
 
-**1. Have Node.js 24 and pnpm 10.**
+The installer runs these same steps. To run them yourself:
+
+**1. Have Node.js 24, pnpm 10, and git.**
 
 ```bash
 node --version      # must print v24 or later
@@ -227,30 +239,20 @@ pnpm start
 ```
 
 If Node.js or pnpm is too old, `pnpm install` stops before fetching anything
-and prints what to do.
-
-**3. Open the address it prints**, `http://localhost:5150`, in a browser on
-the same computer, and enter the setup token shown in the terminal. Use the
-`localhost` address: logging in is kept by your browser only on this
-computer's own addresses or over https.
-
-Leave the terminal open while you use the site. Control + C stops it, and
-`pnpm start` starts it again with everything as you left it.
+and prints what to do. Then open the address it prints, as above. (On
+Windows, see also [Windows](#windows).)
 
 ### In a folder with another name
 
-The folder does not have to be called `fotobogen`. With the one-line
-install, name it: `npx fotobogen@latest fotobogen-live`. By hand,
-`git clone` takes the folder's name as a second argument, and everything
-else is the same:
+The folder does not have to be called `fotobogen`. Name it to the installer:
 
 ```bash
-git clone https://github.com/cschweda/fotobogen.git fotobogen-live
-cd fotobogen-live
-pnpm install
-pnpm build
-pnpm start
+npx fotobogen@latest fotobogen-live
 ```
+
+By hand, `git clone` takes the folder's name as a second argument
+(`git clone https://github.com/cschweda/fotobogen.git fotobogen-live`), and
+everything else is the same.
 
 Use this to keep an install beside a copy of the source, or to run several
 sites on one machine: `fotobogen-live`, `fotobogen-test`, one for each
@@ -467,7 +469,7 @@ distributions may well work, but are reported as untested.
 `/api/health` needs no login and answers `GET` and `HEAD`:
 
 ```json
-{ "status": "ok", "version": "1.11.0", "database": "ok", "queue": { "depth": 0 }, "uptime": 86400 }
+{ "status": "ok", "version": "1.11.1", "database": "ok", "queue": { "depth": 0 }, "uptime": 86400 }
 ```
 
 It returns `200` when the app and its database are working and `503` when
@@ -1032,7 +1034,8 @@ downloads are pointed at a stand-in server.
 ## Windows
 
 Fotobogen installs and runs on Windows with Node 24 and pnpm; no compiler or
-Visual Studio is needed. In PowerShell:
+Visual Studio is needed. The one-line installer has not been tried on
+Windows yet, so install by hand. In PowerShell:
 
 ```powershell
 git clone https://github.com/cschweda/fotobogen.git
@@ -1058,6 +1061,120 @@ file mode `0600`; they inherit the folder's permissions), and the Docker
 path needs Docker Desktop or WSL, which is not covered by the Windows test
 run.
 
+## Your own domain, start to finish
+
+A walkthrough from nothing to your photographs at
+`https://photos.example.com`: buy a domain, rent a server, point the domain
+at it, install Fotobogen, keep it running under pm2, and put nginx and HTTPS
+in front. The complete version, with a check after every step and what to
+do when one fails, is on
+[fotobogen.com/docs/your-own-domain](https://fotobogen.com/docs/your-own-domain/).
+
+**Who this is for.** It takes about an hour in a terminal on a rented
+server. If that is not for you, someone who has set up a website before can
+do it in fifteen minutes; after that, everything happens in the admin in a
+browser.
+
+Below, `photos.example.com` stands for your domain and `203.0.113.10` for
+your server's address.
+
+1. **Buy a domain** from a registrar: [Porkbun](https://porkbun.com),
+   [Namecheap](https://www.namecheap.com), or
+   [DNSimple](https://dnsimple.com) (a paid subscription with a clean DNS
+   editor; it can also run the DNS of a domain bought elsewhere). A
+   subdomain such as `photos.yourname.com` of a domain you already own costs
+   nothing more.
+2. **Rent a server**: Ubuntu 24.04 LTS, 2 GB of memory recommended (1 GB
+   works with swap). On the Forge track, Forge creates it. Copy its IP address.
+3. **Point the domain at it, straight away** (DNS can take a while to take
+   effect, and HTTPS needs it). At the registrar, add an **A record**: name
+   `photos` (empty, or `@`, for the whole domain), value `203.0.113.10`.
+   Porkbun: the domain's **DNS** page. Namecheap: **Manage**, **Advanced
+   DNS**. DNSimple: **DNS**, **Manage records**. Check with
+   `nslookup photos.example.com`.
+
+Then follow one of the two tracks.
+
+<details>
+<summary><strong>Track A: a plain server</strong> (a DigitalOcean droplet, or any Ubuntu VPS)</summary>
+
+Log in as root, make an ordinary user, and open only SSH and the web:
+
+```bash
+ssh root@203.0.113.10
+adduser photos && usermod -aG sudo photos
+rsync --archive --chown=photos:photos ~/.ssh /home/photos
+apt update && apt upgrade -y && apt install -y nginx git
+ufw allow OpenSSH && ufw allow 'Nginx Full' && ufw enable
+exit
+```
+
+As that user, install Node.js 24, pnpm and pm2, then Fotobogen (on a 1 GB
+server, [add swap](https://fotobogen.com/docs/installation/#swap) first):
+
+```bash
+ssh photos@203.0.113.10
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | bash
+source ~/.nvm/nvm.sh && nvm install 24 && npm install -g pnpm@10 pm2
+npx fotobogen@latest fotobogen     # answer no when it offers to start
+cd ~/fotobogen
+pnpm fotobogen init                # Enter for the port; site address https://photos.example.com; no demo mode
+pm2 start ecosystem.config.cjs
+pm2 save && pm2 startup            # run the "sudo env PATH=..." line it prints
+pm2 logs fotobogen                 # the setup token; Control + C to leave
+```
+
+Put nginx in front: save the site file from
+[nginx in front of the app](#nginx-in-front-of-the-app) as
+`/etc/nginx/sites-available/photos.example.com`, then:
+
+```bash
+sudo ln -s /etc/nginx/sites-available/photos.example.com /etc/nginx/sites-enabled/
+sudo rm /etc/nginx/sites-enabled/default
+sudo nginx -t && sudo systemctl reload nginx
+sudo apt install -y certbot python3-certbot-nginx
+sudo certbot --nginx -d photos.example.com
+```
+
+</details>
+
+<details>
+<summary><strong>Track B: Laravel Forge</strong></summary>
+
+1. In Forge, create a server (Ubuntu 24.04, 2 GB if you can), and do step 3
+   above with its IP address. Add your SSH key on its **SSH Keys** tab.
+2. Create the site `photos.example.com` with a project type that has no PHP
+   (Static HTML, or Other), and install the repository `cschweda/fotobogen`,
+   branch `main`.
+3. Log in as `forge` and build and start it:
+
+   ```bash
+   ssh forge@203.0.113.10
+   curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | bash
+   source ~/.nvm/nvm.sh && nvm install 24 && nvm alias default 24
+   npm install -g pnpm@10 pm2
+   cd /home/forge/photos.example.com
+   pnpm install --frozen-lockfile && pnpm build
+   pnpm fotobogen init              # site address https://photos.example.com
+   pm2 start ecosystem.config.cjs
+   pm2 save && pm2 startup          # run the "sudo env PATH=..." line it prints
+   pm2 logs fotobogen               # the setup token
+   ```
+
+4. **Edit Nginx Configuration**: replace the `location / { ... }` block with
+   the blocks from [deploy/forge-nginx.conf](deploy/forge-nginx.conf)
+   (its marked path becomes
+   `/home/forge/photos.example.com/data/derivatives/`), and delete the `location ~ \.php$`, `location = /favicon.ico` and
+   `location = /robots.txt` blocks if they are there.
+5. **SSL** tab: obtain a Let's Encrypt certificate.
+6. **Deployments** tab: use the deploy script from
+   [Laravel Forge with pm2](#laravel-forge-with-pm2-no-docker).
+
+</details>
+
+Open `https://photos.example.com`, enter the setup token, and the wizard
+does the rest.
+
 ## Docker quick start
 
 For a server with nothing on it but Docker. This runs Fotobogen behind
@@ -1066,7 +1183,9 @@ domain automatically.
 
 The image is downloaded from `ghcr.io/cschweda/fotobogen`; nothing is built
 on your server. (To build it yourself instead, uncomment the `build: .` line
-in `docker-compose.yml` and add `--build` to the command.)
+in `docker-compose.yml` and add `--build` to the command.) The one-line
+installer is not used here: Docker needs the repository's
+`docker-compose.yml` and `.env.sample`, so clone it.
 
 ```bash
 git clone https://github.com/cschweda/fotobogen.git
@@ -1107,14 +1226,17 @@ Building takes more memory than running; on a 1 GB server, add 2 GB of swap
 first.
 
 ```bash
-git clone https://github.com/cschweda/fotobogen.git
+npx fotobogen@latest fotobogen   # answer no when it offers to start
 cd fotobogen
-pnpm install --frozen-lockfile
-pnpm build
-pnpm fotobogen init          # optional: asks for the port, the site's address, and demo mode
+pnpm fotobogen init              # optional: asks for the port, the site's address, and demo mode
 pm2 start ecosystem.config.cjs
-pm2 logs fotobogen           # shows the setup token
+pm2 logs fotobogen               # shows the setup token
 ```
+
+The installer installs and builds it, and ends by printing these pm2 steps.
+By hand, `git clone https://github.com/cschweda/fotobogen.git`, then
+`cd fotobogen`, `pnpm install --frozen-lockfile` and `pnpm build` in place
+of the first line.
 
 **For one site there is nothing to edit in `ecosystem.config.cjs`**, and no
 pm2 file to write yourself. (The file itself sets `HOST`, `DATA_DIR`, and
@@ -1275,7 +1397,10 @@ same standing.
    `location / { ... }` block with the blocks from
    [deploy/forge-nginx.conf](deploy/forge-nginx.conf), and change the two
    marked lines: the path to your site's `data/derivatives/` folder, and
-   the port if you changed it. Leave everything else Forge wrote (the
+   the port if you changed it. Also delete Forge's `location ~ \.php$`,
+   `location = /favicon.ico` and `location = /robots.txt` blocks if there
+   are any: the last two answer from disk and hide Fotobogen's own. Leave
+   everything else Forge wrote (the
    `listen` lines, the certificate, its `include` lines) as it is. Save;
    Forge checks the file and reloads nginx.
 6. **Issue the certificate**: the site's **SSL** tab, Let's Encrypt.

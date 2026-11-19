@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your own domain, start to finish | Fotobogen documentation</title>
+<meta name="description" content="A complete walkthrough: buy a domain, rent a server, point the domain at it, install Fotobogen, keep it running with pm2, and put nginx and HTTPS in front. On a plain server, or on one managed by Laravel Forge.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f5f5f2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0a0a0b" media="(prefers-color-scheme: dark)">
+<link rel="canonical" href="https://fotobogen.com/docs/your-own-domain/">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://fotobogen.com/docs/your-own-domain/">
+<meta property="og:title" content="Your own domain, start to finish | Fotobogen documentation">
+<meta property="og:description" content="A complete walkthrough: buy a domain, rent a server, point the domain at it, install Fotobogen, keep it running with pm2, and put nginx and HTTPS in front. On a plain server, or on one managed by Laravel Forge.">
+<meta property="og:image" content="https://fotobogen.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Fotobogen wordmark beside a contact sheet of sixteen numbered frames, one of them red. Above the wordmark: German for photo sheet, as in a contact sheet.">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230a0a0b'/%3E%3Crect x='6' y='9' width='20' height='14' fill='%23e30613'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/docs/docs.css">
+<script src="/docs/docs.js" defer></script>
+<!-- Privacy-friendly analytics by Plausible -->
+<script async src="https://plausible.io/js/pa-UXO2Zaq02zXvfaEecXWvD.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header>
+  <div class="wrap bar">
+    <a class="bar__name" href="/">Fotobogen<span>Documentation</span></a>
+    <div class="bar__links">
+      <a href="https://github.com/cschweda/fotobogen" data-goal="GitHub click" data-where="docs">Source on GitHub</a>
+      <button class="toggle" type="button" id="theme">Dark</button>
+    </div>
+  </div>
+</header>
+<div class="wrap layout">
+  <nav class="pages" aria-label="Documentation">
+    <ul class="pages__all">
+      <li><a href="/docs/">Overview</a></li>
+      <li><a href="/docs/installation/">Installation</a></li>
+      <li><a href="/docs/your-own-domain/" aria-current="page">Your own domain</a></li>
+      <li><a href="/docs/configuration/">Configuration</a></li>
+      <li><a href="/docs/usage/">Using Fotobogen</a></li>
+      <li><a href="/docs/updating/">Updating</a></li>
+      <li><a href="/docs/customization/">Customization</a></li>
+      <li><a href="/docs/skins/">Skins</a></li>
+      <li><a href="/docs/writing-a-skin/">Writing a skin</a></li>
+      <li><a href="/docs/modules/">Modules</a></li>
+      <li><a href="/docs/writing-a-module/">Writing a module</a></li>
+      <li><a href="/docs/faq/">Questions</a></li>
+      <li><a href="/docs/security-audits/">Security audits</a></li>
+      <li><a href="/docs/changelog/">Releases</a></li>
+    </ul>
+    <div class="pages__here">
+      <h2>On this page</h2>
+      <ul>
+        <li><a href="#tracks">Which are you using?</a></li>
+        <li><a href="#buy">1. Buy a domain</a></li>
+        <li><a href="#server">2. Rent a server</a></li>
+        <li><a href="#dns">3. Point the domain at the server</a></li>
+        <li><a href="#plain">Track A: a plain server</a></li>
+        <li><a href="#forge">Track B: Laravel Forge</a></li>
+        <li><a href="#finish">The finish: set up the site</a></li>
+        <li><a href="#trouble">If something is wrong</a></li>
+      </ul>
+    </div>
+  </nav>
+  <main id="main" class="doc">
+<h1>Your own domain, start to finish</h1>
+<p class="lead">From nothing to your photographs at <code>https://photos.example.com</code>: buy a domain, rent a server, point the one at the other, install Fotobogen, keep it running, and put nginx and HTTPS in front of it. Every command is written out in full.</p>
+
+<div class="note">
+  <p><strong>Who this is for.</strong> This takes about an hour, most of it typing commands into a terminal on a server you rent. Nothing here needs you to write code, but there are several moving parts, and each step checks the one before. If the terminal is not for you, someone who has set up a website before can do all of it in fifteen minutes, and after that everything happens in Fotobogen's admin in a browser.</p>
+</div>
+
+<h2 id="tracks">Which are you using?</h2>
+<p>Steps 1 to 3 are the same for everyone. After that, follow one track:</p>
+<ul>
+  <li><a href="#plain"><strong>A plain server</strong></a>: you rent a server (a DigitalOcean droplet is the example) and set it up yourself. Costs only the server.</li>
+  <li><a href="#forge"><strong>Laravel Forge</strong></a>: <a href="https://forge.laravel.com">Forge</a> sets up the server, nginx, and the certificate for you, from a web page. Fewer commands, but Forge is a paid service on top of the server.</li>
+</ul>
+<p>Both end in the same place: Fotobogen running under <a href="https://pm2.keymetrics.io">pm2</a>, behind nginx, with HTTPS, and a <a href="/docs/installation/#first-run">setup wizard</a> waiting in your browser.</p>
+
+<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
+  <thead><tr><th>What you pay for</th><th>Roughly</th></tr></thead>
+  <tbody>
+    <tr><td>A domain name</td><td>$10 to $20 a year, depending on the ending (<code>.com</code>, <code>.photo</code>, …)</td></tr>
+    <tr><td>A server with 2 GB of memory (recommended)</td><td>About $12 a month</td></tr>
+    <tr><td>A server with 1 GB of memory (works, with swap)</td><td>About $6 a month</td></tr>
+    <tr><td>Laravel Forge, if you choose that track</td><td>Forge's own monthly plan, as well as the server</td></tr>
+  </tbody>
+</table></div>
+<p>Prices are what the larger providers charged when this was written; check theirs. The <a href="/docs/installation/#requirements">requirements</a> say what Fotobogen needs from the server.</p>
+
+<p>Throughout this page, <code>photos.example.com</code> stands for your domain and <code>203.0.113.10</code> for your server's address. Put yours in their place wherever they appear.</p>
+
+<h2 id="buy">1. Buy a domain</h2>
+<p>A domain is bought, by the year, from a <strong>registrar</strong>. Any registrar works; three that are straightforward to use:</p>
+<ul>
+  <li><a href="https://porkbun.com"><strong>Porkbun</strong></a>: low prices, and free privacy for your contact details.</li>
+  <li><a href="https://www.namecheap.com"><strong>Namecheap</strong></a>: one of the largest; also includes privacy.</li>
+  <li><a href="https://dnsimple.com"><strong>DNSimple</strong></a>: a paid subscription, aimed at people who manage several domains, with a clean DNS editor. It can also run the DNS for a domain you bought somewhere else.</li>
+</ul>
+<p>Search for the name you want, add it to the cart, and pay. Turn on auto-renew, so the domain does not lapse in a year.</p>
+<p><strong>A whole domain, or part of one?</strong> Fotobogen can be the whole of <code>yourname.com</code>, or live at a <strong>subdomain</strong> like <code>photos.yourname.com</code>, leaving the rest of the domain for other things. If you already own a domain, a subdomain costs nothing more. This page uses a subdomain; where the whole domain is different, it says so.</p>
+
+<h2 id="server">2. Rent a server</h2>
+<p>On either track the server is a rented Linux machine (a VPS). Choose <strong>Ubuntu 24.04 LTS</strong>, and 2 GB of memory if you can; 1 GB works with the swap step below.</p>
+<p>When it is created, the provider shows its <strong>IP address</strong>, four numbers like <code>203.0.113.10</code>. Copy it: the next step needs it.</p>
+<p>On the Forge track, Forge creates this server for you: see <a href="#forge-server">Forge, step 1</a>, then come back for step 3.</p>
+
+<h2 id="dns">3. Point the domain at the server</h2>
+<p>Do this now, before installing anything. A change to DNS can take a few minutes, occasionally a few hours, to reach everyone, and HTTPS cannot be set up until it has.</p>
+<p>What you add is an <strong>A record</strong>: a line that says "this name is at this address".</p>
+<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
+  <thead><tr><th>Field</th><th>For <code>photos.example.com</code></th><th>For the whole of <code>example.com</code></th></tr></thead>
+  <tbody>
+    <tr><td>Type</td><td><code>A</code></td><td><code>A</code></td></tr>
+    <tr><td>Name (or Host)</td><td><code>photos</code></td><td>Left empty, or <code>@</code></td></tr>
+    <tr><td>Value (or Answer, Content, Points to)</td><td><code>203.0.113.10</code></td><td><code>203.0.113.10</code></td></tr>
+    <tr><td>TTL</td><td>The lowest offered, or Automatic</td><td>The same</td></tr>
+  </tbody>
+</table></div>
+<p>Where to add it, at each of the registrars above (the pages are rearranged now and then, so the names may differ a little):</p>
+<ul>
+  <li><strong>Porkbun:</strong> Domain Management, then the domain's <strong>DNS</strong> link. Type <code>A</code>, Host <code>photos</code>, Answer the address. Porkbun adds a few records of its own to a new domain (for its parking page); delete any <code>A</code> or <code>ALIAS</code> record already on the same name.</li>
+  <li><strong>Namecheap:</strong> Domain List, <strong>Manage</strong> beside the domain, then <strong>Advanced DNS</strong>, <strong>Add New Record</strong>. Choose A Record, Host <code>photos</code> (or <code>@</code>), Value the address. Delete the parking-page records Namecheap added (a <code>CNAME</code> for <code>www</code> and a URL Redirect for <code>@</code>) if they are on the name you are using.</li>
+  <li><strong>DNSimple:</strong> the domain, then <strong>DNS</strong>, <strong>Manage records</strong>, <strong>Add record</strong>, <strong>A</strong>. Name <code>photos</code> (empty for the whole domain), Content the address. If the domain was bought elsewhere and you want DNSimple to run its DNS, add the domain to DNSimple first and change the domain's <strong>name servers</strong> at the other registrar to the ones DNSimple lists; that change is the slow one, sometimes a day.</li>
+</ul>
+<p>If the server also has an IPv6 address (it looks like <code>2001:db8::1</code>), you can add an <code>AAAA</code> record for it the same way. It is optional.</p>
+<p><strong>Check it.</strong> On your own computer, in a terminal:</p>
+<pre tabindex="0"><code>nslookup photos.example.com</code></pre>
+<p>When the answer includes <code>203.0.113.10</code>, it has taken effect. Until then, carry on: the next steps do not need it until HTTPS.</p>
+
+<h2 id="plain">Track A: a plain server</h2>
+<p>Ubuntu 24.04 on a DigitalOcean droplet, or any provider's equivalent. You will install nginx, Node.js, and pm2 yourself.</p>
+
+<h3 id="plain-login">A1. Log in and make a user</h3>
+<p>When creating the droplet, choose <strong>SSH key</strong> as the way to log in, and add your computer's key (DigitalOcean explains how on the same page). Then, from your computer:</p>
+<pre tabindex="0"><code>ssh root@203.0.113.10</code></pre>
+<p>Running a website as <code>root</code> is a bad habit, so make an ordinary user, here called <code>photos</code>, that can use <code>sudo</code>, and let your key log in as it:</p>
+<pre tabindex="0"><code>adduser photos                   # asks for a password: choose one and keep it
+usermod -aG sudo photos
+rsync --archive --chown=photos:photos ~/.ssh /home/photos</code></pre>
+<p>Bring the system up to date, install nginx and git, and switch on the firewall with only SSH and the web open:</p>
+<pre tabindex="0"><code>apt update &amp;&amp; apt upgrade -y
+apt install -y nginx git
+ufw allow OpenSSH
+ufw allow 'Nginx Full'
+ufw enable                       # answer y</code></pre>
+<p>Log out (<code>exit</code>) and log back in as the new user. Everything from here on is done as <code>photos</code>:</p>
+<pre tabindex="0"><code>ssh photos@203.0.113.10</code></pre>
+<p><strong>Check:</strong> opening <code>http://203.0.113.10</code> in a browser shows "Welcome to nginx!".</p>
+
+<h3 id="plain-swap">A2. On a 1 GB server, add swap</h3>
+<p>Building Fotobogen needs more memory than running it. With 2 GB or more, skip this.</p>
+<pre tabindex="0"><code>sudo fallocate -l 2G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab</code></pre>
+
+<h3 id="plain-node">A3. Install Node.js 24, pnpm, and pm2</h3>
+<p>With <a href="https://github.com/nvm-sh/nvm#installing-and-updating">nvm</a>, which keeps Node.js in your own folder:</p>
+<pre tabindex="0"><code>curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | bash
+source ~/.nvm/nvm.sh
+nvm install 24
+npm install -g pnpm@10 pm2</code></pre>
+<p><strong>Check:</strong> <code>node --version</code> prints <code>v24</code> and some more.</p>
+
+<h3 id="plain-install">A4. Install Fotobogen</h3>
+<pre tabindex="0"><code>cd ~
+npx fotobogen@latest fotobogen</code></pre>
+<p>It checks the tools, fetches the newest release into <code>~/fotobogen</code>, installs, and builds, which takes a few minutes. <strong>Answer no when it offers to start it</strong>: pm2 starts it in the next step. Then tell it its address:</p>
+<pre tabindex="0"><code>cd ~/fotobogen
+pnpm fotobogen init</code></pre>
+<p>It asks three things. Press Enter for the port (5150). For the site address, type <code>https://photos.example.com</code>. Answer no to demo mode.</p>
+
+<h3 id="plain-pm2">A5. Start it under pm2</h3>
+<p>pm2 keeps Fotobogen running, restarts it if it stops, and, once told to, starts it again when the server reboots. The file it needs, <code>ecosystem.config.cjs</code>, comes with Fotobogen and needs no editing.</p>
+<pre tabindex="0"><code>pm2 start ecosystem.config.cjs
+pm2 save
+pm2 startup</code></pre>
+<p><code>pm2 startup</code> prints one long command beginning with <code>sudo env PATH=</code>. Copy that whole line, paste it, and run it.</p>
+<p>Now find the <strong>setup token</strong>, 32 letters and digits that the first visit asks for:</p>
+<pre tabindex="0"><code>pm2 logs fotobogen               # Control + C to leave; the token is also in ~/fotobogen/data/setup-token</code></pre>
+<p><strong>Check:</strong> <code>pm2 status</code> shows <code>fotobogen</code> as <code>online</code>, and</p>
+<pre tabindex="0"><code>curl http://127.0.0.1:5150/api/health</code></pre>
+<p>answers with <code>"status":"ok"</code>. Fotobogen is running, but only the server itself can reach it. The next step opens it to the world.</p>
+
+<h3 id="plain-nginx">A6. Put nginx in front of it</h3>
+<p>nginx answers visitors on the usual web ports and passes each request to Fotobogen on port 5150. Create the site's file:</p>
+<pre tabindex="0"><code>sudo nano /etc/nginx/sites-available/photos.example.com</code></pre>
+<p>Paste this in, with your domain on the <code>server_name</code> line:</p>
+<pre tabindex="0"><code>server {
+    listen 80;
+    listen [::]:80;
+    server_name photos.example.com;
+
+    # The largest upload nginx lets through. Keep it equal to MAX_UPLOAD_MB.
+    client_max_body_size 50m;
+
+    # Once the site has its certificate: browsers that have visited use https from then on.
+    add_header Strict-Transport-Security "max-age=31536000" always;
+
+    location / {
+        proxy_pass http://127.0.0.1:5150;
+        proxy_http_version 1.1;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 120s;
+    }
+}</code></pre>
+<p>Save (Control + O, Enter) and close (Control + X). Switch it on, switch off nginx's welcome page, check, and reload:</p>
+<pre tabindex="0"><code>sudo ln -s /etc/nginx/sites-available/photos.example.com /etc/nginx/sites-enabled/
+sudo rm /etc/nginx/sites-enabled/default
+sudo nginx -t                    # must say "syntax is ok" and "test is successful"
+sudo systemctl reload nginx</code></pre>
+<p>What each line of the file does is explained in <a href="/docs/installation/#nginx">nginx in front of the app</a>. Leave the <code>Host</code> line in: without it, saving anything in the admin fails.</p>
+<p><strong>Check:</strong> once the domain has taken effect (<a href="#dns">step 3</a>), <code>http://photos.example.com</code> shows Fotobogen's setup page. Do not set it up yet: logging in needs HTTPS.</p>
+
+<h3 id="plain-https">A7. Add HTTPS</h3>
+<p><a href="https://certbot.eff.org">Certbot</a> gets a free certificate from Let's Encrypt and renews it by itself:</p>
+<pre tabindex="0"><code>sudo apt install -y certbot python3-certbot-nginx
+sudo certbot --nginx -d photos.example.com</code></pre>
+<p>It asks for an email address (for renewal warnings) and to accept the terms, then edits the nginx file to use the certificate and send <code>http</code> visitors to <code>https</code>. If it says the domain could not be reached, the A record has not taken effect yet: wait, check with <code>nslookup</code>, and run the second line again.</p>
+<p><strong>Check:</strong> <code>https://photos.example.com</code> opens with a padlock. Go on to <a href="#finish">the finish</a>.</p>
+
+<h2 id="forge">Track B: Laravel Forge</h2>
+<p><a href="https://forge.laravel.com">Forge</a> creates and looks after the server: it installs nginx, manages each site's nginx file, and issues and renews certificates. Fotobogen runs under pm2 as Forge's <code>forge</code> user, and Forge's nginx passes requests to it. Forge is made for PHP sites, so a few steps below go around the PHP parts.</p>
+
+<h3 id="forge-server">B1. Create the server</h3>
+<p>In Forge, connect your server provider (DigitalOcean, Hetzner, and others; or use <strong>Custom VPS</strong> for a server you already rent), then create a server: Ubuntu 24.04, 2 GB of memory if you can. Forge emails you the passwords for <code>sudo</code> and the database; keep that email. When the server is ready, copy its <strong>IP address</strong> from its page, and do <a href="#dns">step 3, the A record</a>, now.</p>
+<p>Add your computer's SSH key to the server (the server's <strong>SSH Keys</strong> tab), so you can log in as <code>forge</code>.</p>
+
+<h3 id="forge-site">B2. Create the site</h3>
+<p>On the server, create a site with the domain <code>photos.example.com</code>. For the project type, pick one with no PHP (<strong>Static HTML</strong>, or <strong>Other</strong>). Then install a repository into it: provider GitHub, repository <code>cschweda/fotobogen</code>, branch <code>main</code>. Leave Composer and any database unticked.</p>
+<p>Forge puts it in <code>/home/forge/photos.example.com</code>.</p>
+
+<h3 id="forge-node">B3. Install Node.js 24, pnpm, and pm2</h3>
+<p>Log in as <code>forge</code>:</p>
+<pre tabindex="0"><code>ssh forge@203.0.113.10</code></pre>
+<p>Forge may already have put a Node.js on the server, often an older one. Fotobogen needs 24:</p>
+<pre tabindex="0"><code>curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | bash
+source ~/.nvm/nvm.sh
+nvm install 24
+nvm alias default 24
+npm install -g pnpm@10 pm2</code></pre>
+<p>On a 1 GB server, <a href="#plain-swap">add swap</a> as on the plain track.</p>
+<p><strong>Check:</strong> <code>node --version</code> prints <code>v24</code>.</p>
+
+<h3 id="forge-install">B4. Build it and start it under pm2</h3>
+<pre tabindex="0"><code>cd /home/forge/photos.example.com
+pnpm install --frozen-lockfile
+pnpm build
+pnpm fotobogen init              # Enter for the port; the site address is https://photos.example.com; no to demo mode
+pm2 start ecosystem.config.cjs
+pm2 save
+pm2 startup</code></pre>
+<p>Run the <code>sudo env PATH=…</code> line that <code>pm2 startup</code> prints; it asks for the <code>sudo</code> password from Forge's email. Then find the setup token:</p>
+<pre tabindex="0"><code>pm2 logs fotobogen               # Control + C to leave; the token is also in data/setup-token</code></pre>
+<p><strong>Check:</strong> <code>curl http://127.0.0.1:5150/api/health</code> answers with <code>"status":"ok"</code>.</p>
+
+<h3 id="forge-nginx">B5. Point Forge's nginx at it</h3>
+<p>In Forge, open the site, then <strong>Edit Files</strong>, <strong>Edit Nginx Configuration</strong>. Forge wrote this file for a PHP site. Inside its <code>server { … }</code> block, find the <code>location / { … }</code> block and replace it, and only it, with:</p>
+<pre tabindex="0"><code>client_max_body_size 50m;
+add_header Strict-Transport-Security "max-age=31536000" always;
+
+location / {
+    proxy_pass http://127.0.0.1:5150;
+    proxy_http_version 1.1;
+    proxy_set_header Host $http_host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_read_timeout 120s;
+}</code></pre>
+<p>Delete three more blocks if the file has them: <code>location ~ \.php$ { … }</code>, and the two one-line blocks <code>location = /favicon.ico</code> and <code>location = /robots.txt</code>. Those two answer from the empty folder on disk, so your site's icon and its note to search engines would never reach Fotobogen. Leave everything else as Forge wrote it: the <code>listen</code> and <code>server_name</code> lines, the certificate lines, and its <code>include</code> lines. Save; Forge checks the file and reloads nginx. If it reports an error, the message names the line.</p>
+<p>A faster version, in which nginx sends the resized photos straight from disk, is in <a href="https://github.com/cschweda/fotobogen/blob/main/deploy/forge-nginx.conf"><code>deploy/forge-nginx.conf</code></a>. The block above is all that is needed.</p>
+
+<h3 id="forge-https">B6. Add HTTPS</h3>
+<p>On the site's <strong>SSL</strong> tab, choose <strong>Let's Encrypt</strong> and obtain a certificate for <code>photos.example.com</code>. Forge installs it, renews it, and adds it to the nginx file. If Forge says it could not verify the domain, the A record has not taken effect yet: check with <code>nslookup</code>, wait, and try again.</p>
+
+<h3 id="forge-deploy">B7. Make "Deploy Now" update it</h3>
+<p>On the site's <strong>Deployments</strong> tab, replace the deploy script with:</p>
+<pre tabindex="0"><code>cd /home/forge/photos.example.com
+source ~/.nvm/nvm.sh
+git pull origin $FORGE_SITE_BRANCH
+pnpm install --frozen-lockfile
+pnpm build
+pm2 reload ecosystem.config.cjs --update-env</code></pre>
+<p>The <code>source</code> line matters: Forge runs the script without your login's setup, and without it Node.js is not found. Leave <strong>Quick Deploy</strong> off, so the site changes only when you choose.</p>
+<p><strong>Check:</strong> <code>https://photos.example.com</code> opens with a padlock.</p>
+
+<h2 id="finish">The finish: set up the site</h2>
+<p>Open <code>https://photos.example.com</code>. The setup wizard asks for the token from the pm2 logs, a name for the site, and an admin account; <a href="/docs/installation/#first-run">the first run</a> goes through each screen. After that, everything is done in the admin in your browser.</p>
+<p>Three things worth doing in the first week:</p>
+<ul>
+  <li><strong>Reboot once,</strong> to be sure it comes back: <code>sudo reboot</code>, wait a minute, and load the site. If it does not, <code>pm2 startup</code>'s line was not run.</li>
+  <li><strong>Make a backup,</strong> under <strong>Admin, System, Download a backup</strong>, and keep it somewhere other than the server (<a href="/docs/faq/#backups">more on backups</a>).</li>
+  <li><strong>Watch it:</strong> a free monitor such as UptimeRobot can check <code>https://photos.example.com/api/health</code> and email you if it stops answering (<a href="/docs/installation/#monitoring">details</a>).</li>
+</ul>
+<p><strong>Updating</strong> later is a button in the admin; see <a href="/docs/updating/">Updating</a>. On the Forge track, Deploy Now does the same.</p>
+
+<h2 id="trouble">If something is wrong</h2>
+<div class="table" tabindex="0" role="group" aria-label="Table; scrolls sideways on a narrow screen"><table>
+  <thead><tr><th>What you see</th><th>What it means</th></tr></thead>
+  <tbody>
+    <tr><td>The browser says the site cannot be found</td><td>The A record has not taken effect, or has a typing mistake. <code>nslookup photos.example.com</code> should show the server's address</td></tr>
+    <tr><td>Certbot, or Forge's SSL tab, cannot verify the domain</td><td>The same: wait for the A record. On the plain track, also check that <code>sudo ufw status</code> lists <code>Nginx Full</code></td></tr>
+    <tr><td>"Welcome to nginx!" instead of Fotobogen</td><td>nginx's default site is still on (<code>sudo rm /etc/nginx/sites-enabled/default</code>, then reload), or <code>server_name</code> does not match the domain</td></tr>
+    <tr><td><code>502 Bad Gateway</code></td><td>Fotobogen is not running, or is on another port. <code>pm2 status</code>, then <code>pm2 logs fotobogen</code> says why</td></tr>
+    <tr><td>Saving in the admin says "This request did not come from this site"</td><td>The <code>proxy_set_header Host $http_host;</code> line is missing from nginx</td></tr>
+    <tr><td>Logging in says it needs a secure connection</td><td>The site is being used over <code>http</code>. Finish the HTTPS step</td></tr>
+    <tr><td>An upload fails with <code>413</code></td><td><code>client_max_body_size</code> in nginx is smaller than the file</td></tr>
+    <tr><td>The build stops with "JavaScript heap out of memory", or is "Killed"</td><td>The server ran out of memory: <a href="#plain-swap">add swap</a> and build again</td></tr>
+    <tr><td>Fotobogen refuses to start and says what to fix</td><td>Its check of the machine found a problem; the message names it. See <a href="/docs/installation/#requirements">requirements</a></td></tr>
+  </tbody>
+</table></div>
+<p>More on nginx, and on fitting Fotobogen beside other sites on a server that already has them: <a href="/docs/installation/#nginx">nginx in front of the app</a> and <a href="/docs/installation/#existing-nginx">an existing droplet with nginx</a>.</p>
+    <p class="next">
+      <a href="/docs/installation/">Back: Installation</a>
+      <a href="/docs/configuration/">Next: Configuration</a>
+    </p>
+  </main>
+</div>
+<footer>
+  <div class="wrap">
+    <span>Fotobogen is free and open source, under the MIT licence.</span>
+    <span>It comes with no warranty. Keep backups of your photographs.</span>
+    <span>&copy; 2026 <a href="https://github.com/cschweda" data-goal="Author click">Christopher Schweda</a></span>
+  </div>
+</footer>
+</body>
+</html>

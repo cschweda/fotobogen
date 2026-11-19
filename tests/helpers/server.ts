@@ -42,9 +42,21 @@ function freePort(): Promise<number> {
   })
 }
 
-export async function startServer(options: { env?: Record<string, string> | ((port: number) => Record<string, string>), dataDir?: string, waitForHealth?: boolean } = {}): Promise<TestServer> {
+export async function startServer(options: { env?: Record<string, string> | ((port: number) => Record<string, string>), dataDir?: string, waitForHealth?: boolean, port?: number } = {}): Promise<TestServer> {
   const dataDir = options.dataDir ?? join(mkdtempSync(join(tmpdir(), 'fotobogen-test-')), 'data')
-  const port = await freePort()
+  // Test files run side by side, and each asks the system for a free port and then lets go of it
+  // before its server takes it. Now and then two are handed the same port: the loser tries another.
+  for (let tries = 1; ; tries++) {
+    try {
+      return await startOn(options.port ?? await freePort(), dataDir, options)
+    }
+    catch (error) {
+      if (options.port !== undefined || tries === 3 || !String(error).includes('EADDRINUSE')) throw error
+    }
+  }
+}
+
+async function startOn(port: number, dataDir: string, options: { env?: Record<string, string> | ((port: number) => Record<string, string>), waitForHealth?: boolean }): Promise<TestServer> {
   const url = `http://localhost:${port}`
   let child: ChildProcess
   let printed = ''
@@ -69,7 +81,10 @@ export async function startServer(options: { env?: Record<string, string> | ((po
     while (Date.now() < deadline) {
       try {
         const response = await fetch(`http://127.0.0.1:${port}/api/health`)
-        if (response.ok) return
+        // Healthy, and this server says so itself. Another test's server on the same port would
+        // answer the health check too, and a test would then send its setup token to a stranger.
+        // The line is printed after the setup token, so the token has been read by now as well.
+        if (response.ok && printed.includes(`Listening on http://127.0.0.1:${port}`)) return
       }
       catch { /* not listening yet */ }
       if (child.exitCode !== null) throw new Error(`Server exited early:\n${printed}`)
