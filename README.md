@@ -83,20 +83,23 @@ free software with no warranty: keep backups of your photographs.
 
 ## Screenshots
 
-Taken from a local install of version 1.10.0 (the grid, the photo page, and
-the admin's Overview from 1.9.0, which they match; the upload page from
-1.11.0). The
+Taken from a local install of version 1.10.0 (the grid and the admin's
+Overview from 1.9.0, which they match; the upload page, the photo page and
+the slideshow from 1.11.0). The
 photographs are the sample photos Fotobogen can download (Unsplash
-photographs, via Lorem Picsum).
+photographs, via Lorem Picsum). The sample photos arrive with no camera
+data, so the date, camera, lens and settings shown beside two of them here
+are example values, put in to show where a photo's own details appear;
+they are not what those photographs were taken with.
 
 What visitors see: the grid, a photo on its own page, and the slideshow
 with a photo's details open.
 
 ![The public site: a dark page with a row of album names to choose from, above a masonry grid of photographs of different shapes](docs/screenshots/gallery.jpg)
 
-![A photo page: the photograph with its title, description, and size beside it, and Previous and Next links](docs/screenshots/photo.jpg)
+![A photo page: the photograph with, beside it, its title, description, date taken, camera, lens, exposure settings, size in pixels, two tags, and licence, and Previous and Next links](docs/screenshots/photo.jpg)
 
-![The slideshow: a photograph filling the screen, with a panel over its lower part giving the title, description, size in pixels, album, two tags, and licence, above the Previous, Pause, Next, Full screen, and Close buttons](docs/screenshots/slideshow.jpg)
+![The slideshow: a photograph filling the screen, with a panel over its lower part giving the title, description, date taken, camera, lens, exposure settings, size in pixels, album, two tags, and licence, above the Previous, Pause, Next, Full screen, and Close buttons](docs/screenshots/slideshow.jpg)
 
 Editing a photo, with the strip of look previews under it and a film frame
 chosen:
